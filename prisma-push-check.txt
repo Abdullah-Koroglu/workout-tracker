@@ -1,0 +1,12 @@
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": SQLite database "dev.db" at "file:./dev.db"
+
+Error: 
+⚠️ We found changes that cannot be executed:
+
+  • Added the required column `scheduledFor` to the `TemplateAssignment` table without a default value. There are 1 rows in this table, it is not possible to execute this step.
+
+You may use the --force-reset flag to drop the database before push like prisma db push --force-reset
+All data will be lost.
+      

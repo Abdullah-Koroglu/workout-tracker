@@ -55,6 +55,35 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
     return [hours, minutes, secs].map((v) => String(v).padStart(2, "0")).join(":");
   };
 
+  // Derive activeExerciseId before any conditional returns (Rules of Hooks)
+  const activeExerciseId = exerciseManager.activeExercise?.exercise.exerciseId ?? "";
+
+  const handleCardioSecondChange = useCallback((seconds: number) => {
+    setCardioSeconds((prev) => {
+      if (prev[activeExerciseId] === seconds) return prev;
+      return { ...prev, [activeExerciseId]: seconds };
+    });
+  }, [activeExerciseId]);
+
+  const handleCardioReachedEnd = useCallback(() => {
+    setCardioReachedEnd((prev) => {
+      if (prev[activeExerciseId]) return prev;
+      return { ...prev, [activeExerciseId]: true };
+    });
+  }, [activeExerciseId]);
+
+  const handleCardioAbandon = useCallback(() => {
+    setCardioReachedEnd((prev) => {
+      if (!prev[activeExerciseId]) return prev;
+      return { ...prev, [activeExerciseId]: false };
+    });
+    setCardioSeconds((prev) => {
+      if ((prev[activeExerciseId] || 0) === 0) return prev;
+      return { ...prev, [activeExerciseId]: 0 };
+    });
+    warning("Kardiyo akışı sıfırlandı. Yeniden başlatabilirsin.");
+  }, [activeExerciseId, warning]);
+
   // Show loading state while initializing
   if (workoutState.isLoading) {
     return (
@@ -83,33 +112,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   }
 
   const activeExercise = exerciseManager.activeExercise;
-  const activeExerciseId = activeExercise.exercise.exerciseId;
-
-  const handleCardioSecondChange = useCallback((seconds: number) => {
-    setCardioSeconds((prev) => {
-      if (prev[activeExerciseId] === seconds) return prev;
-      return { ...prev, [activeExerciseId]: seconds };
-    });
-  }, [activeExerciseId]);
-
-  const handleCardioReachedEnd = useCallback(() => {
-    setCardioReachedEnd((prev) => {
-      if (prev[activeExerciseId]) return prev;
-      return { ...prev, [activeExerciseId]: true };
-    });
-  }, [activeExerciseId]);
-
-  const handleCardioAbandon = useCallback(() => {
-    setCardioReachedEnd((prev) => {
-      if (!prev[activeExerciseId]) return prev;
-      return { ...prev, [activeExerciseId]: false };
-    });
-    setCardioSeconds((prev) => {
-      if ((prev[activeExerciseId] || 0) === 0) return prev;
-      return { ...prev, [activeExerciseId]: 0 };
-    });
-    warning("Kardiyo akışı sıfırlandı. Yeniden başlatabilirsin.");
-  }, [activeExerciseId, warning]);
 
   // Wrapper handlers for API calls with UI state management
   const handleSaveWeightSet = async (

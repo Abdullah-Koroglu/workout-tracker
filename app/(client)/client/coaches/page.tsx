@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { ActionMenu } from "@/components/ui/action-menu";
@@ -88,6 +90,13 @@ export default function ClientCoachesPage() {
 
   return (
     <div className="space-y-4">
+      <Link
+        href="/client/dashboard"
+        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+      >
+        <ChevronLeft className="h-4 w-4" />
+        Dashboard'a geri don
+      </Link>
       <h1 className="text-2xl font-bold">Coach Bul</h1>
       <div className="flex gap-2">
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="İsme göre ara" />

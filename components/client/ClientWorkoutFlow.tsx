@@ -496,12 +496,24 @@ function CardioExerciseSection({
   onSaveCardio: (exerciseId: string, durationMinutes: number) => void;
   savingKey: string | null;
 }) {
+  const normalizedProtocol = (exercise.exercise.protocol || []).map((row) => {
+    const value = row as unknown as Record<string, unknown>;
+    const durationFromNew = typeof value.durationMinutes === "number" ? value.durationMinutes : null;
+    const durationFromLegacy = typeof value.minute === "number" ? value.minute : null;
+
+    return {
+      durationMinutes: Math.max(1, Number(durationFromNew ?? durationFromLegacy ?? 1)),
+      speed: Number(value.speed ?? 0),
+      incline: Number(value.incline ?? 0)
+    };
+  });
+
   return (
     <div className="space-y-4 rounded-[32px] border border-border/60 bg-card p-6 shadow-sm">
       <CardioTimer
         storageKey={`cardio-${workoutId}-${exercise.exercise.id}`}
         durationMinutes={exercise.exercise.durationMinutes || 1}
-        protocol={exercise.exercise.protocol || [{ minute: 1, speed: 0, incline: 0 }]}
+        protocol={normalizedProtocol.length ? normalizedProtocol : [{ durationMinutes: 1, speed: 0, incline: 0 }]}
         enabled={!exercise.isCompleted}
         onReachedEnd={onReachedEnd}
         onAbandon={onAbandon}

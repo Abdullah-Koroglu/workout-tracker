@@ -4,6 +4,12 @@ import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { templateSchema } from "@/validations/template";
 
+type CardioProtocolRow = {
+  durationMinutes: number;
+  speed: number;
+  incline: number;
+};
+
 export async function GET() {
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
@@ -40,7 +46,10 @@ export async function POST(request: Request) {
           targetSets: e.exerciseType === "WEIGHT" ? e.targetSets ?? null : null,
           targetReps: e.exerciseType === "WEIGHT" ? e.targetReps ?? null : null,
           targetRir: e.exerciseType === "WEIGHT" ? e.targetRir ?? null : null,
-          durationMinutes: e.exerciseType === "CARDIO" ? e.durationMinutes ?? null : null,
+          durationMinutes:
+            e.exerciseType === "CARDIO"
+              ? e.protocol.reduce((sum: number, row: CardioProtocolRow) => sum + row.durationMinutes, 0)
+              : null,
           protocol: e.exerciseType === "CARDIO" ? e.protocol ?? undefined : undefined
         }))
       }

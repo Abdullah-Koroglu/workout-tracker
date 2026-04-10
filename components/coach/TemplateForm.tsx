@@ -20,7 +20,7 @@ type ExerciseLibraryItem = {
 };
 
 type CardioProtocolItem = {
-  minute: number;
+  durationMinutes: number;
   speed: number;
   incline: number;
 };
@@ -128,7 +128,7 @@ export function TemplateForm({
       durationMinutes: selectedExercise.type === "CARDIO" ? 20 : null,
       protocol:
         selectedExercise.type === "CARDIO"
-          ? [{ minute: 1, speed: 5, incline: 0 }]
+          ? [{ durationMinutes: 1, speed: 5, incline: 0 }]
           : null
     });
 
@@ -143,7 +143,7 @@ export function TemplateForm({
       [
         ...currentProtocol,
         {
-          minute: currentProtocol.length + 1,
+          durationMinutes: 1,
           speed: 5,
           incline: 0
         }
@@ -158,9 +158,14 @@ export function TemplateForm({
 
     form.setValue(
       `exercises.${exerciseIndex}.protocol`,
-      nextProtocol.map((row, index) => ({ ...row, minute: index + 1 })),
+      nextProtocol,
       { shouldDirty: true, shouldValidate: true }
     );
+  };
+
+  const getCardioTotalMinutes = (exerciseIndex: number) => {
+    const rows = form.getValues(`exercises.${exerciseIndex}.protocol`) || [];
+    return rows.reduce((sum, row) => sum + asPositiveInteger(row.durationMinutes, 1), 0);
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -195,12 +200,15 @@ export function TemplateForm({
         return {
           ...exercise,
           order: index,
-          durationMinutes: asPositiveInteger(exercise.durationMinutes, 20),
-          protocol: (exercise.protocol || [{ minute: 1, speed: 5, incline: 0 }]).map((row, protocolIndex) => ({
-            minute: asPositiveInteger(row.minute, protocolIndex + 1),
+          protocol: (exercise.protocol || [{ durationMinutes: 1, speed: 5, incline: 0 }]).map((row) => ({
+            durationMinutes: asPositiveInteger(row.durationMinutes, 1),
             speed: Number.isFinite(Number(row.speed)) ? Number(row.speed) : 5,
             incline: Number.isFinite(Number(row.incline)) ? Number(row.incline) : 0
           })),
+          durationMinutes: (exercise.protocol || [{ durationMinutes: 1, speed: 5, incline: 0 }]).reduce(
+            (sum, row) => sum + asPositiveInteger(row.durationMinutes, 1),
+            0
+          ),
           targetSets: null,
           targetReps: null,
           targetRir: null
@@ -332,14 +340,15 @@ export function TemplateForm({
                             </div>
                           ) : (
                             <div className="space-y-4">
-                              <div className="space-y-1">
-                                <label className="text-sm font-medium">Toplam Dakika</label>
-                                <Input type="number" {...form.register(`exercises.${index}.durationMinutes`, { valueAsNumber: true })} />
+                              <div className="rounded-lg border border-emerald-200/50 bg-emerald-50/70 p-3">
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Toplam Sure</p>
+                                <p className="mt-1 text-lg font-black text-emerald-900">{getCardioTotalMinutes(index)} dakika</p>
+                                <p className="text-xs text-emerald-700">Sure otomatik olarak satirlarin toplamiyla hesaplanir.</p>
                               </div>
 
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium">Dakika Bazlı Protokol</p>
+                                  <p className="text-sm font-medium">Sure Bazli Protokol</p>
                                   <Button type="button" variant="outline" onClick={() => addProtocolRow(index)}>
                                     Satır Ekle
                                   </Button>
@@ -349,10 +358,10 @@ export function TemplateForm({
                                   <div key={`${field.id}-${protocolIndex}`} className="rounded-xl border bg-card p-3">
                                     <div className="mb-2 flex items-center justify-between border-b pb-2">
                                       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                                        Dakika Bloğu
+                                        Blok {protocolIndex + 1}
                                       </p>
                                       <div className="flex items-center gap-2">
-                                        <span className="text-lg font-black text-foreground">{protocolItem.minute}</span>
+                                        <span className="text-lg font-black text-foreground">{protocolItem.durationMinutes} dk</span>
                                         <ActionMenu
                                           items={[
                                             {
@@ -367,9 +376,9 @@ export function TemplateForm({
                                     <div className="grid gap-2 md:grid-cols-3">
                                       <Input
                                         type="number"
-                                        placeholder="Dakika"
-                                        defaultValue={protocolItem.minute}
-                                        {...form.register(`exercises.${index}.protocol.${protocolIndex}.minute`, { valueAsNumber: true })}
+                                        placeholder="Sure (dk)"
+                                        defaultValue={protocolItem.durationMinutes}
+                                        {...form.register(`exercises.${index}.protocol.${protocolIndex}.durationMinutes`, { valueAsNumber: true })}
                                       />
                                       <Input
                                         type="number"

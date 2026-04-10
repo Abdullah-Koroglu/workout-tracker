@@ -7,6 +7,7 @@ import { ConfirmationProvider } from "@/contexts/ConfirmationContext";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Navbar } from "@/components/shared/Navbar";
 import { AppSessionProvider } from "@/components/shared/SessionProvider";
+import { GlobalBreadcrumb } from "@/components/shared/GlobalBreadcrumb";
 
 export const metadata: Metadata = {
   title: "FitCoach",
@@ -27,7 +28,10 @@ export default function RootLayout({
               <NotificationProvider>
                 <ConfirmationProvider>
                   <Navbar />
-                  <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">{children}</main>
+                  <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">
+                    <GlobalBreadcrumb />
+                    {children}
+                  </main>
                 </ConfirmationProvider>
               </NotificationProvider>
             </AuthProvider>

@@ -7,7 +7,7 @@ type TimerSnapshot = {
   isRunning: boolean;
 };
 
-export function useWorkoutTimer(storageKey: string, enabled = true, maxSeconds?: number) {
+export function useWorkoutTimer(storageKey: string, enabled = true, maxSeconds?: number, stepSeconds = 1) {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -41,13 +41,14 @@ export function useWorkoutTimer(storageKey: string, enabled = true, maxSeconds?:
 
     const interval = setInterval(() => {
       setSeconds((prev) => {
-        const next = typeof maxSeconds === "number" ? Math.min(prev + 1, maxSeconds) : prev + 1;
+        const increment = Math.max(1, Math.floor(stepSeconds));
+        const next = typeof maxSeconds === "number" ? Math.min(prev + increment, maxSeconds) : prev + increment;
         return next;
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [enabled, isRunning, maxSeconds]);
+  }, [enabled, isRunning, maxSeconds, stepSeconds]);
 
   useEffect(() => {
     if (typeof maxSeconds === "number" && seconds >= maxSeconds && isRunning) {

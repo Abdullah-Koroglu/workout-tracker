@@ -4,6 +4,7 @@ services:
     build: .
     ports:
       - "3000:3000"
+      - "5555:5555"
     volumes:
       - ./prisma/dev.db:/app/prisma/dev.db # Veri tabanını sunucuda saklar
     restart: always

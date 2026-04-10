@@ -77,14 +77,17 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
     return date.getTime() > today.getTime();
   });
 
-  const groupByDate = (items: AssignmentItem[]) => {
-    return items.reduce<Record<string, AssignmentItem[]>>((acc, assignment) => {
-      const key = new Date(assignment.scheduledFor).toISOString().slice(0, 10);
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(assignment);
-      return acc;
-    }, {});
-  };
+const groupByDate = (items: AssignmentItem[]) => {
+  return items.reduce<Record<string, AssignmentItem[]>>((acc, assignment) => {
+    const d = new Date(assignment.scheduledFor);
+    
+    const key = new Intl.DateTimeFormat('en-CA').format(d);
+
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(assignment);
+    return acc;
+  }, {});
+};
 
   const renderCalendar = (items: AssignmentItem[]) => {
     const groups = groupByDate(items);

@@ -56,25 +56,30 @@ export default async function ClientDashboardPage() {
 
     return {
       ...assignment,
-      isToday: scheduledFor.getTime() === today.getTime(),
+      isToday: scheduledFor.toDateString() === today.toDateString(),
       isPast: scheduledFor.getTime() < today.getTime(),
       isConsumed
     };
   }).filter((assignment) => !assignment.isPast && !assignment.isConsumed);
+
+  
 
   const todayAssignments = assignmentItems.filter((assignment) => assignment.isToday);
   const upcomingAssignments = assignmentItems.filter((assignment) => !assignment.isToday);
 
   type DashboardAssignment = (typeof assignmentItems)[number];
 
-  const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
-    return items.reduce<Record<string, DashboardAssignment[]>>((acc, assignment) => {
-      const dateKey = new Date(assignment.scheduledFor).toISOString().slice(0, 10);
-      if (!acc[dateKey]) acc[dateKey] = [];
-      acc[dateKey].push(assignment);
-      return acc;
-    }, {} as Record<string, DashboardAssignment[]>);
-  };
+const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
+  return items.reduce<Record<string, DashboardAssignment[]>>((acc, assignment) => {
+    
+    const d = new Date(assignment.scheduledFor);
+    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    if (!acc[dateKey]) acc[dateKey] = [];
+    acc[dateKey].push(assignment);
+    return acc;
+  }, {} as Record<string, DashboardAssignment[]>);
+};
 
   const renderCalendarGroups = (items: DashboardAssignment[], showStartButton: boolean) => {
     const groups = groupAssignmentsByDate(items);
@@ -93,7 +98,7 @@ export default async function ClientDashboardPage() {
                   {date.toLocaleDateString("tr-TR", { weekday: "long" })}
                 </p>
                 <p className="text-lg font-black text-foreground">
-                  {date.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" })}
+                  {date.toLocaleDateString("tr-TR", { day: "2-digit", month: "long" })}
                 </p>
               </div>
 

@@ -7,3 +7,7 @@ services:
     volumes:
       - ./prisma/dev.db:/app/prisma/dev.db # Veri tabanını sunucuda saklar
     restart: always
+    environment:
+      - AUTH_TRUST_HOST=true
+      - NEXTAUTH_URL=https://fitcoach.akoroglu.com.tr
+      - AUTH_SECRET=uydurma_bir_sey_yaz_buraya

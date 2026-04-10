@@ -53,7 +53,7 @@ export function CardioTimer({
   }, [durationMinutes, protocol]);
 
   const totalSeconds = totalDurationMinutes * 60;
-  const { seconds, isRunning, start, pause, resume, reset } = useWorkoutTimer(storageKey, enabled, totalSeconds, 5);
+  const { seconds, isRunning, start, pause, resume, reset } = useWorkoutTimer(storageKey, enabled, totalSeconds, 1);
   useWakeLock(enabled && isRunning);
 
   const elapsedMinutes = Math.floor(seconds / 60);
@@ -157,9 +157,9 @@ export function CardioTimer({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 overflow-visibl h-full">
             <p className="text-xs uppercase tracking-[0.2em] text-white/70 lg:mb-2">Protokol Gosterimi</p>
-            <div className="flex flex-col gap-2 max-h-56 overflow-y-auto pr-2">
+            <div className="flex flex-col gap-2 max-h-56 pr-2 overflow-y-auto px-2">
               {protocol.map((block, index) => {
                 const isActive = index === currentIndex;
                 const isPast = index < currentIndex;

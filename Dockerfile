@@ -23,7 +23,7 @@ ENV NODE_ENV production
 # PRISMA İÇİN BU SATIRI EKLE:
 COPY --from=builder /app/prisma ./prisma
 # Bağımlılıkları ve diğer dosyaları kopyala
-COPY --from=builder /app/public ./public
+# COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 

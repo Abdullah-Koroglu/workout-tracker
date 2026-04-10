@@ -3,5 +3,7 @@ services:
   nextjs_app:
     build: .
     ports:
-      - "3000:3000" 
+      - "3000:3000"
+    volumes:
+      - ./prisma/dev.db:/app/prisma/dev.db # Veri tabanını sunucuda saklar
     restart: always

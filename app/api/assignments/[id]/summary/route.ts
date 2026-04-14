@@ -63,13 +63,20 @@ export async function GET(
 
   return NextResponse.json({
     id: assignment.id,
+    templateId: assignment.template.id,
     templateName: assignment.template.name,
+    templateDescription: assignment.template.description,
     isOneTime: assignment.isOneTime,
     blockingWorkout: inProgressWorkout || consumedWorkout,
     exercises: assignment.template.exercises.map((te) => ({
       id: te.exercise.id,
       name: te.exercise.name,
-      type: te.exercise.type
+      type: te.exercise.type,
+      targetSets: te.targetSets,
+      targetReps: te.targetReps,
+      targetRir: te.targetRir,
+      durationMinutes: te.durationMinutes,
+      protocol: te.protocol
     }))
   });
 }

@@ -2,7 +2,7 @@
 
 import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { GripVertical, Plus } from "lucide-react";
+import { ChevronDown, Copy, GripVertical, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -72,6 +72,7 @@ export function TemplateForm({
   const [exerciseLibrary, setExerciseLibrary] = useState<ExerciseLibraryItem[]>([]);
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showJsonExamples, setShowJsonExamples] = useState(false);
 
   const form = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema) as never,
@@ -177,6 +178,104 @@ export function TemplateForm({
     queueMicrotask(syncOrders);
   };
 
+  const weightTrainingExample = {
+    name: "Ayaklı Güç Antrenmanı",
+    description: "Bacak ve gluteus çalışması için kapsamlı antrenman",
+    exercises: [
+      {
+        exerciseType: "WEIGHT",
+        exerciseId: "squat-id",
+        order: 0,
+        targetSets: 4,
+        targetReps: 6,
+        targetRir: 1,
+        durationMinutes: null,
+        protocol: null
+      },
+      {
+        exerciseType: "WEIGHT",
+        exerciseId: "leg-press-id",
+        order: 1,
+        targetSets: 3,
+        targetReps: 8,
+        targetRir: 2,
+        durationMinutes: null,
+        protocol: null
+      }
+    ]
+  };
+
+  const runningExample = {
+    name: "Koşu Intervali Antrenmanı",
+    description: "Dayanıklılık geliştirmesi için eklenmiş interval antrenman",
+    exercises: [
+      {
+        exerciseType: "CARDIO",
+        exerciseId: "running-id",
+        order: 0,
+        durationMinutes: 20,
+        protocol: [
+          {
+            durationMinutes: 5,
+            speed: 8.0,
+            incline: 0.0
+          },
+          {
+            durationMinutes: 2,
+            speed: 10.5,
+            incline: 2.0
+          },
+          {
+            durationMinutes: 3,
+            speed: 8.0,
+            incline: 0.0
+          },
+          {
+            durationMinutes: 2,
+            speed: 10.5,
+            incline: 2.0
+          },
+          {
+            durationMinutes: 8,
+            speed: 6.0,
+            incline: 0.0
+          }
+        ],
+        targetSets: null,
+        targetReps: null,
+        targetRir: null
+      }
+    ]
+  };
+
+  const copyToClipboard = async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      push(`${label} JSON kopyalandı.`);
+    } catch {
+      push("Klipborda kopyalanamadı.");
+    }
+  };
+
+  const JsonExample = ({ title, example }: { title: string; example: typeof weightTrainingExample }) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="font-semibold text-sm">{title}</p>
+        <button
+          type="button"
+          onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
+          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+        >
+          <Copy className="h-3 w-3" />
+          Kopyala
+        </button>
+      </div>
+      <pre className="rounded-lg border bg-muted p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
+        <code>{JSON.stringify(example, null, 2)}</code>
+      </pre>
+    </div>
+  );
+
   const submit = async (values: TemplateFormValues) => {
     setIsSubmitting(true);
 
@@ -247,6 +346,31 @@ export function TemplateForm({
         className="min-h-28 w-full rounded-md border bg-background p-3 text-sm"
         {...form.register("description")}
       />
+
+      <div className="rounded-lg border">
+        <button
+          type="button"
+          onClick={() => setShowJsonExamples(!showJsonExamples)}
+          className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+        >
+          <span className="font-semibold text-sm">JSON Formatında Özellikleri Gör</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${showJsonExamples ? "rotate-180" : ""}`} />
+        </button>
+
+        {showJsonExamples && (
+          <div className="border-t p-4 space-y-6 bg-muted/30">
+            <div>
+              <p className="text-xs text-muted-foreground mb-4">
+                Aşağıda template ilişkilendirmeleri için JSON format örnekleri verilmiştir. Her egzersiz türü kendi yapısını içerir.
+              </p>
+              <div className="space-y-4">
+                <JsonExample title="Ağırlık Antrenmanı Örneği" example={weightTrainingExample} />
+                <JsonExample title="Koşu Antrenmanı Örneği" example={runningExample} />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="rounded-xl border p-4">
         <div className="flex flex-col gap-3 md:flex-row">

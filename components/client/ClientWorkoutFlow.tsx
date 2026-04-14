@@ -199,125 +199,161 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
 
   return (
-    <div className="space-y-6 pb-28">
-      {/* Header with progress stats */}
-      <div className="overflow-hidden rounded-[32px] border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-6 shadow-sm">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="space-y-3">
-            <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-sm font-medium text-emerald-700 hover:text-emerald-900">
-              <ChevronLeft className="h-4 w-4" />
-              Dashboard'a dön
-            </Link>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Workout Flow</p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Bugünkü antrenman hazır</h1>
-              <p className="mt-2 max-w-2xl text-sm text-slate-600">
-                Hedef değerler senin için dolduruldu. İstersen aynı plandan sapabilir, ekstra set ekleyebilir veya bugünkü hareketi erken bitirebilirsin.
-              </p>
-            </div>
+    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28">
+      {/* Header with progress stats - Mobile Optimized */}
+      <div className="overflow-hidden rounded-xl md:rounded-[32px] border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-4 md:p-6 shadow-sm">
+        <div className="space-y-3 md:space-y-5">
+          <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-emerald-700 hover:text-emerald-900">
+            <ChevronLeft className="h-4 w-4" />
+            <span className="hidden md:inline">Dashboard'a dön</span>
+            <span className="md:hidden">Geri</span>
+          </Link>
+          
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Antrenman Akışı</p>
+            <h1 className="mt-1 md:mt-2 text-xl md:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">Bugünkü Antrenman</h1>
+            <p className="mt-1 md:mt-2 max-w-2xl text-xs md:text-sm text-slate-600">
+              Hedef değerler dolduruldu. İstersen sapabilir, set ekleyebilir veya erken bitirebilirsin.
+            </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+          {/* Stats Grid - Mobile First */}
+          <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-4">
+            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Geçen Süre</p>
-              <p className="mt-2 font-mono text-2xl font-black text-slate-900">{formatTime(elapsedSeconds)}</p>
+              <p className="mt-1 font-mono text-lg md:text-2xl font-black text-slate-900">{formatTime(elapsedSeconds)}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">İlerleme</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">%{exerciseManager.progressPercent}</p>
+              <p className="mt-1 text-xl md:text-3xl font-black text-slate-900">%{exerciseManager.progressPercent}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Tamamlanan</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}</p>
+              <p className="mt-1 text-xl md:text-3xl font-black text-slate-900">{exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Aktif mod</p>
-              <p className="mt-2 text-lg font-bold text-slate-900">{activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Weight"}</p>
+            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
+              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Aktif Mod</p>
+              <p className="mt-1 text-base md:text-lg font-bold text-slate-900">{activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Weight"}</p>
             </div>
           </div>
-        </div>
 
-        <div className="mt-5 h-3 w-full overflow-hidden rounded-full bg-emerald-100">
-          <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
+          {/* Progress Bar */}
+          <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-100">
+            <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
+          </div>
         </div>
       </div>
 
-      {/* Main layout: Sidebar + Content */}
-      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      {/* Main Layout: Mobile Tabs + Desktop Sidebar */}
+      <div className="space-y-3 md:space-y-6 md:grid md:gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
         
-        {/* Left Sidebar: Exercise list */}
-        <aside className="space-y-3 xl:sticky xl:top-24 xl:self-start">
+        {/* Mobile: Exercise Tabs */}
+        <div className="block md:hidden">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-semibold text-foreground">Egzersizler</p>
+            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-semibold">
+              {exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}
+            </span>
+          </div>
+          <div className="flex overflow-x-auto gap-2 pb-2 -mx-4 px-4">
+            {exerciseManager.exerciseState.map((item) => (
+              <button
+                key={item.exercise.id}
+                type="button"
+                onClick={() => exerciseManager.setActiveExerciseId(item.exercise.exerciseId)}
+                className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition border ${
+                  item.exercise.exerciseId === activeExercise.exercise.exerciseId
+                    ? "border-emerald-500 bg-emerald-100 text-emerald-900"
+                    : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+                }`}
+              >
+                {item.isCompleted ? (
+                  <span className="flex items-center gap-1">
+                    <CheckCircle2 className="h-3 w-3" />
+                    {item.exercise.exercise.type === "CARDIO" ? "🔥" : "💪"}
+                  </span>
+                ) : (
+                  item.exercise.exercise.type === "CARDIO" ? "🔥" : "💪"
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop: Sidebar */}
+        <aside className="hidden md:block md:sticky md:top-24 md:self-start space-y-3">
           {exerciseManager.exerciseState.map((item, index) => (
             <button
               key={item.exercise.id}
               type="button"
               onClick={() => exerciseManager.setActiveExerciseId(item.exercise.exerciseId)}
-              className={`w-full rounded-3xl border p-4 text-left transition ${
+              className={`w-full rounded-2xl border p-3 md:p-4 text-left transition ${
                 item.exercise.exerciseId === activeExercise.exercise.exerciseId
                   ? "border-emerald-500 bg-emerald-50 shadow-sm"
                   : "border-border bg-card hover:border-emerald-300 hover:bg-emerald-50/50"
               }`}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div>
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Egzersiz {index + 1}</p>
-                  <p className="mt-1 font-semibold text-foreground">{item.exercise.exercise.name}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {item.exercise.exercise.type === "CARDIO" ? `${item.exercise.durationMinutes || 1} dk protokol` : `${item.completedCount}/${item.plannedSetCount} set`}
+                  <p className="mt-1 font-semibold text-foreground text-sm truncate">{item.exercise.exercise.name}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {item.exercise.exercise.type === "CARDIO" ? `${item.exercise.durationMinutes || 1} dk` : `${item.completedCount}/${item.plannedSetCount} set`}
                   </p>
                 </div>
-                {item.isCompleted ? <CheckCircle2 className="h-5 w-5 text-emerald-600" /> : item.exercise.exercise.type === "CARDIO" ? <Flame className="h-5 w-5 text-orange-500" /> : <Dumbbell className="h-5 w-5 text-slate-500" />}
+                {item.isCompleted ? <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" /> : item.exercise.exercise.type === "CARDIO" ? <Flame className="h-5 w-5 text-orange-500 flex-shrink-0" /> : <Dumbbell className="h-5 w-5 text-slate-500 flex-shrink-0" />}
               </div>
             </button>
           ))}
         </aside>
 
         {/* Right Content: Exercise details and form */}
-        <section className="space-y-5">
-          {/* Exercise header and stats */}
-          <div className="rounded-[32px] border border-border/60 bg-card p-6 shadow-sm">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <section className="space-y-3 md:space-y-5">
+          {/* Exercise header and stats - Mobile Optimized */}
+          <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+            <div className="space-y-3 md:space-y-4">
               <div>
-                <div className="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                  {activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio Drill" : "Weight Block"}
+                <div className="inline-flex rounded-full bg-emerald-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                  {activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Ağırlık"}
                 </div>
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-foreground">{activeExercise.exercise.exercise.name}</h2>
-                <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+                <h2 className="mt-2 md:mt-3 text-xl md:text-3xl font-black tracking-tight text-foreground">{activeExercise.exercise.exercise.name}</h2>
+                <p className="mt-1 md:mt-2 max-w-2xl text-xs md:text-sm text-muted-foreground">
                   {activeExercise.exercise.exercise.type === "CARDIO"
-                    ? "Canlı tempo kartını takip et. Başlat, duraklat, erkenden durdur veya sıfırlayıp yeniden başlayabilirsin."
-                    : "Hedef tekrar ve RIR alanları otomatik dolu geliyor. İstersen ekstra set açabilir veya bugünkü hareketi daha erken kapatabilirsin."}
+                    ? "Protokolü takip et. Başlat, duraklat, durdur veya sıfırla."
+                    : "Hedef tekrar ve RIR otomatik. İstersen ekstra set veya erken bitir."}
                 </p>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              {/* Stats Grid - Mobile First */}
+              <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-3">
                 {activeExercise.exercise.exercise.type === "WEIGHT" ? (
                   <>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Hedef</p>
-                      <p className="mt-2 text-2xl font-black">{activeExercise.exercise.targetSets || activeExercise.plannedSetCount}x{activeExercise.exercise.targetReps || "-"}</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">Hedef</p>
+                      <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">{activeExercise.exercise.targetSets || activeExercise.plannedSetCount}x{activeExercise.exercise.targetReps || "-"}</p>
                     </div>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Önerilen Kg</p>
-                      <p className="mt-2 text-2xl font-black">{activeExercise.suggestedValues.weightKg ?? "-"}</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">Kilo</p>
+                      <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">{activeExercise.suggestedValues.weightKg ?? "-"}</p>
                     </div>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">RIR</p>
-                      <p className="mt-2 text-2xl font-black">{activeExercise.suggestedValues.rir ?? activeExercise.exercise.targetRir ?? "-"}</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">RIR</p>
+                      <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">{activeExercise.suggestedValues.rir ?? activeExercise.exercise.targetRir ?? "-"}</p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Süre</p>
-                      <p className="mt-2 text-2xl font-black">{activeExercise.exercise.durationMinutes || 1} dk</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">Süre</p>
+                      <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">{activeExercise.exercise.durationMinutes || 1} dk</p>
                     </div>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Blok Sayısı</p>
-                      <p className="mt-2 text-2xl font-black">{activeExercise.exercise.protocol?.length || 1}</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">Blok</p>
+                      <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">{activeExercise.exercise.protocol?.length || 1}</p>
                     </div>
-                    <div className="rounded-2xl bg-muted/40 px-4 py-3">
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Durum</p>
-                      <p className="mt-2 text-lg font-bold">{activeExercise.isCompleted ? "Hazır" : "Devam ediyor"}</p>
+                    <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
+                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">Durum</p>
+                      <p className="mt-1 md:mt-2 text-base md:text-lg font-bold">{activeExercise.isCompleted ? "✓" : "→"}</p>
                     </div>
                   </>
                 )}
@@ -350,31 +386,43 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         </section>
       </div>
 
-      {/* Bottom bar: Completion options */}
+      {/* Bottom bar: Completion options - Mobile Optimized */}
       <div className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+        <div className="mx-auto max-w-6xl flex flex-col gap-2 px-3 py-3 md:px-4 md:py-4 md:flex-row md:items-center md:justify-between">
+          <div className="hidden md:block">
             <p className="text-sm font-semibold text-foreground">Antrenman özeti</p>
-            <p className="text-sm text-muted-foreground">
-              {exerciseManager.completedExercises} hareket tamamlandı, {exerciseManager.exerciseState.length - exerciseManager.completedExercises} hareket açık.
+            <p className="text-xs md:text-sm text-muted-foreground">
+              {exerciseManager.completedExercises} / {exerciseManager.exerciseState.length} tamamlandı
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-2 md:flex-row md:gap-2">
             <Button
               type="button"
               disabled={cancelling}
               onClick={handleCancelWorkout}
               variant="outline"
-              className="min-w-48 border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800"
+              className="border-red-300 text-red-700 hover:bg-red-50 hover:text-red-800 text-xs md:text-sm py-2 md:py-6 flex-1 md:flex-initial md:min-w-fit"
             >
-              <X className="mr-2 h-4 w-4" />
-              {cancelling ? "İptal ediliyor..." : "Antrenmanı İptal Et"}
+              <X className="mr-2 h-3 md:h-4 w-3 md:w-4" />
+              <span className="hidden sm:inline">{cancelling ? "İptal ediliyor..." : "İptal Et"}</span>
+              <span className="sm:hidden">İptal</span>
             </Button>
-            <Button type="button" disabled={finishing} onClick={() => handleCompleteWorkout("ABANDONED")} variant="outline" className="min-w-52">
-              {finishing ? "Kaydediliyor..." : "Yarıda Bırak ve Çık"}
+            <Button 
+              type="button" 
+              disabled={finishing} 
+              onClick={() => handleCompleteWorkout("ABANDONED")} 
+              variant="outline" 
+              className="text-xs md:text-sm py-2 md:py-6 flex-1"
+            >
+              {finishing ? "Kaydediliyor..." : "Yarıda Bırak"}
             </Button>
-            <Button type="button" disabled={finishing} onClick={() => handleCompleteWorkout("COMPLETED")} className="min-w-52">
-              {finishing ? "Tamamlanıyor..." : "Tamamla ve Çık"}
+            <Button 
+              type="button" 
+              disabled={finishing} 
+              onClick={() => handleCompleteWorkout("COMPLETED")}
+              className="text-xs md:text-sm py-2 md:py-6 flex-1"
+            >
+              {finishing ? "Tamamlanıyor..." : "Tamamla"}
             </Button>
           </div>
         </div>
@@ -401,54 +449,59 @@ function WeightExerciseSection({
   savingKey: string | null;
 }) {
   return (
-    <div className="space-y-4 rounded-[32px] border border-border/60 bg-card p-6 shadow-sm">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+    <div className="space-y-3 md:space-y-4 rounded-xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+      <div className="space-y-3 md:space-y-0 md:flex md:flex-col md:gap-4 md:lg:flex-row md:lg:items-center md:lg:justify-between">
         <div>
-          <p className="text-sm font-semibold text-foreground">Set planı</p>
-          <p className="text-sm text-muted-foreground">
-            Planlanan {exercise.plannedSetCount} set. İstediğin kadar artırabilir veya bugünü erken kapatabilirsin.
+          <p className="text-xs md:text-sm font-semibold text-foreground">Set Planı</p>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1">
+            Planlanan {exercise.plannedSetCount} set. Artırabilir veya erken bitirebilirsin.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={onAddExtraSet}>
-            <Plus className="mr-2 h-4 w-4" />
-            1 ekstra set
+          <Button type="button" variant="outline" onClick={onAddExtraSet} className="text-xs md:text-sm py-5 md:py-6 flex-1 md:flex-initial">
+            <Plus className="mr-2 h-3 md:h-4 w-3 md:w-4" />
+            <span className="hidden sm:inline">1 Ekstra Set</span>
+            <span className="sm:hidden">+Set</span>
           </Button>
           <Button
             type="button"
             variant="ghost"
             disabled={exercise.completedCount === 0 || exercise.isCompleted}
             onClick={onFinishEarly}
+            className="text-xs md:text-sm py-5 md:py-6 flex-1 md:flex-initial"
           >
-            Bugün burada bitir
+            <span className="hidden sm:inline">Bugün Burada Bitir</span>
+            <span className="sm:hidden">Bitir</span>
           </Button>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      {/* Completed Sets Display */}
+      <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {exercise.exerciseSets.length === 0 ? (
-          <div className="rounded-2xl border border-dashed p-5 text-sm text-muted-foreground">
-            İlk seti gir. Geçmiş performansın varsa önerilen kilo ve tekrar otomatik getirildi.
+          <div className="col-span-2 md:col-span-3 rounded-lg border border-dashed p-3 md:p-4 text-xs md:text-sm text-muted-foreground bg-muted/30">
+            İlk seti gir. Öneriler alındı.
           </div>
         ) : (
           exercise.exerciseSets.map((setItem) => (
-            <div key={setItem.id} className="rounded-2xl border bg-muted/30 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Set {setItem.setNumber}</p>
-              <div className="mt-3 flex items-center gap-4 text-sm">
-                <span><strong>{setItem.weightKg ?? 0}</strong> kg</span>
-                <span><strong>{setItem.reps ?? 0}</strong> tekrar</span>
-                <span>RIR <strong>{setItem.rir ?? 0}</strong></span>
+            <div key={setItem.id} className="rounded-lg md:rounded-xl border bg-emerald-50 border-emerald-200 p-2 md:p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-700">Set {setItem.setNumber}</p>
+              <div className="mt-2 space-y-1 text-xs md:text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">Kg:</span> <strong>{setItem.weightKg ?? 0}</strong></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">Rep:</span> <strong>{setItem.reps ?? 0}</strong></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">RIR:</span> <strong>{setItem.rir ?? 0}</strong></div>
               </div>
             </div>
           ))
         )}
       </div>
 
+      {/* Next Set Form */}
       {!exercise.isCompleted && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <div className="space-y-3 pt-2 md:pt-3 border-t">
+          <div className="flex items-center gap-2 text-xs md:text-sm font-semibold text-foreground">
             <Target className="h-4 w-4 text-emerald-600" />
-            Sıradaki set: {exercise.nextSetNumber} / {exercise.plannedSetCount}
+            <span>SET {exercise.nextSetNumber} / {exercise.plannedSetCount}</span>
           </div>
           <WorkoutSetForm
             key={`${exercise.exercise.exerciseId}-${exercise.nextSetNumber}`}
@@ -463,8 +516,8 @@ function WeightExerciseSection({
       )}
 
       {exercise.isCompleted && (
-        <div className="rounded-2xl bg-emerald-50 p-4 text-sm font-medium text-emerald-700">
-          Bu hareket tamamlandı. İstersen soldan başka bir harekete geçebilir ya da aşağıdan antrenmanı kapatabilirsin.
+        <div className="rounded-lg md:rounded-xl bg-emerald-50 p-3 md:p-4 text-xs md:text-sm font-medium text-emerald-700 border border-emerald-200">
+          ✓ Bu hareket tamamlandı. Başka harekete geç veya antrenmanı sona erdir.
         </div>
       )}
     </div>
@@ -509,7 +562,7 @@ function CardioExerciseSection({
   });
 
   return (
-    <div className="space-y-4 rounded-[32px] border border-border/60 bg-card p-6 shadow-sm">
+    <div className="space-y-3 md:space-y-4 rounded-xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
       <CardioTimer
         storageKey={`cardio-${workoutId}-${exercise.exercise.id}`}
         durationMinutes={exercise.exercise.durationMinutes || 1}
@@ -519,17 +572,22 @@ function CardioExerciseSection({
         onAbandon={onAbandon}
         onSecondChange={onSecondChange}
       />
-      <div className="flex flex-wrap gap-3">
+      <div className="flex flex-col gap-2 md:flex-row md:gap-3">
         <Button
           type="button"
           disabled={exercise.isCompleted || savingKey === exercise.exercise.exerciseId}
           onClick={() => onSaveCardio(exercise.exercise.exerciseId, exercise.exercise.durationMinutes || 1)}
+          className="text-xs md:text-sm py-5 md:py-6 flex-1"
         >
-          <Sparkles className="mr-2 h-4 w-4" />
-          {cardioReachedEnd[exercise.exercise.exerciseId] ? "Kardiyoyu kaydet" : "Kardiyoyu şimdiye kadar kaydet"}
+          <Sparkles className="mr-2 h-3 md:h-4 w-3 md:w-4" />
+          {cardioReachedEnd[exercise.exercise.exerciseId] ? "Kaydet" : "Kısmi Kaydet"}
         </Button>
       </div>
-      {exercise.isCompleted && <p className="text-sm font-medium text-emerald-600">Kardiyo kaydedildi.</p>}
+      {exercise.isCompleted && (
+        <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-emerald-50 border border-emerald-200 text-xs md:text-sm font-medium text-emerald-700">
+          ✓ Kardiyo tamamlandı.
+        </div>
+      )}
     </div>
   );
 }

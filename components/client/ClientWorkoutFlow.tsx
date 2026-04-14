@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, Plus, Sparkles, Target, X } from "lucide-react";
 
@@ -25,9 +25,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [cancelling, setCancelling] = useState(false);
-  const [headerVisible, setHeaderVisible] = useState(true);
-  const [headerPinned, setHeaderPinned] = useState(false);
-  const lastScrollY = useRef(0);
 
   // Load workout data and initialize state
   const [workoutState, workoutActions] = useWorkoutFlow(assignmentId);
@@ -49,29 +46,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
     return () => clearInterval(interval);
   }, [workoutState.workoutId, workoutState.isLoading]);
-
-  useEffect(() => {
-    const onScroll = () => {
-      const currentY = window.scrollY;
-      const scrollingDown = currentY > lastScrollY.current;
-      const movedEnough = Math.abs(currentY - lastScrollY.current) > 8;
-
-      setHeaderPinned(currentY > 12);
-
-      if (movedEnough) {
-        if (scrollingDown && currentY > 90) {
-          setHeaderVisible(false);
-        } else {
-          setHeaderVisible(true);
-        }
-      }
-
-      lastScrollY.current = currentY;
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Format elapsed time as HH:MM:SS
   const formatTime = (seconds: number): string => {
@@ -225,13 +199,10 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28 pt-24 md:pt-36">
-      {/* Floating Header */}
-      <div
-        className={`fixed inset-x-0 top-0 z-30 px-3 md:px-4 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}
-      >
-        <div className={`mx-auto max-w-6xl overflow-hidden rounded-xl md:rounded-[28px] border border-emerald-200/70 bg-gradient-to-br from-emerald-50/95 via-white/95 to-lime-50/95 shadow-sm backdrop-blur ${headerPinned ? "mt-2" : "mt-3"}`}>
-          <div className="p-3 md:p-4">
+    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28">
+      {/* Workout Header */}
+      <div className="overflow-hidden rounded-xl md:rounded-[28px] border border-emerald-200/70 bg-gradient-to-br from-emerald-50/95 via-white/95 to-lime-50/95 shadow-sm backdrop-blur">
+        <div className="p-3 md:p-4">
             <div className="flex items-center justify-between gap-2">
               <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-[11px] md:text-xs font-semibold text-emerald-700 hover:text-emerald-900">
                 <ChevronLeft className="h-3 w-3" />
@@ -272,7 +243,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
             <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-emerald-100">
               <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
             </div>
-          </div>
         </div>
       </div>
 

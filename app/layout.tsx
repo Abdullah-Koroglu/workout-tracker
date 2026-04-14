@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Navbar } from "@/components/shared/Navbar";
 import { AppSessionProvider } from "@/components/shared/SessionProvider";
 import { GlobalBreadcrumb } from "@/components/shared/GlobalBreadcrumb";
+import { NavbarScrollBehavior } from "@/components/shared/NavbarScrollBehavior";
 
 export const metadata: Metadata = {
   title: "FitCoach",
@@ -28,6 +29,7 @@ export default function RootLayout({
               <NotificationProvider>
                 <ConfirmationProvider>
                   <Navbar />
+                  <NavbarScrollBehavior />
                   <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">
                     <GlobalBreadcrumb />
                     {children}

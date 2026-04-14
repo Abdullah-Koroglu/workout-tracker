@@ -73,6 +73,8 @@ export function TemplateForm({
   const [selectedExerciseId, setSelectedExerciseId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showJsonExamples, setShowJsonExamples] = useState(false);
+  const [jsonImportInput, setJsonImportInput] = useState("");
+  const [jsonImportError, setJsonImportError] = useState("");
 
   const form = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema) as never,
@@ -248,6 +250,69 @@ export function TemplateForm({
     ]
   };
 
+  const combinedExample = {
+    name: "Full Body Antrenma Programı",
+    description: "Güç + Dayanıklılık kombinasyonu - Ön antrenman + Ana çalışma + Kardiyovaküler",
+    exercises: [
+      {
+        exerciseType: "WEIGHT",
+        exerciseId: "bench-press-id",
+        order: 0,
+        targetSets: 4,
+        targetReps: 5,
+        targetRir: 1,
+        durationMinutes: null,
+        protocol: null
+      },
+      {
+        exerciseType: "WEIGHT",
+        exerciseId: "deadlift-id",
+        order: 1,
+        targetSets: 3,
+        targetReps: 3,
+        targetRir: 2,
+        durationMinutes: null,
+        protocol: null
+      },
+      {
+        exerciseType: "CARDIO",
+        exerciseId: "treadmill-id",
+        order: 2,
+        durationMinutes: 15,
+        protocol: [
+          {
+            durationMinutes: 3,
+            speed: 8.0,
+            incline: 0.0
+          },
+          {
+            durationMinutes: 1,
+            speed: 12.0,
+            incline: 3.0
+          },
+          {
+            durationMinutes: 2,
+            speed: 8.0,
+            incline: 0.0
+          },
+          {
+            durationMinutes: 1,
+            speed: 12.0,
+            incline: 3.0
+          },
+          {
+            durationMinutes: 8,
+            speed: 6.0,
+            incline: 0.0
+          }
+        ],
+        targetSets: null,
+        targetReps: null,
+        targetRir: null
+      }
+    ]
+  };
+
   const copyToClipboard = async (text: string, label: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -257,18 +322,78 @@ export function TemplateForm({
     }
   };
 
+  const handleJsonImport = () => {
+    setJsonImportError("");
+    
+    try {
+      const parsedTemplate = JSON.parse(jsonImportInput);
+      
+      // Validate structure
+      if (!parsedTemplate.name || !Array.isArray(parsedTemplate.exercises)) {
+        throw new Error("JSON şu alanları içermelidir: name, exercises (array)");
+      }
+
+      if (parsedTemplate.exercises.length === 0) {
+        throw new Error("En az bir egzersiz eklemelisiniz.");
+      }
+
+      // Set form values from JSON
+      form.setValue("name", parsedTemplate.name || "", { shouldValidate: true });
+      form.setValue("description", parsedTemplate.description || "", { shouldValidate: true });
+      
+      // Clear current exercises and add new ones
+      while (fields.length > 0) {
+        remove(0);
+      }
+
+      // Add exercises from JSON
+      parsedTemplate.exercises.forEach((exercise: unknown, index: number) => {
+        const ex = exercise as Record<string, unknown>;
+        append({
+          exerciseId: (ex.exerciseId as string) || "",
+          exerciseType: (ex.exerciseType as "WEIGHT" | "CARDIO") || "WEIGHT",
+          order: index,
+          targetSets: ex.exerciseType === "WEIGHT" ? ((ex.targetSets as number) || null) : null,
+          targetReps: ex.exerciseType === "WEIGHT" ? ((ex.targetReps as number) || null) : null,
+          targetRir: ex.exerciseType === "WEIGHT" ? ((ex.targetRir as number) || null) : null,
+          durationMinutes: ex.exerciseType === "CARDIO" ? ((ex.durationMinutes as number) || null) : null,
+          protocol: ex.exerciseType === "CARDIO" ? ((ex.protocol as CardioProtocolItem[]) || null) : null
+        });
+      });
+
+      setJsonImportInput("");
+      push("Template JSON başarıyla yüklendi!");
+      setShowJsonExamples(false);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Geçersiz JSON formatı";
+      setJsonImportError(message);
+    }
+  };
+
   const JsonExample = ({ title, example }: { title: string; example: Record<string, unknown> }) => (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="font-semibold text-sm">{title}</p>
-        <button
-          type="button"
-          onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
-          className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-        >
-          <Copy className="h-3 w-3" />
-          Kopyala
-        </button>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setJsonImportInput(JSON.stringify(example, null, 2));
+              setJsonImportError("");
+            }}
+            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
+          >
+            Kullan
+          </button>
+          <button
+            type="button"
+            onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
+            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+          >
+            <Copy className="h-3 w-3" />
+            Kopyala
+          </button>
+        </div>
       </div>
       <pre className="rounded-lg border bg-muted p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
         <code>{JSON.stringify(example, null, 2)}</code>
@@ -353,19 +478,54 @@ export function TemplateForm({
           onClick={() => setShowJsonExamples(!showJsonExamples)}
           className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
         >
-          <span className="font-semibold text-sm">JSON Formatında Özellikleri Gör</span>
+          <span className="font-semibold text-sm">JSON ile Hızlı Template Oluştur</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${showJsonExamples ? "rotate-180" : ""}`} />
         </button>
 
         {showJsonExamples && (
           <div className="border-t p-4 space-y-6 bg-muted/30">
+            {/* JSON Import Section */}
+            <div className="space-y-3 border-b pb-6">
+              <div>
+                <p className="text-sm font-semibold text-foreground mb-2">JSON Formatında Template Yükleme</p>
+                <p className="text-xs text-muted-foreground mb-3">
+                  JSON yapıştırın veya aşağıdaki örneklerden birini kullanın. Template anında oluşturulacak!
+                </p>
+              </div>
+              
+              <textarea
+                value={jsonImportInput}
+                onChange={(e) => setJsonImportInput(e.target.value)}
+                placeholder={"{\n  \"name\": \"Template Adı\",\n  \"description\": \"Açıklama\",\n  \"exercises\": [...]\n}"}
+                className="w-full h-40 rounded-md border bg-background p-3 text-xs font-mono"
+              />
+
+              {jsonImportError && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
+                  ❌ {jsonImportError}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleJsonImport}
+                disabled={!jsonImportInput.trim()}
+                className="w-full px-4 py-2 rounded-md bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              >
+                JSON Yükle ve Formu Doldur
+              </button>
+            </div>
+
+            {/* Examples Section */}
             <div>
+              <p className="text-sm font-semibold text-foreground mb-3">Örnek Template JSON Yapıları</p>
               <p className="text-xs text-muted-foreground mb-4">
-                Aşağıda template ilişkilendirmeleri için JSON format örnekleri verilmiştir. Her egzersiz türü kendi yapısını içerir.
+                "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına yapıştırabilir, ardından "JSON Yükle" butonuna basabilirsiniz.
               </p>
               <div className="space-y-4">
-                <JsonExample title="Ağırlık Antrenmanı Örneği" example={weightTrainingExample} />
-                <JsonExample title="Koşu Antrenmanı Örneği" example={runningExample} />
+                <JsonExample title="✨ Full Body (Ağırlık + Kardiyovaküler)" example={combinedExample} />
+                <JsonExample title="💪 Son Ağırlık Antrenmanı" example={weightTrainingExample} />
+                <JsonExample title="🏃 Koşu İntervali Antrenmanı" example={runningExample} />
               </div>
             </div>
           </div>

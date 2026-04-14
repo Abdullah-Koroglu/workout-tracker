@@ -322,11 +322,41 @@ export function TemplateForm({
     }
   };
 
+  const buildExerciseCatalogComments = () => {
+    const sortedExercises = [...exerciseLibrary].sort((a, b) => {
+      if (a.type !== b.type) {
+        return a.type.localeCompare(b.type);
+      }
+
+      return a.name.localeCompare(b.name, "tr");
+    });
+
+    if (sortedExercises.length === 0) {
+      return "// EXERCISE_LIBRARY\n// Egzersiz listesi yuklenemedi veya bos.";
+    }
+
+    const lines = [
+      "// EXERCISE_LIBRARY (id | name | type)",
+      ...sortedExercises.map((exercise) => `// ${exercise.id} | ${exercise.name} | ${exercise.type}`)
+    ];
+
+    return lines.join("\n");
+  };
+
+  const buildJsonWithExerciseCatalog = (example: Record<string, unknown>) => {
+    return `${JSON.stringify(example, null, 2)}\n\n${buildExerciseCatalogComments()}`;
+  };
+
   const handleJsonImport = () => {
     setJsonImportError("");
     
     try {
-      const parsedTemplate = JSON.parse(jsonImportInput);
+      const sanitizedJson = jsonImportInput
+        .replace(/^\s*\/\/.*$/gm, "")
+        .replace(/\/\*[\s\S]*?\*\//g, "")
+        .trim();
+
+      const parsedTemplate = JSON.parse(sanitizedJson);
       
       // Validate structure
       if (!parsedTemplate.name || !Array.isArray(parsedTemplate.exercises)) {
@@ -378,7 +408,7 @@ export function TemplateForm({
           <button
             type="button"
             onClick={() => {
-              setJsonImportInput(JSON.stringify(example, null, 2));
+              setJsonImportInput(buildJsonWithExerciseCatalog(example));
               setJsonImportError("");
             }}
             className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
@@ -387,7 +417,7 @@ export function TemplateForm({
           </button>
           <button
             type="button"
-            onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
+            onClick={() => copyToClipboard(buildJsonWithExerciseCatalog(example), title)}
             className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
           >
             <Copy className="h-3 w-3" />
@@ -396,7 +426,7 @@ export function TemplateForm({
         </div>
       </div>
       <pre className="rounded-lg border bg-muted p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
-        <code>{JSON.stringify(example, null, 2)}</code>
+        <code>{buildJsonWithExerciseCatalog(example)}</code>
       </pre>
     </div>
   );
@@ -520,7 +550,7 @@ export function TemplateForm({
             <div>
               <p className="text-sm font-semibold text-foreground mb-3">Örnek Template JSON Yapıları</p>
               <p className="text-xs text-muted-foreground mb-4">
-                "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına yapıştırabilir, ardından "JSON Yükle" butonuna basabilirsiniz.
+                "Kullan" veya "Kopyala" ile template JSON + altindaki comment'li tum egzersiz listesini birlikte alabilirsiniz. Import sırasında comment satirları otomatik temizlenir.
               </p>
               <div className="space-y-4">
                 <JsonExample title="✨ Full Body (Ağırlık + Kardiyovaküler)" example={combinedExample} />

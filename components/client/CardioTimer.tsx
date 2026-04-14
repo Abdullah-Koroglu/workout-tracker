@@ -96,36 +96,36 @@ export function CardioTimer({
   }, [onSecondChange, seconds]);
 
   return (
-    <div className="overflow-hidden rounded-[28px] border border-emerald-200/60 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-5 text-white shadow-xl">
-      <div className="space-y-6">
-        <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
-          <div className="space-y-4">
+    <div className="overflow-hidden rounded-xl md:rounded-[28px] border border-emerald-200/60 bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-3 md:p-5 text-white shadow-xl">
+      <div className="space-y-3 md:space-y-6">
+        <div className="grid gap-3 md:gap-4 lg:grid-cols-[2fr_1fr]">
+          <div className="space-y-3 md:space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white/90">
+              <span className="rounded-full bg-white/15 px-2 py-1 text-[10px] md:text-xs font-semibold uppercase tracking-[0.16em] text-white/90">
                 Kardiyo Modu
               </span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/80">
+              <span className="rounded-full bg-white/10 px-2 py-1 text-[10px] md:text-xs text-white/80">
                 Dakika {Math.min(currentBlockMinute, totalDurationMinutes)} / {totalDurationMinutes}
               </span>
-              <span className={`rounded-full bg-gradient-to-r px-3 py-1 text-xs font-semibold text-white ${getIntensityColor(current?.speed ?? 0, current?.incline ?? 0)}`}>
+              <span className={`rounded-full bg-gradient-to-r px-2 py-1 text-[10px] md:text-xs font-semibold text-white ${getIntensityColor(current?.speed ?? 0, current?.incline ?? 0)}`}>
                 {getIntensityLabel(current?.speed ?? 0, current?.incline ?? 0)} Yogunluk
               </span>
             </div>
 
-            <div className="rounded-3xl border border-white/15 bg-black/10 px-6 py-6 shadow-inner backdrop-blur-sm">
-              <p className="text-6xl font-black tracking-tight sm:text-7xl">{formattedSeconds}</p>
-              <div className="mt-3 flex items-baseline justify-between">
-                <p className="text-sm uppercase tracking-[0.18em] text-white/70">Kalan Sure</p>
-                <p className="text-2xl font-bold text-white/90">{formattedRemaining}</p>
+            <div className="rounded-2xl md:rounded-3xl border border-white/15 bg-black/10 px-4 py-4 md:px-6 md:py-6 shadow-inner backdrop-blur-sm">
+              <p className="text-4xl md:text-7xl font-black tracking-tight">{formattedSeconds}</p>
+              <div className="mt-2 md:mt-3 flex items-baseline justify-between">
+                <p className="text-[10px] md:text-sm uppercase tracking-[0.14em] md:tracking-[0.18em] text-white/70">Kalan Sure</p>
+                <p className="text-lg md:text-2xl font-bold text-white/90">{formattedRemaining}</p>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs uppercase tracking-[0.18em] text-white/70">
+            <div className="space-y-1.5 md:space-y-2">
+              <div className="flex items-center justify-between text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.18em] text-white/70">
                 <span>Ilerleme</span>
                 <span>%{progress}</span>
               </div>
-              <div className="h-4 w-full overflow-hidden rounded-full bg-white/15">
+              <div className="h-2.5 md:h-4 w-full overflow-hidden rounded-full bg-white/15">
                 <div
                   className="h-full rounded-full bg-gradient-to-r from-white via-white/80 to-white/60 transition-all duration-500 shadow-lg"
                   style={{ width: `${progress}%` }}
@@ -133,40 +133,40 @@ export function CardioTimer({
               </div>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-white/70">Su anki blok</p>
+            <div className="grid gap-2 md:gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5 rounded-xl md:rounded-2xl bg-white/10 p-3 md:p-4 backdrop-blur-sm">
+                <p className="text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.2em] text-white/70">Su anki blok</p>
                 <div className="space-y-1">
-                  <p className="text-lg font-bold">{current?.speed ?? 0} Hiz</p>
-                  <p className="text-sm text-white/80">{current?.incline ?? 0} Egim</p>
-                  <p className="text-xs text-white/70">Sure: {current?.durationMinutes ?? 1} dk</p>
+                  <p className="text-sm md:text-lg font-bold">{current?.speed ?? 0} Hiz</p>
+                  <p className="text-xs md:text-sm text-white/80">{current?.incline ?? 0} Egim</p>
+                  <p className="text-[10px] md:text-xs text-white/70">Sure: {current?.durationMinutes ?? 1} dk</p>
                 </div>
               </div>
-              <div className="space-y-2 rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-                <p className="text-xs uppercase tracking-[0.2em] text-white/70">Siradaki blok</p>
+              <div className="space-y-1.5 rounded-xl md:rounded-2xl bg-white/10 p-3 md:p-4 backdrop-blur-sm">
+                <p className="text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.2em] text-white/70">Siradaki blok</p>
                 {next ? (
                   <div className="space-y-1">
-                    <p className="text-lg font-bold">{next.speed} Hiz</p>
-                    <p className="text-sm text-white/80">{next.incline} Egim</p>
-                    <p className="text-xs text-white/70">Sure: {next.durationMinutes} dk</p>
+                    <p className="text-sm md:text-lg font-bold">{next.speed} Hiz</p>
+                    <p className="text-xs md:text-sm text-white/80">{next.incline} Egim</p>
+                    <p className="text-[10px] md:text-xs text-white/70">Sure: {next.durationMinutes} dk</p>
                   </div>
                 ) : (
-                  <p className="text-sm font-medium text-emerald-100">Tamamlandi</p>
+                  <p className="text-xs md:text-sm font-medium text-emerald-100">Tamamlandi</p>
                 )}
               </div>
             </div>
           </div>
 
-          <div className="space-y-2 overflow-visibl h-full">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/70 lg:mb-2">Protokol Gosterimi</p>
-            <div className="flex flex-col gap-2 max-h-56 pr-2 overflow-y-auto px-2">
+          <div className="space-y-1.5 md:space-y-2 overflow-visible h-full">
+            <p className="text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.2em] text-white/70 lg:mb-2">Protokol Gosterimi</p>
+            <div className="flex flex-col gap-1.5 md:gap-2 max-h-44 md:max-h-56 pr-1 md:pr-2 overflow-y-auto px-1 md:px-2">
               {protocol.map((block, index) => {
                 const isActive = index === currentIndex;
                 const isPast = index < currentIndex;
                 return (
                   <div
                     key={`${index}-${block.durationMinutes}-${block.speed}-${block.incline}`}
-                    className={`rounded-xl px-3 py-2 text-xs font-semibold transition-all ${
+                    className={`rounded-lg md:rounded-xl px-2 py-1.5 md:px-3 md:py-2 text-[10px] md:text-xs font-semibold transition-all ${
                       isActive
                         ? "bg-white text-emerald-700 scale-105 shadow-lg"
                         : isPast
@@ -187,47 +187,47 @@ export function CardioTimer({
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-3 gap-2 md:gap-3">
           {!hasStarted && !hasFinished ? (
-            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-12" onClick={start}>
-              <Play className="mr-2 h-5 w-5" />
+            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2" onClick={start}>
+              <Play className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
               Baslat
             </Button>
           ) : isRunning ? (
-            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-12" onClick={pause}>
-              <Pause className="mr-2 h-5 w-5" />
+            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2" onClick={pause}>
+              <Pause className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
               Duraklat
             </Button>
           ) : !hasFinished ? (
-            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-12" onClick={resume}>
-              <Play className="mr-2 h-5 w-5" />
+            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2" onClick={resume}>
+              <Play className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
               Devam Et
             </Button>
           ) : (
-            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-12" disabled>
+            <Button type="button" className="bg-white text-emerald-700 hover:bg-white/90 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2" disabled>
               Tamamlandi
             </Button>
           )}
-          <Button type="button" variant="outline" className="border-white/30 bg-transparent text-white hover:bg-white/10 font-semibold h-12" onClick={reset}>
-            <RotateCcw className="mr-2 h-5 w-5" />
+          <Button type="button" variant="outline" className="border-white/30 bg-transparent text-white hover:bg-white/10 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2" onClick={reset}>
+            <RotateCcw className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
             Sifirla
           </Button>
           <Button
             type="button"
             variant="outline"
-            className="border-white/30 bg-transparent text-white hover:bg-white/10 font-semibold h-12"
+            className="border-white/30 bg-transparent text-white hover:bg-white/10 font-semibold h-10 md:h-12 text-[11px] md:text-sm px-2"
             onClick={() => {
               reset();
               onAbandon?.();
             }}
           >
-            <TimerOff className="mr-2 h-5 w-5" />
+            <TimerOff className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
             Yarida Birak
           </Button>
         </div>
 
         {hasFinished && (
-          <div className="rounded-2xl border border-emerald-200/30 bg-emerald-400/20 p-4 text-sm font-medium text-emerald-50">
+          <div className="rounded-xl md:rounded-2xl border border-emerald-200/30 bg-emerald-400/20 p-3 md:p-4 text-xs md:text-sm font-medium text-emerald-50">
             Harika performans! Tum protokol basariyla tamamlandi.
           </div>
         )}

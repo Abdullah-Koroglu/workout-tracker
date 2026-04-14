@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, Plus, Sparkles, Target, X } from "lucide-react";
 
@@ -25,6 +25,9 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [cancelling, setCancelling] = useState(false);
+  const [headerVisible, setHeaderVisible] = useState(true);
+  const [headerPinned, setHeaderPinned] = useState(false);
+  const lastScrollY = useRef(0);
 
   // Load workout data and initialize state
   const [workoutState, workoutActions] = useWorkoutFlow(assignmentId);
@@ -46,6 +49,29 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
     return () => clearInterval(interval);
   }, [workoutState.workoutId, workoutState.isLoading]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const currentY = window.scrollY;
+      const scrollingDown = currentY > lastScrollY.current;
+      const movedEnough = Math.abs(currentY - lastScrollY.current) > 8;
+
+      setHeaderPinned(currentY > 12);
+
+      if (movedEnough) {
+        if (scrollingDown && currentY > 90) {
+          setHeaderVisible(false);
+        } else {
+          setHeaderVisible(true);
+        }
+      }
+
+      lastScrollY.current = currentY;
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   // Format elapsed time as HH:MM:SS
   const formatTime = (seconds: number): string => {
@@ -199,47 +225,53 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28">
-      {/* Header with progress stats - Mobile Optimized */}
-      <div className="overflow-hidden rounded-xl md:rounded-[32px] border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-4 md:p-6 shadow-sm">
-        <div className="space-y-3 md:space-y-5">
-          <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-emerald-700 hover:text-emerald-900">
-            <ChevronLeft className="h-4 w-4" />
-            <span className="hidden md:inline">Dashboard'a dön</span>
-            <span className="md:hidden">Geri</span>
-          </Link>
-          
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Antrenman Akışı</p>
-            <h1 className="mt-1 md:mt-2 text-xl md:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">Bugünkü Antrenman</h1>
-            <p className="mt-1 md:mt-2 max-w-2xl text-xs md:text-sm text-slate-600">
-              Hedef değerler dolduruldu. İstersen sapabilir, set ekleyebilir veya erken bitirebilirsin.
-            </p>
-          </div>
+    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28 pt-24 md:pt-36">
+      {/* Floating Header */}
+      <div
+        className={`fixed inset-x-0 top-0 z-30 px-3 md:px-4 transition-transform duration-300 ${headerVisible ? "translate-y-0" : "-translate-y-full"}`}
+      >
+        <div className={`mx-auto max-w-6xl overflow-hidden rounded-xl md:rounded-[28px] border border-emerald-200/70 bg-gradient-to-br from-emerald-50/95 via-white/95 to-lime-50/95 shadow-sm backdrop-blur ${headerPinned ? "mt-2" : "mt-3"}`}>
+          <div className="p-3 md:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-[11px] md:text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+                <ChevronLeft className="h-3 w-3" />
+                Dashboard
+              </Link>
+              <div className="flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] md:text-xs font-semibold text-slate-700">
+                <Clock className="h-3 w-3 text-emerald-600" />
+                {formatTime(elapsedSeconds)}
+              </div>
+            </div>
 
-          {/* Stats Grid - Mobile First */}
-          <div className="grid grid-cols-2 gap-2 md:gap-3 md:grid-cols-4">
-            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Geçen Süre</p>
-              <p className="mt-1 font-mono text-lg md:text-2xl font-black text-slate-900">{formatTime(elapsedSeconds)}</p>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Antrenman Akisi</p>
+                <h1 className="truncate text-sm md:text-xl font-black text-slate-900">{activeExercise.exercise.exercise.name}</h1>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] md:text-xs text-slate-500">Ilerleme</p>
+                <p className="text-sm md:text-lg font-black text-slate-900">%{exerciseManager.progressPercent}</p>
+              </div>
             </div>
-            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">İlerleme</p>
-              <p className="mt-1 text-xl md:text-3xl font-black text-slate-900">%{exerciseManager.progressPercent}</p>
-            </div>
-            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Tamamlanan</p>
-              <p className="mt-1 text-xl md:text-3xl font-black text-slate-900">{exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}</p>
-            </div>
-            <div className="rounded-lg md:rounded-2xl bg-white px-3 py-2 md:px-4 md:py-3 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Aktif Mod</p>
-              <p className="mt-1 text-base md:text-lg font-bold text-slate-900">{activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Weight"}</p>
-            </div>
-          </div>
 
-          {/* Progress Bar */}
-          <div className="h-2 w-full overflow-hidden rounded-full bg-emerald-100">
-            <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
+            <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] md:text-xs">
+              <div className="rounded-lg bg-white px-2 py-1.5">
+                <p className="text-slate-500">Tamamlanan</p>
+                <p className="font-bold text-slate-900">{exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}</p>
+              </div>
+              <div className="rounded-lg bg-white px-2 py-1.5">
+                <p className="text-slate-500">Mod</p>
+                <p className="font-bold text-slate-900">{activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Weight"}</p>
+              </div>
+              <div className="rounded-lg bg-white px-2 py-1.5">
+                <p className="text-slate-500">Sıradaki</p>
+                <p className="font-bold text-slate-900">Set {activeExercise.nextSetNumber}</p>
+              </div>
+            </div>
+
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-emerald-100">
+              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
+            </div>
           </div>
         </div>
       </div>
@@ -281,7 +313,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         </div>
 
         {/* Desktop: Sidebar */}
-        <aside className="hidden md:block md:sticky md:top-24 md:self-start space-y-3">
+        <aside className="hidden md:block md:sticky md:top-36 md:self-start space-y-3">
           {exerciseManager.exerciseState.map((item, index) => (
             <button
               key={item.exercise.id}
@@ -310,14 +342,14 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         {/* Right Content: Exercise details and form */}
         <section className="space-y-3 md:space-y-5">
           {/* Exercise header and stats - Mobile Optimized */}
-          <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+          <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-3 md:p-6 shadow-sm">
             <div className="space-y-3 md:space-y-4">
               <div>
                 <div className="inline-flex rounded-full bg-emerald-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                   {activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Ağırlık"}
                 </div>
-                <h2 className="mt-2 md:mt-3 text-xl md:text-3xl font-black tracking-tight text-foreground">{activeExercise.exercise.exercise.name}</h2>
-                <p className="mt-1 md:mt-2 max-w-2xl text-xs md:text-sm text-muted-foreground">
+                <h2 className="mt-1 md:mt-3 text-base md:text-3xl font-black tracking-tight text-foreground">{activeExercise.exercise.exercise.name}</h2>
+                <p className="mt-1 md:mt-2 max-w-2xl text-[11px] md:text-sm text-muted-foreground">
                   {activeExercise.exercise.exercise.type === "CARDIO"
                     ? "Protokolü takip et. Başlat, duraklat, durdur veya sıfırla."
                     : "Hedef tekrar ve RIR otomatik. İstersen ekstra set veya erken bitir."}

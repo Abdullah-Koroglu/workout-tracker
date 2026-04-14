@@ -13,7 +13,18 @@ export default async function ClientDashboardPage() {
     prisma.templateAssignment.findMany({
       where: { clientId },
       include: {
-        template: true,
+        template: {
+          include: {
+            exercises: {
+              include: {
+                exercise: true
+              },
+              orderBy: {
+                order: "asc"
+              }
+            }
+          }
+        },
         workouts: {
           select: { status: true }
         }
@@ -103,25 +114,63 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
               </div>
 
               <div className="space-y-2">
-                {dayItems.map((assignment) => (
-                  <div key={assignment.id} className="flex items-center justify-between gap-3 rounded-xl border p-3">
-                    <div>
-                      <p className="text-base font-bold text-foreground">{assignment.template.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Atama: {new Date(assignment.createdAt).toLocaleDateString("tr-TR")}
-                      </p>
+                {dayItems.map((assignment) => {
+                  const weightItems = assignment.template.exercises.filter((item) => item.exercise.type === "WEIGHT");
+                  const cardioItems = assignment.template.exercises.filter((item) => item.exercise.type === "CARDIO");
+
+                  return (
+                    <div key={assignment.id} className="rounded-xl border p-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-base font-bold text-foreground">{assignment.template.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Atama: {new Date(assignment.createdAt).toLocaleDateString("tr-TR")}
+                          </p>
+                        </div>
+                        {showStartButton ? (
+                          <Link href={`/client/workout/${assignment.id}/start`} className="inline-flex rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                            Basla
+                          </Link>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
+                            Gunu gelmedi
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-lg bg-slate-50 p-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Agirlik ({weightItems.length})</p>
+                          <div className="mt-1 space-y-1">
+                            {weightItems.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">Yok</p>
+                            ) : (
+                              weightItems.map((item) => (
+                                <p key={item.id} className="text-xs text-slate-700">
+                                  {item.exercise.name}: {item.targetSets ?? "-"}x{item.targetReps ?? "-"} RIR {item.targetRir ?? "-"}
+                                </p>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                        <div className="rounded-lg bg-orange-50 p-2">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">Kardiyo ({cardioItems.length})</p>
+                          <div className="mt-1 space-y-1">
+                            {cardioItems.length === 0 ? (
+                              <p className="text-xs text-muted-foreground">Yok</p>
+                            ) : (
+                              cardioItems.map((item) => (
+                                <p key={item.id} className="text-xs text-orange-900">
+                                  {item.exercise.name}: {item.durationMinutes ?? 1} dk / {(item.protocol as unknown[] | null)?.length ?? 0} blok
+                                </p>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                    {showStartButton ? (
-                      <Link href={`/client/workout/${assignment.id}/start`} className="inline-flex rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">
-                        Basla
-                      </Link>
-                    ) : (
-                      <span className="inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                        Gunu gelmedi
-                      </span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );

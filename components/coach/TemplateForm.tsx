@@ -180,76 +180,6 @@ export function TemplateForm({
     queueMicrotask(syncOrders);
   };
 
-  const weightTrainingExample = {
-    name: "Ayaklı Güç Antrenmanı",
-    description: "Bacak ve gluteus çalışması için kapsamlı antrenman",
-    exercises: [
-      {
-        exerciseType: "WEIGHT",
-        exerciseId: "squat-id",
-        order: 0,
-        targetSets: 4,
-        targetReps: 6,
-        targetRir: 1,
-        durationMinutes: null,
-        protocol: null
-      },
-      {
-        exerciseType: "WEIGHT",
-        exerciseId: "leg-press-id",
-        order: 1,
-        targetSets: 3,
-        targetReps: 8,
-        targetRir: 2,
-        durationMinutes: null,
-        protocol: null
-      }
-    ]
-  };
-
-  const runningExample = {
-    name: "Koşu Intervali Antrenmanı",
-    description: "Dayanıklılık geliştirmesi için eklenmiş interval antrenman",
-    exercises: [
-      {
-        exerciseType: "CARDIO",
-        exerciseId: "running-id",
-        order: 0,
-        durationMinutes: 20,
-        protocol: [
-          {
-            durationMinutes: 5,
-            speed: 8.0,
-            incline: 0.0
-          },
-          {
-            durationMinutes: 2,
-            speed: 10.5,
-            incline: 2.0
-          },
-          {
-            durationMinutes: 3,
-            speed: 8.0,
-            incline: 0.0
-          },
-          {
-            durationMinutes: 2,
-            speed: 10.5,
-            incline: 2.0
-          },
-          {
-            durationMinutes: 8,
-            speed: 6.0,
-            incline: 0.0
-          }
-        ],
-        targetSets: null,
-        targetReps: null,
-        targetRir: null
-      }
-    ]
-  };
-
   const combinedExample = {
     name: "Full Body Antrenma Programı",
     description: "Güç + Dayanıklılık kombinasyonu - Ön antrenman + Ana çalışma + Kardiyovaküler",
@@ -322,41 +252,11 @@ export function TemplateForm({
     }
   };
 
-  const buildExerciseCatalogComments = () => {
-    const sortedExercises = [...exerciseLibrary].sort((a, b) => {
-      if (a.type !== b.type) {
-        return a.type.localeCompare(b.type);
-      }
-
-      return a.name.localeCompare(b.name, "tr");
-    });
-
-    if (sortedExercises.length === 0) {
-      return "// EXERCISE_LIBRARY\n// Egzersiz listesi yuklenemedi veya bos.";
-    }
-
-    const lines = [
-      "// EXERCISE_LIBRARY (id | name | type)",
-      ...sortedExercises.map((exercise) => `// ${exercise.id} | ${exercise.name} | ${exercise.type}`)
-    ];
-
-    return lines.join("\n");
-  };
-
-  const buildJsonWithExerciseCatalog = (example: Record<string, unknown>) => {
-    return `${JSON.stringify(example, null, 2)}\n\n${buildExerciseCatalogComments()}`;
-  };
-
   const handleJsonImport = () => {
     setJsonImportError("");
     
     try {
-      const sanitizedJson = jsonImportInput
-        .replace(/^\s*\/\/.*$/gm, "")
-        .replace(/\/\*[\s\S]*?\*\//g, "")
-        .trim();
-
-      const parsedTemplate = JSON.parse(sanitizedJson);
+      const parsedTemplate = JSON.parse(jsonImportInput);
       
       // Validate structure
       if (!parsedTemplate.name || !Array.isArray(parsedTemplate.exercises)) {
@@ -408,7 +308,7 @@ export function TemplateForm({
           <button
             type="button"
             onClick={() => {
-              setJsonImportInput(buildJsonWithExerciseCatalog(example));
+              setJsonImportInput(JSON.stringify(example, null, 2));
               setJsonImportError("");
             }}
             className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
@@ -417,7 +317,7 @@ export function TemplateForm({
           </button>
           <button
             type="button"
-            onClick={() => copyToClipboard(buildJsonWithExerciseCatalog(example), title)}
+            onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
             className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
           >
             <Copy className="h-3 w-3" />
@@ -426,7 +326,7 @@ export function TemplateForm({
         </div>
       </div>
       <pre className="rounded-lg border bg-muted p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
-        <code>{buildJsonWithExerciseCatalog(example)}</code>
+        <code>{JSON.stringify(example, null, 2)}</code>
       </pre>
     </div>
   );
@@ -550,13 +450,29 @@ export function TemplateForm({
             <div>
               <p className="text-sm font-semibold text-foreground mb-3">Örnek Template JSON Yapıları</p>
               <p className="text-xs text-muted-foreground mb-4">
-                "Kullan" veya "Kopyala" ile template JSON + altindaki comment'li tum egzersiz listesini birlikte alabilirsiniz. Import sırasında comment satirları otomatik temizlenir.
+                "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına yapıştırabilir, ardından "JSON Yükle" butonuna basabilirsiniz.
               </p>
               <div className="space-y-4">
                 <JsonExample title="✨ Full Body (Ağırlık + Kardiyovaküler)" example={combinedExample} />
-                <JsonExample title="💪 Son Ağırlık Antrenmanı" example={weightTrainingExample} />
-                <JsonExample title="🏃 Koşu İntervali Antrenmanı" example={runningExample} />
               </div>
+            </div>
+
+            <div className="border-t pt-6">
+              <p className="text-sm font-semibold text-foreground mb-2">Veritabanindaki Tum Egzersizler</p>
+              <p className="text-xs text-muted-foreground mb-3">Format: /id/name/type</p>
+              <pre className="rounded-lg border bg-background p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
+                <code>
+                  
+
+
+                  {exerciseLibrary.length === 0
+                    ? "Egzersiz listesi yukleniyor..."
+                    : [...exerciseLibrary]
+                        .sort((a, b) => a.name.localeCompare(b.name, "tr"))
+                        .map((exercise) => `/${exercise.id}/${exercise.name}/${exercise.type}`)
+                        .join("\n")}
+                </code>
+              </pre>
             </div>
           </div>
         )}

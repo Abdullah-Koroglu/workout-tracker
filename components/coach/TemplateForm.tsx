@@ -180,68 +180,52 @@ export function TemplateForm({
     queueMicrotask(syncOrders);
   };
 
-  const combinedExample = {
-    name: "Full Body Antrenma Programı",
-    description: "Güç + Dayanıklılık kombinasyonu - Ön antrenman + Ana çalışma + Kardiyovaküler",
-    exercises: [
-      {
-        exerciseType: "WEIGHT",
-        exerciseId: "bench-press-id",
-        order: 0,
-        targetSets: 4,
-        targetReps: 5,
-        targetRir: 1,
-        durationMinutes: null,
-        protocol: null
-      },
-      {
-        exerciseType: "WEIGHT",
-        exerciseId: "deadlift-id",
-        order: 1,
-        targetSets: 3,
-        targetReps: 3,
-        targetRir: 2,
-        durationMinutes: null,
-        protocol: null
-      },
-      {
-        exerciseType: "CARDIO",
-        exerciseId: "treadmill-id",
-        order: 2,
-        durationMinutes: 15,
-        protocol: [
-          {
-            durationMinutes: 3,
-            speed: 8.0,
-            incline: 0.0
-          },
-          {
-            durationMinutes: 1,
-            speed: 12.0,
-            incline: 3.0
-          },
-          {
-            durationMinutes: 2,
-            speed: 8.0,
-            incline: 0.0
-          },
-          {
-            durationMinutes: 1,
-            speed: 12.0,
-            incline: 3.0
-          },
-          {
-            durationMinutes: 8,
-            speed: 6.0,
-            incline: 0.0
-          }
-        ],
-        targetSets: null,
-        targetReps: null,
-        targetRir: null
-      }
-    ]
-  };
+  const aiTemplatePrompt = `Sen bir antrenman template JSON ureten asistansin.
+
+Girdi olarak sana su iki sey verilecek:
+1) JSON sema ornegi
+2) Veritabani egzersiz listesi (format: /id/name/type)
+
+Gorevin:
+- Kullanici istegine gore uygun bir template JSON uret.
+- Sadece egzersiz listesindeki id degerlerini kullan.
+- type = WEIGHT olanlarda targetSets, targetReps, targetRir dolu olsun; durationMinutes ve protocol null olsun.
+- type = CARDIO olanlarda durationMinutes ve protocol dolu olsun; targetSets, targetReps, targetRir null olsun.
+- order alanlarini 0'dan baslayarak sirali ver.
+- Cikti yalnizca gecerli JSON olsun, aciklama metni yazma.
+
+
+Beklenen JSON formati:
+{
+  "name": "Template Adi",
+  "description": "Kisa aciklama",
+  "exercises": [
+    {
+      "exerciseType": "WEIGHT",
+      "exerciseId": "ornek-id",
+      "order": 0,
+      "targetSets": 4,
+      "targetReps": 6,
+      "targetRir": 2,
+      "durationMinutes": null,
+      "protocol": null
+    },
+    {
+      "exerciseType": "CARDIO",
+      "exerciseId": "ornek-cardio-id",
+      "order": 1,
+      "durationMinutes": 15,
+      "protocol": [
+        { "durationMinutes": 5, "speed": 8, "incline": 0 },
+        { "durationMinutes": 5, "speed": 10, "incline": 2 },
+        { "durationMinutes": 5, "speed": 7, "incline": 0 }
+      ],
+      "targetSets": null,
+      "targetReps": null,
+      "targetRir": null
+    }
+  ]
+}`;
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -299,37 +283,6 @@ export function TemplateForm({
       setJsonImportError(message);
     }
   };
-
-  const JsonExample = ({ title, example }: { title: string; example: Record<string, unknown> }) => (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <p className="font-semibold text-sm">{title}</p>
-        <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setJsonImportInput(JSON.stringify(example, null, 2));
-              setJsonImportError("");
-            }}
-            className="flex items-center gap-1 text-xs text-emerald-600 hover:text-emerald-700 font-semibold"
-          >
-            Kullan
-          </button>
-          <button
-            type="button"
-            onClick={() => copyToClipboard(JSON.stringify(example, null, 2), title)}
-            className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
-          >
-            <Copy className="h-3 w-3" />
-            Kopyala
-          </button>
-        </div>
-      </div>
-      <pre className="rounded-lg border bg-muted p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
-        <code>{JSON.stringify(example, null, 2)}</code>
-      </pre>
-    </div>
-  );
 
   const submit = async (values: TemplateFormValues) => {
     setIsSubmitting(true);
@@ -394,7 +347,11 @@ export function TemplateForm({
     <form className="space-y-3" onSubmit={form.handleSubmit(submit)}>
       <div className="space-y-1">
         <Input placeholder="Template adı" {...form.register("name")} />
-        {form.formState.errors.name && <p className="text-xs text-red-500">{form.formState.errors.name.message}</p>}
+        {form.formState.errors.name && (
+          <p className="text-xs text-red-500">
+            {form.formState.errors.name.message}
+          </p>
+        )}
       </div>
       <textarea
         placeholder="Açıklama"
@@ -408,8 +365,12 @@ export function TemplateForm({
           onClick={() => setShowJsonExamples(!showJsonExamples)}
           className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
         >
-          <span className="font-semibold text-sm">JSON ile Hızlı Template Oluştur</span>
-          <ChevronDown className={`h-4 w-4 transition-transform ${showJsonExamples ? "rotate-180" : ""}`} />
+          <span className="font-semibold text-sm">
+            JSON ile Hızlı Template Oluştur
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 transition-transform ${showJsonExamples ? "rotate-180" : ""}`}
+          />
         </button>
 
         {showJsonExamples && (
@@ -417,16 +378,21 @@ export function TemplateForm({
             {/* JSON Import Section */}
             <div className="space-y-3 border-b pb-6">
               <div>
-                <p className="text-sm font-semibold text-foreground mb-2">JSON Formatında Template Yükleme</p>
+                <p className="text-sm font-semibold text-foreground mb-2">
+                  JSON Formatında Template Yükleme
+                </p>
                 <p className="text-xs text-muted-foreground mb-3">
-                  JSON yapıştırın veya aşağıdaki örneklerden birini kullanın. Template anında oluşturulacak!
+                  JSON yapıştırın veya aşağıdaki örneklerden birini kullanın.
+                  Template anında oluşturulacak!
                 </p>
               </div>
-              
+
               <textarea
                 value={jsonImportInput}
                 onChange={(e) => setJsonImportInput(e.target.value)}
-                placeholder={"{\n  \"name\": \"Template Adı\",\n  \"description\": \"Açıklama\",\n  \"exercises\": [...]\n}"}
+                placeholder={
+                  '{\n  "name": "Template Adı",\n  "description": "Açıklama",\n  "exercises": [...]\n}'
+                }
                 className="w-full h-40 rounded-md border bg-background p-3 text-xs font-mono"
               />
 
@@ -448,28 +414,55 @@ export function TemplateForm({
 
             {/* Examples Section */}
             <div>
-              <p className="text-sm font-semibold text-foreground mb-3">Örnek Template JSON Yapıları</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına yapıştırabilir, ardından "JSON Yükle" butonuna basabilirsiniz.
+              <p className="text-sm font-semibold text-foreground mb-3">
+                Örnek Template JSON Yapıları
               </p>
-              <div className="space-y-4">
-                <JsonExample title="✨ Full Body (Ağırlık + Kardiyovaküler)" example={combinedExample} />
-              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına
+                yapıştırabilir, ardından "JSON Yükle" butonuna basabilirsiniz.
+              </p>
             </div>
 
             <div className="border-t pt-6">
-              <p className="text-sm font-semibold text-foreground mb-2">Veritabanindaki Tum Egzersizler</p>
-              <p className="text-xs text-muted-foreground mb-3">Format: /id/name/type</p>
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground">
+                  AI Prompt Şablonu
+                </p>
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(aiTemplatePrompt, "AI Prompt")}
+                  className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700"
+                >
+                  <Copy className="h-3 w-3" />
+                  Kopyala
+                </button>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Bu promptu bir AI araca verip altina JSON sema + exercise
+                listesini ekleyerek tek seferde template JSON uretebilirsiniz.
+              </p>
+              <pre className="rounded-lg border bg-background p-3 text-xs overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap">
+                <code>{aiTemplatePrompt}</code>
+              </pre>
+            </div>
+
+            <div className="border-t pt-6">
+              <p className="text-sm font-semibold text-foreground mb-2">
+                Veritabanindaki Tum Egzersizler
+              </p>
+              <p className="text-xs text-muted-foreground mb-3" onClick={() => copyToClipboard(exerciseLibrary.map(exercise => `/${exercise.id}/${exercise.name}/${exercise.type}`).join("\n"), "Egzersiz Listesi")} style={{ cursor: "pointer" }}>
+                Copy
+              </p>
               <pre className="rounded-lg border bg-background p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
                 <code>
-                  
-
-
                   {exerciseLibrary.length === 0
                     ? "Egzersiz listesi yukleniyor..."
                     : [...exerciseLibrary]
                         .sort((a, b) => a.name.localeCompare(b.name, "tr"))
-                        .map((exercise) => `/${exercise.id}/${exercise.name}/${exercise.type}`)
+                        .map(
+                          (exercise) =>
+                            `${exercise.id}/${exercise.name}/${exercise.type}`,
+                        )
                         .join("\n")}
                 </code>
               </pre>
@@ -500,7 +493,9 @@ export function TemplateForm({
       </div>
 
       {form.formState.errors.exercises && (
-        <p className="text-xs text-red-500">En az bir egzersiz eklemelisiniz.</p>
+        <p className="text-xs text-red-500">
+          En az bir egzersiz eklemelisiniz.
+        </p>
       )}
 
       {fields.length === 0 ? (
@@ -511,22 +506,45 @@ export function TemplateForm({
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="template-exercises">
             {(droppableProvided) => (
-              <div ref={droppableProvided.innerRef} {...droppableProvided.droppableProps} className="space-y-3">
+              <div
+                ref={droppableProvided.innerRef}
+                {...droppableProvided.droppableProps}
+                className="space-y-3"
+              >
                 {fields.map((field, index) => {
                   const currentExercise = exercises[index];
-                  const exerciseInfo = exerciseMap.get(currentExercise?.exerciseId || "");
+                  const exerciseInfo = exerciseMap.get(
+                    currentExercise?.exerciseId || "",
+                  );
 
                   return (
-                    <Draggable key={field.id} draggableId={field.id} index={index}>
+                    <Draggable
+                      key={field.id}
+                      draggableId={field.id}
+                      index={index}
+                    >
                       {(draggableProvided) => (
                         <div
                           ref={draggableProvided.innerRef}
                           {...draggableProvided.draggableProps}
                           className="rounded-xl border p-4"
                         >
-                          <input type="hidden" {...form.register(`exercises.${index}.exerciseId`)} />
-                          <input type="hidden" {...form.register(`exercises.${index}.exerciseType`)} />
-                          <input type="hidden" {...form.register(`exercises.${index}.order`, { valueAsNumber: true })} />
+                          <input
+                            type="hidden"
+                            {...form.register(`exercises.${index}.exerciseId`)}
+                          />
+                          <input
+                            type="hidden"
+                            {...form.register(
+                              `exercises.${index}.exerciseType`,
+                            )}
+                          />
+                          <input
+                            type="hidden"
+                            {...form.register(`exercises.${index}.order`, {
+                              valueAsNumber: true,
+                            })}
+                          />
 
                           <div className="mb-4 flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3">
@@ -538,8 +556,12 @@ export function TemplateForm({
                                 <GripVertical className="h-5 w-5" />
                               </button>
                               <div>
-                                <p className="font-semibold">{exerciseInfo?.name || "Egzersiz"}</p>
-                                <p className="text-xs text-muted-foreground">{currentExercise?.exerciseType}</p>
+                                <p className="font-semibold">
+                                  {exerciseInfo?.name || "Egzersiz"}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {currentExercise?.exerciseType}
+                                </p>
                               </div>
                             </div>
                             <ActionMenu
@@ -547,8 +569,8 @@ export function TemplateForm({
                                 {
                                   label: "Egzersizi kaldir",
                                   danger: true,
-                                  onClick: () => remove(index)
-                                }
+                                  onClick: () => remove(index),
+                                },
                               ]}
                             />
                           </div>
@@ -556,77 +578,136 @@ export function TemplateForm({
                           {currentExercise?.exerciseType === "WEIGHT" ? (
                             <div className="grid gap-3 md:grid-cols-3">
                               <div className="space-y-1">
-                                <label className="text-sm font-medium">Hedef Set</label>
-                                <Input type="number" {...form.register(`exercises.${index}.targetSets`, { valueAsNumber: true })} />
+                                <label className="text-sm font-medium">
+                                  Hedef Set
+                                </label>
+                                <Input
+                                  type="number"
+                                  {...form.register(
+                                    `exercises.${index}.targetSets`,
+                                    { valueAsNumber: true },
+                                  )}
+                                />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-sm font-medium">Hedef Tekrar</label>
-                                <Input type="number" {...form.register(`exercises.${index}.targetReps`, { valueAsNumber: true })} />
+                                <label className="text-sm font-medium">
+                                  Hedef Tekrar
+                                </label>
+                                <Input
+                                  type="number"
+                                  {...form.register(
+                                    `exercises.${index}.targetReps`,
+                                    { valueAsNumber: true },
+                                  )}
+                                />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-sm font-medium">Hedef RIR</label>
-                                <Input type="number" {...form.register(`exercises.${index}.targetRir`, { valueAsNumber: true })} />
+                                <label className="text-sm font-medium">
+                                  Hedef RIR
+                                </label>
+                                <Input
+                                  type="number"
+                                  {...form.register(
+                                    `exercises.${index}.targetRir`,
+                                    { valueAsNumber: true },
+                                  )}
+                                />
                               </div>
                             </div>
                           ) : (
                             <div className="space-y-4">
                               <div className="rounded-lg border border-emerald-200/50 bg-emerald-50/70 p-3">
-                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Toplam Sure</p>
-                                <p className="mt-1 text-lg font-black text-emerald-900">{getCardioTotalMinutes(index)} dakika</p>
-                                <p className="text-xs text-emerald-700">Sure otomatik olarak satirlarin toplamiyla hesaplanir.</p>
+                                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                                  Toplam Sure
+                                </p>
+                                <p className="mt-1 text-lg font-black text-emerald-900">
+                                  {getCardioTotalMinutes(index)} dakika
+                                </p>
+                                <p className="text-xs text-emerald-700">
+                                  Sure otomatik olarak satirlarin toplamiyla
+                                  hesaplanir.
+                                </p>
                               </div>
 
                               <div className="space-y-2">
                                 <div className="flex items-center justify-between">
-                                  <p className="text-sm font-medium">Sure Bazli Protokol</p>
-                                  <Button type="button" variant="outline" onClick={() => addProtocolRow(index)}>
+                                  <p className="text-sm font-medium">
+                                    Sure Bazli Protokol
+                                  </p>
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => addProtocolRow(index)}
+                                  >
                                     Satır Ekle
                                   </Button>
                                 </div>
 
-                                {(currentExercise?.protocol || []).map((protocolItem, protocolIndex) => (
-                                  <div key={`${field.id}-${protocolIndex}`} className="rounded-xl border bg-card p-3">
-                                    <div className="mb-2 flex items-center justify-between border-b pb-2">
-                                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
-                                        Blok {protocolIndex + 1}
-                                      </p>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg font-black text-foreground">{protocolItem.durationMinutes} dk</span>
-                                        <ActionMenu
-                                          items={[
-                                            {
-                                              label: "Satiri sil",
-                                              danger: true,
-                                              onClick: () => removeProtocolRow(index, protocolIndex)
-                                            }
-                                          ]}
+                                {(currentExercise?.protocol || []).map(
+                                  (protocolItem, protocolIndex) => (
+                                    <div
+                                      key={`${field.id}-${protocolIndex}`}
+                                      className="rounded-xl border bg-card p-3"
+                                    >
+                                      <div className="mb-2 flex items-center justify-between border-b pb-2">
+                                        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                                          Blok {protocolIndex + 1}
+                                        </p>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-lg font-black text-foreground">
+                                            {protocolItem.durationMinutes} dk
+                                          </span>
+                                          <ActionMenu
+                                            items={[
+                                              {
+                                                label: "Satiri sil",
+                                                danger: true,
+                                                onClick: () =>
+                                                  removeProtocolRow(
+                                                    index,
+                                                    protocolIndex,
+                                                  ),
+                                              },
+                                            ]}
+                                          />
+                                        </div>
+                                      </div>
+                                      <div className="grid gap-2 md:grid-cols-3">
+                                        <Input
+                                          type="number"
+                                          placeholder="Sure (dk)"
+                                          defaultValue={
+                                            protocolItem.durationMinutes
+                                          }
+                                          {...form.register(
+                                            `exercises.${index}.protocol.${protocolIndex}.durationMinutes`,
+                                            { valueAsNumber: true },
+                                          )}
+                                        />
+                                        <Input
+                                          type="number"
+                                          step="0.1"
+                                          placeholder="Hız"
+                                          defaultValue={protocolItem.speed}
+                                          {...form.register(
+                                            `exercises.${index}.protocol.${protocolIndex}.speed`,
+                                            { valueAsNumber: true },
+                                          )}
+                                        />
+                                        <Input
+                                          type="number"
+                                          step="0.1"
+                                          placeholder="Eğim"
+                                          defaultValue={protocolItem.incline}
+                                          {...form.register(
+                                            `exercises.${index}.protocol.${protocolIndex}.incline`,
+                                            { valueAsNumber: true },
+                                          )}
                                         />
                                       </div>
                                     </div>
-                                    <div className="grid gap-2 md:grid-cols-3">
-                                      <Input
-                                        type="number"
-                                        placeholder="Sure (dk)"
-                                        defaultValue={protocolItem.durationMinutes}
-                                        {...form.register(`exercises.${index}.protocol.${protocolIndex}.durationMinutes`, { valueAsNumber: true })}
-                                      />
-                                      <Input
-                                        type="number"
-                                        step="0.1"
-                                        placeholder="Hız"
-                                        defaultValue={protocolItem.speed}
-                                        {...form.register(`exercises.${index}.protocol.${protocolIndex}.speed`, { valueAsNumber: true })}
-                                      />
-                                      <Input
-                                        type="number"
-                                        step="0.1"
-                                        placeholder="Eğim"
-                                        defaultValue={protocolItem.incline}
-                                        {...form.register(`exercises.${index}.protocol.${protocolIndex}.incline`, { valueAsNumber: true })}
-                                      />
-                                    </div>
-                                  </div>
-                                ))}
+                                  ),
+                                )}
                               </div>
                             </div>
                           )}

@@ -257,7 +257,7 @@ export function TemplateForm({
     }
   };
 
-  const JsonExample = ({ title, example }: { title: string; example: typeof weightTrainingExample }) => (
+  const JsonExample = ({ title, example }: { title: string; example: Record<string, unknown> }) => (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <p className="font-semibold text-sm">{title}</p>

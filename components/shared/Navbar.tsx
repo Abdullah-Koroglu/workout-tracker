@@ -86,7 +86,7 @@ export async function Navbar() {
             <span
               className={`bg-gradient-to-r ${logoText} bg-clip-text text-lg font-black tracking-tight text-transparent`}
             >
-              FitCoach
+              Fit Coach
             </span>
           </Link>
 

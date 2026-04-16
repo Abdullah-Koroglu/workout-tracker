@@ -43,7 +43,7 @@ export default function RegisterPage() {
     <div className="mx-auto mt-10 max-w-md">
       <Card>
         <CardHeader>
-          <CardTitle>FitCoach Kayıt</CardTitle>
+          <CardTitle>Fit Coach Kayıt</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">

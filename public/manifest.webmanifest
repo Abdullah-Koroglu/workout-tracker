@@ -1,6 +1,6 @@
 {
-  "name": "FitCoach",
-  "short_name": "FitCoach",
+  "name": "Fit Coach",
+  "short_name": "Fit Coach",
   "description": "Coach and client workout tracking platform",
   "start_url": "/",
   "scope": "/",

@@ -48,7 +48,7 @@ export default function LoginPage() {
     <div className="mx-auto mt-10 max-w-md">
       <Card>
         <CardHeader>
-          <CardTitle>FitCoach Giriş</CardTitle>
+          <CardTitle>Fit Coach Giriş</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">

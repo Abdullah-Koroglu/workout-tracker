@@ -12,7 +12,7 @@ import { NavbarScrollBehavior } from "@/components/shared/NavbarScrollBehavior";
 import { PwaRegister } from "@/components/shared/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "FitCoach",
+  title: "Fit Coach",
   description: "Coach and client workout tracking platform",
   manifest: "/manifest.webmanifest",
   icons: {
@@ -40,7 +40,7 @@ export default function RootLayout({
         {/* iOS PWA – metadata API bu tag'leri inject etmiyor, explicit yazılması şart */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="FitCoach" />
+        <meta name="apple-mobile-web-app-title" content="Fit Coach" />
         <meta name="mobile-web-app-capable" content="yes" />
 
         <link rel="apple-touch-icon" href="/apple-icon-180.png" />

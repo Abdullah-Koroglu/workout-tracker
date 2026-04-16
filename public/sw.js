@@ -1,4 +1,4 @@
-const CACHE_NAME = "fitcoach-static-v2";
+const CACHE_NAME = "fitcoach-static-v3";
 const PRECACHE_URLS = [
   "/",
   "/manifest.webmanifest",

@@ -1,135 +1,47 @@
-Aşağıdaki özellikleri sırayla geliştir. Her adımı tamamlamadan geçme.
+
+### 1. PWA Push Notifications & Offline Kullanım
+**Copilot İçin Context:** "Uygulama bir Next.js PWA'dır. `next-pwa` veya `serwist` kullanarak Service Worker yönetimini yapıyoruz. Push API ve Notification API entegrasyonu gerekiyor."
+
+* **Detaylandırma:**
+    * **VAPID Setup:** "Backend tarafında `web-push` kütüphanesini kullanarak VAPID anahtarlarını oluştur ve `/api/notifications/subscribe` endpoint'i üzerinden kullanıcı `subscription` objesini `User` modelinde yeni bir sahada sakla."
+    * **Service Worker:** `sw.js` dosyasına `push` event listener ekle. Arka planda gelen veriyi `self.registration.showNotification` ile göster.
+    * **Offline Support:** "Antrenman ekranında (`/workout/[id]`) girilen set verilerini, internet yoksa `IndexedDB` (veya localStorage) üzerinde tut. Bağlantı geldiğinde `sync` event'i ile veya manuel bir 'Sync' butonuyla veritabanına (Prisma) gönder."
+
+### 2. In-App Mesajlaşma & Bildirimler
+**Copilot İçin Context:** "Coach ve Client arasında asenkron mesajlaşma sistemi kurulacak. WebSocket (Pusher/Ably) veya basit bir 'polling' mekanizması kullanılabilir."
+
+* **Detaylandırma:**
+    * **Veri Modeli:** `Message` tablosu oluştur (`id, senderId, receiverId, content, createdAt, isRead`).
+    * **UI:** `app/(shared)/messages` altında bir chat arayüzü oluştur. `useOptimistic` hook'u ile mesaj gönderildiğinde anında ekranda göster.
+    * **Trigger:** "Bir Coach bir antrenmanı yorumladığında (`Comment` tablosu), sistem otomatik olarak bir `Notification` objesi oluştursun ve Push API üzerinden Client'a 'Coach yeni bir yorum bıraktı' bildirimi gitsin."
+
+### 3. PR Kutlama ve Antrenman Bitim Paylaşım Kartı
+**Copilot İçin Context:** "Kullanıcı antrenmanı bitirdiğinde veya bir egzersizde Personal Record (PR) kırdığında görsel bir özet üretilecek."
+
+* **Detaylandırma:**
+    * **PR Logiği:** "Egzersiz girilirken, kullanıcının o egzersizdeki geçmiş `maxWeight` verisini kontrol et. Eğer yeni giriş eskisinden büyükse `isPR: true` flag'i dön ve ekranda konfeti efekti (canvas-confetti) patlat."
+    * **Share Card:** "Antrenman özeti ekranında (`WorkoutSummary`), `html-to-image` veya `satori` kullanarak; antrenman süresi, toplam hacim (volume) ve kırılan PR'ları içeren estetik bir 'Instagram Story' boyutunda kart üret. Kullanıcının bu kartı indirmesini sağla."
+
+### 4. Mail Bildirimleri
+**Copilot İçin Context:** "Kritik olaylarda (yeni ilişki isteği, haftalık özet) kullanıcıya e-posta gönderilecek."
+
+* **Detaylandırma:**
+    * **Nodemailer/Resend:** "Resend veya Amazon SES kullanarak bir mail servisi kur. `react-email` ile şık template'ler hazırla."
+    * **Senaryolar:**
+        * "Coach'a yeni bir client isteği geldiğinde."
+        * "Client'a yeni bir antrenman atandığında."
+        * "Pazartesi sabahları, Coach'a geçen haftanın 'tamamlanma oranlarını' içeren bir digest maili."
+
+### 5. Beslenme, Vücut ve Performans Takibi
+**Copilot İçin Context:** "Mevcut workout takibine paralel olarak metrik tabanlı yeni takip modülleri eklenecek."
+
+* **Detaylandırma:**
+    * **Beslenme:** `NutritionLog` tablosu (`calories, protein, carbs, fat, waterIntake`). Günlük hedefleri `User` profilinde sakla.
+    * **Vücut Takibi:** `BodyMetric` tablosu (`weight, bodyFat, waist, chest, photoUrl`).
+    * **Performans Grafikleri:** "Recharts kullanarak, `Exercise` bazlı 1RM (One Rep Max) tahmin grafiği ve vücut ağırlığı vs. antrenman hacmi korelasyon grafiği oluştur."
 
 ---
 
-## ADIM 1 — Auth (Kayıt & Giriş)
+### Copilot'a Verilecek Örnek "Komut" (Prompt) Taslağı:
 
-- /register sayfası: ad, email, şifre, rol seçimi (COACH / CLIENT)
-- /login sayfası: email + şifre
-- NextAuth credentials provider ile JWT session
-- Şifre bcryptjs ile hash'lenir
-- Giriş sonrası rol'e göre yönlendir: COACH → /coach/dashboard, CLIENT → /client/dashboard
-- Middleware: /coach/** sadece COACH, /client/** sadece CLIENT erişebilir
-
----
-
-## ADIM 2 — Egzersiz Kütüphanesi (Coach)
-
-- /coach/exercises sayfası
-- Egzersiz listesi: ad ve tür (WEIGHT / CARDIO) gösterilir
-- Yeni egzersiz ekleme formu: ad + tür seçimi
-- Egzersiz silme
-- API: GET /api/coach/exercises, POST /api/coach/exercises, DELETE /api/coach/exercises/[id]
-
----
-
-## ADIM 3 — Workout Template Oluşturma (Coach)
-
-- /coach/templates → template listesi, yeni template butonu
-- /coach/templates/new ve /coach/templates/[id]/edit sayfaları
-- Template formu:
-  - Ad ve açıklama girişi
-  - Egzersiz kütüphanesinden egzersiz seç ve ekle
-  - WEIGHT egzersizi için: hedef set, tekrar, RIR girişi
-  - CARDIO egzersizi için: toplam dakika + dakika bazlı hız & eğim tablosu (satır ekle/sil)
-  - Egzersiz sırası @hello-pangea/dnd ile sürükle-bırak
-- API: GET/POST /api/coach/templates, PUT/DELETE /api/coach/templates/[id]
-
----
-
-## ADIM 4 — Client-Coach Bağlantısı
-
-Coach tarafı:
-- /coach/clients sayfası: kabul edilmiş client listesi + bekleyen istekler
-- Bekleyen isteği kabul et / reddet butonu
-- API: GET /api/coach/clients, PATCH /api/coach/clients/[clientId]/relation
-
-Client tarafı:
-- /client/coaches sayfası: isme göre coach arama
-- Coach kartında "İstek Gönder" butonu
-- Gönderilen isteğin durumu gösterilir (Bekliyor / Kabul / Red)
-- API: GET /api/client/coaches, POST /api/client/coaches/request
-
----
-
-## ADIM 5 — Template Atama (Coach)
-
-- /coach/clients/[clientId] sayfasında "Template Ata" butonu
-- Modal açılır: coach'un template listesi listelenir, seç ve ata
-- Atanan template'ler client profilinde listelenir
-- API: POST /api/coach/templates/[id]/assign
-
----
-
-## ADIM 6 — Antrenman Yapma (Client)
-
-- /client/dashboard: atanmış template'ler listelenir, "Başla" butonu
-- /client/workout/[assignmentId]/start sayfası:
-
-  WEIGHT hareketi:
-  - Hedef set/tekrar/RIR gösterilir
-  - Her set için: ağırlık (kg) + tekrar + RIR girişi
-  - "Seti Tamamla" → sonraki set
-
-  CARDIO hareketi:
-  - Zamanlayıcı başlar
-  - O dakikaya ait hız ve eğim büyük puntolarla gösterilir
-  - Dakika geçince otomatik güncellenir
-  - Progress bar ile kalan süre
-  - Sayfa yenilenirse localStorage'dan kaldığı dakikadan devam eder
-
-  Tümü bitince "Antrenmanı Tamamla" → workout kaydedilir
-
-- API: POST /api/client/workouts, POST /api/client/workouts/[id]/sets, PATCH /api/client/workouts/[id]/complete
-
----
-
-## ADIM 7 — Antrenman Görüntüleme & Yorum (Coach)
-
-- /coach/clients/[clientId] sayfasında geçmiş antrenman listesi
-- Antrenmana tıklayınca: her setin detayı (ağırlık, tekrar, RIR)
-- Altta yorum yazma alanı + gönder butonu
-- Yorumlar tarih sırasıyla listelenir
-- API: GET /api/coach/clients/[clientId]/workouts, POST /api/coach/workouts/[workoutId]/comments
-
----
-
-## ADIM 8 — İlerleme Grafikleri (Coach)
-
-- /coach/clients/[clientId]/progress sayfası
-- Egzersiz seçimi (dropdown)
-- Seçili egzersiz için Recharts ile:
-  - Ağırlık grafiği (tarih vs kg)
-  - Hacim grafiği (tarih vs toplam kg×tekrar)
-- Filtre: son 4 hafta / 3 ay / tümü
-- API: GET /api/coach/clients/[clientId]/progress?exerciseId=&range=
-
----
-
-## ADIM 9 — Client Antrenman Geçmişi
-
-- /client/dashboard: geçmiş antrenmanlar listelenir
-- /client/workouts/[workoutId]: antrenman özeti, set detayları, coach yorumları
-- API: GET /api/client/workouts, GET /api/client/workouts/[workoutId]
-
----
-
-## ADIM 10 — UI Polish & Genel İyileştirmeler
-
-- Tüm sayfalara loading skeleton ekle
-- Boş state mesajları ekle (client yok, template yok vb.)
-- Toast bildirimleri: başarı ve hata durumları
-- Antrenman sırasında WakeLock API ile ekran kapanmasını engelle
-- Coach arayüzü mavi tonları, Client arayüzü yeşil tonları
-- Tüm sayfalar mobil uyumlu kontrol edilir ve düzenlenir
-- prisma/seed.ts: 2 coach, 4 client, 10 egzersiz, 3 template örnek verisi
-
----
-
-## GENEL KURALLAR
-
-- Her API route session kontrolü yapar, yetkisiz erişimde 401 döner
-- Tüm formlar Zod şemasıyla validate edilir
-- Sayfa geçişlerinde Next.js loading.tsx kullanılır
-- Server component / client component ayrımına dikkat edilir
-- Prisma sorguları lib/prisma.ts üzerinden yapılır
+> "Mevcut Next.js 16 App Router ve Prisma yapımızda; `Workout` tablosu `COMPLETED` statüsüne geçtiğinde tetiklenecek bir yapı kur. Eğer bu workout içinde herhangi bir set, kullanıcının o egzersizdeki geçmiş rekorunu (maxWeight) geçiyorsa, kullanıcıya bir 'PR Başarısı' modalı göster ve bu görseli Instagram Story formatında (html-to-image kullanarak) indirilebilir bir kart olarak hazırla. Antrenman özetindeki verileri (süre, toplam kg) bu karta yansıt."

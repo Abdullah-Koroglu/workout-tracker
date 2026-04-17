@@ -13,6 +13,7 @@ model User {
   password  String
   name      String
   role      Role
+  pushSubscription Json?
   createdAt DateTime @default(now())
 
   coachRelations  CoachClientRelation[] @relation("Coach")
@@ -21,6 +22,9 @@ model User {
   assignments     TemplateAssignment[]  @relation("AssignedTo")
   workouts        Workout[]
   comments        Comment[]
+  sentMessages      Message[]      @relation("MessageSender")
+  receivedMessages  Message[]      @relation("MessageReceiver")
+  notifications     Notification[] @relation("NotificationUser")
 }
 
 enum Role {
@@ -151,4 +155,31 @@ model Comment {
   authorId  String
   content   String
   createdAt DateTime @default(now())
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  sender     User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  senderId   String
+  receiver   User     @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  receiverId String
+  content    String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([senderId, receiverId, createdAt])
+  @@index([receiverId, isRead])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  title     String
+  body      String
+  type      String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
 }

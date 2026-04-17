@@ -10,7 +10,7 @@ export const proxy = auth((req) => {
     return NextResponse.next();
   }
 
-  if (!session && (pathname.startsWith("/coach") || pathname.startsWith("/client"))) {
+  if (!session && (pathname.startsWith("/coach") || pathname.startsWith("/client") || pathname.startsWith("/messages"))) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 

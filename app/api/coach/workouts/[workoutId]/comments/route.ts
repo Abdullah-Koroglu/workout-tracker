@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
 import { commentSchema } from "@/validations/workout";
 
@@ -21,7 +23,15 @@ export async function POST(
 
   const workout = await prisma.workout.findUnique({
     where: { id: workoutId },
-    select: { clientId: true }
+    select: {
+      id: true,
+      clientId: true,
+      client: {
+        select: {
+          pushSubscription: true
+        }
+      }
+    }
   });
 
   if (!workout) {
@@ -47,6 +57,28 @@ export async function POST(
       content: parsed.data.content
     }
   });
+
+  await prisma.notification.create({
+    data: {
+      userId: workout.clientId,
+      title: "Coach yeni bir yorum birakti",
+      body: parsed.data.content.slice(0, 140),
+      type: "WORKOUT_COMMENT"
+    }
+  });
+
+  const pushResult = await sendPushNotification(workout.client.pushSubscription, {
+    title: "Coach yeni bir yorum birakti",
+    body: parsed.data.content.slice(0, 140),
+    url: `/client/workouts/${workoutId}`
+  });
+
+  if (pushResult.expired) {
+    await prisma.user.update({
+      where: { id: workout.clientId },
+      data: { pushSubscription: Prisma.DbNull }
+    });
+  }
 
   return NextResponse.json({ comment }, { status: 201 });
 }

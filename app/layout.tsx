@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
 
 import "./globals.css";
@@ -101,7 +102,9 @@ export default function RootLayout({
               <NotificationProvider>
                 <ConfirmationProvider>
                   <PwaRegister />
-                  <OfflineResume />
+                  <Suspense fallback={null}>
+                    <OfflineResume />
+                  </Suspense>
                   <Navbar />
                   <NavbarScrollBehavior />
                   <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">

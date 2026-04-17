@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, Plus, Sparkles, Target, X } from "lucide-react";
+import confetti from "canvas-confetti";
 
 import { CardioTimer } from "@/components/client/CardioTimer";
 import { WorkoutSetForm } from "@/components/client/WorkoutSetForm";
@@ -132,6 +133,20 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
     
     if (newSet) {
       workoutActions.addSet(newSet);
+
+      if (newSet.isPR) {
+        void confetti({
+          particleCount: 140,
+          spread: 90,
+          origin: { y: 0.7 }
+        });
+
+        info(
+          newSet.previousMaxWeight !== null && newSet.previousMaxWeight !== undefined
+            ? `PR! Onceki max ${newSet.previousMaxWeight} kg idi.`
+            : "PR! Bu harekette ilk kaydin en iyi kaydin oldu."
+        );
+      }
     }
   };
 
@@ -509,6 +524,11 @@ function WeightExerciseSection({
           exercise.exerciseSets.map((setItem) => (
             <div key={setItem.id} className="rounded-lg md:rounded-xl border bg-emerald-50 border-emerald-200 p-2 md:p-3">
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-700">Set {setItem.setNumber}</p>
+              {setItem.isPR ? (
+                <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">
+                  PR
+                </span>
+              ) : null}
               <div className="mt-2 space-y-1 text-xs md:text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">Kg:</span> <strong>{setItem.weightKg ?? 0}</strong></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Rep:</span> <strong>{setItem.reps ?? 0}</strong></div>

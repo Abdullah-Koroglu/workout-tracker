@@ -28,6 +28,30 @@ export async function POST(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  let previousMaxWeight: number | null = null;
+  let isPR = false;
+
+  if (parsed.data.completed && typeof parsed.data.weightKg === "number") {
+    const previous = await prisma.workoutSet.aggregate({
+      where: {
+        exerciseId: parsed.data.exerciseId,
+        completed: true,
+        weightKg: { not: null },
+        workoutId: { not: workoutId },
+        workout: {
+          clientId: auth.session.user.id,
+          status: "COMPLETED"
+        }
+      },
+      _max: {
+        weightKg: true
+      }
+    });
+
+    previousMaxWeight = previous._max.weightKg ?? null;
+    isPR = previousMaxWeight === null || parsed.data.weightKg > previousMaxWeight;
+  }
+
   const existingSet = await prisma.workoutSet.findFirst({
     where: {
       workoutId,
@@ -62,5 +86,14 @@ export async function POST(
         }
       });
 
-  return NextResponse.json({ set }, { status: 201 });
+  return NextResponse.json(
+    {
+      set: {
+        ...set,
+        isPR,
+        previousMaxWeight
+      }
+    },
+    { status: 201 }
+  );
 }

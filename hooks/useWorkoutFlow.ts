@@ -25,6 +25,8 @@ export type SavedSet = {
   durationMinutes: number | null;
   durationSeconds: number | null;
   completed: boolean;
+  isPR?: boolean;
+  previousMaxWeight?: number | null;
 };
 
 export type ExerciseItem = {

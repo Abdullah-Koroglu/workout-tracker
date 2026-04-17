@@ -67,7 +67,9 @@ function buildOfflineSet(payload: SaveSetPayload): SavedSet {
     rir: payload.rir ?? null,
     durationMinutes: payload.durationMinutes ?? null,
     durationSeconds: payload.durationSeconds ?? null,
-    completed: payload.completed
+    completed: payload.completed,
+    isPR: false,
+    previousMaxWeight: null
   };
 }
 

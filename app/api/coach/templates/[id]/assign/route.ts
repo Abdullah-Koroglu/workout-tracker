@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { createElement } from "react";
 
 import { requireAuth } from "@/lib/api-auth";
+import { sendTemplatedEmail } from "@/lib/email/send-email";
+import { AssignmentEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -69,6 +72,33 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       isOneTime: true
     }
   });
+
+  const [client, coach] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: clientId },
+      select: { email: true, name: true, role: true }
+    }),
+    prisma.user.findUnique({
+      where: { id: auth.session.user.id },
+      select: { name: true }
+    })
+  ]);
+
+  if (client && client.role === "CLIENT") {
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3009";
+
+    await sendTemplatedEmail({
+      to: client.email,
+      subject: "Yeni antrenman atandi",
+      template: createElement(AssignmentEmail, {
+        clientName: client.name,
+        coachName: coach?.name || "Coach",
+        templateName: template.name,
+        scheduledDateLabel: scheduledForRaw.toLocaleDateString("tr-TR"),
+        dashboardUrl: `${appUrl}/client/dashboard`
+      })
+    });
+  }
 
   return NextResponse.json({ assignment }, { status: 201 });
 }

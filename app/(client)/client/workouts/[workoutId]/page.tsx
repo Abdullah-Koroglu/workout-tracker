@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { WorkoutShareCard } from "@/components/client/WorkoutShareCard";
 
 export default async function WorkoutDetailPage({
   params,
@@ -72,6 +73,71 @@ export default async function WorkoutDetailPage({
         (workout.finishedAt.getTime() - workout.startedAt.getTime()) / 60000
       )
     : null;
+
+  const totalVolumeKg = workout.sets.reduce((sum, set) => {
+    if (!set.completed || set.weightKg === null || set.reps === null) {
+      return sum;
+    }
+
+    return sum + set.weightKg * set.reps;
+  }, 0);
+
+  const weightExerciseIds = Array.from(
+    new Set(
+      workout.sets
+        .filter((set) => set.completed && set.weightKg !== null)
+        .map((set) => set.exerciseId)
+    )
+  );
+
+  const previousSets = weightExerciseIds.length
+    ? await prisma.workoutSet.findMany({
+        where: {
+          exerciseId: { in: weightExerciseIds },
+          completed: true,
+          weightKg: { not: null },
+          workout: {
+            clientId: session.user.id,
+            status: "COMPLETED",
+            startedAt: {
+              lt: workout.startedAt
+            }
+          }
+        },
+        select: {
+          exerciseId: true,
+          weightKg: true
+        }
+      })
+    : [];
+
+  const previousMaxByExercise = previousSets.reduce<Record<string, number>>((acc, item) => {
+    if (item.weightKg === null) {
+      return acc;
+    }
+
+    const current = acc[item.exerciseId] ?? 0;
+    if (item.weightKg > current) {
+      acc[item.exerciseId] = item.weightKg;
+    }
+
+    return acc;
+  }, {});
+
+  const prExerciseNames = Array.from(
+    new Set(
+      workout.sets
+        .filter((set) => {
+          if (!set.completed || set.weightKg === null) {
+            return false;
+          }
+
+          const previousMax = previousMaxByExercise[set.exerciseId];
+          return previousMax === undefined || set.weightKg > previousMax;
+        })
+        .map((set) => set.exercise.name)
+    )
+  );
 
   return (
     <div className="space-y-6">
@@ -198,6 +264,13 @@ export default async function WorkoutDetailPage({
           </div>
         )}
       </div>
+
+      <WorkoutShareCard
+        title={workout.template.name}
+        durationMinutes={workoutDuration}
+        totalVolumeKg={Math.round(totalVolumeKg)}
+        prExerciseNames={prExerciseNames}
+      />
 
       {/* Coach Comments */}
       <div className="space-y-4">

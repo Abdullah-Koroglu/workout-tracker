@@ -20,6 +20,9 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV production
 
+# Runtime'da db push calistirabilmek icin Prisma CLI'yi ekle
+RUN npm install -g prisma@6.6.0
+
 # PRISMA İÇİN BU SATIRI EKLE:
 COPY --from=builder /app/prisma ./prisma
 # Bağımlılıkları ve diğer dosyaları kopyala
@@ -29,4 +32,4 @@ COPY --from=builder /app/.next/static ./.next/static
 
 EXPOSE 3000
 ENV PORT 3000
-CMD ["node", "server.js"]
+CMD ["sh", "-c", "prisma db push --schema=/app/prisma/schema.prisma --skip-generate && node server.js"]

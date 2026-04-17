@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   nextjs_app:
     build: .
@@ -6,9 +5,10 @@ services:
       - "3000:3000"
       - "5555:5555"
     volumes:
-      - ./prisma/dev.db:/app/prisma/dev.db # Veri tabanını sunucuda saklar
+      - ./prisma/dev.db:/app/prisma/dev.db # SQLite dosyasini hostta kalici tutar
     restart: always
     environment:
+      - DATABASE_URL=file:/app/prisma/dev.db
       - AUTH_TRUST_HOST=true
       - NEXTAUTH_URL=https://fitcoach.akoroglu.com.tr
       - AUTH_SECRET=uydurma_bir_sey_yaz_buraya

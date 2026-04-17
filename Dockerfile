@@ -20,10 +20,7 @@ FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV production
 
-# Runtime'da db push calistirabilmek icin Prisma CLI'yi ekle
-RUN npm install -g prisma@6.6.0
-
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/public ./public
@@ -33,4 +30,4 @@ COPY --from=builder /app/server.js ./server.js
 
 EXPOSE 3000
 ENV PORT 3000
-CMD ["sh", "-c", "prisma generate --schema=/app/prisma/schema.prisma && prisma db push --schema=/app/prisma/schema.prisma --skip-generate && node server.js"]
+CMD ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && node server.js"]

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 
 export function PwaRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV === "test") {
       return;
     }
 

@@ -1,4 +1,4 @@
-
+<!-- 
 ### 1. PWA Push Notifications & Offline Kullanım
 **Copilot İçin Context:** "Uygulama bir Next.js PWA'dır. `next-pwa` veya `serwist` kullanarak Service Worker yönetimini yapıyoruz. Push API ve Notification API entegrasyonu gerekiyor."
 
@@ -13,7 +13,7 @@
 * **Detaylandırma:**
     * **Veri Modeli:** `Message` tablosu oluştur (`id, senderId, receiverId, content, createdAt, isRead`).
     * **UI:** `app/(shared)/messages` altında bir chat arayüzü oluştur. `useOptimistic` hook'u ile mesaj gönderildiğinde anında ekranda göster.
-    * **Trigger:** "Bir Coach bir antrenmanı yorumladığında (`Comment` tablosu), sistem otomatik olarak bir `Notification` objesi oluştursun ve Push API üzerinden Client'a 'Coach yeni bir yorum bıraktı' bildirimi gitsin."
+    * **Trigger:** "Bir Coach bir antrenmanı yorumladığında (`Comment` tablosu), sistem otomatik olarak bir `Notification` objesi oluştursun ve Push API üzerinden Client'a 'Coach yeni bir yorum bıraktı' bildirimi gitsin." -->
 
 ### 3. PR Kutlama ve Antrenman Bitim Paylaşım Kartı
 **Copilot İçin Context:** "Kullanıcı antrenmanı bitirdiğinde veya bir egzersizde Personal Record (PR) kırdığında görsel bir özet üretilecek."

@@ -49,9 +49,23 @@ export function PushNotificationToggle() {
       return;
     }
 
+    const isLocalhost =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+
+    if (!window.isSecureContext && !isLocalhost) {
+      warning("Push bildirimleri için HTTPS gerekiyor.");
+      return;
+    }
+
     setLoading(true);
     try {
-      const registration = await navigator.serviceWorker.ready;
+      const existingRegistration = await navigator.serviceWorker.getRegistration();
+      const registration =
+        existingRegistration || (await navigator.serviceWorker.register("/sw.js"));
+
+      await navigator.serviceWorker.ready;
+
       const asked = await Notification.requestPermission();
       setPermission(asked);
 

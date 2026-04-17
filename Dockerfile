@@ -23,12 +23,13 @@ ENV NODE_ENV production
 # Runtime'da db push calistirabilmek icin Prisma CLI'yi ekle
 RUN npm install -g prisma@6.6.0
 
-# PRISMA İÇİN BU SATIRI EKLE:
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/prisma ./prisma
-# Bağımlılıkları ve diğer dosyaları kopyala
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/server.js ./server.js
 
 EXPOSE 3000
 ENV PORT 3000

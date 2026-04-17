@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3009",
+    "dev": "node server.js",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
@@ -51,6 +51,7 @@
     "recharts": "^2.15.2",
     "tailwind-merge": "^2.6.0",
     "web-push": "^3.6.7",
+    "ws": "^8.20.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -62,6 +63,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "@types/ws": "^8.18.1",
     "autoprefixer": "^10.0.1",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",

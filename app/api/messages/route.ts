@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
 import { conversationQuerySchema, sendMessageSchema } from "@/validations/message";
 
@@ -93,6 +95,33 @@ export async function POST(request: Request) {
       receiver: { select: { id: true, name: true } }
     }
   });
+
+  await prisma.notification.create({
+    data: {
+      userId: parsed.data.receiverId,
+      title: `${message.sender.name} yeni mesaj gonderdi`,
+      body: message.content.slice(0, 140),
+      type: "DIRECT_MESSAGE"
+    }
+  });
+
+  const receiver = await prisma.user.findUnique({
+    where: { id: parsed.data.receiverId },
+    select: { pushSubscription: true }
+  });
+
+  const pushResult = await sendPushNotification(receiver?.pushSubscription, {
+    title: `${message.sender.name} yeni mesaj gonderdi`,
+    body: message.content.slice(0, 140),
+    url: `/messages?withUserId=${auth.session.user.id}`
+  });
+
+  if (pushResult.expired) {
+    await prisma.user.update({
+      where: { id: parsed.data.receiverId },
+      data: { pushSubscription: Prisma.DbNull }
+    });
+  }
 
   return NextResponse.json({ message }, { status: 201 });
 }

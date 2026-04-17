@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useOptimistic, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MessageCircle, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,83 @@ type MessageItem = {
   sender?: { id: string; name: string };
 };
 
+type WsIncomingMessage =
+  | {
+      type: "welcome";
+      userId: string;
+      sessionId: string;
+    }
+  | {
+      type: "message_sent";
+      clientId: string;
+      message: MessageItem;
+    }
+  | {
+      type: "new_message";
+      message: MessageItem;
+    }
+  | {
+      type: "ws_error";
+      code: string;
+      message: string;
+    }
+  | {
+      type: "pong";
+    };
+
+type WsOutgoingMessage =
+  | {
+      type: "send_message";
+      receiverId: string;
+      content: string;
+      clientId: string;
+    }
+  | {
+      type: "ping";
+    };
+
+function mergeMessage(list: MessageItem[], message: MessageItem) {
+  if (list.some((item) => item.id === message.id)) {
+    return list;
+  }
+
+  const next = [...list, message];
+  next.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+  return next;
+}
+
+function updateThreadsWithLatestMessage(
+  previous: Thread[],
+  message: MessageItem,
+  currentUserId: string,
+  activePeerId: string
+) {
+  const peerId = message.senderId === currentUserId ? message.receiverId : message.senderId;
+
+  return previous.map((thread) => {
+    if (thread.user.id !== peerId) {
+      return thread;
+    }
+
+    const incrementUnread = message.senderId === peerId && peerId !== activePeerId;
+
+    return {
+      ...thread,
+      unreadCount: incrementUnread ? thread.unreadCount + 1 : 0,
+      lastMessage: {
+        id: message.id,
+        content: message.content,
+        createdAt: message.createdAt,
+        senderId: message.senderId
+      }
+    };
+  }).sort((a, b) => {
+    const aTime = a.lastMessage ? new Date(a.lastMessage.createdAt).getTime() : 0;
+    const bTime = b.lastMessage ? new Date(b.lastMessage.createdAt).getTime() : 0;
+    return bTime - aTime;
+  });
+}
+
 export function MessagesClient({
   currentUserId,
   currentUserRole
@@ -47,18 +124,24 @@ export function MessagesClient({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
-
-  const [optimisticMessages, addOptimisticMessage] = useOptimistic(
-    messages,
-    (state: MessageItem[], optimisticValue: MessageItem) => [...state, optimisticValue]
-  );
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<number | null>(null);
+  const manualCloseRef = useRef(false);
+  const pingTimerRef = useRef<number | null>(null);
+  const activePeerRef = useRef<string>("");
+  const preferredPeerRef = useRef<string>("");
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
     [selectedUserId, threads]
   );
 
-  const fetchThreads = async () => {
+  useEffect(() => {
+    activePeerRef.current = selectedUserId;
+  }, [selectedUserId]);
+
+  const fetchThreads = useCallback(async () => {
     const response = await fetch("/api/messages/threads", { cache: "no-store" });
     if (!response.ok) {
       return;
@@ -68,11 +151,13 @@ export function MessagesClient({
     setThreads(data.threads || []);
 
     if (!selectedUserId && data.threads?.length) {
-      setSelectedUserId(data.threads[0].user.id);
+      const preferred = preferredPeerRef.current;
+      const preferredExists = preferred && data.threads.some((thread: Thread) => thread.user.id === preferred);
+      setSelectedUserId(preferredExists ? preferred : data.threads[0].user.id);
     }
-  };
+  }, [selectedUserId]);
 
-  const fetchMessages = async (withUserId: string) => {
+  const fetchMessages = useCallback(async (withUserId: string) => {
     if (!withUserId) return;
 
     setLoadingMessages(true);
@@ -88,27 +173,146 @@ export function MessagesClient({
     const data = await response.json();
     setMessages(data.messages || []);
     setLoadingMessages(false);
-  };
+  }, []);
+
+  const cleanupSocket = useCallback(() => {
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+
+    if (pingTimerRef.current) {
+      window.clearInterval(pingTimerRef.current);
+      pingTimerRef.current = null;
+    }
+  }, []);
+
+  const connectSocket = useCallback(async () => {
+    try {
+      const tokenResponse = await fetch("/api/messages/ws-token", { cache: "no-store" });
+      if (!tokenResponse.ok) {
+        setWsConnected(false);
+        return;
+      }
+
+      const tokenData = await tokenResponse.json();
+      const token = tokenData.token;
+      if (!token) {
+        setWsConnected(false);
+        return;
+      }
+
+      cleanupSocket();
+
+      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+      const socket = new WebSocket(`${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`);
+      wsRef.current = socket;
+
+      socket.onopen = () => {
+        setWsConnected(true);
+
+        pingTimerRef.current = window.setInterval(() => {
+          if (socket.readyState === WebSocket.OPEN) {
+            const payload: WsOutgoingMessage = { type: "ping" };
+            socket.send(JSON.stringify(payload));
+          }
+        }, 25000);
+      };
+
+      socket.onmessage = (event) => {
+        let payload: WsIncomingMessage;
+        try {
+          payload = JSON.parse(event.data) as WsIncomingMessage;
+        } catch {
+          return;
+        }
+
+        if (payload.type === "ws_error") {
+          error(payload.message || "Mesajlasma baglantisinda hata olustu.");
+          return;
+        }
+
+        if (payload.type === "message_sent") {
+          setMessages((prev) => {
+            const withoutTemp = prev.filter((item) => item.id !== payload.clientId);
+            return mergeMessage(withoutTemp, payload.message);
+          });
+          setThreads((prev) => updateThreadsWithLatestMessage(prev, payload.message, currentUserId, activePeerRef.current));
+          return;
+        }
+
+        if (payload.type === "new_message") {
+          const incoming = payload.message;
+          const peerId = incoming.senderId === currentUserId ? incoming.receiverId : incoming.senderId;
+
+          setThreads((prev) => updateThreadsWithLatestMessage(prev, incoming, currentUserId, activePeerRef.current));
+
+          if (peerId === activePeerRef.current) {
+            setMessages((prev) => mergeMessage(prev, incoming));
+
+            if (incoming.senderId === activePeerRef.current && activePeerRef.current) {
+              void fetchMessages(activePeerRef.current);
+            }
+          }
+        }
+      };
+
+      socket.onclose = () => {
+        setWsConnected(false);
+
+        if (pingTimerRef.current) {
+          window.clearInterval(pingTimerRef.current);
+          pingTimerRef.current = null;
+        }
+
+        if (!manualCloseRef.current) {
+          reconnectTimerRef.current = window.setTimeout(() => {
+            void connectSocket();
+          }, 1800);
+        }
+      };
+
+      socket.onerror = () => {
+        setWsConnected(false);
+      };
+    } catch {
+      setWsConnected(false);
+      reconnectTimerRef.current = window.setTimeout(() => {
+        void connectSocket();
+      }, 1800);
+    }
+  }, [cleanupSocket, currentUserId, error, fetchMessages]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    preferredPeerRef.current = params.get("withUserId") || "";
+  }, []);
 
   useEffect(() => {
     void fetchThreads();
-  }, []);
+  }, [fetchThreads]);
 
   useEffect(() => {
     if (!selectedUserId) return;
     void fetchMessages(selectedUserId);
-  }, [selectedUserId]);
+  }, [fetchMessages, selectedUserId]);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      void fetchThreads();
-      if (selectedUserId) {
-        void fetchMessages(selectedUserId);
-      }
-    }, 4000);
+    manualCloseRef.current = false;
+    void connectSocket();
 
-    return () => clearInterval(interval);
-  }, [selectedUserId]);
+    return () => {
+      manualCloseRef.current = true;
+      cleanupSocket();
+      if (reconnectTimerRef.current) {
+        window.clearTimeout(reconnectTimerRef.current);
+      }
+    };
+  }, [cleanupSocket, connectSocket]);
 
   const onSend = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,10 +331,24 @@ export function MessagesClient({
       optimistic: true
     };
 
-    addOptimisticMessage(optimistic);
-    const content = draft;
+    setMessages((prev) => mergeMessage(prev, optimistic));
+    const content = draft.trim();
     setDraft("");
     setSending(true);
+
+    const socket = wsRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      const payload: WsOutgoingMessage = {
+        type: "send_message",
+        receiverId: selectedUserId,
+        content,
+        clientId: tempId
+      };
+
+      socket.send(JSON.stringify(payload));
+      setSending(false);
+      return;
+    }
 
     const response = await fetch("/api/messages", {
       method: "POST",
@@ -144,16 +362,16 @@ export function MessagesClient({
     if (!response.ok) {
       error(data.error || "Mesaj gonderilemedi.");
       setDraft(content);
-      void fetchMessages(selectedUserId);
+      setMessages((prev) => prev.filter((item) => item.id !== tempId));
       return;
     }
 
     success("Mesaj gonderildi.");
     setMessages((prev) => {
       const withoutTemp = prev.filter((item) => item.id !== tempId);
-      return [...withoutTemp, data.message];
+      return mergeMessage(withoutTemp, data.message);
     });
-    void fetchThreads();
+    setThreads((prev) => updateThreadsWithLatestMessage(prev, data.message, currentUserId, selectedUserId));
   };
 
   return (
@@ -166,6 +384,9 @@ export function MessagesClient({
             {currentUserRole === "COACH"
               ? "Clientlarinla birebir mesajlasabilirsin."
               : "Coachlarinla antrenman hakkinda anlik mesajlasabilirsin."}
+          </p>
+          <p className="mt-2 text-xs font-semibold text-muted-foreground">
+            Durum: {wsConnected ? "Canli bagli" : "Baglanti yeniden kuruluyor"}
           </p>
         </div>
         <PushNotificationToggle />
@@ -220,12 +441,12 @@ export function MessagesClient({
               <div className="flex-1 space-y-3 overflow-y-auto p-4">
                 {loadingMessages ? (
                   <p className="text-sm text-muted-foreground">Mesajlar yukleniyor...</p>
-                ) : optimisticMessages.length === 0 ? (
+                ) : messages.length === 0 ? (
                   <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
                     Ilk mesaji gondererek konusmayi baslat.
                   </div>
                 ) : (
-                  optimisticMessages.map((message) => {
+                  messages.map((message) => {
                     const mine = message.senderId === currentUserId;
                     return (
                       <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>

@@ -57,11 +57,11 @@ export default async function ClientDashboardPage() {
 
   const today = getCurrentDayStart();
 
-  const assignmentItems = assignments.map((assignment) => {
+  const assignmentItems = assignments.map((assignment: (typeof assignments)[number]) => {
     const scheduledFor = new Date(assignment.scheduledFor);
     scheduledFor.setHours(0, 0, 0, 0);
 
-    const isConsumed = assignment.isOneTime && assignment.workouts.some((workout) =>
+    const isConsumed = assignment.isOneTime && assignment.workouts.some((workout: { status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED" }) =>
       workout.status === "COMPLETED" || workout.status === "ABANDONED"
     );
 
@@ -71,12 +71,12 @@ export default async function ClientDashboardPage() {
       isPast: scheduledFor.getTime() < today.getTime(),
       isConsumed
     };
-  }).filter((assignment) => !assignment.isPast && !assignment.isConsumed);
+  }).filter((assignment: { isPast: boolean; isConsumed: boolean }) => !assignment.isPast && !assignment.isConsumed);
 
   
 
-  const todayAssignments = assignmentItems.filter((assignment) => assignment.isToday);
-  const upcomingAssignments = assignmentItems.filter((assignment) => !assignment.isToday);
+  const todayAssignments = assignmentItems.filter((assignment: DashboardAssignment) => assignment.isToday);
+  const upcomingAssignments = assignmentItems.filter((assignment: DashboardAssignment) => !assignment.isToday);
 
   type DashboardAssignment = (typeof assignmentItems)[number];
 
@@ -115,8 +115,12 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
 
               <div className="space-y-2">
                 {dayItems.map((assignment) => {
-                  const weightItems = assignment.template.exercises.filter((item) => item.exercise.type === "WEIGHT");
-                  const cardioItems = assignment.template.exercises.filter((item) => item.exercise.type === "CARDIO");
+                  const weightItems = assignment.template.exercises.filter(
+                    (item: (typeof assignment.template.exercises)[number]) => item.exercise.type === "WEIGHT"
+                  );
+                  const cardioItems = assignment.template.exercises.filter(
+                    (item: (typeof assignment.template.exercises)[number]) => item.exercise.type === "CARDIO"
+                  );
 
                   return (
                     <div key={assignment.id} className="rounded-xl border p-3 md:p-4">

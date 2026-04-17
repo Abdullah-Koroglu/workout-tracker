@@ -1,15 +1,6 @@
-import { Suspense } from "react";
-import ClientCoachesContent from "./content";
+"use client";
 
-export const dynamic = "force-dynamic";
-
-export default function ClientCoachesPage() {
-  return (
-    <Suspense>
-      <ClientCoachesContent />
-    </Suspense>
-  );
-};
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ChevronLeft, Search, ShieldCheck, Users } from "lucide-react";
 
@@ -32,7 +23,7 @@ const statusLabel: Record<NonNullable<Coach["requestStatus"]>, string> = {
   REJECTED: "Reddedildi"
 };
 
-export default function ClientCoachesPage() {
+export default function ClientCoachesContent() {
   const { push } = useNotificationContext();
   const { confirm } = useConfirmation();
   const [search, setSearch] = useState("");

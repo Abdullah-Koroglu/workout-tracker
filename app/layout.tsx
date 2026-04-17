@@ -10,6 +10,7 @@ import { AppSessionProvider } from "@/components/shared/SessionProvider";
 import { GlobalBreadcrumb } from "@/components/shared/GlobalBreadcrumb";
 import { NavbarScrollBehavior } from "@/components/shared/NavbarScrollBehavior";
 import { PwaRegister } from "@/components/shared/PwaRegister";
+import { OfflineResume } from "@/components/shared/OfflineResume";
 
 export const metadata: Metadata = {
   title: "Fit Coach",
@@ -100,6 +101,7 @@ export default function RootLayout({
               <NotificationProvider>
                 <ConfirmationProvider>
                   <PwaRegister />
+                  <OfflineResume />
                   <Navbar />
                   <NavbarScrollBehavior />
                   <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">

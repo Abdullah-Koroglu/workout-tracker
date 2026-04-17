@@ -12,3 +12,4 @@ services:
       - AUTH_TRUST_HOST=true
       - NEXTAUTH_URL=https://fitcoach.akoroglu.com.tr
       - AUTH_SECRET=uydurma_bir_sey_yaz_buraya
+      - PORT=3000

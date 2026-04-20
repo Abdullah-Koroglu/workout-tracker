@@ -4,6 +4,7 @@ import { Dumbbell } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { HeaderInteractive } from "./HeaderInteractive";
+import Image from "next/image";
 
 function getInitials(name: string): string {
   return name
@@ -79,9 +80,9 @@ export async function Navbar() {
             className="group flex flex-shrink-0 items-center gap-2.5"
           >
             <div
-              className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br ${logoBg} shadow-sm transition-shadow group-hover:shadow-md`}
+              className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-shadow group-hover:shadow-md`}
             >
-              <Dumbbell className="h-4 w-4 text-white" />
+              <Image src="/logo.png" alt="Fit Coach Logo" width={32} height={32} className="aspect-square"/>
             </div>
             <span
               className={`bg-gradient-to-r ${logoText} bg-clip-text text-lg font-black tracking-tight text-transparent`}

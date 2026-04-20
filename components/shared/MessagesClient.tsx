@@ -1,9 +1,8 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, MessageCircle, PanelLeft, RefreshCcw, Send } from "lucide-react";
+import { ArrowLeft, CheckCheck, MessageCircle, Plus, Send } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { PushNotificationToggle } from "@/components/shared/PushNotificationToggle";
 
@@ -190,7 +189,6 @@ export function MessagesClient({
     [selectedUserId, threads]
   );
 
-  const wsStatusLabel = wsConnected ? "Canli bagli" : "Yeniden baglaniyor";
   const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
 
   const selectThread = useCallback((userId: string) => {
@@ -537,169 +535,269 @@ export function MessagesClient({
     void fetchThreads({ syncSelectedMessages: true });
   };
 
-  return (
-    <div className="space-y-3 md:space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Mesajlasma Durumu</p>
-          <div className="mt-1 flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full ${wsStatusDotClass}`} />
-            <p className="text-sm font-semibold text-foreground">{wsStatusLabel}</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="outline" className="h-10 gap-2" onClick={handleRefresh} disabled={refreshing}>
-            <RefreshCcw className="h-4 w-4" />
-            Yenile
-          </Button>
-          <PushNotificationToggle />
-        </div>
-      </div>
+  // ─── helpers ────────────────────────────────────────────────────────────────
 
-      <div className="grid gap-3 md:gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
-        <aside
-          className={`rounded-2xl border bg-card p-3 shadow-sm ${
-            !isThreadPanelOpen && selectedThread ? "hidden lg:block" : "block"
-          }`}
-        >
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Konusmalar</p>
-          <div className="space-y-2 max-h-[68vh] overflow-y-auto pr-1 lg:max-h-[72vh]">
-            {threads.length === 0 ? (
-              <p className="rounded-xl border border-dashed p-3 text-sm text-muted-foreground">
-                Henuz mesajlasabilecegin baglanti bulunmuyor.
-              </p>
-            ) : (
-              threads.map((thread) => {
-                const isActive = thread.user.id === selectedUserId;
-                return (
-                  <button
-                    key={thread.user.id}
-                    type="button"
-                    onClick={() => selectThread(thread.user.id)}
-                    className={`w-full rounded-2xl border p-3 text-left transition ${
-                      isActive
-                        ? "border-emerald-400 bg-emerald-50 shadow-sm"
-                        : "border-border bg-background hover:bg-muted/40"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <p className="truncate text-sm font-semibold text-foreground">{thread.user.name}</p>
-                      {thread.unreadCount > 0 ? (
-                        <span className="rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white">
-                          {thread.unreadCount}
+  function getInitials(name: string) {
+    return name
+      .split(" ")
+      .map((w) => w[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase();
+  }
+
+  function formatTime(iso: string) {
+    const d = new Date(iso);
+    const now = new Date();
+    const isToday =
+      d.getDate() === now.getDate() &&
+      d.getMonth() === now.getMonth() &&
+      d.getFullYear() === now.getFullYear();
+    if (isToday) {
+      return d.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+    }
+    return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" });
+  }
+
+  function groupMessagesByDate(msgs: MessageItem[]) {
+    const groups: { label: string; messages: MessageItem[] }[] = [];
+    let currentLabel = "";
+    for (const msg of msgs) {
+      const d = new Date(msg.createdAt);
+      const label = d.toLocaleDateString("tr-TR", { weekday: "short", day: "numeric", month: "short" });
+      if (label !== currentLabel) {
+        currentLabel = label;
+        groups.push({ label, messages: [] });
+      }
+      groups[groups.length - 1].messages.push(msg);
+    }
+    return groups;
+  }
+
+  // ─── render ─────────────────────────────────────────────────────────────────
+
+  // Thread list view
+  if (isThreadPanelOpen || !selectedThread) {
+    return (
+      <div className="flex h-[calc(100dvh-4rem)] flex-col bg-background">
+        {/* Header */}
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
+          <span className="w-8" />
+          <h1 className="text-base font-bold text-foreground">Mesajlar</h1>
+          <div className="flex items-center gap-1">
+            <span className={`h-2 w-2 rounded-full ${wsStatusDotClass}`} />
+            <PushNotificationToggle />
+          </div>
+        </header>
+
+        {/* Thread list */}
+        <div className="flex-1 overflow-y-auto divide-y divide-border">
+          {threads.length === 0 ? (
+            <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
+              <MessageCircle className="h-12 w-12 text-muted-foreground/40" />
+              <p className="text-sm">Henüz mesajlaşabileceğin bağlantı yok.</p>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                Yenile
+              </button>
+            </div>
+          ) : (
+            threads.map((thread) => {
+              const isActive = thread.user.id === selectedUserId;
+              return (
+                <button
+                  key={thread.user.id}
+                  type="button"
+                  onClick={() => selectThread(thread.user.id)}
+                  className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                    isActive ? "bg-emerald-50" : "hover:bg-muted/40"
+                  }`}
+                >
+                  {/* Avatar */}
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                    {getInitials(thread.user.name)}
+                  </div>
+
+                  {/* Content */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="truncate text-sm font-semibold text-foreground">
+                        {thread.user.name}
+                      </span>
+                      {thread.lastMessage && (
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          {formatTime(thread.lastMessage.createdAt)}
                         </span>
-                      ) : null}
+                      )}
                     </div>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {thread.lastMessage?.content || "Henuz mesaj yok"}
-                    </p>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {thread.lastMessage
-                        ? new Date(thread.lastMessage.createdAt).toLocaleTimeString("tr-TR", {
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="truncate text-xs text-muted-foreground">
+                        {thread.lastMessage?.content || "Henüz mesaj yok"}
+                      </p>
+                      {thread.unreadCount > 0 && (
+                        <span className="shrink-0 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+                          {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        {/* New message FAB */}
+        <button
+          type="button"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="absolute bottom-6 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-700 disabled:opacity-60"
+          aria-label="Yenile"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      </div>
+    );
+  }
+
+  // Active chat thread view
+  const messageGroups = groupMessagesByDate(messages);
+
+  return (
+    <div className="flex h-[calc(100dvh-4rem)] flex-col bg-background">
+      {/* Chat header */}
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-3 py-2.5 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setIsThreadPanelOpen(true)}
+          className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-muted"
+          aria-label="Geri"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+          {getInitials(selectedThread.user.name)}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground leading-tight">
+            {selectedThread.user.name}
+          </p>
+          <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotClass}`} />
+            {wsConnected ? "Çevrimiçi" : "Bağlanıyor..."}
+          </p>
+        </div>
+
+        <PushNotificationToggle />
+      </header>
+
+      {/* Messages area */}
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto px-3 py-4 space-y-1"
+      >
+        {loadingMessages ? (
+          <div className="flex h-full items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
+            <MessageCircle className="h-10 w-10 text-muted-foreground/30" />
+            <p className="text-sm">İlk mesajı göndererek konuşmayı başlat.</p>
+          </div>
+        ) : (
+          messageGroups.map((group) => (
+            <div key={group.label}>
+              {/* Date separator */}
+              <div className="my-4 flex items-center justify-center">
+                <span className="rounded-full bg-muted px-3 py-0.5 text-[11px] text-muted-foreground">
+                  {group.label}
+                </span>
+              </div>
+
+              {group.messages.map((message) => {
+                const mine = message.senderId === currentUserId;
+                return (
+                  <div
+                    key={message.id}
+                    className={`mb-1.5 flex items-end gap-2 ${mine ? "justify-end" : "justify-start"}`}
+                  >
+                    {/* Incoming avatar */}
+                    {!mine && (
+                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                        {getInitials(selectedThread.user.name)}
+                      </div>
+                    )}
+
+                    <div className={`max-w-[75%] ${mine ? "items-end" : "items-start"} flex flex-col`}>
+                      <div
+                        className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
+                          mine
+                            ? "rounded-br-sm bg-emerald-600 text-white"
+                            : "rounded-bl-sm bg-muted text-foreground"
+                        } ${message.optimistic ? "opacity-70" : ""}`}
+                      >
+                        {message.content}
+                      </div>
+
+                      {/* Meta: time + read tick for outgoing */}
+                      <div className={`mt-0.5 flex items-center gap-1 ${mine ? "justify-end" : "justify-start"}`}>
+                        <span className="text-[10px] text-muted-foreground">
+                          {new Date(message.createdAt).toLocaleTimeString("tr-TR", {
                             hour: "2-digit",
                             minute: "2-digit"
-                          })
-                        : ""}
-                    </p>
-                  </button>
-                );
-              })
-            )}
-          </div>
-        </aside>
-
-        <section
-          className={`min-h-[72vh] rounded-2xl border bg-card shadow-sm ${
-            isThreadPanelOpen && !selectedThread ? "flex" : isThreadPanelOpen ? "hidden lg:flex" : "flex"
-          } flex-col`}
-        >
-          {selectedThread ? (
-            <>
-              <div className="border-b px-3 py-3 sm:px-4">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="h-8 w-8 lg:hidden"
-                      onClick={() => setIsThreadPanelOpen(true)}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-semibold text-foreground">{selectedThread.user.name}</p>
-                      <p className="truncate text-xs text-muted-foreground">{selectedThread.user.email}</p>
+                          })}
+                          {message.optimistic ? "  ·" : ""}
+                        </span>
+                        {mine && !message.optimistic && (
+                          <CheckCheck className="h-3 w-3 text-emerald-500" />
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="h-8 gap-1 px-2 lg:hidden"
-                    onClick={() => setIsThreadPanelOpen(true)}
-                  >
-                    <PanelLeft className="h-3.5 w-3.5" />
-                    Liste
-                  </Button>
-                </div>
-              </div>
-
-              <div
-                ref={messagesContainerRef}
-                className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-background via-background to-emerald-50/30 p-3 sm:p-4"
-              >
-                {loadingMessages ? (
-                  <p className="text-sm text-muted-foreground">Mesajlar yukleniyor...</p>
-                ) : messages.length === 0 ? (
-                  <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
-                    Ilk mesaji gondererek konusmayi baslat.
-                  </div>
-                ) : (
-                  messages.map((message) => {
-                    const mine = message.senderId === currentUserId;
-                    return (
-                      <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div
-                          className={`max-w-[88%] rounded-3xl px-3 py-2.5 text-sm shadow-sm sm:max-w-[82%] ${
-                            mine ? "bg-emerald-600 text-white" : "border bg-background text-foreground"
-                          }`}
-                        >
-                          <p>{message.content}</p>
-                          <p className={`mt-1 text-[10px] ${mine ? "text-emerald-100" : "text-muted-foreground"}`}>
-                            {new Date(message.createdAt).toLocaleString("tr-TR")}
-                            {message.optimistic ? " (gonderiliyor)" : ""}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              <form onSubmit={onSend} className="border-t bg-card p-2.5 sm:p-3">
-                <div className="flex gap-2">
-                  <input
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    placeholder="Mesajini yaz..."
-                    className="h-11 flex-1 rounded-2xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <Button type="submit" disabled={sending || !draft.trim()} className="h-11 gap-2 px-4">
-                    <Send className="h-4 w-4" />
-                    Gonder
-                  </Button>
-                </div>
-              </form>
-            </>
-          ) : (
-            <div className="flex h-full flex-1 items-center justify-center p-6 text-center text-muted-foreground">
-              <div>
-                <MessageCircle className="mx-auto h-10 w-10 text-emerald-600" />
-                <p className="mt-3 text-sm">Mesajlasmaya baslamak icin bir konusma sec.</p>
-              </div>
+                );
+              })}
             </div>
-          )}
-        </section>
+          ))
+        )}
       </div>
+
+      {/* Input footer */}
+      <form
+        onSubmit={onSend}
+        className="sticky bottom-0 flex items-center gap-2 border-t bg-background px-3 py-2.5"
+      >
+        <button
+          type="button"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground hover:bg-muted/80"
+          aria-label="Medya ekle"
+        >
+          <Plus className="h-5 w-5" />
+        </button>
+
+        <input
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Mesaj yaz..."
+          className="h-10 flex-1 rounded-full border-0 bg-muted px-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+        />
+
+        <button
+          type="submit"
+          disabled={sending || !draft.trim()}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50"
+          aria-label="Gönder"
+        >
+          <Send className="h-4 w-4" />
+        </button>
+      </form>
     </div>
   );
 }

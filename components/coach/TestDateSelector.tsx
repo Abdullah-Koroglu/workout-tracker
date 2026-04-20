@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertCircle, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNotificationContext } from "@/contexts/NotificationContext";
+import { sendTestPush } from "./TestPush";
 
 export function TestDateSelector({ inline = false }: { inline?: boolean }) {
   const { info, error, success } = useNotificationContext();
@@ -115,6 +116,9 @@ export function TestDateSelector({ inline = false }: { inline?: boolean }) {
             </Button>
           </div>
         </div>
+        <Button onClick={sendTestPush} variant="ghost" className="mt-3">
+          Test Push Gönder
+        </Button>
       </div>
     );
   }

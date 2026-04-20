@@ -82,14 +82,43 @@ function buildWsUrl(token: string) {
   const explicitBaseUrl = process.env.NEXT_PUBLIC_WS_URL?.trim();
 
   if (explicitBaseUrl) {
-    const normalizedBaseUrl = explicitBaseUrl.startsWith("http://")
-      ? explicitBaseUrl.replace("http://", "ws://")
-      : explicitBaseUrl.startsWith("https://")
-        ? explicitBaseUrl.replace("https://", "wss://")
-        : explicitBaseUrl;
+    try {
+      if (explicitBaseUrl.startsWith("/")) {
+        const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+        const delimiter = explicitBaseUrl.includes("?") ? "&" : "?";
+        return `${protocol}://${window.location.host}${explicitBaseUrl}${delimiter}token=${encodeURIComponent(token)}`;
+      }
 
-    const delimiter = normalizedBaseUrl.includes("?") ? "&" : "?";
-    return `${normalizedBaseUrl}${delimiter}token=${encodeURIComponent(token)}`;
+      const normalizedInput = explicitBaseUrl.startsWith("http://")
+        ? explicitBaseUrl.replace("http://", "ws://")
+        : explicitBaseUrl.startsWith("https://")
+          ? explicitBaseUrl.replace("https://", "wss://")
+          : explicitBaseUrl;
+
+      const url = new URL(normalizedInput);
+      const isLocalHost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+
+      if (typeof window !== "undefined") {
+        if (window.location.protocol === "https:" && url.protocol === "ws:") {
+          url.protocol = "wss:";
+        }
+
+        if (isLocalHost && window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
+          url.hostname = window.location.hostname;
+          if (window.location.protocol === "https:") {
+            url.port = "";
+          } else if (window.location.port && !url.port) {
+            url.port = window.location.port;
+          }
+        }
+      }
+
+      const delimiter = url.toString().includes("?") ? "&" : "?";
+      return `${url.toString()}${delimiter}token=${encodeURIComponent(token)}`;
+    } catch {
+      const delimiter = explicitBaseUrl.includes("?") ? "&" : "?";
+      return `${explicitBaseUrl}${delimiter}token=${encodeURIComponent(token)}`;
+    }
   }
 
   const protocol = window.location.protocol === "https:" ? "wss" : "ws";
@@ -161,6 +190,15 @@ export function MessagesClient({
     [selectedUserId, threads]
   );
 
+  const wsStatusLabel = wsConnected ? "Canli bagli" : "Yeniden baglaniyor";
+  const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
+
+  const selectThread = useCallback((userId: string) => {
+    activePeerRef.current = userId;
+    setSelectedUserId(userId);
+    setIsThreadPanelOpen(false);
+  }, []);
+
   useEffect(() => {
     activePeerRef.current = selectedUserId;
     if (selectedUserId) {
@@ -191,7 +229,7 @@ export function MessagesClient({
     }
 
     const data = await response.json();
-    if (latestMessagesRequestRef.current !== requestId || withUserId !== activePeerRef.current) {
+    if (latestMessagesRequestRef.current !== requestId) {
       return;
     }
 
@@ -231,6 +269,7 @@ export function MessagesClient({
       const preferred = preferredPeerRef.current;
       const preferredExists = preferred && data.threads.some((thread: Thread) => thread.user.id === preferred);
       selectedAfterSync = preferredExists ? preferred : data.threads[0].user.id;
+      activePeerRef.current = selectedAfterSync;
       setSelectedUserId(selectedAfterSync);
     }
 
@@ -255,11 +294,22 @@ export function MessagesClient({
     }
   }, []);
 
+  const scheduleReconnect = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      window.clearTimeout(reconnectTimerRef.current);
+    }
+
+    reconnectTimerRef.current = window.setTimeout(() => {
+      void connectSocket();
+    }, 1800);
+  }, []);
+
   const connectSocket = useCallback(async () => {
     try {
       const tokenResponse = await fetch("/api/messages/ws-token", { cache: "no-store" });
       if (!tokenResponse.ok) {
         setWsConnected(false);
+        scheduleReconnect();
         return;
       }
 
@@ -267,6 +317,7 @@ export function MessagesClient({
       const token = tokenData.token;
       if (!token) {
         setWsConnected(false);
+        scheduleReconnect();
         return;
       }
 
@@ -335,22 +386,19 @@ export function MessagesClient({
         }
 
         if (!manualCloseRef.current) {
-          reconnectTimerRef.current = window.setTimeout(() => {
-            void connectSocket();
-          }, 1800);
+          scheduleReconnect();
         }
       };
 
       socket.onerror = () => {
         setWsConnected(false);
+        socket.close();
       };
     } catch {
       setWsConnected(false);
-      reconnectTimerRef.current = window.setTimeout(() => {
-        void connectSocket();
-      }, 1800);
+      scheduleReconnect();
     }
-  }, [cleanupSocket, currentUserId, error, fetchMessages]);
+  }, [cleanupSocket, currentUserId, error, fetchMessages, scheduleReconnect]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -489,16 +537,11 @@ export function MessagesClient({
     <div className="space-y-3 md:space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">In-App Mesajlar</p>
-          <h1 className="mt-1 text-2xl font-black text-foreground">Mesajlasma Merkezi</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {currentUserRole === "COACH"
-              ? "Clientlarinla birebir mesajlasabilirsin."
-              : "Coachlarinla antrenman hakkinda anlik mesajlasabilirsin."}
-          </p>
-          <p className="mt-2 text-xs font-semibold text-muted-foreground">
-            Durum: {wsConnected ? "Canli bagli" : "Baglanti yeniden kuruluyor"}
-          </p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Mesajlasma Durumu</p>
+          <div className="mt-1 flex items-center gap-2">
+            <span className={`h-2.5 w-2.5 rounded-full ${wsStatusDotClass}`} />
+            <p className="text-sm font-semibold text-foreground">{wsStatusLabel}</p>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" variant="outline" className="h-10 gap-2" onClick={handleRefresh} disabled={refreshing}>
@@ -528,10 +571,7 @@ export function MessagesClient({
                   <button
                     key={thread.user.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedUserId(thread.user.id);
-                      setIsThreadPanelOpen(false);
-                    }}
+                    onClick={() => selectThread(thread.user.id)}
                     className={`w-full rounded-2xl border p-3 text-left transition ${
                       isActive
                         ? "border-emerald-400 bg-emerald-50 shadow-sm"

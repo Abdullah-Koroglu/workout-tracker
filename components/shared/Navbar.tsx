@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Dumbbell } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -36,12 +35,6 @@ export async function Navbar() {
       : "/";
 
   const initials = session?.user.name ? getInitials(session.user.name) : "?";
-
-  const logoBg = isCoach
-    ? "from-blue-500 to-cyan-600"
-    : isClient
-      ? "from-emerald-500 to-teal-600"
-      : "from-slate-600 to-slate-800";
 
   const logoText = isCoach
     ? "from-blue-600 to-cyan-600 dark:from-blue-400 dark:to-cyan-400"

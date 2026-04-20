@@ -172,6 +172,9 @@ export function MessagesClient({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const nextCursorRef = useRef<string | null>(null);
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectTimerRef = useRef<number | null>(null);
@@ -183,6 +186,8 @@ export function MessagesClient({
   const [isThreadPanelOpen, setIsThreadPanelOpen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  // tracks whether the next messages state update should scroll to bottom
+  const scrollToBottomRef = useRef(true);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
@@ -216,7 +221,7 @@ export function MessagesClient({
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-      const response = await fetch(`/api/messages?withUserId=${withUserId}`, {
+      const response = await fetch(`/api/messages?withUserId=${withUserId}&limit=20`, {
         cache: "no-store",
         signal: controller.signal
       }).finally(() => {
@@ -228,7 +233,10 @@ export function MessagesClient({
       }
 
       const data = await response.json();
+      scrollToBottomRef.current = true;
       setMessages(data.messages || []);
+      setHasMore(data.hasMore ?? false);
+      nextCursorRef.current = data.nextCursor ?? null;
     } catch {
       return;
     } finally {
@@ -237,6 +245,53 @@ export function MessagesClient({
       }
     }
   }, []);
+
+  const loadMoreMessages = useCallback(async () => {
+    if (!selectedUserId || !nextCursorRef.current || loadingMore) return;
+
+    setLoadingMore(true);
+    try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+      const url = `/api/messages?withUserId=${selectedUserId}&limit=20&cursor=${encodeURIComponent(nextCursorRef.current)}`;
+      const response = await fetch(url, {
+        cache: "no-store",
+        signal: controller.signal
+      }).finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const older: MessageItem[] = data.messages || [];
+
+      // Preserve scroll position: measure height before prepending
+      const container = messagesContainerRef.current;
+      const prevScrollHeight = container?.scrollHeight ?? 0;
+
+      scrollToBottomRef.current = false;
+      setMessages((prev) => {
+        const existingIds = new Set(prev.map((m) => m.id));
+        const fresh = older.filter((m) => !existingIds.has(m.id));
+        return [...fresh, ...prev];
+      });
+      setHasMore(data.hasMore ?? false);
+      nextCursorRef.current = data.nextCursor ?? null;
+
+      // Restore scroll so older messages appear above without jumping
+      requestAnimationFrame(() => {
+        if (container) {
+          container.scrollTop = container.scrollHeight - prevScrollHeight;
+        }
+      });
+    } catch {
+      return;
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [selectedUserId, loadingMore]);
 
   const fetchThreads = useCallback(async (options?: { syncSelectedMessages?: boolean; silent?: boolean }) => {
     const silent = options?.silent ?? false;
@@ -352,12 +407,13 @@ export function MessagesClient({
         }
 
         if (payload.type === "message_sent") {
+          scrollToBottomRef.current = true;
           setMessages((prev) => {
             const withoutTemp = prev.filter((item) => item.id !== payload.clientId);
             return mergeMessage(withoutTemp, payload.message);
           });
           setThreads((prev) => updateThreadsWithLatestMessage(prev, payload.message, currentUserId, activePeerRef.current));
-          void fetchThreads({ syncSelectedMessages: true, silent: true });
+          void fetchThreads({ syncSelectedMessages: false, silent: true });
           return;
         }
 
@@ -368,14 +424,11 @@ export function MessagesClient({
           setThreads((prev) => updateThreadsWithLatestMessage(prev, incoming, currentUserId, activePeerRef.current));
 
           if (peerId === activePeerRef.current) {
+            scrollToBottomRef.current = true;
             setMessages((prev) => mergeMessage(prev, incoming));
-
-            if (incoming.senderId === activePeerRef.current && activePeerRef.current) {
-              void fetchMessages(activePeerRef.current, { silent: true });
-            }
           }
 
-          void fetchThreads({ syncSelectedMessages: true, silent: true });
+          void fetchThreads({ syncSelectedMessages: false, silent: true });
         }
       };
 
@@ -449,11 +502,9 @@ export function MessagesClient({
   }, [fetchThreads]);
 
   useEffect(() => {
+    if (!scrollToBottomRef.current) return;
     const container = messagesContainerRef.current;
-    if (!container) {
-      return;
-    }
-
+    if (!container) return;
     container.scrollTop = container.scrollHeight;
   }, [messages, selectedUserId]);
 
@@ -713,7 +764,22 @@ export function MessagesClient({
             <p className="text-sm">İlk mesajı göndererek konuşmayı başlat.</p>
           </div>
         ) : (
-          messageGroups.map((group) => (
+          <>
+            {/* Load more button at the top */}
+            {hasMore && (
+              <div className="flex justify-center pb-2">
+                <button
+                  type="button"
+                  onClick={() => void loadMoreMessages()}
+                  disabled={loadingMore}
+                  className="rounded-full bg-muted px-4 py-1.5 text-xs font-medium text-muted-foreground transition hover:bg-muted/80 disabled:opacity-50"
+                >
+                  {loadingMore ? "Yükleniyor..." : "Önceki mesajları yükle"}
+                </button>
+              </div>
+            )}
+
+            {messageGroups.map((group) => (
             <div key={group.label}>
               {/* Date separator */}
               <div className="my-4 flex items-center justify-center">
@@ -765,7 +831,8 @@ export function MessagesClient({
                 );
               })}
             </div>
-          ))
+          ))}
+          </>
         )}
       </div>
 

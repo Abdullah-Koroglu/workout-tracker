@@ -6,5 +6,7 @@ export const sendMessageSchema = z.object({
 });
 
 export const conversationQuerySchema = z.object({
-  withUserId: z.string().min(1)
+  withUserId: z.string().min(1),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional().default(20)
 });

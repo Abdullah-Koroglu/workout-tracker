@@ -27,34 +27,44 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const parsed = conversationQuerySchema.safeParse({
-    withUserId: searchParams.get("withUserId")
+    withUserId: searchParams.get("withUserId"),
+    cursor: searchParams.get("cursor") ?? undefined,
+    limit: searchParams.get("limit") ?? undefined
   });
 
   if (!parsed.success) {
     return NextResponse.json({ error: "withUserId is required" }, { status: 400 });
   }
 
-  const withUserId = parsed.data.withUserId;
+  const { withUserId, cursor, limit } = parsed.data;
   const isRelated = await hasAcceptedRelation(auth.session.user.id, withUserId);
 
   if (!isRelated) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const messages = await prisma.message.findMany({
+  // Cursor-based pagination: fetch `limit+1` items sorted desc to detect hasMore,
+  // then reverse so the client always receives chronological order.
+  const rawMessages = await prisma.message.findMany({
     where: {
       OR: [
         { senderId: auth.session.user.id, receiverId: withUserId },
         { senderId: withUserId, receiverId: auth.session.user.id }
-      ]
+      ],
+      ...(cursor ? { createdAt: { lt: new Date(cursor) } } : {})
     },
-    orderBy: { createdAt: "asc" },
+    orderBy: { createdAt: "desc" },
+    take: limit + 1,
     include: {
       sender: { select: { id: true, name: true } },
       receiver: { select: { id: true, name: true } }
-    },
-    take: 300
+    }
   });
+
+  const hasMore = rawMessages.length > limit;
+  const page = hasMore ? rawMessages.slice(0, limit) : rawMessages;
+  const messages = page.reverse(); // chronological order
+  const nextCursor = hasMore ? messages[0].createdAt.toISOString() : null;
 
   await prisma.message.updateMany({
     where: {
@@ -65,7 +75,7 @@ export async function GET(request: Request) {
     data: { isRead: true }
   });
 
-  return NextResponse.json({ messages });
+  return NextResponse.json({ messages, nextCursor, hasMore });
 }
 
 export async function POST(request: Request) {

@@ -136,20 +136,26 @@ export function TestDateSelector({ inline = false }: { inline?: boolean }) {
   }
 
   return (
-    <div className={`fixed bottom-4 right-4 z-40 rounded-2xl border-2 shadow-lg transition-all ${testDate ? "border-yellow-300 bg-yellow-50" : "border-slate-200 bg-white"}`}>
+    <div
+      className={`fixed bottom-4 right-4 z-40 rounded-2xl border-2 shadow-lg transition-all ${testDate ? "border-yellow-300 bg-yellow-50" : "border-slate-200 bg-white"}`}
+    >
       <Button onClick={sendTestPush} variant="ghost" className="mt-3">
-          Test Push Gönder
-        </Button>
+        Test Push Gönder
+      </Button>
       <div className={`p-4 ${testDate ? "space-y-3" : "space-y-2"}`}>
         {testDate && (
           <div className="flex items-start gap-3 rounded-xl bg-yellow-100/50 p-3">
             <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm text-yellow-900">Test Modu Aktif</p>
+              <p className="font-semibold text-sm text-yellow-900">
+                Test Modu Aktif
+              </p>
               <p className="text-xs text-yellow-800 mt-1">
                 Şu anda <strong>{testDate}</strong> tarihine ayarlandı
               </p>
-              <p className="text-xs text-yellow-700 mt-1 italic">Bu sadece test amaçlıdır. Canlıya almadan silin!</p>
+              <p className="text-xs text-yellow-700 mt-1 italic">
+                Bu sadece test amaçlıdır. Canlıya almadan silin!
+              </p>
             </div>
             <button
               onClick={() => setIsExpanded(false)}

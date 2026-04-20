@@ -1,6 +1,6 @@
-const STATIC_CACHE = "fitcoach-static-v4";
-const PAGE_CACHE = "fitcoach-pages-v4";
-const API_CACHE = "fitcoach-api-v4";
+const STATIC_CACHE = "fitcoach-static-v5";
+const PAGE_CACHE = "fitcoach-pages-v5";
+const API_CACHE = "fitcoach-api-v5";
 const CACHE_ALLOWLIST = [STATIC_CACHE, PAGE_CACHE, API_CACHE];
 
 const PRECACHE_URLS = [
@@ -106,6 +106,21 @@ async function staleWhileRevalidateApi(request) {
   });
 }
 
+function isRealtimeApiPath(pathname) {
+  return pathname === "/api/messages" || pathname.startsWith("/api/messages/");
+}
+
+async function networkOnlyApi(request) {
+  try {
+    return await fetch(request);
+  } catch {
+    return new Response(JSON.stringify({ error: "Offline" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
     return;
@@ -118,6 +133,11 @@ self.addEventListener("fetch", (event) => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(networkFirstPage(event.request));
+    return;
+  }
+
+  if (isRealtimeApiPath(requestUrl.pathname)) {
+    event.respondWith(networkOnlyApi(event.request));
     return;
   }
 

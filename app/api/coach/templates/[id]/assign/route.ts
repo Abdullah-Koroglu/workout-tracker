@@ -85,7 +85,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   ]);
 
   if (client && client.role === "CLIENT") {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3009";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
 
     await sendTemplatedEmail({
       to: client.email,

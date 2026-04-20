@@ -1,15 +1,11 @@
 const http = require("http");
 const crypto = require("crypto");
-const next = require("next");
 const webpush = require("web-push");
 const { WebSocketServer } = require("ws");
 const { Prisma, PrismaClient } = require("@prisma/client");
 
-const dev = process.env.NODE_ENV !== "production";
 const hostname = "0.0.0.0";
-const port = Number(process.env.PORT || 3000);
-const app = next({ dev, hostname, port });
-const handle = app.getRequestHandler();
+const port = Number(process.env.WS_PORT || 3001);
 const prisma = new PrismaClient();
 
 const socketsByUserId = new Map();
@@ -268,9 +264,16 @@ async function handleSendMessage(senderId, ws, data) {
   }
 }
 
-app.prepare().then(() => {
+function startWsServer() {
   const server = http.createServer((req, res) => {
-    handle(req, res);
+    if (req.url === "/health") {
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
+    res.writeHead(404, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: "Not found" }));
   });
 
   const wss = new WebSocketServer({ noServer: true });
@@ -348,6 +351,8 @@ app.prepare().then(() => {
   });
 
   server.listen(port, hostname, () => {
-    console.log(`> Ready on http://${hostname}:${port}`);
+    console.log(`> WebSocket server ready on ws://${hostname}:${port}/ws`);
   });
-});
+}
+
+startWsServer();

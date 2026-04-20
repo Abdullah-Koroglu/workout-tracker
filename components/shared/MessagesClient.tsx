@@ -78,6 +78,24 @@ function mergeMessage(list: MessageItem[], message: MessageItem) {
   return next;
 }
 
+function buildWsUrl(token: string) {
+  const explicitBaseUrl = process.env.NEXT_PUBLIC_WS_URL?.trim();
+
+  if (explicitBaseUrl) {
+    const normalizedBaseUrl = explicitBaseUrl.startsWith("http://")
+      ? explicitBaseUrl.replace("http://", "ws://")
+      : explicitBaseUrl.startsWith("https://")
+        ? explicitBaseUrl.replace("https://", "wss://")
+        : explicitBaseUrl;
+
+    const delimiter = normalizedBaseUrl.includes("?") ? "&" : "?";
+    return `${normalizedBaseUrl}${delimiter}token=${encodeURIComponent(token)}`;
+  }
+
+  const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+  return `${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`;
+}
+
 function updateThreadsWithLatestMessage(
   previous: Thread[],
   message: MessageItem,
@@ -203,9 +221,7 @@ export function MessagesClient({
       }
 
       cleanupSocket();
-
-      const protocol = window.location.protocol === "https:" ? "wss" : "ws";
-      const socket = new WebSocket(`${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`);
+      const socket = new WebSocket(buildWsUrl(token));
       wsRef.current = socket;
 
       socket.onopen = () => {

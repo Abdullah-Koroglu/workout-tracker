@@ -30,4 +30,4 @@ COPY --from=builder /app/server.js ./server.js
 
 EXPOSE 3000
 ENV PORT 3000
-CMD ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && node server.js"]
+CMD ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && npm run start"]

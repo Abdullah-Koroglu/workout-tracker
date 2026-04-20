@@ -1,75 +1,265 @@
-# Uygulama Teknik Olarak Nasıl Bir Yapıda?
+# Teknik Yapı — FitCoach
 
-Bu proje, Next.js App Router üzerinde çalışan full-stack bir web uygulamasıdır. UI, API, kimlik doğrulama ve veritabanı erişimi aynı kod tabanında yönetilir.
+## Genel Mimari
 
-## Teknoloji Yığını
-- **Framework**: Next.js 16 (App Router)
-- **Dil**: TypeScript
-- **UI**: React 19 + Tailwind CSS + Radix UI bileşenleri
-- **Kimlik Doğrulama**: NextAuth (Credentials Provider, JWT session)
-- **ORM/DB**: Prisma + SQLite
-- **Validasyon**: Zod
-- **Grafikler**: Recharts
-- **E2E Test**: Playwright
+Uygulama iki bağımsız Node.js sürecinden oluşur:
 
-## Mimari Yaklaşım
-- Monorepo değil, tek uygulama reposu.
-- App Router ile route grupları:
-  - `app/(auth)` -> login/register akışları
-  - `app/(coach)` -> coach ekranları
-  - `app/(client)` -> client ekranları
-  - `app/api/**` -> server-side API route'ları
-- Server Components + Client Components birlikte kullanılıyor.
-- UI state için React context ve custom hook'lar kullanılıyor.
+| Süreç | Port | Açıklama |
+|---|---|---|
+| Next.js App | 3000 | Tüm sayfalar, REST API route'ları, auth |
+| WebSocket Server | 3001 | Gerçek zamanlı mesajlaşma (server.js) |
 
-## Kimlik Doğrulama ve Yetkilendirme
-- Credentials tabanlı giriş (email + password).
-- Şifreler `bcryptjs` ile hashleniyor.
-- Session stratejisi JWT.
-- `proxy.ts` ile rol bazlı route koruması:
-  - `COACH` kullanıcılar client alanına yönlendirilmiyor.
-  - `CLIENT` kullanıcılar coach alanına yönlendirilmiyor.
-- API seviyesinde `requireAuth` yardımcı fonksiyonu ile role check yapılıyor.
+Hem Next.js hem de WS sunucusu aynı Dockerfile üzerinden derlenir; production ortamında iki ayrı Docker container olarak koşar (nextjs_app, ws_server). Her iki container da aynı SQLite dosyasını (host üzerinden volume mount) ve aynı AUTH_SECRET'ı paylaşır.
 
-## Veri Modeli (Prisma)
-Temel tablolar:
-- `User` (role: COACH | CLIENT)
-- `CoachClientRelation` (PENDING/ACCEPTED/REJECTED)
-- `Exercise` (WEIGHT | CARDIO)
-- `WorkoutTemplate`
-- `WorkoutTemplateExercise` (set/rep/RIR veya cardio duration/protocol)
-- `TemplateAssignment`
-- `Workout` (IN_PROGRESS/COMPLETED/ABANDONED)
-- `WorkoutSet`
-- `Comment`
+---
 
-Bu model, coach-client ilişkisini, template atamasını, workout icrasını ve yorum/analiz akışını uçtan uca taşıyor.
+## Tech Stack
 
-## API Katmanı
-- Next.js Route Handlers (`app/api/**/route.ts`) kullanılıyor.
-- İş kuralları API tarafında doğrulanıyor:
-  - Session ve rol kontrolü
-  - Coach-client ilişki kontrolü
-  - Template sahipliği kontrolü
-  - Idempotent/korumalı workout akışları
+| Katman | Teknoloji | Versiyon |
+|---|---|---|
+| Framework | Next.js (App Router) | 16.2.2 |
+| UI | React | 19.0.0 |
+| Dil | TypeScript | ^5 |
+| ORM | Prisma | 6.6.0 |
+| Veritabanı | SQLite | — |
+| Auth | NextAuth v5 beta | 5.0.0-beta.25 |
+| Şifreleme | bcryptjs | 2.4.3 |
+| Stil | Tailwind CSS | 3.4.17 |
+| UI Bileşenleri | Radix UI | çeşitli |
+| Form | react-hook-form + Zod | 7.54 / 3.24 |
+| WebSocket | ws (node) | 8.20.0 |
+| Push Bildirim | web-push (VAPID) | 3.6.7 |
+| E-posta | Nodemailer + @react-email | 6.9 / 2.0.7 |
+| Grafik | Recharts | 2.15.2 |
+| PWA | Özel Service Worker | — |
+| Test | Playwright (E2E) | 1.59.1 |
 
-## Frontend Katmanı
-- Tailwind + Radix ile bileşen tabanlı arayüz.
-- Ortak durum yönetimi için context'ler:
-  - `AuthContext`
-  - `WorkoutContext`
-  - `NotificationContext`
-  - `ConfirmationContext`
-- Özel iş akışları için custom hook'lar:
-  - `useWorkoutFlow`, `useWorkoutTimer`, `useWorkoutActions`, `useExerciseManager` vb.
+---
 
-## Test ve Çalıştırma
-- Geliştirme: `npm run dev` (port 3009)
-- Build: `npm run build`
-- E2E: `npm run test:e2e`
-- Prisma:
-  - `npm run db:push`
-  - `npm run db:seed`
+## Klasör Yapısı
 
-## Teknik Profilin Kısa Değerlendirmesi
-Bu uygulama, modern TypeScript + Next.js full-stack yaklaşımıyla geliştirilmiş; rol bazlı erişim, güçlü domain modeli ve e2e test altyapısı olan, üretime yakın bir fitness takip sistemidir.
+```
+app/
+	(auth)/           → /login, /register (herkese açık)
+	(client)/         → CLIENT rolüne ait sayfalar
+	(coach)/          → COACH rolüne ait sayfalar
+	(shared)/         → /messages (her iki rol)
+	api/              → REST API route'ları
+components/
+	client/           → Client'a özgü React bileşenleri
+	coach/            → Coach'a özgü React bileşenleri
+	shared/           → Ortak bileşenler (Navbar, MessagesClient, vb.)
+	ui/               → Temel UI bileşenleri (Button, Input, vb.)
+contexts/           → React context'leri (Auth, Workout, Notification, Confirmation)
+hooks/              → Özel hook'lar
+lib/                → Yardımcı modüller (prisma, auth, api-auth, push, email, vb.)
+prisma/
+	schema.prisma     → Veritabanı şeması
+	seed.ts           → Geliştirme verisi
+public/
+	sw.js             → Service Worker
+	manifest.webmanifest
+validations/        → Zod şemaları
+e2e/                → Playwright E2E testleri
+server.js           → Bağımsız WebSocket sunucusu
+```
+
+---
+
+## Veritabanı Şeması (Prisma / SQLite)
+
+### Modeller ve İlişkiler
+
+```
+User
+ ├─ CoachClientRelation (coach veya client olarak)
+ ├─ WorkoutTemplate      (coach'un oluşturduğu)
+ ├─ TemplateAssignment   (coach'un atadığı)
+ ├─ Workout              (client'ın yaptığı)
+ ├─ Comment              (workout'a bırakılan)
+ ├─ Message              (gönderen / alan)
+ └─ Notification
+
+CoachClientRelation
+ └─ status: PENDING | ACCEPTED | REJECTED
+ └─ benzersiz kısıt: [coachId, clientId]
+
+WorkoutTemplate
+ └─ WorkoutTemplateExercise[]  (sıralı egzersiz listesi)
+		└─ Exercise (WEIGHT | CARDIO)
+		└─ targetSets, targetReps, targetRir, durationMinutes, protocol (JSON?)
+
+TemplateAssignment
+ └─ Workout[]  (her çalışma seansı)
+
+Workout
+ └─ status: IN_PROGRESS | COMPLETED | ABANDONED
+ └─ WorkoutSet[]  (her set için weightKg, reps, rir, durationMinutes, durationSeconds)
+ └─ Comment[]
+
+Message
+ └─ indeksler: [senderId, receiverId, createdAt], [receiverId, isRead]
+
+Notification
+ └─ indeksler: [userId, isRead, createdAt]
+```
+
+---
+
+## Kimlik Doğrulama
+
+- **Strateji:** JWT (veritabanı session'ı yok).
+- **Provider:** Credentials (email + bcrypt şifre karşılaştırma).
+- **Roller:** `COACH` | `CLIENT` — JWT token'a ve session'a eklenir.
+- **API güvenliği:** `lib/api-auth.ts` → `requireAuth(role?)` helper'ı. Kimliği doğrulanmamış istek → 401, yanlış rol → 403.
+- **WS token:** `/api/messages/ws-token` → HMAC-SHA256 imzalı, 10 dakika geçerli kısa ömürlü token. WS sunucusu bu token'ı `timingSafeEqual` ile doğrular.
+
+---
+
+## API Route'ları
+
+### Auth
+| Method | Path | Açıklama |
+|---|---|---|
+| GET/POST | `/api/auth/[...nextauth]` | NextAuth handler |
+| POST | `/api/auth/register` | Yeni kullanıcı kaydı |
+
+### Coach — Egzersizler
+| Method | Path | Açıklama |
+|---|---|---|
+| GET/POST | `/api/coach/exercises` | Liste / oluştur |
+| PATCH/DELETE | `/api/coach/exercises/[id]` | Güncelle / sil |
+
+### Coach — Şablonlar
+| Method | Path | Açıklama |
+|---|---|---|
+| GET/POST | `/api/coach/templates` | Liste / oluştur |
+| GET/PATCH/DELETE | `/api/coach/templates/[id]` | Detay / güncelle / sil |
+| POST | `/api/coach/templates/[id]/assign` | Client'a ata |
+
+### Coach — Client'lar
+| Method | Path | Açıklama |
+|---|---|---|
+| GET | `/api/coach/clients` | Kabul edilmiş client listesi |
+| GET | `/api/coach/clients/[clientId]` | Client detayı |
+| PATCH | `/api/coach/clients/[clientId]/relation` | Kabul / red |
+| DELETE | `/api/coach/clients/[clientId]/relation` | İlişkiyi kaldır |
+| GET | `/api/coach/clients/[clientId]/workouts` | Client antrenman geçmişi |
+| GET | `/api/coach/clients/[clientId]/progress` | İlerleme verileri (grafikler) |
+
+### Client — Koçlar
+| Method | Path | Açıklama |
+|---|---|---|
+| GET | `/api/client/coaches` | Koç arama (max 50 sonuç) |
+| POST | `/api/client/coaches/[coachId]/request` | Bağlantı isteği gönder |
+| DELETE | `/api/client/coaches/[coachId]` | İsteği iptal et / ilişkiyi kaldır |
+
+### Client — Antrenmanlar
+| Method | Path | Açıklama |
+|---|---|---|
+| GET | `/api/client/assignments` | Görev listesi |
+| GET/POST | `/api/client/workouts` | Antrenman listesi / başlat |
+| GET/PATCH | `/api/client/workouts/[id]` | Detay / güncelle (tamamla/terk et) |
+| POST | `/api/client/workouts/[id]/sets` | Set verisi kaydet |
+
+### Mesajlaşma
+| Method | Path | Açıklama |
+|---|---|---|
+| GET | `/api/messages?withUserId=&cursor=&limit=` | Cursor-based sayfalandırılmış geçmiş |
+| POST | `/api/messages` | HTTP yedek gönderim |
+| GET | `/api/messages/ws-token` | WS auth token üret |
+| GET | `/api/messages/threads` | Konuşma iş parçacığı listesi |
+
+### Bildirimler & Cron
+| Method | Path | Açıklama |
+|---|---|---|
+| POST/DELETE | `/api/notifications/subscribe` | Push aboneliği kaydet / sil |
+| POST | `/api/cron/weekly-coach-digest` | Haftalık e-posta özeti (cron secret korumalı) |
+
+---
+
+## WebSocket Sunucusu (`server.js`)
+
+### Bağlantı Yönetimi
+- `Map<userId, Set<WebSocket>>` → Aynı kullanıcının birden fazla sekme/cihazı desteklenir.
+- WS upgrade anında HMAC token doğrulanır; geçersiz token bağlantıyı keser.
+
+### Mesaj Akışı (`send_message`)
+1. İçerik doğrulama (max 2000 karakter).
+2. Coach-Client ilişkisi `ACCEPTED` kontrol edilir.
+3. `Message` kaydı DB'ye yazılır, `Notification` oluşturulur.
+4. Gönderenin diğer sekmelerine ve alıcının tüm soketlerine anlık iletilir.
+5. Alıcı çevrimdışıysa VAPID push bildirimi gönderilir; eski (410) abonelikler otomatik silinir.
+
+### HTTP Endpoint
+- `GET /health` → `{ ok: true }` (liveness probe için)
+
+---
+
+## Mesajlaşma Sayfalandırması
+
+Cursor-based pagination:
+- İlk yükleme: en son 20 mesaj.
+- "Önceki mesajları yükle": `cursor` (ISO tarih) ile geriye doğru 20'li bloklar.
+- `nextCursor` ve `hasMore` API response'ında döner.
+- Scroll pozisyonu korunur (eski mesajlar yüklendiğinde aşağı zıplamaz).
+
+---
+
+## PWA / Service Worker
+
+- **Özel SW** (`public/sw.js`) — Workbox kullanılmaz.
+- Cache versiyonu: `fitcoach-static-v5`, `fitcoach-pages-v5`, `fitcoach-api-v5`.
+- **Strateji:**
+	- Statik dosyalar: Cache First
+	- Sayfalar: Network First (offline → cache → `/offline.html`)
+	- `/api/messages/*`: Network Only (canlı veri, önbelleğe alınmaz)
+	- Diğer API: Stale-While-Revalidate
+- **Push:** `push` event'i yakalanır, VAPID bildirimi gösterilir. `notificationclick` ilgili sayfaya yönlendirir.
+- **Manifest:** `display: standalone`, dil `tr`, tema rengi `#22C55E`.
+- `PwaRegister` bileşeni root layout'ta SW'yi kayıt eder.
+
+---
+
+## Docker Yapılandırması
+
+```yaml
+services:
+	nextjs_app:    # Port 3000 + 5555 (Prisma Studio)
+	ws_server:     # Port 3001
+```
+
+- Her iki servis de tek `Dockerfile`'dan derlenir.
+- `ws_server` komutu: `prisma generate && npm run start:ws`
+- `nextjs_app` komutu: `prisma generate && prisma db push && next start`
+- SQLite dosyası host'ta kalıcı: `./prisma/dev.db:/app/prisma/dev.db`
+- `.dockerignore`: `node_modules`, `.next`, `test-results`, `e2e` dahil edilmez.
+- Her iki servis `restart: always`.
+
+---
+
+## Önemli Hook'lar
+
+| Hook | Görev |
+|---|---|
+| `useWorkoutFlow` | Antrenman adım yönetimi (egzersiz → set → tamamla) |
+| `useWorkoutTimer` | Anlık süre sayacı |
+| `useExerciseManager` | Set ekleme/silme, veri güncelleme |
+| `useWorkoutActions` | Antrenmanı tamamla/terk et API çağrıları |
+| `useWakeLock` | Ekranın kapanmasını engeller (Screen Wake Lock API) |
+| `useProgress` | İlerleme verisi fetch ve hesaplama |
+| `useStartConfirmation` | Antrenman başlatma onay diyaloğu |
+
+---
+
+## E2E Testler
+
+Playwright ile 6 test dosyası:
+- `auth.spec.ts` — giriş, kayıt, yönlendirme
+- `coach-client-relations.spec.ts` — bağlantı istekleri ve kabul akışı
+- `exercise-template.spec.ts` — egzersiz ve şablon yönetimi
+- `workout-execution.spec.ts` — antrenman yürütme akışı
+- `workout-review.spec.ts` — tamamlanan antrenman incelemesi
+- `complete-workflow.spec.ts` — uçtan uca tam kullanım senaryosu
+
+Test ortamı: Chromium, Mobile Chrome, Mobile Safari, WebKit.

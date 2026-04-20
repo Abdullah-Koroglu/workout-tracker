@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ChevronLeft, Calendar, Clock, MessageSquare } from "lucide-react";
+import { CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, LayoutDashboard, MessageSquare, Trophy, Weight, XCircle } from "lucide-react";
 import { notFound } from "next/navigation";
 
 import { prisma } from "@/lib/prisma";
@@ -139,179 +139,300 @@ export default async function WorkoutDetailPage({
     )
   );
 
+  const totalSets = workout.sets.filter((s) => s.completed).length;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/client/workouts"
-          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100"
-        >
-          <ChevronLeft className="w-4 h-4" />
-          Geri
-        </Link>
-        <h1 className="text-3xl font-bold">{workout.template.name}</h1>
-      </div>
+    <div className="space-y-4 pb-8 md:space-y-6">
+      {/* Hero Header */}
+      <div className={`overflow-hidden rounded-2xl md:rounded-3xl shadow-sm ${
+        workout.status === "COMPLETED"
+          ? "bg-gradient-to-br from-emerald-50 via-white to-lime-50 border border-emerald-200/60"
+          : workout.status === "ABANDONED"
+          ? "bg-gradient-to-br from-amber-50 via-white to-orange-50 border border-amber-200/60"
+          : "bg-card border"
+      }`}>
+        <div className="px-4 py-4 md:px-6 md:py-5">
+          {/* Back + status */}
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              href="/client/workouts"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              Antrenmanlar
+            </Link>
+            {workout.status === "COMPLETED" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Tamamlandı
+              </span>
+            ) : workout.status === "ABANDONED" ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+                <XCircle className="h-3.5 w-3.5" />
+                Yarıda Bırakıldı
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800">
+                Devam Ediyor
+              </span>
+            )}
+          </div>
 
-      {/* Workout Info */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow dark:bg-gray-800">
-          <Calendar className="w-5 h-5 text-green-600" />
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Tarih</p>
-            <p className="font-semibold">
-              {workoutDate.toLocaleDateString("tr-TR")}
+          {/* Title */}
+          <div className="mt-3">
+            <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 md:text-xs">
+              Antrenman Özeti
+            </p>
+            <h1 className="mt-1 text-xl font-black leading-tight text-slate-900 md:text-3xl">
+              {workout.template.name}
+            </h1>
+            <p className="mt-1 text-xs text-slate-500 md:text-sm">
+              {workoutDate.toLocaleDateString("tr-TR", {
+                weekday: "long",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}
             </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow dark:bg-gray-800">
-          <Clock className="w-5 h-5 text-green-600" />
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Süre</p>
-            <p className="font-semibold">
-              {workoutDuration ? `${workoutDuration} dakika` : "-"}
-            </p>
-          </div>
-        </div>
+          {/* Stats Row */}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Süre</p>
+              </div>
+              <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
+                {workoutDuration ?? "-"}
+                <span className="ml-1 text-xs font-semibold text-slate-500">dk</span>
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow dark:bg-gray-800">
-          <MessageSquare className="w-5 h-5 text-green-600" />
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Yorumlar</p>
-            <p className="font-semibold">{workout.comments.length}</p>
-          </div>
-        </div>
+            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+              <div className="flex items-center gap-1.5">
+                <Weight className="h-3.5 w-3.5 text-emerald-600" />
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Hacim</p>
+              </div>
+              <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
+                {Math.round(totalVolumeKg).toLocaleString("tr-TR")}
+                <span className="ml-1 text-xs font-semibold text-slate-500">kg</span>
+              </p>
+            </div>
 
-        <div className="flex items-center gap-3 p-4 bg-white rounded-lg shadow dark:bg-gray-800">
-          <MessageSquare className="w-5 h-5 text-green-600" />
-          <div>
-            <p className="text-sm text-gray-600 dark:text-gray-400">Durum</p>
-            <p className="font-semibold">
-              {workout.status === "ABANDONED" ? "Yarıda bırakıldı" : workout.status === "COMPLETED" ? "Tamamlandı" : "Devam ediyor"}
-            </p>
+            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+              <div className="flex items-center gap-1.5">
+                <Dumbbell className="h-3.5 w-3.5 text-emerald-600" />
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Set</p>
+              </div>
+              <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
+                {totalSets}
+              </p>
+            </div>
+
+            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+              <div className="flex items-center gap-1.5">
+                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">PR</p>
+              </div>
+              <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
+                {prExerciseNames.length}
+              </p>
+            </div>
           </div>
+
+          {/* PR Banner */}
+          {prExerciseNames.length > 0 && (
+            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
+              <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+              <div>
+                <p className="text-xs font-bold text-amber-800">Kişisel Rekor!</p>
+                <p className="mt-0.5 text-xs text-amber-700">
+                  {prExerciseNames.join(", ")}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
       {/* Set Details */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Set Detayları</h2>
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground md:text-base">
+          Egzersiz Detayları
+        </h2>
 
         {Object.entries(setsByExercise).length === 0 ? (
-          <div className="p-8 bg-gray-50 rounded-lg text-center dark:bg-gray-800">
-            <p className="text-gray-500 dark:text-gray-400">
-              Bu antrenman için kayıtlı set bulunmamaktadır
-            </p>
+          <div className="rounded-2xl border border-dashed p-8 text-center">
+            <p className="text-sm text-muted-foreground">Bu antrenman için kayıtlı set bulunmamaktadır.</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {Object.entries(setsByExercise).map(([exerciseName, sets]) => (
-              <div
-                key={exerciseName}
-                className="bg-white rounded-lg shadow overflow-hidden dark:bg-gray-800"
-              >
-                <div className="bg-green-50 dark:bg-green-900/20 px-4 py-3 border-b border-green-200 dark:border-green-900">
-                  <h3 className="font-semibold text-gray-900 dark:text-white">
-                    {exerciseName}
-                  </h3>
-                </div>
+          <div className="space-y-3">
+            {Object.entries(setsByExercise).map(([exerciseName, sets]) => {
+              const firstSet = sets[0];
+              const isCardio = firstSet.weightKg === null && firstSet.reps === null;
+              const hasPR = sets.some((s) => {
+                if (s.weightKg === null) return false;
+                const exercise = workout.sets.find((ws) => ws.exercise.name === exerciseName);
+                if (!exercise) return false;
+                const prev = previousMaxByExercise[exercise.exerciseId];
+                return prev === undefined || s.weightKg! > prev;
+              });
 
-                <div className="divide-y dark:divide-gray-700">
-                  {sets.map((set) => (
-                    <div
-                      key={set.id}
-                      className="p-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Set {set.setNumber}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-6 text-sm">
-                        {set.weightKg !== null && (
-                          <div className="text-right">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Ağırlık
-                            </p>
-                            <p className="font-semibold">
-                              {set.weightKg} <span className="text-xs">kg</span>
-                            </p>
-                          </div>
-                        )}
-                        {set.reps !== null && (
-                          <div className="text-right">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              Tekrar
-                            </p>
-                            <p className="font-semibold">{set.reps}</p>
-                          </div>
-                        )}
-                        {set.rir !== null && (
-                          <div className="text-right">
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
-                              RIR
-                            </p>
-                            <p className="font-semibold">{set.rir}</p>
-                          </div>
-                        )}
-                      </div>
+              return (
+                <div key={exerciseName} className="overflow-hidden rounded-2xl border bg-card shadow-sm">
+                  {/* Exercise header */}
+                  <div className={`flex items-center justify-between gap-2 px-4 py-3 ${
+                    isCardio ? "bg-orange-50/60 border-b border-orange-100" : "bg-emerald-50/60 border-b border-emerald-100"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {isCardio ? (
+                        <Flame className="h-4 w-4 text-orange-500 shrink-0" />
+                      ) : (
+                        <Dumbbell className="h-4 w-4 text-emerald-600 shrink-0" />
+                      )}
+                      <h3 className="font-bold text-sm text-slate-900">{exerciseName}</h3>
+                      {hasPR && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase text-amber-700">
+                          <Trophy className="h-2.5 w-2.5" />
+                          PR
+                        </span>
+                      )}
                     </div>
-                  ))}
+                    <span className="text-xs font-semibold text-muted-foreground">{sets.length} set</span>
+                  </div>
+
+                  {/* Sets */}
+                  <div className="divide-y">
+                    {sets.map((set) => (
+                      <div
+                        key={set.id}
+                        className="flex items-center gap-3 px-4 py-2.5"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-bold text-muted-foreground">
+                          {set.setNumber}
+                        </div>
+                        <div className="flex flex-1 flex-wrap items-center gap-x-4 gap-y-1">
+                          {set.weightKg !== null && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <span className="text-xs text-muted-foreground">Ağırlık</span>
+                              <span className="font-bold text-slate-900">{set.weightKg} kg</span>
+                            </div>
+                          )}
+                          {set.reps !== null && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <span className="text-xs text-muted-foreground">Tekrar</span>
+                              <span className="font-bold text-slate-900">{set.reps}</span>
+                            </div>
+                          )}
+                          {set.rir !== null && (
+                            <div className="flex items-center gap-1 text-sm">
+                              <span className="text-xs text-muted-foreground">RIR</span>
+                              <span className="font-bold text-slate-900">{set.rir}</span>
+                            </div>
+                          )}
+                        </div>
+                        {set.weightKg !== null && (() => {
+                          const exercise = workout.sets.find((ws) => ws.exercise.name === exerciseName);
+                          if (!exercise) return null;
+                          const prev = previousMaxByExercise[exercise.exerciseId];
+                          if ((prev === undefined || set.weightKg! > prev)) {
+                            return (
+                              <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black text-amber-700">
+                                PR
+                              </span>
+                            );
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
-      </div>
+      </section>
 
+      {/* Share Card */}
       <WorkoutShareCard
         title={workout.template.name}
         durationMinutes={workoutDuration}
         totalVolumeKg={Math.round(totalVolumeKg)}
         prExerciseNames={prExerciseNames}
+        workoutDate={workoutDate}
+        totalSets={totalSets}
       />
 
       {/* Coach Comments */}
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Antrenör Yorumları</h2>
+      <section className="space-y-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-bold uppercase tracking-widest text-muted-foreground md:text-base">
+            Antrenör Yorumları
+          </h2>
+          {workout.comments.length > 0 && (
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[11px] font-bold text-blue-700">
+              {workout.comments.length}
+            </span>
+          )}
+        </div>
 
         {workout.comments.length === 0 ? (
-          <div className="p-8 bg-gray-50 rounded-lg text-center dark:bg-gray-800">
-            <p className="text-gray-500 dark:text-gray-400">
-              Henüz yorum yapılmamıştır
-            </p>
+          <div className="rounded-2xl border border-dashed p-8 text-center">
+            <p className="text-sm text-muted-foreground">Henüz antrenör yorumu bulunmamaktadır.</p>
           </div>
         ) : (
           <div className="space-y-3">
             {workout.comments.map((comment) => (
               <div
                 key={comment.id}
-                className="bg-white rounded-lg shadow p-4 dark:bg-gray-800 border-l-4 border-blue-500"
+                className="rounded-2xl border bg-card p-4 shadow-sm"
               >
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {comment.author.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(comment.createdAt).toLocaleDateString("tr-TR", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                <div className="flex items-start gap-3">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-xs font-bold text-blue-700">
+                    {comment.author.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <p className="text-sm font-semibold text-slate-900">{comment.author.name}</p>
+                      <p className="shrink-0 text-xs text-muted-foreground">
+                        {new Date(comment.createdAt).toLocaleDateString("tr-TR", {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <p className="mt-1.5 text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                      {comment.content}
                     </p>
                   </div>
                 </div>
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                  {comment.content}
-                </p>
               </div>
             ))}
           </div>
         )}
+      </section>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+        <Link
+          href="/client/dashboard"
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl border bg-card px-4 py-3 text-sm font-semibold text-foreground shadow-sm hover:bg-muted transition"
+        >
+          <LayoutDashboard className="h-4 w-4" />
+          Dashboard
+        </Link>
+        <Link
+          href="/client/workouts"
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+        >
+          <Dumbbell className="h-4 w-4" />
+          Tüm Antrenmanlar
+        </Link>
       </div>
     </div>
   );

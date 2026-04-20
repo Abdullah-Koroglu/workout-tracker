@@ -68,6 +68,8 @@ type WsOutgoingMessage =
       type: "ping";
     };
 
+const REQUEST_TIMEOUT_MS = 12000;
+
 function mergeMessage(list: MessageItem[], message: MessageItem) {
   if (list.some((item) => item.id === message.id)) {
     return list;
@@ -182,8 +184,6 @@ export function MessagesClient({
   const [isThreadPanelOpen, setIsThreadPanelOpen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
-  const latestMessagesRequestRef = useRef(0);
-  const latestThreadsRequestRef = useRef(0);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
@@ -209,76 +209,80 @@ export function MessagesClient({
   const fetchMessages = useCallback(async (withUserId: string, options?: { silent?: boolean }) => {
     if (!withUserId) return;
 
-    const requestId = latestMessagesRequestRef.current + 1;
-    latestMessagesRequestRef.current = requestId;
-
     const silent = options?.silent ?? false;
     if (!silent) {
       setLoadingMessages(true);
     }
 
-    const response = await fetch(`/api/messages?withUserId=${withUserId}`, {
-      cache: "no-store"
-    });
+    try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
-    if (!response.ok) {
-      if (!silent && latestMessagesRequestRef.current === requestId) {
+      const response = await fetch(`/api/messages?withUserId=${withUserId}`, {
+        cache: "no-store",
+        signal: controller.signal
+      }).finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setMessages(data.messages || []);
+    } catch {
+      return;
+    } finally {
+      if (!silent) {
         setLoadingMessages(false);
       }
-      return;
-    }
-
-    const data = await response.json();
-    if (latestMessagesRequestRef.current !== requestId) {
-      return;
-    }
-
-    setMessages(data.messages || []);
-    if (!silent) {
-      setLoadingMessages(false);
     }
   }, []);
 
   const fetchThreads = useCallback(async (options?: { syncSelectedMessages?: boolean; silent?: boolean }) => {
-    const requestId = latestThreadsRequestRef.current + 1;
-    latestThreadsRequestRef.current = requestId;
-
     const silent = options?.silent ?? false;
     if (!silent) {
       setRefreshing(true);
     }
 
-    const response = await fetch("/api/messages/threads", { cache: "no-store" });
-    if (!response.ok) {
-      if (!silent && latestThreadsRequestRef.current === requestId) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+      const response = await fetch("/api/messages/threads", {
+        cache: "no-store",
+        signal: controller.signal
+      }).finally(() => {
+        window.clearTimeout(timeoutId);
+      });
+
+      if (!response.ok) {
+        return;
+      }
+
+      const data = await response.json();
+      setThreads(data.threads || []);
+
+      let selectedAfterSync = selectedUserId;
+
+      if (!selectedUserId && data.threads?.length) {
+        const preferred = preferredPeerRef.current;
+        const preferredExists = preferred && data.threads.some((thread: Thread) => thread.user.id === preferred);
+        selectedAfterSync = preferredExists ? preferred : data.threads[0].user.id;
+        activePeerRef.current = selectedAfterSync;
+        setSelectedUserId(selectedAfterSync);
+      }
+
+      if (options?.syncSelectedMessages && selectedAfterSync) {
+        await fetchMessages(selectedAfterSync, { silent: true });
+      }
+    } catch {
+      return;
+    } finally {
+      if (!silent) {
         setRefreshing(false);
       }
-      return;
-    }
-
-    const data = await response.json();
-    if (latestThreadsRequestRef.current !== requestId) {
-      return;
-    }
-
-    setThreads(data.threads || []);
-
-    let selectedAfterSync = selectedUserId;
-
-    if (!selectedUserId && data.threads?.length) {
-      const preferred = preferredPeerRef.current;
-      const preferredExists = preferred && data.threads.some((thread: Thread) => thread.user.id === preferred);
-      selectedAfterSync = preferredExists ? preferred : data.threads[0].user.id;
-      activePeerRef.current = selectedAfterSync;
-      setSelectedUserId(selectedAfterSync);
-    }
-
-    if (options?.syncSelectedMessages && selectedAfterSync) {
-      await fetchMessages(selectedAfterSync, { silent: true });
-    }
-
-    if (!silent) {
-      setRefreshing(false);
     }
   }, [fetchMessages, selectedUserId]);
 

@@ -137,6 +137,9 @@ export function TestDateSelector({ inline = false }: { inline?: boolean }) {
 
   return (
     <div className={`fixed bottom-4 right-4 z-40 rounded-2xl border-2 shadow-lg transition-all ${testDate ? "border-yellow-300 bg-yellow-50" : "border-slate-200 bg-white"}`}>
+      <Button onClick={sendTestPush} variant="ghost" className="mt-3">
+          Test Push Gönder
+        </Button>
       <div className={`p-4 ${testDate ? "space-y-3" : "space-y-2"}`}>
         {testDate && (
           <div className="flex items-start gap-3 rounded-xl bg-yellow-100/50 p-3">

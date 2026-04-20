@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MessageCircle, Send } from "lucide-react";
+import { ArrowLeft, MessageCircle, PanelLeft, RefreshCcw, Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { useNotificationContext } from "@/contexts/NotificationContext";
@@ -147,8 +147,12 @@ export function MessagesClient({
   const reconnectTimerRef = useRef<number | null>(null);
   const manualCloseRef = useRef(false);
   const pingTimerRef = useRef<number | null>(null);
+  const refreshTimerRef = useRef<number | null>(null);
   const activePeerRef = useRef<string>("");
   const preferredPeerRef = useRef<string>("");
+  const [isThreadPanelOpen, setIsThreadPanelOpen] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
@@ -159,39 +163,66 @@ export function MessagesClient({
     activePeerRef.current = selectedUserId;
   }, [selectedUserId]);
 
-  const fetchThreads = useCallback(async () => {
+  const fetchMessages = useCallback(async (withUserId: string, options?: { silent?: boolean }) => {
+    if (!withUserId) return;
+
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setLoadingMessages(true);
+    }
+
+    const response = await fetch(`/api/messages?withUserId=${withUserId}`, {
+      cache: "no-store"
+    });
+
+    if (!response.ok) {
+      if (!silent) {
+        setLoadingMessages(false);
+      }
+      return;
+    }
+
+    const data = await response.json();
+    setMessages(data.messages || []);
+    if (!silent) {
+      setLoadingMessages(false);
+    }
+  }, []);
+
+  const fetchThreads = useCallback(async (options?: { syncSelectedMessages?: boolean; silent?: boolean }) => {
+    const silent = options?.silent ?? false;
+    if (!silent) {
+      setRefreshing(true);
+    }
+
     const response = await fetch("/api/messages/threads", { cache: "no-store" });
     if (!response.ok) {
+      if (!silent) {
+        setRefreshing(false);
+      }
       return;
     }
 
     const data = await response.json();
     setThreads(data.threads || []);
 
+    let selectedAfterSync = selectedUserId;
+
     if (!selectedUserId && data.threads?.length) {
       const preferred = preferredPeerRef.current;
       const preferredExists = preferred && data.threads.some((thread: Thread) => thread.user.id === preferred);
-      setSelectedUserId(preferredExists ? preferred : data.threads[0].user.id);
-    }
-  }, [selectedUserId]);
-
-  const fetchMessages = useCallback(async (withUserId: string) => {
-    if (!withUserId) return;
-
-    setLoadingMessages(true);
-    const response = await fetch(`/api/messages?withUserId=${withUserId}`, {
-      cache: "no-store"
-    });
-
-    if (!response.ok) {
-      setLoadingMessages(false);
-      return;
+      selectedAfterSync = preferredExists ? preferred : data.threads[0].user.id;
+      setSelectedUserId(selectedAfterSync);
     }
 
-    const data = await response.json();
-    setMessages(data.messages || []);
-    setLoadingMessages(false);
-  }, []);
+    if (options?.syncSelectedMessages && selectedAfterSync) {
+      await fetchMessages(selectedAfterSync, { silent: true });
+    }
+
+    if (!silent) {
+      setRefreshing(false);
+    }
+  }, [fetchMessages, selectedUserId]);
 
   const cleanupSocket = useCallback(() => {
     if (wsRef.current) {
@@ -254,6 +285,7 @@ export function MessagesClient({
             return mergeMessage(withoutTemp, payload.message);
           });
           setThreads((prev) => updateThreadsWithLatestMessage(prev, payload.message, currentUserId, activePeerRef.current));
+          void fetchThreads({ syncSelectedMessages: true, silent: true });
           return;
         }
 
@@ -267,9 +299,11 @@ export function MessagesClient({
             setMessages((prev) => mergeMessage(prev, incoming));
 
             if (incoming.senderId === activePeerRef.current && activePeerRef.current) {
-              void fetchMessages(activePeerRef.current);
+              void fetchMessages(activePeerRef.current, { silent: true });
             }
           }
+
+          void fetchThreads({ syncSelectedMessages: true, silent: true });
         }
       };
 
@@ -309,13 +343,50 @@ export function MessagesClient({
   }, []);
 
   useEffect(() => {
-    void fetchThreads();
+    void fetchThreads({ syncSelectedMessages: true });
   }, [fetchThreads]);
 
   useEffect(() => {
     if (!selectedUserId) return;
     void fetchMessages(selectedUserId);
   }, [fetchMessages, selectedUserId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const syncFromApi = () => {
+      void fetchThreads({ syncSelectedMessages: true, silent: true });
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        syncFromApi();
+      }
+    };
+
+    window.addEventListener("focus", syncFromApi);
+    document.addEventListener("visibilitychange", onVisibility);
+    refreshTimerRef.current = window.setInterval(syncFromApi, 12000);
+
+    return () => {
+      window.removeEventListener("focus", syncFromApi);
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (refreshTimerRef.current) {
+        window.clearInterval(refreshTimerRef.current);
+      }
+    };
+  }, [fetchThreads]);
+
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (!container) {
+      return;
+    }
+
+    container.scrollTop = container.scrollHeight;
+  }, [messages, selectedUserId]);
 
   useEffect(() => {
     manualCloseRef.current = false;
@@ -388,10 +459,15 @@ export function MessagesClient({
       return mergeMessage(withoutTemp, data.message);
     });
     setThreads((prev) => updateThreadsWithLatestMessage(prev, data.message, currentUserId, selectedUserId));
+    void fetchThreads({ syncSelectedMessages: true, silent: true });
+  };
+
+  const handleRefresh = () => {
+    void fetchThreads({ syncSelectedMessages: true });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card p-4 shadow-sm">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">In-App Mesajlar</p>
@@ -405,13 +481,23 @@ export function MessagesClient({
             Durum: {wsConnected ? "Canli bagli" : "Baglanti yeniden kuruluyor"}
           </p>
         </div>
-        <PushNotificationToggle />
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" className="h-10 gap-2" onClick={handleRefresh} disabled={refreshing}>
+            <RefreshCcw className="h-4 w-4" />
+            Yenile
+          </Button>
+          <PushNotificationToggle />
+        </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="rounded-2xl border bg-card p-3 shadow-sm">
+      <div className="grid gap-3 md:gap-4 lg:grid-cols-[340px_minmax(0,1fr)]">
+        <aside
+          className={`rounded-2xl border bg-card p-3 shadow-sm ${
+            !isThreadPanelOpen && selectedThread ? "hidden lg:block" : "block"
+          }`}
+        >
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Konusmalar</p>
-          <div className="space-y-2">
+          <div className="space-y-2 max-h-[68vh] overflow-y-auto pr-1 lg:max-h-[72vh]">
             {threads.length === 0 ? (
               <p className="rounded-xl border border-dashed p-3 text-sm text-muted-foreground">
                 Henuz mesajlasabilecegin baglanti bulunmuyor.
@@ -423,9 +509,14 @@ export function MessagesClient({
                   <button
                     key={thread.user.id}
                     type="button"
-                    onClick={() => setSelectedUserId(thread.user.id)}
-                    className={`w-full rounded-xl border p-3 text-left transition ${
-                      isActive ? "border-emerald-400 bg-emerald-50" : "border-border hover:bg-muted/40"
+                    onClick={() => {
+                      setSelectedUserId(thread.user.id);
+                      setIsThreadPanelOpen(false);
+                    }}
+                    className={`w-full rounded-2xl border p-3 text-left transition ${
+                      isActive
+                        ? "border-emerald-400 bg-emerald-50 shadow-sm"
+                        : "border-border bg-background hover:bg-muted/40"
                     }`}
                   >
                     <div className="flex items-center justify-between gap-2">
@@ -439,6 +530,14 @@ export function MessagesClient({
                     <p className="mt-1 truncate text-xs text-muted-foreground">
                       {thread.lastMessage?.content || "Henuz mesaj yok"}
                     </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
+                      {thread.lastMessage
+                        ? new Date(thread.lastMessage.createdAt).toLocaleTimeString("tr-TR", {
+                            hour: "2-digit",
+                            minute: "2-digit"
+                          })
+                        : ""}
+                    </p>
                   </button>
                 );
               })
@@ -446,15 +545,45 @@ export function MessagesClient({
           </div>
         </aside>
 
-        <section className="flex min-h-[520px] flex-col rounded-2xl border bg-card shadow-sm">
+        <section
+          className={`min-h-[72vh] rounded-2xl border bg-card shadow-sm ${
+            isThreadPanelOpen && !selectedThread ? "flex" : isThreadPanelOpen ? "hidden lg:flex" : "flex"
+          } flex-col`}
+        >
           {selectedThread ? (
             <>
-              <div className="border-b px-4 py-3">
-                <p className="text-sm font-semibold text-foreground">{selectedThread.user.name}</p>
-                <p className="text-xs text-muted-foreground">{selectedThread.user.email}</p>
+              <div className="border-b px-3 py-3 sm:px-4">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="h-8 w-8 lg:hidden"
+                      onClick={() => setIsThreadPanelOpen(true)}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{selectedThread.user.name}</p>
+                      <p className="truncate text-xs text-muted-foreground">{selectedThread.user.email}</p>
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="h-8 gap-1 px-2 lg:hidden"
+                    onClick={() => setIsThreadPanelOpen(true)}
+                  >
+                    <PanelLeft className="h-3.5 w-3.5" />
+                    Liste
+                  </Button>
+                </div>
               </div>
 
-              <div className="flex-1 space-y-3 overflow-y-auto p-4">
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 space-y-3 overflow-y-auto bg-gradient-to-b from-background via-background to-emerald-50/30 p-3 sm:p-4"
+              >
                 {loadingMessages ? (
                   <p className="text-sm text-muted-foreground">Mesajlar yukleniyor...</p>
                 ) : messages.length === 0 ? (
@@ -467,8 +596,8 @@ export function MessagesClient({
                     return (
                       <div key={message.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
                         <div
-                          className={`max-w-[85%] rounded-2xl px-3 py-2 text-sm shadow-sm ${
-                            mine ? "bg-emerald-600 text-white" : "bg-muted text-foreground"
+                          className={`max-w-[88%] rounded-3xl px-3 py-2.5 text-sm shadow-sm sm:max-w-[82%] ${
+                            mine ? "bg-emerald-600 text-white" : "border bg-background text-foreground"
                           }`}
                         >
                           <p>{message.content}</p>
@@ -483,13 +612,13 @@ export function MessagesClient({
                 )}
               </div>
 
-              <form onSubmit={onSend} className="border-t p-3">
+              <form onSubmit={onSend} className="border-t bg-card p-2.5 sm:p-3">
                 <div className="flex gap-2">
                   <input
                     value={draft}
                     onChange={(event) => setDraft(event.target.value)}
                     placeholder="Mesajini yaz..."
-                    className="h-11 flex-1 rounded-xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="h-11 flex-1 rounded-2xl border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                   <Button type="submit" disabled={sending || !draft.trim()} className="h-11 gap-2 px-4">
                     <Send className="h-4 w-4" />
@@ -502,7 +631,7 @@ export function MessagesClient({
             <div className="flex h-full flex-1 items-center justify-center p-6 text-center text-muted-foreground">
               <div>
                 <MessageCircle className="mx-auto h-10 w-10 text-emerald-600" />
-                <p className="mt-3 text-sm">Mesajlasmaya baslamak icin soldan bir kisi sec.</p>
+                <p className="mt-3 text-sm">Mesajlasmaya baslamak icin bir konusma sec.</p>
               </div>
             </div>
           )}

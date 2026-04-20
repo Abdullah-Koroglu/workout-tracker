@@ -13,7 +13,7 @@
     "start:ws": "node server.js",
     "start:ws:local": "node --env-file=.env server.js",
     "start:next": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",

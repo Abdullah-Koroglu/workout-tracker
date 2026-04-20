@@ -153,6 +153,8 @@ export function MessagesClient({
   const [isThreadPanelOpen, setIsThreadPanelOpen] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const latestMessagesRequestRef = useRef(0);
+  const latestThreadsRequestRef = useRef(0);
 
   const selectedThread = useMemo(
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
@@ -161,10 +163,16 @@ export function MessagesClient({
 
   useEffect(() => {
     activePeerRef.current = selectedUserId;
+    if (selectedUserId) {
+      setIsThreadPanelOpen(false);
+    }
   }, [selectedUserId]);
 
   const fetchMessages = useCallback(async (withUserId: string, options?: { silent?: boolean }) => {
     if (!withUserId) return;
+
+    const requestId = latestMessagesRequestRef.current + 1;
+    latestMessagesRequestRef.current = requestId;
 
     const silent = options?.silent ?? false;
     if (!silent) {
@@ -176,13 +184,17 @@ export function MessagesClient({
     });
 
     if (!response.ok) {
-      if (!silent) {
+      if (!silent && latestMessagesRequestRef.current === requestId) {
         setLoadingMessages(false);
       }
       return;
     }
 
     const data = await response.json();
+    if (latestMessagesRequestRef.current !== requestId || withUserId !== activePeerRef.current) {
+      return;
+    }
+
     setMessages(data.messages || []);
     if (!silent) {
       setLoadingMessages(false);
@@ -190,6 +202,9 @@ export function MessagesClient({
   }, []);
 
   const fetchThreads = useCallback(async (options?: { syncSelectedMessages?: boolean; silent?: boolean }) => {
+    const requestId = latestThreadsRequestRef.current + 1;
+    latestThreadsRequestRef.current = requestId;
+
     const silent = options?.silent ?? false;
     if (!silent) {
       setRefreshing(true);
@@ -197,13 +212,17 @@ export function MessagesClient({
 
     const response = await fetch("/api/messages/threads", { cache: "no-store" });
     if (!response.ok) {
-      if (!silent) {
+      if (!silent && latestThreadsRequestRef.current === requestId) {
         setRefreshing(false);
       }
       return;
     }
 
     const data = await response.json();
+    if (latestThreadsRequestRef.current !== requestId) {
+      return;
+    }
+
     setThreads(data.threads || []);
 
     let selectedAfterSync = selectedUserId;

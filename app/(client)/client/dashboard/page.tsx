@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, CalendarClock, MessageSquare, PlayCircle, ShieldCheck, Users } from "lucide-react";
+import { Activity, ArrowRight, CalendarClock, CheckCircle2, Flame, MessageSquare, PlayCircle, Users } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -9,7 +9,7 @@ export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
 
-  const [assignments, workouts, comments, relations, inProgressWorkout] = await Promise.all([
+  const [assignments, workouts, comments, relations, inProgressWorkout, completedWorkoutCount, unreadMessageCount, totalCommentCount] = await Promise.all([
     prisma.templateAssignment.findMany({
       where: { clientId },
       include: {
@@ -52,6 +52,15 @@ export default async function ClientDashboardPage() {
       where: { clientId, status: "IN_PROGRESS" },
       include: { template: true },
       orderBy: { startedAt: "desc" }
+    }),
+    prisma.workout.count({
+      where: { clientId, status: "COMPLETED" }
+    }),
+    prisma.message.count({
+      where: { receiverId: clientId, isRead: false }
+    }),
+    prisma.comment.count({
+      where: { workout: { clientId } }
     })
   ]);
 
@@ -77,6 +86,9 @@ export default async function ClientDashboardPage() {
 
   const todayAssignments = assignmentItems.filter((assignment: DashboardAssignment) => assignment.isToday);
   const upcomingAssignments = assignmentItems.filter((assignment: DashboardAssignment) => !assignment.isToday);
+  const weeklyWorkoutCount = workouts.length;
+  const completionMomentum = weeklyWorkoutCount > 0 ? Math.round((completedWorkoutCount / Math.max(completedWorkoutCount + 1, 1)) * 100) : 0;
+  const connectedCoachNames = relations.map((relation) => relation.coach.name).join(", ");
 
   type DashboardAssignment = (typeof assignmentItems)[number];
 
@@ -186,35 +198,36 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
   return (
     <div className="space-y-6 md:space-y-8">
       <section className="overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-4 shadow-sm md:rounded-[32px] md:p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700 md:text-xs md:tracking-[0.25em]">Client Command Center</p>
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl md:text-4xl">Her şey tek akışta</h1>
-            <p className="max-w-2xl text-xs text-slate-600 sm:text-sm">
-              Aktif antrenmana dön, coach bağlantılarını yönet, yeni atanan programları başlat ve geçmiş performansını tek ekrandan takip et.
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Client Performance Hub</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Gunluk planini net gor, ritmini kaybetme.</h1>
+            <p className="mt-3 text-sm leading-6 text-slate-600 md:text-base">
+              Bugunku atanmis planlar, okunmamis mesajlar, aktif workout ve coach geri bildirimleri ayni panelde. Karar vermek yerine harekete gec.
             </p>
           </div>
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
             <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Aktif Coach</p>
               <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{relations.length}</p>
             </div>
             <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Atanmış Plan</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{assignments.length}</p>
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Bugun Hazir</p>
+              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{todayAssignments.length}</p>
+            </div>
+            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Okunmamis</p>
+              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{unreadMessageCount}</p>
             </div>
             <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
               <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Tamamlanan</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{workouts.length}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Yorum</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{comments.length}</p>
+              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{completedWorkoutCount}</p>
             </div>
           </div>
         </div>
 
-        <div className="mt-4 grid gap-3 md:mt-6 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:mt-6 md:grid-cols-3 xl:grid-cols-[1.1fr_1.1fr_0.8fr]">
           <Link href={inProgressWorkout ? `/client/workout/${inProgressWorkout.assignmentId}/start` : "/client/workouts"} className="rounded-2xl bg-emerald-600 p-4 text-white shadow-sm transition hover:bg-emerald-700 md:rounded-3xl md:p-5">
             <div className="flex items-center justify-between">
               <PlayCircle className="h-6 w-6" />
@@ -235,6 +248,45 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
             <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Detaylı geçmiş</p>
             <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">Set detayları ve coach yorumlarıyla tüm geçmişi aç.</p>
           </Link>
+          <div className="rounded-2xl border bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
+            <div className="flex items-center justify-between">
+              <Flame className="h-6 w-6 text-orange-600" />
+              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">
+                Tempo
+              </span>
+            </div>
+            <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Haftalik hareket ritmi</p>
+            <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">
+              Son gorunen antrenman akisin {weeklyWorkoutCount} kayit ile takipte. Disiplini korumak icin bugunku planlara odaklan.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-3 grid gap-3 md:grid-cols-3">
+          <div className="rounded-2xl border border-emerald-100 bg-white/80 p-4">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-emerald-700" />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Hazirlik Durumu</p>
+            </div>
+            <p className="mt-3 text-2xl font-black text-slate-950">{assignmentItems.length}</p>
+            <p className="mt-1 text-sm text-slate-600">Aktif atama havuzu. Bugun ve yaklasan planlar tek listede.</p>
+          </div>
+          <div className="rounded-2xl border border-sky-100 bg-white/80 p-4">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-sky-700" />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Tamamlama Ivmeleri</p>
+            </div>
+            <p className="mt-3 text-2xl font-black text-slate-950">%{completionMomentum}</p>
+            <p className="mt-1 text-sm text-slate-600">Tamamlanan workout sayina gore olusan genel ilerleme hissi.</p>
+          </div>
+          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-violet-700" />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">Coach Geri Bildirimi</p>
+            </div>
+            <p className="mt-3 text-2xl font-black text-slate-950">{totalCommentCount}</p>
+            <p className="mt-1 text-sm text-slate-600">Toplam yorum ve not akisi. Son yorumlar asagida listelenir.</p>
+          </div>
         </div>
       </section>
 
@@ -321,7 +373,16 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         <div className="rounded-2xl border bg-card p-4 shadow-sm md:rounded-3xl md:p-5">
           <Users className="h-6 w-6 text-emerald-600" />
           <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Bağlı coachlar</p>
-          <p className="mt-2 text-sm text-muted-foreground">{relations.length > 0 ? relations.map((relation) => relation.coach.name).join(", ") : "Henüz kabul edilmiş coach yok."}</p>
+          <p className="mt-2 text-sm text-muted-foreground">{relations.length > 0 ? connectedCoachNames : "Henüz kabul edilmiş coach yok."}</p>
+        </div>
+        <div className="rounded-2xl border bg-card p-4 shadow-sm md:rounded-3xl md:p-5">
+          <MessageSquare className="h-6 w-6 text-sky-600" />
+          <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Mesaj merkezi sinyali</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {unreadMessageCount > 0
+              ? `${unreadMessageCount} okunmamis mesajin var. Mesajlasma ekranindan anlik takip et.`
+              : "Su an tum mesajlar okunmus gorunuyor. Yeni geri bildirimler burada oncelik kazanir."}
+          </p>
         </div>
       </section>
     </div>

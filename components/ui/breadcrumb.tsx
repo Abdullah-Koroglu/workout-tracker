@@ -18,7 +18,7 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
             <span className="font-medium text-foreground">{item.label}</span>
           ) : (
             <Link
-              href={item.href}
+              href={(item.label === "Client" || item.label === "Coach") ? "/" : item.href}
               className="text-muted-foreground hover:text-foreground transition"
             >
               {item.label}

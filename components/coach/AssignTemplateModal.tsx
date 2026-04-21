@@ -226,7 +226,6 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                         </div>
                         <Button
                           type="button"
-                          size="sm"
                           disabled={submittingId === template.id}
                           onClick={() => assignTemplate(template.id, template.name)}
                           className="shrink-0"

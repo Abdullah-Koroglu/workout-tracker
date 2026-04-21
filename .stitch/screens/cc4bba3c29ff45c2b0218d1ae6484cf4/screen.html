@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Athlete Dashboard - FitCoach</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "inverse-on-surface": "#eff1f3",
+                        "surface": "#f7f9fb",
+                        "on-surface": "#191c1e",
+                        "inverse-primary": "#ffb690",
+                        "background": "#f7f9fb",
+                        "primary": "#9d4300",
+                        "on-primary-container": "#582200",
+                        "surface-container-highest": "#e0e3e5",
+                        "tertiary-container": "#7296ff",
+                        "primary-fixed-dim": "#ffb690",
+                        "on-primary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#584237",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed-dim": "#b4c5ff",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "tertiary": "#0053db",
+                        "secondary-container": "#b6d0ff",
+                        "surface-tint": "#9d4300",
+                        "surface-container-high": "#e6e8ea",
+                        "on-tertiary-container": "#002c7c",
+                        "on-secondary-container": "#3f5882",
+                        "surface-variant": "#e0e3e5",
+                        "surface-bright": "#f7f9fb",
+                        "error-container": "#ffdad6",
+                        "secondary": "#455f88",
+                        "tertiary-fixed": "#dbe1ff",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-tertiary-fixed-variant": "#003ea8",
+                        "on-secondary-fixed-variant": "#2d476f",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#783200",
+                        "surface-container-low": "#f2f4f6",
+                        "surface-dim": "#d8dadc",
+                        "outline": "#8c7164",
+                        "on-primary-fixed": "#341100",
+                        "on-background": "#191c1e",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-fixed": "#00174b",
+                        "error": "#ba1a1a",
+                        "inverse-surface": "#2d3133",
+                        "outline-variant": "#e0c0b1",
+                        "on-error": "#ffffff",
+                        "primary-fixed": "#ffdbca",
+                        "primary-container": "#f97316",
+                        "secondary-fixed": "#d6e3ff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {},
+                    "fontFamily": {
+                        "headline": ["Lexend"],
+                        "body": ["Lexend"],
+                        "label": ["Lexend"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface pb-24 md:pb-0 md:pl-64 flex min-h-screen flex-col">
+<!-- Top App Bar (Mobile & Desktop) -->
+<header class="flex justify-between items-center w-full px-6 py-4 md:px-8 bg-surface-container-low/80 backdrop-blur-md sticky top-0 z-40 hidden md:flex md:w-[calc(100%-16rem)]">
+<div>
+<h1 class="text-2xl font-black text-primary-container tracking-tighter uppercase">Athlete Lab</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 rounded-full text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</button>
+<button class="p-2 rounded-full text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high border-2 border-surface">
+<img alt="Athlete Avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a focused athlete looking determined, high contrast lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOWoXZmPhvTKoUNZoeYTyj9nlbjNS8ztDcu9lo-bX-RZbpYns7bV_1uIz1wJ5WXEzNyjdCPWq4-pCPW1vhoBXNPNNbFsMQ_XOugGoWLtnjSYXRoysbDYKPYzpCMnUloZ4jXx7ZZ6-swqxX7RkoY1UpC72BdFOpAXBPSfHFu4zyv_agezHqw6az-y9ipNBxQs3-8btaVZoEj1wHs4ZmexkRlac7C8qxZcu9sPGgXptNRkS3hosbwjWCF4nBGBwVV5LmZZ8b37lVDJE"/>
+</div>
+</div>
+</header>
+<!-- Mobile Top App Bar -->
+<header class="flex justify-between items-center w-full px-6 py-4 bg-surface md:hidden sticky top-0 z-40">
+<div>
+<h1 class="text-lg font-black text-on-surface uppercase tracking-tighter">Athlete Lab</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="p-2 text-primary-container active:opacity-80">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Athlete Avatar" class="w-full h-full object-cover" data-alt="Close up portrait of a focused athlete looking determined, high contrast lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAUiK2eSPqqPgTH3etyqdy1c-UXwm-cfl6NLiOZ8-Rw42_i8s-XzfnFCvbHeDrjtjdUS7jhzDyGSQ7lToQmoGB_ukTUHix14wZuGzU7g_XjpLssUD-lTL-tJ7JovnA04ZQbJzi1kpGjY6gix9tSwxJd2T5ZWhDGP1pgKYYEVsBNO7o8U6MgO6wXVnpR_IoEuCsgLdKXkkq_3NKp_NPtwHJ1G6JXga3kGZDfIF0qXgcFATFi0x_QvByycN8s-r7oSKzTzlJ7JU4RGXQ"/>
+</div>
+</div>
+</header>
+<!-- Side Nav Bar (Desktop) -->
+<nav class="hidden md:flex flex-col w-64 fixed left-0 top-0 h-full py-6 bg-surface-container-low rounded-r-lg shadow-none">
+<div class="px-6 mb-8">
+<h2 class="text-xl font-black text-on-surface uppercase tracking-tighter">Performance Lab</h2>
+<p class="text-sm text-secondary font-medium mt-1">Elite Coach Dashboard</p>
+</div>
+<div class="flex-1 px-4 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-variant transition-all duration-200 rounded-lg scale-95 active:scale-90 font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="group">group</span>
+                Roster
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-variant transition-all duration-200 rounded-lg scale-95 active:scale-90 font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+                Library
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-primary-container font-bold border-r-4 border-primary-container bg-surface-variant rounded-lg scale-95 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="insights" style="font-variation-settings: 'FILL' 1;">insights</span>
+                Analytics
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-variant transition-all duration-200 rounded-lg scale-95 active:scale-90 font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="chat">chat</span>
+                Messages
+            </a>
+<a class="flex items-center gap-3 px-4 py-3 text-secondary hover:bg-surface-variant transition-all duration-200 rounded-lg scale-95 active:scale-90 font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<div class="px-6 mt-auto">
+<button class="w-full bg-gradient-to-br from-primary to-primary-container text-on-primary font-bold py-3 rounded-lg shadow-sm active:scale-95 transition-transform">
+                New Program
+            </button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-8 flex flex-col">
+<!-- Hero Section -->
+<section class="space-y-2">
+<h2 class="text-4xl md:text-5xl font-black text-on-surface uppercase tracking-tight">PUSH FOR PRECISION</h2>
+<p class="text-lg md:text-xl text-secondary font-medium">4 sessions down. The goal is in sight.</p>
+</section>
+<!-- Weekly Focus Strip -->
+<section class="w-full overflow-x-auto pb-4 hide-scrollbar">
+<div class="flex gap-4 min-w-max">
+<!-- Completed Day -->
+<div class="flex flex-col items-center justify-center w-16 h-20 bg-surface-container-low rounded-lg opacity-60">
+<span class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">MON</span>
+<span class="text-lg font-black text-on-surface">12</span>
+<span class="material-symbols-outlined text-primary-container text-sm mt-1" data-icon="check_circle">check_circle</span>
+</div>
+<!-- Completed Day -->
+<div class="flex flex-col items-center justify-center w-16 h-20 bg-surface-container-low rounded-lg opacity-60">
+<span class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">TUE</span>
+<span class="text-lg font-black text-on-surface">13</span>
+<span class="material-symbols-outlined text-primary-container text-sm mt-1" data-icon="check_circle">check_circle</span>
+</div>
+<!-- Active Day -->
+<div class="flex flex-col items-center justify-center w-16 h-20 bg-primary-container text-on-primary rounded-lg shadow-sm scale-105 transform origin-bottom">
+<span class="text-xs font-bold text-on-primary/80 uppercase tracking-wider mb-1">WED</span>
+<span class="text-lg font-black">14</span>
+<div class="w-1 h-1 bg-on-primary rounded-full mt-1"></div>
+</div>
+<!-- Upcoming Day -->
+<div class="flex flex-col items-center justify-center w-16 h-20 bg-surface-container-lowest rounded-lg border border-outline-variant/15">
+<span class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">THU</span>
+<span class="text-lg font-black text-on-surface">15</span>
+</div>
+<!-- Upcoming Day -->
+<div class="flex flex-col items-center justify-center w-16 h-20 bg-surface-container-lowest rounded-lg border border-outline-variant/15">
+<span class="text-xs font-bold text-secondary uppercase tracking-wider mb-1">FRI</span>
+<span class="text-lg font-black text-on-surface">16</span>
+</div>
+</div>
+</section>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+<!-- Main Action Card (Hero) -->
+<div class="md:col-span-8 bg-inverse-surface text-inverse-on-surface rounded-xl overflow-hidden relative min-h-[300px] flex flex-col justify-end p-6 md:p-8">
+<!-- Background Image Layer -->
+<div class="absolute inset-0 z-0">
+<img alt="Gym background" class="w-full h-full object-cover opacity-40 mix-blend-overlay" data-alt="Dark, moody gym setting with heavy weights, high contrast dramatic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAwMjxiFoPkuG953JYd_-K_CV9XJcQED2r0GkMPhmrBz4GiLHjZLjfeno7-LeMGDS4OAm2DK-vJSB6rymqqhck7YdHCWqKW9m-TKsTnBjpUcGYWqqTO5R1pM8DimG6ENvabmtpdNi59z10v67Jq4UPRoOJj-1kb7CrrJN9Eut3IjVXOsnmat1csrDsNJuzGPME8rIj6S5xUij0W8gdqZJzwZXi0A5lpm7Pmppg3BlOZ_sWXvGhBSs0Z-c-4Ov9OQs_ljfk5mLwAg0s"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface via-inverse-surface/80 to-transparent"></div>
+</div>
+<div class="relative z-10 flex flex-col gap-4">
+<div class="inline-flex items-center gap-2 bg-surface-container-lowest/10 backdrop-blur-md px-3 py-1 rounded-full w-fit">
+<span class="w-2 h-2 rounded-full bg-primary-container animate-pulse"></span>
+<span class="text-xs font-bold uppercase tracking-widest text-primary-fixed-dim">TODAY'S SESSION</span>
+</div>
+<h3 class="text-3xl md:text-4xl font-black uppercase tracking-tight leading-none text-surface">HYPERTROPHY LEG DAY</h3>
+<div class="flex gap-4 mt-2">
+<div class="flex items-center gap-1 text-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="timer">timer</span>
+<span class="text-sm font-bold">75 MIN</span>
+</div>
+<div class="flex items-center gap-1 text-surface-variant">
+<span class="material-symbols-outlined text-sm" data-icon="fitness_center">fitness_center</span>
+<span class="text-sm font-bold">12 SETS</span>
+</div>
+</div>
+<button class="mt-4 w-full md:w-auto px-8 py-4 bg-gradient-to-r from-primary to-primary-container text-on-primary font-black uppercase tracking-wider rounded-lg text-lg hover:shadow-lg transition-transform active:scale-95 flex items-center justify-center gap-2">
+                        START WORKOUT
+                        <span class="material-symbols-outlined" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Side Metrics Column -->
+<div class="md:col-span-4 flex flex-col gap-6">
+<!-- Performance Metric 1 -->
+<div class="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-sm font-bold text-secondary uppercase tracking-wider">BODY WEIGHT</span>
+<span class="material-symbols-outlined text-primary-container" data-icon="monitor_weight">monitor_weight</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-black text-on-surface tracking-tighter">72.4</span>
+<span class="text-sm font-bold text-secondary">kg</span>
+</div>
+<div class="flex items-center gap-1 text-xs font-bold text-primary mt-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="trending_down">trending_down</span>
+<span>0.2kg this week</span>
+</div>
+</div>
+</div>
+<!-- Performance Metric 2 -->
+<div class="bg-surface-container-low rounded-xl p-6 flex flex-col justify-between">
+<div class="flex justify-between items-start mb-4">
+<span class="text-sm font-bold text-secondary uppercase tracking-wider">TOTAL VOLUME</span>
+<span class="material-symbols-outlined text-tertiary" data-icon="bar_chart">bar_chart</span>
+</div>
+<div>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-black text-on-surface tracking-tighter">14.2</span>
+<span class="text-sm font-bold text-secondary">T</span>
+</div>
+<div class="flex items-center gap-1 text-xs font-bold text-tertiary mt-1">
+<span class="material-symbols-outlined text-[16px]" data-icon="trending_up">trending_up</span>
+<span>1.5T from last week</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Nutrition Status (Full Width Bottom) -->
+<div class="md:col-span-12 bg-surface-container-highest rounded-xl p-6 md:p-8 flex flex-col md:flex-row items-center gap-8">
+<div class="flex-1 space-y-2">
+<h4 class="text-xl font-black text-on-surface uppercase tracking-tight">NUTRITION STATUS</h4>
+<p class="text-sm text-secondary font-medium">Daily goals are on track. Keep pushing the protein intake.</p>
+</div>
+<div class="flex gap-8 w-full md:w-auto justify-around">
+<!-- Circular Progress (Calories) -->
+<div class="flex flex-col items-center gap-2">
+<div class="relative w-20 h-20">
+<!-- Background Circle -->
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-dim" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-width="4"></path>
+<!-- Progress Circle -->
+<path class="text-primary-container" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="75, 100" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center flex-col">
+<span class="text-sm font-black text-on-surface">2.4k</span>
+</div>
+</div>
+<span class="text-xs font-bold text-secondary uppercase tracking-wider">CALS</span>
+</div>
+<!-- Circular Progress (Protein) -->
+<div class="flex flex-col items-center gap-2">
+<div class="relative w-20 h-20">
+<!-- Background Circle -->
+<svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+<path class="text-surface-dim" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="100, 100" stroke-width="4"></path>
+<!-- Progress Circle -->
+<path class="text-tertiary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="60, 100" stroke-linecap="round" stroke-width="4"></path>
+</svg>
+<div class="absolute inset-0 flex items-center justify-center flex-col">
+<span class="text-sm font-black text-on-surface">140g</span>
+</div>
+</div>
+<span class="text-xs font-bold text-secondary uppercase tracking-wider">PRO</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Nav Bar (Mobile) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-8 bg-surface-container-low/90 backdrop-blur-xl rounded-t-xl shadow-2xl md:hidden tonal-shift">
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary rounded-lg px-4 py-1 scale-110 duration-300 ease-out active:bg-surface-container-highest" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-['Lexend'] text-[10px] font-bold uppercase tracking-widest mt-1">Training</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary scale-110 duration-300 ease-out active:bg-surface-container-highest rounded-lg px-2 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-['Lexend'] text-[10px] font-bold uppercase tracking-widest mt-1">Feed</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary scale-110 duration-300 ease-out active:bg-surface-container-highest rounded-lg px-2 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="equalizer">equalizer</span>
+<span class="font-['Lexend'] text-[10px] font-bold uppercase tracking-widest mt-1">Metrics</span>
+</a>
+<a class="flex flex-col items-center justify-center text-secondary scale-110 duration-300 ease-out active:bg-surface-container-highest rounded-lg px-2 py-1" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Lexend'] text-[10px] font-bold uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

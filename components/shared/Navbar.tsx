@@ -19,6 +19,8 @@ export async function Navbar() {
   const isCoach = session?.user.role === "COACH";
   const isClient = session?.user.role === "CLIENT";
 
+  if (isCoach || isClient) return null;
+
   const activeWorkout =
     isClient && session?.user.id
       ? await prisma.workout.findFirst({

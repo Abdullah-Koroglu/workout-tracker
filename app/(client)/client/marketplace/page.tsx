@@ -65,7 +65,7 @@ export default function MarketplacePage() {
     <div className="space-y-5 pb-10">
       {/* Header */}
       <div>
-        <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700">Danışan Paneli</p>
+        <p className="text-[11px] font-bold uppercase tracking-widest text-primary">Danışan Paneli</p>
         <h1 className="mt-1 text-2xl font-black text-slate-900 md:text-3xl">Koç Keşfet</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Hedeflerinize uygun koçu bulun ve iletişime geçin.
@@ -82,12 +82,12 @@ export default function MarketplacePage() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Koç adı ile ara..."
-              className="h-11 w-full rounded-2xl border bg-card pl-10 pr-4 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="h-11 w-full rounded-xl border-0 bg-card pl-10 pr-4 text-sm shadow-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
           <button
             type="submit"
-            className="rounded-2xl bg-emerald-600 px-5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+            className="rounded-xl bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-5 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-105 transition"
           >
             Ara
           </button>
@@ -115,8 +115,8 @@ export default function MarketplacePage() {
               }}
               className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
                 specialty === s
-                  ? "border-emerald-500 bg-emerald-100 text-emerald-800"
-                  : "border-border text-muted-foreground hover:border-emerald-400 hover:text-emerald-700"
+                  ? "bg-primary/15 text-foreground ring-1 ring-primary/40"
+                  : "bg-card text-muted-foreground ring-1 ring-black/10 hover:text-primary"
               }`}
             >
               {s}
@@ -137,7 +137,7 @@ export default function MarketplacePage() {
             {hasFilters ? "Arama kriterlerine uygun koç bulunamadı." : "Henüz profil oluşturmuş koç bulunmuyor."}
           </p>
           {hasFilters && (
-            <button onClick={clearFilters} className="mt-3 text-xs text-emerald-700 hover:underline">
+              <button onClick={clearFilters} className="mt-3 text-xs text-primary hover:underline">
               Filtreleri temizle
             </button>
           )}
@@ -153,15 +153,15 @@ export default function MarketplacePage() {
               <Link
                 key={coach.id}
                 href={`/client/marketplace/${coach.id}`}
-                className="group flex flex-col rounded-2xl border bg-card p-4 shadow-sm transition hover:border-emerald-400 hover:shadow-md md:p-5"
+                className="group flex flex-col rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5 transition hover:shadow-md md:p-5"
               >
                 {/* Avatar + name */}
                 <div className="flex items-start gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 text-base font-black text-white shadow-sm">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-base font-black text-white shadow-sm">
                     {getInitials(coach.name)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-slate-900 leading-tight group-hover:text-emerald-700 transition">
+                    <p className="font-bold text-slate-900 leading-tight group-hover:text-primary transition">
                       {coach.name}
                     </p>
                     {profile?.experienceYears != null && (
@@ -186,7 +186,7 @@ export default function MarketplacePage() {
                     {specs.slice(0, 4).map((s) => (
                       <span
                         key={s}
-                        className="rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-800"
+                        className="rounded-full bg-primary/15 px-2.5 py-0.5 text-[11px] font-semibold text-foreground"
                       >
                         {s}
                       </span>
@@ -200,12 +200,12 @@ export default function MarketplacePage() {
                 )}
 
                 {/* Package count */}
-                <div className="mt-auto pt-3 flex items-center justify-between border-t border-border/60">
+                <div className="mt-auto pt-3 flex items-center justify-between border-t border-black/10">
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Briefcase className="h-3.5 w-3.5" />
                     {pkgCount > 0 ? `${pkgCount} paket` : "Paket bilgisi yok"}
                   </span>
-                  <span className="text-xs font-semibold text-emerald-700 group-hover:underline">
+                  <span className="text-xs font-semibold text-primary group-hover:underline">
                     Profili Gör →
                   </span>
                 </div>

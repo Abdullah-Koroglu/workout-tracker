@@ -57,10 +57,10 @@ export default async function CoachVitrinPage({
       </Link>
 
       {/* Coach hero */}
-      <div className="overflow-hidden rounded-2xl border bg-gradient-to-br from-emerald-50 via-white to-teal-50 shadow-sm">
+      <div className="overflow-hidden rounded-xl bg-gradient-to-br from-white via-[hsl(var(--muted))] to-[hsl(var(--background))] shadow-sm ring-1 ring-black/5">
         <div className="p-5 md:p-7">
           <div className="flex items-start gap-4">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 text-xl font-black text-white shadow-md">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary text-xl font-black text-white shadow-md">
               {getInitials(coach.name)}
             </div>
             <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export default async function CoachVitrinPage({
                   href={profile.socialMediaUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-1 inline-flex items-center gap-1 text-xs text-emerald-700 hover:underline"
+                  className="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline"
                 >
                   <ExternalLink className="h-3 w-3" />
                   Sosyal Medya
@@ -86,7 +86,7 @@ export default async function CoachVitrinPage({
 
             <Link
               href={messageHref}
-              className="hidden shrink-0 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition sm:flex"
+              className="hidden shrink-0 items-center gap-2 rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-105 transition sm:flex"
             >
               <MessageCircle className="h-4 w-4" />
               Mesaj Gönder
@@ -109,7 +109,7 @@ export default async function CoachVitrinPage({
                 {specialties.map((s) => (
                   <span
                     key={s}
-                    className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800"
+                    className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-foreground"
                   >
                     {s}
                   </span>
@@ -121,7 +121,7 @@ export default async function CoachVitrinPage({
           {/* Mobile message button */}
           <Link
             href={messageHref}
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-emerald-600 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition sm:hidden"
+            className="mt-4 flex items-center justify-center gap-2 rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] py-3 text-sm font-semibold text-primary-foreground shadow-sm hover:brightness-105 transition sm:hidden"
           >
             <MessageCircle className="h-4 w-4" />
             Mesaj Gönder
@@ -150,7 +150,7 @@ export default async function CoachVitrinPage({
             </p>
             <Link
               href={messageHref}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition"
+              className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-4 py-2 text-sm font-semibold text-primary-foreground hover:brightness-105 transition"
             >
               <MessageCircle className="h-4 w-4" />
               Fiyat Sor / İletişime Geç
@@ -161,7 +161,7 @@ export default async function CoachVitrinPage({
             {profile.packages.map((pkg) => (
               <div
                 key={pkg.id}
-                className="flex flex-col rounded-2xl border bg-card p-4 shadow-sm md:p-5"
+                className="flex flex-col rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5 md:p-5"
               >
                 <div className="flex-1 space-y-2">
                   <p className="font-bold text-slate-900">{pkg.title}</p>
@@ -172,7 +172,7 @@ export default async function CoachVitrinPage({
 
                 <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
                   {pkg.price != null ? (
-                    <span className="rounded-full bg-emerald-100 px-3 py-1 text-sm font-black text-emerald-800">
+                    <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-black text-foreground">
                       {pkg.price.toLocaleString("tr-TR")} ₺
                     </span>
                   ) : (
@@ -181,7 +181,7 @@ export default async function CoachVitrinPage({
 
                   <Link
                     href={messageHref}
-                    className="flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+                    className="flex items-center gap-1.5 rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-4 py-2 text-xs font-semibold text-primary-foreground shadow-sm hover:brightness-105 transition"
                   >
                     <MessageCircle className="h-3.5 w-3.5" />
                     {pkg.price != null

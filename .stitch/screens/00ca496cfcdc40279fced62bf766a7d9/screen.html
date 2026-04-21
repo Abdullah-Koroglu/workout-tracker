@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FITCOACH - Historical Workout Detail</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary-fixed": "#dbe1ff",
+                        "on-surface": "#191c1e",
+                        "surface": "#f7f9fb",
+                        "primary-fixed": "#ffdbca",
+                        "error": "#ba1a1a",
+                        "on-primary-fixed-variant": "#783200",
+                        "background": "#f7f9fb",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#adc7f7",
+                        "primary": "#9d4300",
+                        "secondary-fixed": "#d6e3ff",
+                        "primary-container": "#f97316",
+                        "on-secondary-fixed": "#001b3c",
+                        "on-primary-container": "#582200",
+                        "surface-bright": "#f7f9fb",
+                        "outline-variant": "#e0c0b1",
+                        "on-primary-fixed": "#341100",
+                        "surface-variant": "#e0e3e5",
+                        "surface-tint": "#9d4300",
+                        "on-error-container": "#93000a",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#eff1f3",
+                        "surface-container-low": "#f2f4f6",
+                        "secondary": "#455f88",
+                        "surface-container": "#eceef0",
+                        "on-tertiary-container": "#002c7c",
+                        "primary-fixed-dim": "#ffb690",
+                        "on-tertiary-fixed-variant": "#003ea8",
+                        "surface-container-highest": "#e0e3e5",
+                        "on-tertiary-fixed": "#00174b",
+                        "on-tertiary": "#ffffff",
+                        "inverse-primary": "#ffb690",
+                        "on-secondary-fixed-variant": "#2d476f",
+                        "on-secondary-container": "#3f5882",
+                        "tertiary-fixed-dim": "#b4c5ff",
+                        "surface-dim": "#d8dadc",
+                        "inverse-surface": "#2d3133",
+                        "tertiary": "#0053db",
+                        "on-surface-variant": "#584237",
+                        "error-container": "#ffdad6",
+                        "outline": "#8c7164",
+                        "on-background": "#191c1e",
+                        "on-error": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "tertiary-container": "#7296ff",
+                        "secondary-container": "#b6d0ff",
+                        "surface-container-high": "#e6e8ea"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "fontFamily": {
+                        "headline": ["Lexend", "sans-serif"],
+                        "body": ["Lexend", "sans-serif"],
+                        "label": ["Lexend", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Lexend', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col pb-24 md:pb-0">
+<!-- TopAppBar (From JSON, modified for detail view to have back button) -->
+<header class="bg-white dark:bg-slate-950 text-orange-600 dark:text-orange-500 font-['Lexend'] font-bold tracking-tight docked full-width top-0 bg-slate-100 dark:bg-slate-900 flat no shadows flex justify-between items-center w-full px-6 py-4 sticky z-50">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform text-slate-500 dark:text-slate-400 p-2 -ml-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">arrow_back</span>
+</button>
+<div class="text-xl font-black italic tracking-tighter text-slate-900 dark:text-white">FITCOACH</div>
+</div>
+<div class="flex items-center gap-4">
+<!-- Top Nav items for Web -->
+<nav class="hidden md:flex gap-6 items-center">
+<a class="text-slate-500 dark:text-slate-400 hover:opacity-80 transition-opacity active:scale-95 transition-transform font-bold uppercase tracking-widest text-xs flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">fitness_center</span>Workout
+                </a>
+<a class="text-orange-600 dark:text-orange-500 hover:opacity-80 transition-opacity active:scale-95 transition-transform font-bold uppercase tracking-widest text-xs flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">history</span>History
+                </a>
+<a class="text-slate-500 dark:text-slate-400 hover:opacity-80 transition-opacity active:scale-95 transition-transform font-bold uppercase tracking-widest text-xs flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">insights</span>Insights
+                </a>
+<a class="text-slate-500 dark:text-slate-400 hover:opacity-80 transition-opacity active:scale-95 transition-transform font-bold uppercase tracking-widest text-xs flex items-center gap-2" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">person</span>Profile
+                </a>
+</nav>
+<button class="w-8 h-8 rounded-full overflow-hidden hover:opacity-80 transition-opacity active:scale-95 transition-transform bg-surface-container border-2 border-transparent hover:border-primary-container">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="close up headshot portrait of fit athletic woman looking confident in natural studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA6AdFiwcWoH0ejQCBpMh2cPjLntQ7om-U26DaqpCYddhfs-vXfwrxqCtYgO0Z9xyMmdIvfy2xgP-usvIeuVDx-oQepshRD_Z0p5yuK3_NrOsVWTlymakE1N_1eCmoUisXEveHHS-FF3iFBBK1LRi212gBPDWFryTb17uq_4MbI99HW1ofSZFyJiqP2nrcFd1cgCmn87RRcYTuSfZ6TiK25cMC7HWkaohqNtHvMYo4w9uT4i530-pdri4GHWq1YnoVbG2QRAjO0NyA"/>
+</button>
+</div>
+</header>
+<main class="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+<!-- Header Section -->
+<section class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<span class="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-xs font-bold tracking-widest uppercase font-label">Hypertrophy</span>
+<span class="text-sm font-medium text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span> Oct 24, 2023
+                    </span>
+</div>
+<h1 class="text-4xl md:text-5xl font-black font-headline text-on-surface tracking-tight mb-2">Lower Body Focus</h1>
+<p class="text-lg text-on-surface-variant font-body">Completed at Elite Performance Center</p>
+</div>
+<button class="bg-surface-container-high text-on-secondary-container px-6 py-3 rounded-lg font-bold font-label flex items-center gap-2 hover:bg-surface-dim transition-colors">
+<span class="material-symbols-outlined">ios_share</span> Export Data
+            </button>
+</section>
+<!-- Bento Grid: Performance Recap -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<!-- Metric Card 1 -->
+<div class="bg-surface-container-low rounded-lg p-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">weight</span>
+</div>
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2 font-label">Total Volume</h3>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-black text-on-surface font-headline">12,450</span>
+<span class="text-lg font-medium text-on-surface-variant">lbs</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-sm font-medium text-primary-container">
+<span class="material-symbols-outlined text-[16px] font-variation-settings-'FILL'-1">trending_up</span>
+<span>+4% vs last week</span>
+</div>
+</div>
+<!-- Metric Card 2 -->
+<div class="bg-surface-container-low rounded-lg p-6 relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">timer</span>
+</div>
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2 font-label">Duration</h3>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-black text-on-surface font-headline">1h 15m</span>
+</div>
+<div class="mt-4 flex items-center gap-2 text-sm font-medium text-on-surface-variant">
+<span class="material-symbols-outlined text-[16px]">pace</span>
+<span>Optimal pace maintained</span>
+</div>
+</div>
+<!-- Metric Card 3 -->
+<div class="bg-surface-container-highest rounded-lg p-6 relative overflow-hidden group border-b-2 border-primary">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">local_fire_department</span>
+</div>
+<h3 class="text-sm font-bold uppercase tracking-widest text-on-surface-variant mb-2 font-label">Intensity Score</h3>
+<div class="flex items-baseline gap-2">
+<span class="text-4xl font-black text-primary font-headline">8.5</span>
+<span class="text-lg font-medium text-on-surface-variant">/ 10 RPE</span>
+</div>
+<div class="mt-4 w-full bg-surface-variant h-2 rounded-full overflow-hidden">
+<div class="bg-gradient-to-r from-primary to-primary-container h-full w-[85%] rounded-full"></div>
+</div>
+</div>
+</section>
+<!-- Main Content Area: Exercises & Feedback -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-4">
+<!-- Left Column: Exercise Breakdown (2/3 width on desktop) -->
+<section class="lg:col-span-2 flex flex-col gap-6">
+<h2 class="text-2xl font-bold font-headline text-on-surface border-b border-surface-container-high pb-4">Exercise Breakdown</h2>
+<!-- Exercise 1 -->
+<div class="bg-surface-container-lowest rounded-lg p-0 overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+<div class="bg-surface-container-low p-4 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary">
+<span class="material-symbols-outlined">fitness_center</span>
+</div>
+<h3 class="text-lg font-bold font-headline text-on-surface">Barbell Back Squat</h3>
+</div>
+<span class="px-3 py-1 bg-surface-variant text-on-surface-variant rounded-full text-xs font-bold uppercase tracking-widest font-label">Primary</span>
+</div>
+<div class="p-4">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-container-high">
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label w-16">Set</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label">Weight</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label">Reps</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label text-right">RPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-surface-container">
+<td class="py-3 text-sm font-medium text-on-surface">1</td>
+<td class="py-3 text-sm font-bold text-on-surface">135 lbs</td>
+<td class="py-3 text-sm font-bold text-on-surface">10</td>
+<td class="py-3 text-sm text-on-surface-variant text-right">6</td>
+</tr>
+<tr class="border-b border-surface-container bg-surface-container-low/30">
+<td class="py-3 text-sm font-medium text-on-surface">2</td>
+<td class="py-3 text-sm font-bold text-on-surface">225 lbs</td>
+<td class="py-3 text-sm font-bold text-on-surface">8</td>
+<td class="py-3 text-sm text-on-surface-variant text-right">7.5</td>
+</tr>
+<tr>
+<td class="py-3 text-sm font-medium text-on-surface flex items-center gap-1">3 <span class="material-symbols-outlined text-primary text-[14px]">star</span></td>
+<td class="py-3 text-sm font-black text-primary">275 lbs</td>
+<td class="py-3 text-sm font-black text-primary">6</td>
+<td class="py-3 text-sm font-bold text-on-surface text-right">9</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Exercise 2 -->
+<div class="bg-surface-container-lowest rounded-lg p-0 overflow-hidden shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
+<div class="bg-surface-container-low p-4 flex justify-between items-center">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center text-on-secondary">
+<span class="material-symbols-outlined">airline_seat_legroom_extra</span>
+</div>
+<h3 class="text-lg font-bold font-headline text-on-surface">Romanian Deadlift</h3>
+</div>
+<span class="px-3 py-1 bg-surface-variant text-on-surface-variant rounded-full text-xs font-bold uppercase tracking-widest font-label">Accessory</span>
+</div>
+<div class="p-4">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-surface-container-high">
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label w-16">Set</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label">Weight</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label">Reps</th>
+<th class="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant font-label text-right">RPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="border-b border-surface-container">
+<td class="py-3 text-sm font-medium text-on-surface">1</td>
+<td class="py-3 text-sm font-bold text-on-surface">185 lbs</td>
+<td class="py-3 text-sm font-bold text-on-surface">10</td>
+<td class="py-3 text-sm text-on-surface-variant text-right">7</td>
+</tr>
+<tr class="border-b border-surface-container bg-surface-container-low/30">
+<td class="py-3 text-sm font-medium text-on-surface">2</td>
+<td class="py-3 text-sm font-bold text-on-surface">205 lbs</td>
+<td class="py-3 text-sm font-bold text-on-surface">8</td>
+<td class="py-3 text-sm text-on-surface-variant text-right">8</td>
+</tr>
+<tr>
+<td class="py-3 text-sm font-medium text-on-surface">3</td>
+<td class="py-3 text-sm font-bold text-on-surface">205 lbs</td>
+<td class="py-3 text-sm font-bold text-on-surface">8</td>
+<td class="py-3 text-sm text-on-surface-variant text-right">8.5</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+<!-- Right Column: Notes & Feedback (1/3 width on desktop) -->
+<section class="lg:col-span-1 flex flex-col gap-6">
+<!-- Coach Feedback -->
+<div class="bg-secondary text-on-secondary rounded-lg p-6 relative overflow-hidden shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-secondary-fixed-dim rounded-full blur-2xl opacity-50"></div>
+<h2 class="text-sm font-bold uppercase tracking-widest mb-4 font-label flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">verified</span> Coach's Assessment
+                    </h2>
+<div class="flex gap-4 items-start mb-4">
+<img alt="Coach Profile" class="w-12 h-12 rounded-full object-cover border-2 border-secondary-fixed" data-alt="professional headshot of fitness coach with serious expression in gym setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBFyY4GJASdoPenSLFDuU6KByg3jVEyacHGR2WrZrlDp7pfU3hnZ06z_rp2nMbtPs2gT2WqdlCx0M-ZX_rurdqZ9vj2CgIYXWFYi-b2hMoXN4rBclE6g6GBEv_J3CRghXZ7KXU1tIhzEtvBC7GYAtjdbk9Q3fHF92Vh43o45isu6yCfLT1hKNiwjjd-0geaTWQ4nffxUIffk7RWsz1LXYHbOQMMYGpRs8KrQrJi9cuePSyH0Jad5PkZaQlxfrritNgPU8s89MNx9_8"/>
+<div>
+<p class="font-bold text-sm">Marcus Vance</p>
+<p class="text-xs text-secondary-fixed-dim">Lead Strength Coach</p>
+</div>
+</div>
+<p class="text-sm leading-relaxed font-body text-secondary-fixed relative z-10">
+                        "Great work pushing the intensity on those top sets of squats. Form looked solid on the video review, but let's watch the knee cave on the concentric phase as fatigue sets in. RDLs were textbook. Keep this momentum."
+                    </p>
+</div>
+<!-- Athlete Notes -->
+<div class="bg-surface-container-low rounded-lg p-6">
+<h2 class="text-sm font-bold uppercase tracking-widest mb-4 font-label text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">edit_note</span> Athlete Log
+                    </h2>
+<p class="text-sm text-on-surface-variant leading-relaxed font-body italic border-l-2 border-outline-variant pl-4 py-1">
+                        Felt strong today, sleep was optimal last night. Lower back slightly tight during warmups but loosened up after the second set of squats. Ready to increase load on RDLs next week.
+                    </p>
+</div>
+</section>
+</div>
+</main>
+<!-- BottomNavBar (From JSON, modified to hide on Web, show on Mobile) -->
+<nav class="md:hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl font-['Lexend'] text-[10px] font-bold uppercase tracking-widest text-orange-600 fixed bottom-0 w-full z-50 rounded-t-lg border-t border-slate-100 dark:border-slate-800 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">fitness_center</span>Workout
+        </a>
+<a class="flex flex-col items-center justify-center text-orange-600 dark:text-orange-500 scale-110 transition-all hover:text-slate-900 dark:hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">history</span>History
+        </a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">insights</span>Insights
+        </a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-600 hover:text-slate-900 dark:hover:text-white active:scale-90 transition-transform" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 0;">person</span>Profile
+        </a>
+</nav>
+</body></html>

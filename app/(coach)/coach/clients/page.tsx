@@ -33,21 +33,22 @@ export default async function CoachClientsPage() {
 
   return (
     <div className="space-y-6">
-      <section className="rounded-3xl border border-sky-200/60 bg-gradient-to-br from-sky-50 via-white to-cyan-50 p-6 shadow-sm">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-700">Client Yönetimi</p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Clientler</h1>
+      <section className="rounded-xl bg-gradient-to-br from-card via-muted/30 to-background p-6 shadow-sm ring-1 ring-black/5">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Coach Portal</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Active Roster</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Danışan ilişkileri, bekleyen istekler ve ilerleme erişimi.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Toplam</p>
-            <p className="mt-1 text-2xl font-black text-slate-900">{relations.length}</p>
+            <p className="mt-1 text-2xl font-black text-primary">{relations.length}</p>
           </div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Kabul Edilen</p>
-            <p className="mt-1 text-2xl font-black text-slate-900">{accepted.length}</p>
+            <p className="mt-1 text-2xl font-black text-secondary">{accepted.length}</p>
           </div>
-          <div className="rounded-2xl bg-white px-4 py-3 shadow-sm">
+          <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
             <p className="text-xs uppercase tracking-[0.18em] text-slate-500">Bekleyen</p>
-            <p className="mt-1 text-2xl font-black text-slate-900">{pending.length}</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{pending.length}</p>
           </div>
         </div>
       </section>

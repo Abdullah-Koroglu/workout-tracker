@@ -118,7 +118,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
             if (e.target === backdropRef.current) setOpen(false);
           }}
         >
-          <div className="flex w-full flex-col overflow-hidden rounded-t-3xl bg-background shadow-2xl sm:max-w-2xl sm:rounded-2xl max-h-[92dvh]">
+          <div className="flex w-full max-h-[92dvh] flex-col overflow-hidden rounded-t-3xl bg-background shadow-2xl sm:max-w-2xl sm:rounded-xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b px-5 py-4">
               <div>
@@ -136,10 +136,10 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
             </div>
 
             {/* Date Picker */}
-            <div className="border-b bg-muted/30 px-5 py-3">
+            <div className="bg-muted/40 px-5 py-3">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                 <div className="flex items-center gap-2 text-sm font-medium">
-                  <CalendarDays className="h-4 w-4 text-emerald-600" />
+                  <CalendarDays className="h-4 w-4 text-primary" />
                   <span>Antrenman Günü</span>
                 </div>
                 <input
@@ -147,14 +147,14 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                   value={scheduledFor}
                   min={todayStr}
                   onChange={(e) => setScheduledFor(e.target.value)}
-                  className="h-9 flex-1 rounded-lg border bg-background px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="h-9 flex-1 rounded-lg border-0 bg-background px-3 py-1 text-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
                 <span className="text-xs text-muted-foreground">Tek kullanım · Bu gün dışında başlatılamaz</span>
               </div>
             </div>
 
             {/* Search */}
-            <div className="border-b px-5 py-3">
+            <div className="px-5 py-3">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <input
@@ -162,7 +162,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                   placeholder="Template ara..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  className="h-9 w-full rounded-lg border bg-muted/40 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="h-9 w-full rounded-lg border-0 bg-muted/60 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
             </div>
@@ -191,7 +191,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                   return (
                     <div
                       key={template.id}
-                      className="overflow-hidden rounded-xl border bg-card transition-all"
+                      className="overflow-hidden rounded-lg bg-card ring-1 ring-black/5 transition-all"
                     >
                       <div className="flex items-start gap-3 p-4">
                         <div className="flex-1 min-w-0">
@@ -199,13 +199,13 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                             <p className="font-semibold text-sm leading-tight">{template.name}</p>
                             <div className="flex gap-1">
                               {weightCount > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-secondary/20 px-2 py-0.5 text-[10px] font-semibold text-secondary">
                                   <Dumbbell className="h-2.5 w-2.5" />
                                   {weightCount}
                                 </span>
                               )}
                               {cardioCount > 0 && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-orange-50 px-2 py-0.5 text-[10px] font-semibold text-orange-700">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[10px] font-semibold text-foreground">
                                   <Flame className="h-2.5 w-2.5" />
                                   {cardioCount}
                                 </span>
@@ -218,7 +218,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                           <button
                             type="button"
                             onClick={() => setExpandedId(isExpanded ? null : template.id)}
-                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-900"
+                            className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-primary hover:opacity-80"
                           >
                             {isExpanded ? "Gizle" : `${template.exercises.length} egzersiz göster`}
                             <ChevronDown className={`h-3 w-3 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
@@ -236,7 +236,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
 
                       {/* Expanded exercise list */}
                       {isExpanded && (
-                        <div className="border-t bg-muted/30 px-4 py-3">
+                        <div className="border-t border-black/10 bg-muted/40 px-4 py-3">
                           <div className="space-y-1.5">
                             {template.exercises
                               .slice()
@@ -245,9 +245,9 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                                 <div key={ex.id} className="flex items-center justify-between text-xs">
                                   <div className="flex items-center gap-2">
                                     {ex.exercise.type === "CARDIO" ? (
-                                      <Flame className="h-3 w-3 text-orange-500 shrink-0" />
+                                      <Flame className="h-3 w-3 text-primary shrink-0" />
                                     ) : (
-                                      <Dumbbell className="h-3 w-3 text-blue-500 shrink-0" />
+                                      <Dumbbell className="h-3 w-3 text-secondary shrink-0" />
                                     )}
                                     <span className="text-foreground font-medium">{ex.exercise.name}</span>
                                   </div>

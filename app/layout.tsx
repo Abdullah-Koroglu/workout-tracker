@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata, Viewport } from "next";
+import { Lexend } from "next/font/google";
 
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -12,6 +13,8 @@ import { GlobalBreadcrumb } from "@/components/shared/GlobalBreadcrumb";
 import { NavbarScrollBehavior } from "@/components/shared/NavbarScrollBehavior";
 import { PwaRegister } from "@/components/shared/PwaRegister";
 import { OfflineResume } from "@/components/shared/OfflineResume";
+
+const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 
 export const metadata: Metadata = {
   title: "Fit Coach",
@@ -28,7 +31,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#22C55E",
+  themeColor: "#F97316",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -95,7 +98,7 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/apple-splash-640-1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
         <link rel="apple-touch-startup-image" href="/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
       </head>
-      <body>
+      <body className={lexend.className}>
         <ThemeProvider>
           <AppSessionProvider>
             <AuthProvider>

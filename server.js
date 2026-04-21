@@ -287,6 +287,14 @@ function startWsServer() {
       sessionId: base64UrlEncode(`${userId}:${Date.now()}`)
     });
 
+    // Notify all other connected users that this user came online
+    for (const [otherUserId, sockets] of socketsByUserId.entries()) {
+      if (otherUserId === userId) continue;
+      for (const socket of sockets) {
+        safeSend(socket, { type: "peer_online", userId });
+      }
+    }
+
     ws.on("message", async (raw) => {
       let parsed;
       try {
@@ -315,11 +323,27 @@ function startWsServer() {
 
       if (parsed?.type === "ping") {
         safeSend(ws, { type: "pong" });
+        return;
+      }
+
+      if (parsed?.type === "query_peer_status") {
+        const peerId = typeof parsed.peerId === "string" ? parsed.peerId : "";
+        if (peerId) {
+          safeSend(ws, { type: "peer_status", peerId, online: isUserOnline(peerId) });
+        }
+        return;
       }
     });
 
     ws.on("close", () => {
       removeSocket(userId, ws);
+      // Notify all remaining connected users that this user went offline
+      for (const [otherUserId, sockets] of socketsByUserId.entries()) {
+        if (otherUserId === userId) continue;
+        for (const socket of sockets) {
+          safeSend(socket, { type: "peer_offline", userId });
+        }
+      }
     });
 
     ws.on("error", () => {

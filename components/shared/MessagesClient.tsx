@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Bell, CheckCheck, MessageCircle, Phone, Plus, Search, Send, Settings, Video } from "lucide-react";
+import { ArrowLeft, Check, CheckCheck, MessageCircle, Phone, Plus, Search, Send, Video } from "lucide-react";
 
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { PushNotificationToggle } from "@/components/shared/PushNotificationToggle";
@@ -53,6 +53,19 @@ type WsIncomingMessage =
       message: string;
     }
   | {
+      type: "peer_online";
+      userId: string;
+    }
+  | {
+      type: "peer_offline";
+      userId: string;
+    }
+  | {
+      type: "peer_status";
+      peerId: string;
+      online: boolean;
+    }
+  | {
       type: "pong";
     };
 
@@ -62,6 +75,10 @@ type WsOutgoingMessage =
       receiverId: string;
       content: string;
       clientId: string;
+    }
+  | {
+      type: "query_peer_status";
+      peerId: string;
     }
   | {
       type: "ping";
@@ -184,6 +201,7 @@ export function MessagesClient({
   const preferredPeerRef = useRef<string>("");
   const [refreshing, setRefreshing] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [peerOnlineStatus, setPeerOnlineStatus] = useState<Record<string, boolean>>({});
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   // tracks whether the next messages state update should scroll to bottom
   const scrollToBottomRef = useRef(true);
@@ -194,12 +212,17 @@ export function MessagesClient({
   );
 
   const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
-  const wsStatusDotKineticClass = wsConnected ? "bg-primary" : "bg-secondary";
 
   const selectThread = useCallback((userId: string) => {
     activePeerRef.current = userId;
     setSelectedUserId(userId);
     setShowChat(true);
+    // Query peer online status over WS
+    const socket = wsRef.current;
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      const msg: WsOutgoingMessage = { type: "query_peer_status", peerId: userId };
+      socket.send(JSON.stringify(msg));
+    }
   }, []);
 
   useEffect(() => {
@@ -422,6 +445,9 @@ export function MessagesClient({
           const incoming = payload.message;
           const peerId = incoming.senderId === currentUserId ? incoming.receiverId : incoming.senderId;
 
+          // Mark sender as online when we receive a message from them
+          setPeerOnlineStatus((prev) => ({ ...prev, [incoming.senderId]: true }));
+
           setThreads((prev) => updateThreadsWithLatestMessage(prev, incoming, currentUserId, activePeerRef.current));
 
           if (peerId === activePeerRef.current) {
@@ -430,6 +456,22 @@ export function MessagesClient({
           }
 
           void fetchThreads({ syncSelectedMessages: false, silent: true });
+          return;
+        }
+
+        if (payload.type === "peer_online") {
+          setPeerOnlineStatus((prev) => ({ ...prev, [payload.userId]: true }));
+          return;
+        }
+
+        if (payload.type === "peer_offline") {
+          setPeerOnlineStatus((prev) => ({ ...prev, [payload.userId]: false }));
+          return;
+        }
+
+        if (payload.type === "peer_status") {
+          setPeerOnlineStatus((prev) => ({ ...prev, [payload.peerId]: payload.online }));
+          return;
         }
       };
 
@@ -510,8 +552,11 @@ export function MessagesClient({
     if (!scrollToBottomRef.current) return;
     const container = messagesContainerRef.current;
     if (!container) return;
-    container.scrollTop = container.scrollHeight;
-  }, [messages, selectedUserId]);
+    requestAnimationFrame(() => {
+      if (container) container.scrollTop = container.scrollHeight;
+    });
+    scrollToBottomRef.current = false;
+  }, [messages, selectedUserId, showChat]);
 
   useEffect(() => {
     manualCloseRef.current = false;
@@ -772,9 +817,9 @@ export function MessagesClient({
                     {activeThread.user.name}
                   </p>
                   <div className="flex items-center gap-1.5">
-                    <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotKineticClass}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${peerOnlineStatus[activeThread.user.id] ? "bg-emerald-500" : "bg-slate-300"}`} />
                     <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                      {wsConnected ? "Canlı" : "Bağlanıyor"}
+                      {peerOnlineStatus[activeThread.user.id] ? "Çevrimiçi" : "Çevrimdışı"}
                     </span>
                   </div>
                 </div>
@@ -863,8 +908,10 @@ export function MessagesClient({
                                       minute: "2-digit",
                                     })}
                                   </span>
-                                  {mine && !message.optimistic ? (
+                                  {mine && !message.optimistic && message.isRead ? (
                                     <CheckCheck className="h-3 w-3 text-primary" />
+                                  ) : mine && !message.optimistic && !message.isRead ? (
+                                    <Check className="h-3 w-3 text-slate-400" />
                                   ) : null}
                                 </div>
                               </div>

@@ -169,7 +169,7 @@ export function RoleNavShell({
 
         <div className={[
           "mx-auto px-0",
-          isMessagesRoute ? "pt-16 md:pt-16 md:pl-64 md:max-w-[120rem]" : "pt-20 md:pt-24 md:pl-64 md:max-w-[120rem]"
+          isMessagesRoute ? "pt-16 md:pt-16 md:pl-64" : "pt-20 md:pt-24 md:pl-64 md:max-w-[120rem]"
         ].join(" ")}>{children}</div>
       </main>
 

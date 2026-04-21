@@ -27,3 +27,10 @@ Typing indicator (yazıyor...) gerçek zamanlı olay olarak bağlı değil.
 “Canlı/online” durumu anlık presence sistemine değil, websocket bağlantı durumuna dayanıyor.
 Stitch’teki alt sabit özel mesaj nav barı birebir ayrı bir bar olarak kullanılmıyor; uygulamanın mevcut role shell navigasyonu korunuyor.
 mesaj arama 
+
+clients ve coachs yonetimi 
+
+Bekleyen istekleri geri çekme aksiyonu yok (API tarafında iptal endpointi görünmüyor).
+Koç kartlarında uzmanlık, puan, profil görseli gibi detay alanlar sınırlı (mevcut listeden gelen veri kadar gösteriliyor).
+Koç bağlantı durumları gerçek zamanlı güncellenmiyor (ilişki ekranı için WS/push senkronu yok).
+Filtre dışında gelişmiş sıralama yok (ör. en yeni, en uygun, alfabetik).

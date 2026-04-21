@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mission Control - Athlete Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed-dim": "#b4c5ff",
+                    "on-error-container": "#93000a",
+                    "secondary-container": "#b6d0ff",
+                    "surface": "#f7f9fb",
+                    "on-secondary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "tertiary": "#0053db",
+                    "primary-container": "#f97316",
+                    "on-tertiary-fixed": "#00174b",
+                    "on-secondary-fixed": "#001b3c",
+                    "on-primary-fixed-variant": "#783200",
+                    "surface-tint": "#9d4300",
+                    "surface-dim": "#d8dadc",
+                    "on-secondary-fixed-variant": "#2d476f",
+                    "outline-variant": "#e0c0b1",
+                    "on-tertiary-container": "#002c7c",
+                    "error-container": "#ffdad6",
+                    "tertiary-fixed": "#dbe1ff",
+                    "on-secondary-container": "#3f5882",
+                    "tertiary-container": "#7296ff",
+                    "inverse-primary": "#ffb690",
+                    "on-primary-container": "#582200",
+                    "surface-container-high": "#e6e8ea",
+                    "outline": "#8c7164",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-low": "#f2f4f6",
+                    "on-background": "#191c1e",
+                    "surface-variant": "#e0e3e5",
+                    "error": "#ba1a1a",
+                    "on-surface": "#191c1e",
+                    "surface-container": "#eceef0",
+                    "inverse-on-surface": "#eff1f3",
+                    "primary-fixed": "#ffdbca",
+                    "on-primary": "#ffffff",
+                    "background": "#f7f9fb",
+                    "surface-bright": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#003ea8",
+                    "surface-container-highest": "#e0e3e5",
+                    "primary-fixed-dim": "#ffb690",
+                    "primary": "#9d4300",
+                    "inverse-surface": "#2d3133",
+                    "secondary-fixed-dim": "#adc7f7",
+                    "secondary": "#455f88",
+                    "secondary-fixed": "#d6e3ff",
+                    "on-primary-fixed": "#341100",
+                    "on-surface-variant": "#584237"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "fontFamily": {
+                    "headline": ["Lexend"],
+                    "body": ["Lexend"],
+                    "label": ["Lexend"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Lexend', sans-serif; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 left-0 w-full z-50 bg-white dark:bg-slate-950 flex justify-between items-center px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-high">
+<img alt="Athlete profile image" class="w-full h-full object-cover" data-alt="Close-up portrait of a determined elite athlete with intense focus, studio lighting with dramatic shadows and sharp contrast" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAylI--9DHY8ObZKuyqnQL-7r6xY0hTtKIdbLJPEzANpySC6vXt45tf0Zq0sUWYGoKtVgImksj2SxPofXDja6cKm8UbA1oYfoq3pL4-zwJS-sxeFWnrVISTj9rZGdr3Gzp_VYrBrherUTEP_H-y16A8RCd52Z_7HB87d_WJd1gKq070OTIh_CpDMGQbe5g2g0o81GEC6lX7EwevzLHkuJiB6ZjpwOseWPGogn7TFjGJEXHFYm3DnF4mVauzhIUCbvNK6v6v9yOoZqI"/>
+</div>
+<h1 class="font-lexend font-bold uppercase tracking-tight text-orange-600 dark:text-orange-500">MISSION CONTROL</h1>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-slate-400 hover:opacity-80 transition-opacity active:scale-95 duration-200">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</div>
+</header>
+<main class="pt-24 px-6 space-y-8">
+<!-- Hero Section: Today's Session -->
+<section class="relative group">
+<div class="relative overflow-hidden rounded-lg bg-secondary text-on-tertiary shadow-xl">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/90 via-secondary/70 to-transparent z-10"></div>
+<img alt="Workout background" class="absolute inset-0 w-full h-full object-cover opacity-60" data-alt="Professional athlete performing heavy squats in a high-end industrial gym, atmospheric lighting with dust motes and cool blue tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDraMsmydiJ1p0fRKyzV40KK-20wB5_U3im6YnMbPBH2udyntftUS_iUepS4XaagxyZ_nURpo3M-mvR4B_j0IyQ150ejYcuD8IA1DKwCdMaeYGaKkvP0DnWQQod0KnGn7KMJIzaMJJWkZld1cPQrkwh5v_CrXNQPrZp6vopeD1bGHIRabkczymXnFS4USfW8sqcdXdlelNsbXCSy1VrPTFcTCODBVPLWWnGjhbF6MlxmV0FvogFruJQdGNTiy6eiuR6TdQNDB4myH8"/>
+<div class="relative z-20 p-8 space-y-6">
+<div class="space-y-1">
+<span class="font-label text-[10px] uppercase tracking-[0.2em] opacity-80">Today's Session</span>
+<h2 class="text-3xl font-extrabold tracking-tighter leading-none">PEAK ENDURANCE &amp; AGILITY</h2>
+</div>
+<div class="flex gap-6 items-center">
+<div class="flex flex-col">
+<span class="text-xs font-label uppercase tracking-widest opacity-70">Duration</span>
+<span class="text-lg font-bold">75 MIN</span>
+</div>
+<div class="w-px h-8 bg-on-tertiary/20"></div>
+<div class="flex flex-col">
+<span class="text-xs font-label uppercase tracking-widest opacity-70">Target</span>
+<span class="text-lg font-bold">HYPERTROPHY</span>
+</div>
+</div>
+<button class="w-full py-4 bg-gradient-to-r from-primary to-primary-container text-white font-bold rounded-lg uppercase tracking-widest shadow-lg active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<span>START WORKOUT</span>
+<span class="material-symbols-outlined text-sm" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</button>
+</div>
+</div>
+<!-- Kinetic Accent -->
+<div class="absolute -top-2 -right-2 w-16 h-16 bg-primary opacity-10 blur-3xl pointer-events-none"></div>
+</section>
+<!-- Upcoming Schedule -->
+<section class="space-y-4">
+<div class="flex justify-between items-end">
+<h3 class="text-xl font-bold tracking-tight text-secondary">Upcoming Schedule</h3>
+<button class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary hover:opacity-80 transition-opacity active:scale-95">
+<span>View Full Plan</span>
+<span class="material-symbols-outlined text-[16px]" data-icon="calendar_today">calendar_today</span>
+</button>
+</div>
+<div class="space-y-3">
+<!-- Day 1 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg group active:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex flex-col items-center justify-center min-w-[3.5rem] py-2 bg-surface-container-highest rounded-lg">
+<span class="text-[10px] font-bold uppercase text-secondary/60">Thu</span>
+<span class="text-xl font-black text-secondary">24</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-secondary">Active Recovery</h4>
+<p class="text-sm text-on-surface-variant font-medium">Zone 2 Mobility + Foam Roll</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-tertiary/10 text-tertiary rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="restore">restore</span>
+<span class="text-[10px] font-bold uppercase">45m</span>
+</div>
+</div>
+<!-- Day 2 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg group active:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex flex-col items-center justify-center min-w-[3.5rem] py-2 bg-surface-container-highest rounded-lg">
+<span class="text-[10px] font-bold uppercase text-secondary/60">Fri</span>
+<span class="text-xl font-black text-secondary">25</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-secondary">Power Upper Body</h4>
+<p class="text-sm text-on-surface-variant font-medium">Explosive Push/Pull Series</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-primary/10 text-primary rounded-full">
+<span class="material-symbols-outlined text-sm" data-icon="bolt">bolt</span>
+<span class="text-[10px] font-bold uppercase">60m</span>
+</div>
+</div>
+<!-- Day 3 -->
+<div class="flex items-center gap-4 p-4 bg-surface-container-low rounded-lg group active:bg-surface-container-high transition-colors cursor-pointer">
+<div class="flex flex-col items-center justify-center min-w-[3.5rem] py-2 bg-surface-container-highest rounded-lg">
+<span class="text-[10px] font-bold uppercase text-secondary/60">Sat</span>
+<span class="text-xl font-black text-secondary">26</span>
+</div>
+<div class="flex-1 opacity-60">
+<h4 class="font-bold text-secondary">Rest Day</h4>
+<p class="text-sm text-on-surface-variant font-medium">Full System Recharge</p>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-secondary/10 text-secondary rounded-full opacity-60">
+<span class="material-symbols-outlined text-sm" data-icon="bedtime">bedtime</span>
+<span class="text-[10px] font-bold uppercase">Off</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Kinetic Metric Shards -->
+<section class="grid grid-cols-2 gap-4">
+<div class="p-6 bg-white shadow-sm rounded-lg border-l-4 border-primary">
+<span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">Sleep Score</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-3xl font-black text-secondary">88</span>
+<span class="text-xs font-bold text-slate-400">/100</span>
+</div>
+</div>
+<div class="p-6 bg-white shadow-sm rounded-lg border-l-4 border-tertiary">
+<span class="text-[10px] font-bold uppercase tracking-widest text-slate-500">HRV Status</span>
+<div class="flex items-baseline gap-1 mt-1">
+<span class="text-3xl font-black text-secondary">64</span>
+<span class="text-xs font-bold text-slate-400">ms</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 pb-safe bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl shadow-[0_-4px_24px_rgba(0,0,0,0.06)] rounded-t-lg">
+<!-- Training (Active) -->
+<a class="flex flex-col items-center justify-center text-orange-600 dark:text-orange-500 bg-orange-50 dark:bg-orange-950/30 rounded-lg p-2 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="fitness_center" style="font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="font-lexend text-[10px] font-bold uppercase tracking-widest mt-1">Training</span>
+</a>
+<!-- Feed -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-900/50 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dynamic_feed">dynamic_feed</span>
+<span class="font-lexend text-[10px] font-bold uppercase tracking-widest mt-1">Feed</span>
+</a>
+<!-- Metrics -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-900/50 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="bar_chart">bar_chart</span>
+<span class="font-lexend text-[10px] font-bold uppercase tracking-widest mt-1">Metrics</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-slate-500 dark:text-slate-400 p-2 hover:bg-slate-100 dark:hover:bg-slate-900/50 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-lexend text-[10px] font-bold uppercase tracking-widest mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

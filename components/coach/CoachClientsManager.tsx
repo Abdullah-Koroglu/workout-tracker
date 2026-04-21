@@ -45,14 +45,14 @@ export function CoachClientsManager({
       return;
     }
 
-    push(status === "ACCEPTED" ? "Client isteği kabul edildi." : "Client isteği reddedildi.");
+    push(status === "ACCEPTED" ? "Danışan isteği kabul edildi." : "Danışan isteği reddedildi.");
     router.refresh();
   };
 
   const removeClient = async (clientId: string) => {
     const approved = await confirm({
       title: "Client baglantisini kaldir",
-      description: "Bu client ile iliskiyi kaldirmak istediginize emin misiniz?",
+      description: "Bu danışan ile ilişkiyi kaldırmak istediğinize emin misiniz?",
       confirmText: "Kaldir",
       cancelText: "Vazgec",
       danger: true
@@ -70,11 +70,11 @@ export function CoachClientsManager({
     setActiveClientId(null);
 
     if (!response.ok) {
-      push(data.error || "Client bağlantısı kaldırılamadı.");
+      push(data.error || "Danışan bağlantısı kaldırılamadı.");
       return;
     }
 
-    push("Client bağlantısı kaldırıldı.");
+    push("Danışan bağlantısı kaldırıldı.");
     router.refresh();
   };
 
@@ -102,7 +102,7 @@ export function CoachClientsManager({
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Client adı veya e-posta ara..."
+              placeholder="Danışan adı veya e-posta ara..."
               className="h-10 w-full rounded-lg border-0 bg-muted/60 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
@@ -144,10 +144,10 @@ export function CoachClientsManager({
 
       {(filter === "ALL" || filter === "ACCEPTED") && (
         <section className="space-y-3">
-          <h2 className="font-semibold">Aktif Roster</h2>
+          <h2 className="font-semibold">Aktif Danışanlar</h2>
           {acceptedFiltered.length === 0 ? (
             <div className="rounded-xl bg-muted/50 p-6 text-sm text-muted-foreground">
-              Aktif client bulunamadı.
+              Aktif danışan bulunamadı.
             </div>
           ) : (
             <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
@@ -173,7 +173,7 @@ export function CoachClientsManager({
                           }
                         },
                         {
-                          label: "Client'ı kaldır",
+                          label: "Danışanı kaldır",
                           danger: true,
                           onClick: () => {
                             void removeClient(client.id);

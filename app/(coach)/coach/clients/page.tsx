@@ -34,8 +34,8 @@ export default async function CoachClientsPage() {
   return (
     <div className="space-y-6">
       <section className="rounded-xl bg-gradient-to-br from-card via-muted/30 to-background p-6 shadow-sm ring-1 ring-black/5">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Coach Portal</p>
-        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Active Roster</h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Koç Paneli</p>
+        <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">Aktif Danışan Listesi</h1>
         <p className="mt-1 text-sm text-muted-foreground">Danışan ilişkileri, bekleyen istekler ve ilerleme erişimi.</p>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">

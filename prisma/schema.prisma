@@ -25,6 +25,46 @@ model User {
   sentMessages      Message[]      @relation("MessageSender")
   receivedMessages  Message[]      @relation("MessageReceiver")
   notifications     Notification[] @relation("NotificationUser")
+
+  clientProfile   ClientProfile?
+  coachProfile    CoachProfile?
+}
+
+model ClientProfile {
+  id           String    @id @default(cuid())
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId       String    @unique
+  birthDate    DateTime?
+  heightCm     Float?
+  weightKg     Float?
+  goal         String?
+  fitnessLevel String?
+  updatedAt    DateTime  @updatedAt
+}
+
+model CoachProfile {
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @unique
+  bio             String?
+  specialties     Json?
+  experienceYears Int?
+  socialMediaUrl  String?
+  updatedAt       DateTime @updatedAt
+
+  packages CoachPackage[]
+}
+
+model CoachPackage {
+  id          String       @id @default(cuid())
+  profile     CoachProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId   String
+  title       String
+  description String?
+  price       Float?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 enum Role {

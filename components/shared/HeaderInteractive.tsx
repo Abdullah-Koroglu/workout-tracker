@@ -16,6 +16,8 @@ import {
   X,
   Activity,
   LogOut,
+  Compass,
+  User,
 } from "lucide-react";
 
 type NavItem = { href: string; label: string; icon: React.ElementType };
@@ -26,6 +28,7 @@ const coachLinks: NavItem[] = [
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/coach/templates", label: "Template'ler", icon: ClipboardList },
   { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
+  { href: "/coach/profile", label: "Profil", icon: User },
 ];
 
 const clientLinks: NavItem[] = [
@@ -33,6 +36,8 @@ const clientLinks: NavItem[] = [
   { href: "/client/coaches", label: "Coach Bul", icon: UserSearch },
   { href: "/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/workouts", label: "Geçmiş", icon: History },
+  { href: "/client/marketplace", label: "Keşfet", icon: Compass },
+  { href: "/client/profile", label: "Profil", icon: User },
 ];
 
 type Props = {

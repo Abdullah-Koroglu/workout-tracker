@@ -98,7 +98,7 @@ const groupByDate = (items: AssignmentItem[]) => {
     }
 
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 overflow-y-auto">
         {keys.map((dateKey) => {
           const date = new Date(dateKey);
           return (

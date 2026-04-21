@@ -210,7 +210,7 @@ export default function CoachProfilePage() {
               placeholder="Uzmanlık ekle..."
               className="h-9 flex-1 rounded-lg border bg-muted/30 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Button type="button" size="sm" variant="outline" onClick={() => addSpecialty(specialtyInput)}>
+            <Button type="button" variant="outline" onClick={() => addSpecialty(specialtyInput)}>
               <Plus className="h-3.5 w-3.5" />
             </Button>
           </div>

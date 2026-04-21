@@ -127,12 +127,12 @@ export function PushNotificationToggle() {
   return subscribed ? (
     <Button type="button" variant="outline" onClick={disablePush} disabled={loading} className="gap-2">
       <BellOff className="h-4 w-4" />
-      Bildirimleri Kapat
+      {/* Bildirimleri Kapat */}
     </Button>
   ) : (
     <Button type="button" onClick={enablePush} disabled={loading} className="gap-2">
       <Bell className="h-4 w-4" />
-      Bildirimleri Ac
+      {/* Bildirimleri Ac */}
     </Button>
   );
 }

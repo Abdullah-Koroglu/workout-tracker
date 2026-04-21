@@ -133,8 +133,8 @@ export function RoleNavShell({
       </aside>
 
       <main className={[
-        "min-h-screen transition-all duration-300",
-        isMessagesRoute ? "pb-0" : "pb-24 md:pb-8"
+        "min-h-screen ",
+        isMessagesRoute ? "pb-0" : "pb-24 md:pb-8 px-4"
       ].join(" ")}>
         <header className="fixed left-0 right-0 z-30 flex h-16 items-center justify-between bg-white/80 px-6 backdrop-blur-md md:left-64">
           <div>

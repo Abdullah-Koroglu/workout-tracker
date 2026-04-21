@@ -26,3 +26,4 @@ Resim/dosya eki gönderme UI’ı tam akış olarak bağlı değil.
 Typing indicator (yazıyor...) gerçek zamanlı olay olarak bağlı değil.
 “Canlı/online” durumu anlık presence sistemine değil, websocket bağlantı durumuna dayanıyor.
 Stitch’teki alt sabit özel mesaj nav barı birebir ayrı bir bar olarak kullanılmıyor; uygulamanın mevcut role shell navigasyonu korunuyor.
+mesaj arama 

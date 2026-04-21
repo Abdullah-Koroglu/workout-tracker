@@ -107,7 +107,7 @@ export default function RootLayout({
                     <OfflineResume />
                   </Suspense>
                   <Navbar />
-                  <main className="mx-auto min-h-[calc(100vh-64px)] md:px-4 pb-6 bottom-0 m-0">
+                  <main className="mx-auto min-h-[calc(100vh-64px)] bottom-0 m-0">
                     {children}
                   </main>
                 </ConfirmationProvider>

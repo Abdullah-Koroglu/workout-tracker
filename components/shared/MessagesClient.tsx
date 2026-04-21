@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Bell, CheckCheck, MessageCircle, Phone, Plus, Search, Send, Settings, Video } from "lucide-react";
+import { ArrowLeft, Bell, CheckCheck, MessageCircle, Phone, Plus, Search, Send, Settings, Video } from "lucide-react";
 
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { PushNotificationToggle } from "@/components/shared/PushNotificationToggle";
@@ -183,6 +183,7 @@ export function MessagesClient({
   const activePeerRef = useRef<string>("");
   const preferredPeerRef = useRef<string>("");
   const [refreshing, setRefreshing] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   // tracks whether the next messages state update should scroll to bottom
   const scrollToBottomRef = useRef(true);
@@ -198,6 +199,7 @@ export function MessagesClient({
   const selectThread = useCallback((userId: string) => {
     activePeerRef.current = userId;
     setSelectedUserId(userId);
+    setShowChat(true);
   }, []);
 
   useEffect(() => {
@@ -619,99 +621,196 @@ export function MessagesClient({
   const messageGroups = groupMessagesByDate(messages);
   const activeThread = selectedThread || threads[0] || null;
 
+  // Shell header = 4rem (h-16). Content fills the rest of the viewport.
+  // Mobile: bottom nav = h-20 (5rem). Composer is fixed at bottom-20.
+  // Desktop: no bottom nav; composer is absolute bottom-0 inside section.
   return (
-    <div className="min-h-[calc(100dvh-4rem)] bg-background pb-24">
-      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-6 backdrop-blur-xl">
-        <div className="flex items-center gap-3 justify-end w-full">
-          <span className={`h-2 w-2 rounded-full ${wsStatusDotClass}`} />
-          <Bell className="h-4 w-4 text-text-muted" />
-          <Settings className="h-4 w-4 text-text-muted" />
-          <PushNotificationToggle />
-        </div>
-      </header>
+    <div
+      className="flex flex-col overflow-hidden bg-background"
+      style={{ height: "calc(100dvh - 4rem)" }}
+    >
+      <div className="flex min-h-0 flex-1">
 
-      <main className="px-4 pb-8 pt-6 md:px-6">
-        <h1 className="font-headline text-3xl font-extrabold tracking-tight">Mesajlar</h1>
-        <div className="mt-4 flex items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
-          <Search className="h-4 w-4 text-outline" />
-          <input
-            placeholder="Danisan ara..."
-            className="w-full border-none bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
-          />
-        </div>
-
-        <div className="chat-scroll mb-6 mt-6 flex gap-5 overflow-x-auto pb-1">
-          {threads.length === 0 ? (
-            <div className="w-full rounded-xl border border-dashed border-slate-300 p-5 text-center text-sm text-muted-foreground">
-              Konusma bulunamadi.
+        {/* ── Thread list ─────────────────────────────────────────────────── */}
+        <aside
+          className={[
+            "flex flex-col overflow-hidden border-r border-slate-200 bg-white",
+            showChat ? "hidden md:flex" : "flex",
+          ].join(" ")}
+        >
+          {/* Sidebar header */}
+          <div className="shrink-0 border-b border-slate-100 px-4 pb-4 pt-5">
+            <div className="mb-3 flex items-center justify-between">
+              <h1 className="font-headline text-2xl font-extrabold tracking-tight text-secondary">
+                Mesajlar
+              </h1>
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${wsStatusDotClass}`} />
+                {/* <Bell className="h-4 w-4 text-text-muted" />
+                <Settings className="h-4 w-4 text-text-muted" /> */}
+                <PushNotificationToggle />
+              </div>
             </div>
-          ) : (
-            threads.map((thread) => {
-              const isActive = activeThread?.user.id === thread.user.id;
+            <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-surface-container px-3 py-2.5">
+              <Search className="h-4 w-4 shrink-0 text-outline" />
+              <input
+                placeholder="Kişi ara..."
+                className="w-full border-none bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
+              />
+            </div>
+          </div>
 
-              return (
+          {/* Thread rows */}
+          <div className="chat-scroll min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto pb-20 md:pb-0">
+            {threads.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
+                <MessageCircle className="h-10 w-10 text-muted-foreground/30" />
+                <p className="text-sm">Henüz konuşma yok.</p>
                 <button
-                  key={thread.user.id}
                   type="button"
-                  onClick={() => selectThread(thread.user.id)}
-                  className={`flex flex-shrink-0 flex-col items-center gap-2 ${isActive ? "opacity-100" : "opacity-70"}`}
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-white disabled:opacity-50"
                 >
-                  <div className="relative">
-                    <div className={`flex h-14 w-14 items-center justify-center rounded-full bg-surface-container font-bold text-secondary ${isActive ? "border-2 border-primary p-0.5" : ""}`}>
-                      {getInitials(thread.user.name)}
-                    </div>
-                    {thread.unreadCount > 0 ? (
-                      <div className="absolute bottom-0 right-0 flex h-4 min-w-[16px] items-center justify-center rounded-full border-2 border-white bg-primary px-1 text-[9px] font-bold text-white">
-                        {thread.unreadCount > 9 ? "9+" : thread.unreadCount}
-                      </div>
-                    ) : null}
-                  </div>
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? "text-text-dark" : "text-text-muted"}`}>
-                    {thread.user.name.split(" ")[0]}
-                  </span>
+                  Yenile
                 </button>
-              );
-            })
-          )}
-        </div>
+              </div>
+            ) : (
+              threads.map((thread) => {
+                const isActive = activeThread?.user.id === thread.user.id;
+                return (
+                  <button
+                    key={thread.user.id}
+                    type="button"
+                    onClick={() => selectThread(thread.user.id)}
+                    className={[
+                      "flex w-full items-center gap-3 px-4 py-3 text-left transition-colors",
+                      isActive ? "bg-orange-50" : "hover:bg-slate-50",
+                    ].join(" ")}
+                  >
+                    {/* Avatar */}
+                    <div className="relative shrink-0">
+                      <div
+                        className={[
+                          "flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold text-white",
+                          isActive
+                            ? "border-2 border-primary bg-secondary"
+                            : "bg-secondary/80",
+                        ].join(" ")}
+                      >
+                        {getInitials(thread.user.name)}
+                      </div>
+                      {thread.unreadCount > 0 ? (
+                        <span className="absolute -right-1 -top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-white">
+                          {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
+                        </span>
+                      ) : null}
+                    </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                    {/* Text */}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <span
+                          className={[
+                            "truncate text-sm font-semibold",
+                            isActive ? "text-secondary" : "text-foreground",
+                          ].join(" ")}
+                        >
+                          {thread.user.name}
+                        </span>
+                        {thread.lastMessage ? (
+                          <span className="shrink-0 text-[11px] text-text-muted">
+                            {new Date(thread.lastMessage.createdAt).toLocaleTimeString("tr-TR", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p
+                        className={[
+                          "mt-0.5 truncate text-xs",
+                          thread.unreadCount > 0
+                            ? "font-semibold text-secondary"
+                            : "text-text-muted",
+                        ].join(" ")}
+                      >
+                        {thread.lastMessage?.content ?? "Henüz mesaj yok"}
+                      </p>
+                    </div>
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </aside>
+
+        {/* ── Chat panel ──────────────────────────────────────────────────── */}
+        <section
+          className={[
+            "relative flex min-h-0 flex-col bg-white w-full",
+            showChat ? "flex" : "hidden md:flex",
+          ].join(" ")}
+        >
           {activeThread ? (
             <>
-              <div className="mb-6 flex items-center justify-between border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-surface-container font-bold text-secondary">
-                    {getInitials(activeThread.user.name)}
-                  </div>
-                  <div>
-                    <h2 className="font-headline text-base font-bold text-secondary">{activeThread.user.name}</h2>
-                    <div className="flex items-center gap-1.5">
-                      <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotKineticClass}`} />
-                      <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-                        {wsConnected ? "Canli" : "Baglaniyor"}
-                      </span>
-                    </div>
+              {/* Chat header */}
+              <div className="flex shrink-0 items-center gap-3 border-b border-slate-100 bg-white/90 px-4 py-3 backdrop-blur-sm">
+                <button
+                  type="button"
+                  onClick={() => setShowChat(false)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 md:hidden"
+                  aria-label="Listeye dön"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                </button>
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-sm font-bold text-secondary">
+                  {getInitials(activeThread.user.name)}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-headline text-sm font-bold text-secondary">
+                    {activeThread.user.name}
+                  </p>
+                  <div className="flex items-center gap-1.5">
+                    <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotKineticClass}`} />
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                      {wsConnected ? "Canlı" : "Bağlanıyor"}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button type="button" className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100" aria-label="Goruntulu gorusme">
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100"
+                    aria-label="Görüntülü görüşme"
+                  >
                     <Video className="h-4 w-4" />
                   </button>
-                  <button type="button" className="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100" aria-label="Sesli gorusme">
+                  <button
+                    type="button"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100"
+                    aria-label="Sesli görüşme"
+                  >
                     <Phone className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
-              <div ref={messagesContainerRef} className="chat-scroll min-h-[420px] max-h-[56dvh] overflow-y-auto">
+              {/* Messages scroll
+                  pb-40 = nav(80px) + composer(~80px) clearance on mobile
+                  pb-20 = composer clearance only on desktop (no nav bar) */}
+              <div
+                ref={messagesContainerRef}
+                className="chat-scroll flex-1 overflow-y-auto px-4 py-4 pb-40 md:pb-20"
+              >
                 {loadingMessages ? (
-                  <div className="flex h-64 items-center justify-center">
+                  <div className="flex h-full items-center justify-center">
                     <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="flex h-64 flex-col items-center justify-center gap-2 text-center text-muted-foreground">
+                  <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
                     <MessageCircle className="h-10 w-10 text-muted-foreground/30" />
-                    <p className="text-sm">Ilk mesaji gondererek konusmayi baslat.</p>
+                    <p className="text-sm">İlk mesajı göndererek konuşmayı başlat.</p>
                   </div>
                 ) : (
                   <div className="space-y-5">
@@ -723,7 +822,7 @@ export function MessagesClient({
                           disabled={loadingMore}
                           className="rounded-full bg-slate-100 px-4 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200 disabled:opacity-50"
                         >
-                          {loadingMore ? "Yukleniyor..." : "Daha eski mesajlar"}
+                          {loadingMore ? "Yükleniyor..." : "Daha eski mesajlar"}
                         </button>
                       </div>
                     ) : null}
@@ -738,24 +837,35 @@ export function MessagesClient({
 
                         {group.messages.map((message) => {
                           const mine = message.senderId === currentUserId;
-
                           return (
-                            <div key={message.id} className={`mb-3 flex ${mine ? "justify-end" : "justify-start"}`}>
+                            <div
+                              key={message.id}
+                              className={`mb-3 flex ${mine ? "justify-end" : "justify-start"}`}
+                            >
                               <div className={`max-w-[85%] ${mine ? "ml-auto" : "mr-auto"}`}>
                                 <div
-                                  className={`px-4 py-3 text-sm font-medium leading-relaxed ${
+                                  className={[
+                                    "px-4 py-3 text-sm font-medium leading-relaxed",
                                     mine
-                                      ? "rounded-bl-xl rounded-br-xl rounded-tl-xl bg-secondary text-white"
-                                      : "rounded-bl-xl rounded-br-xl rounded-tr-xl border border-slate-200 bg-slate-100 text-text-dark"
-                                  } ${message.optimistic ? "opacity-70" : ""}`}
+                                      ? "rounded-tl-xl rounded-bl-xl rounded-br-xl bg-secondary text-white"
+                                      : "rounded-tr-xl rounded-bl-xl rounded-br-xl border border-slate-200 bg-slate-100 text-text-dark",
+                                    message.optimistic ? "opacity-70" : "",
+                                  ].join(" ")}
                                 >
                                   {message.content}
                                 </div>
-                                <div className={`mt-1 flex items-center gap-1 ${mine ? "justify-end pr-1" : "justify-start pl-1"}`}>
+                                <div
+                                  className={`mt-1 flex items-center gap-1 ${mine ? "justify-end pr-1" : "justify-start pl-1"}`}
+                                >
                                   <span className="text-[9px] font-bold uppercase tracking-widest text-text-muted">
-                                    {new Date(message.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                    {new Date(message.createdAt).toLocaleTimeString("tr-TR", {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    })}
                                   </span>
-                                  {mine && !message.optimistic ? <CheckCheck className="h-3 w-3 text-primary" /> : null}
+                                  {mine && !message.optimistic ? (
+                                    <CheckCheck className="h-3 w-3 text-primary" />
+                                  ) : null}
                                 </div>
                               </div>
                             </div>
@@ -767,11 +877,26 @@ export function MessagesClient({
                 )}
               </div>
 
-              <form onSubmit={onSend} className="mt-6 flex items-center gap-3 border-t border-slate-100 pt-4">
-                <button type="button" onClick={handleRefresh} disabled={refreshing} className="text-text-muted transition-colors hover:text-primary" aria-label="Yenile">
-                  <Plus className="h-6 w-6" />
+              {/*
+                Composer bar:
+                - Mobile: fixed, bottom-20 (sits directly above the 80px bottom nav)
+                - Desktop: absolute, bottom-0 (section is position:relative, no bottom nav)
+              */}
+              <form
+                onSubmit={onSend}
+                className="fixed bottom-20 left-0 right-0 z-20 flex items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm md:absolute md:bottom-0 md:left-0 md:right-0 md:z-10"
+                style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))" }}
+              >
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-text-muted transition-colors hover:bg-slate-100 hover:text-primary"
+                  aria-label="Yenile"
+                >
+                  <Plus className="h-5 w-5" />
                 </button>
-                <div className="flex-grow rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <div className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5">
                   <input
                     value={draft}
                     onChange={(e) => setDraft(e.target.value)}
@@ -782,29 +907,30 @@ export function MessagesClient({
                 <button
                   type="submit"
                   disabled={sending || !draft.trim()}
-                  className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-orange-200 transition-all hover:brightness-105 disabled:opacity-50"
-                  aria-label="Gonder"
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white shadow-lg shadow-orange-200 transition-all active:scale-95 hover:brightness-105 disabled:opacity-50"
+                  aria-label="Gönder"
                 >
                   <Send className="h-4 w-4" />
                 </button>
               </form>
             </>
           ) : (
-            <div className="flex min-h-[420px] flex-col items-center justify-center gap-3 text-center text-muted-foreground">
+            <div className="flex h-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
               <MessageCircle className="h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm">Sohbet baslatmak icin kisi sec.</p>
+              <p className="text-sm">Sohbet başlatmak için kişi seç.</p>
               <button
                 type="button"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="rounded-full bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 Yenile
               </button>
             </div>
           )}
-        </div>
-      </main>
+        </section>
+
+      </div>
     </div>
   );
 }

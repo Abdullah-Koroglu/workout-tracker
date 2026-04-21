@@ -1,17 +1,19 @@
 import Link from "next/link";
-import { Activity, ArrowRight, BarChart3, ClipboardList, Dumbbell, Users, TrendingUp, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { Check, ChevronRight, MessageCircle, MoreVertical, Plus, TrendingUp } from "lucide-react";
 
 import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 export default async function CoachDashboardPage() {
   const session = await auth();
   const coachId = session?.user.id || "";
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [totalClients, weeklyActive, recentWorkouts, totalTemplates, totalExercises, pendingRequests, acceptedClients, completedThisWeek, abandonedThisWeek] = await Promise.all([
+  const [totalClients, weeklyActive, recentWorkouts, pendingRequests, completedThisWeek, workoutsToday, recentAcceptedClients, monthlyNewClients, upcomingAppointments] = await Promise.all([
     prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
     prisma.workout.count({
       where: {
@@ -21,7 +23,7 @@ export default async function CoachDashboardPage() {
           }
         },
         startedAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          gte: sevenDaysAgo
         }
       }
     }),
@@ -35,21 +37,13 @@ export default async function CoachDashboardPage() {
       },
       include: { client: true, template: true },
       orderBy: { startedAt: "desc" },
-      take: 8
+      take: 6
     }),
-    prisma.workoutTemplate.count({ where: { coachId } }),
-    prisma.exercise.count(),
     prisma.coachClientRelation.findMany({
       where: { coachId, status: "PENDING" },
       include: { client: true },
       orderBy: { createdAt: "desc" },
-      take: 5
-    }),
-    prisma.coachClientRelation.findMany({
-      where: { coachId, status: "ACCEPTED" },
-      include: { client: true },
-      orderBy: { createdAt: "desc" },
-      take: 6
+      take: 4
     }),
     prisma.workout.count({
       where: {
@@ -60,291 +54,237 @@ export default async function CoachDashboardPage() {
           }
         },
         startedAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          gte: sevenDaysAgo
         }
       }
     }),
     prisma.workout.count({
       where: {
-        status: "ABANDONED",
         client: {
           clientRelations: {
             some: { coachId, status: "ACCEPTED" }
           }
         },
         startedAt: {
-          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+          gte: todayStart
         }
       }
+    }),
+    prisma.coachClientRelation.findMany({
+      where: { coachId, status: "ACCEPTED" },
+      include: { client: true },
+      orderBy: { createdAt: "desc" },
+      take: 4
+    }),
+    prisma.coachClientRelation.count({
+      where: { coachId, status: "ACCEPTED", createdAt: { gte: thirtyDaysAgo } }
+    }),
+    prisma.templateAssignment.findMany({
+      where: {
+        template: { coachId },
+        scheduledFor: { gte: todayStart }
+      },
+      include: {
+        client: true
+      },
+      orderBy: { scheduledFor: "asc" },
+      take: 3
     })
   ]);
 
   const completionRate = weeklyActive > 0 ? Math.round((completedThisWeek / weeklyActive) * 100) : 0;
+  const monthlyTrendText = `${monthlyNewClients >= 0 ? "+" : ""}${monthlyNewClients}`;
 
-  type RecentWorkout = (typeof recentWorkouts)[number];
+  const formatTimeAgo = (date: Date) => {
+    const diffMs = Date.now() - date.getTime();
+    const minutes = Math.floor(diffMs / 60000);
+    if (minutes < 60) {
+      return `${Math.max(minutes, 1)}d ago`;
+    }
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) {
+      return `${hours}s ago`;
+    }
+    const days = Math.floor(hours / 24);
+    return `${days}g ago`;
+  };
 
-  const workoutsByDay = recentWorkouts.reduce<Record<string, RecentWorkout[]>>((acc, workout) => {
-    const key = new Date(workout.startedAt).toISOString().slice(0, 10);
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(workout);
-    return acc;
-  }, {} as Record<string, RecentWorkout[]>);
-  const workoutDayKeys = Object.keys(workoutsByDay).sort((a, b) => b.localeCompare(a));
+  const topInquiry = pendingRequests[0];
 
   return (
-    <div className="space-y-8">
-      {/* Hero Section */}
-      <section className="overflow-hidden rounded-xl bg-gradient-to-br from-card via-muted/20 to-background p-6 shadow-sm ring-1 ring-black/5">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Elite Command Center</p>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Limits of precision</h1>
-            <p className="max-w-2xl text-sm text-slate-600">
-              Daily command overview: compliance, workload, client feedback ve anlık aksiyonlar tek panelde.
-            </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Aktif Client</p>
-              <p className="mt-2 text-3xl font-black text-primary">{totalClients}</p>
-            </div>
-            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Bu Hafta</p>
-              <p className="mt-2 text-3xl font-black text-secondary">{weeklyActive}</p>
-            </div>
-            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Template</p>
-              <p className="mt-2 text-3xl font-black text-foreground">{totalTemplates}</p>
-            </div>
-            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
-              <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Bekleyen</p>
-              <p className="mt-2 text-3xl font-black text-primary">{pendingRequests.length}</p>
+    <div className="mx-auto max-w-7xl space-y-10 pb-6">
+      <section className="flex flex-col items-end justify-between gap-6 md:flex-row">
+        <div className="max-w-xl">
+          <p className="mb-2 text-[10px] font-black uppercase tracking-[0.3em] text-orange-600">Daily Summary</p>
+          <h2 className="leading-[0.9] text-4xl font-black tracking-tighter text-slate-900 md:text-5xl">
+            PUSHING THE <br />
+            <span className="text-orange-500">LIMITS OF</span> PRECISION.
+          </h2>
+        </div>
+        <Link
+          href="/coach/templates"
+          className="inline-flex items-center gap-3 rounded-sm bg-orange-600 px-8 py-4 font-bold text-white shadow-lg shadow-orange-600/20 transition-all hover:bg-orange-700"
+        >
+          <Plus className="h-4 w-4" />
+          New Program
+        </Link>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-8 shadow-sm md:col-span-2">
+          <p className="mb-1 text-xs font-bold uppercase tracking-widest text-slate-500">Total Active Clients</p>
+          <h3 className="text-6xl font-black text-slate-900">{totalClients}</h3>
+          <p className="mt-2 flex items-center gap-1 text-sm font-bold text-orange-600">
+            <TrendingUp className="h-4 w-4" />
+            {monthlyTrendText} this month
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
+          <p className="mb-auto text-xs font-bold uppercase tracking-widest text-slate-500">Daily Compliance</p>
+          <div className="mt-4">
+            <h3 className="text-4xl font-black text-slate-900">{completionRate}%</h3>
+            <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+              <div className="h-full bg-orange-500" style={{ width: `${Math.min(completionRate, 100)}%` }} />
             </div>
           </div>
         </div>
-
-        {/* Quick Action Buttons */}
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/coach/clients" className="group rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] p-4 text-white shadow-sm transition hover:brightness-105 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <Users className="h-5 w-5 group-hover:scale-110 transition-transform" />
-              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="mt-3 text-sm font-bold">Client Roster</p>
-            <p className="mt-1 text-xs text-orange-50">Kabul, reddet, detay ve progress</p>
-          </Link>
-          <Link href="/coach/templates" className="group rounded-lg bg-slate-900 p-4 text-white shadow-sm transition hover:bg-black hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <ClipboardList className="h-5 w-5 group-hover:scale-110 transition-transform" />
-              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="mt-3 text-sm font-bold">Program Library</p>
-            <p className="mt-1 text-xs text-slate-200">Yeni plan ekle, düzenle, ata</p>
-          </Link>
-          <Link href="/coach/exercises" className="group rounded-lg bg-secondary p-4 text-white shadow-sm transition hover:brightness-110 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <Dumbbell className="h-5 w-5 group-hover:scale-110 transition-transform" />
-              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="mt-3 text-sm font-bold">Exercise Library</p>
-            <p className="mt-1 text-xs text-blue-100">Ağırlık ve kardiyo havuzu</p>
-          </Link>
-          <Link href="/coach/dashboard" className="group rounded-lg bg-background p-4 text-foreground shadow-sm ring-1 ring-black/10 transition hover:bg-muted/50 hover:shadow-md">
-            <div className="flex items-center justify-between">
-              <BarChart3 className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-              <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <p className="mt-3 text-sm font-bold">Analytics Lab</p>
-            <p className="mt-1 text-xs text-muted-foreground">KPI ve anlık performans akışı</p>
-          </Link>
+        <div className="rounded-lg border border-slate-800 bg-slate-900 p-8 text-white shadow-xl">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Workouts Today</p>
+          <div>
+            <h3 className="text-4xl font-black text-orange-500">{workoutsToday}</h3>
+            <p className="mt-1 text-xs text-slate-400">{Math.max(weeklyActive - completedThisWeek, 0)} pending review</p>
+          </div>
         </div>
       </section>
 
-      {/* Key Metrics */}
-      <section>
-        <h2 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Bu Hafta İstatistikleri</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Başlanan Antrenmanlar</CardTitle>
-              <Activity className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{weeklyActive}</div>
-              <p className="text-xs text-muted-foreground mt-1">Son 7 gün içinde</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Tamamlanan</CardTitle>
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{completedThisWeek}</div>
-              <p className="text-xs text-muted-foreground mt-1">%{completionRate} başarı oranı</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Yarıda Bırakılan</CardTitle>
-              <AlertCircle className="h-4 w-4 text-orange-600" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{abandonedThisWeek}</div>
-              <p className="text-xs text-muted-foreground mt-1">Müdahale gerekebilir</p>
-            </CardContent>
-          </Card>
-          <Card className="border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Egzersiz</CardTitle>
-              <TrendingUp className="h-4 w-4 text-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{totalExercises}</div>
-              <p className="text-xs text-muted-foreground mt-1">Kullanılabilir egzersiz</p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Main Content Grid */}
-      <section>
-        <h2 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Yönetim Paneli</h2>
-        <div className="grid gap-6 lg:grid-cols-3">
-          {/* Pending Requests */}
-          <Card className="lg:col-span-1 border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="border-b border-black/10 pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-primary" />
-                  Bekleyen İstekler
-                </CardTitle>
-                {pendingRequests.length > 0 && (
-                  <span className="text-xs font-bold bg-primary/15 text-foreground px-2 py-1 rounded-full">{pendingRequests.length}</span>
-                )}
+      <section className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2">
+          <div className="mb-6 flex items-center justify-between">
+            <h4 className="text-xl font-black uppercase tracking-tight text-slate-900">Recent Activity</h4>
+            <Link href="/coach/clients" className="text-xs font-bold text-orange-600 hover:underline">
+              View All Feed
+            </Link>
+          </div>
+          <div className="space-y-4">
+            {recentWorkouts.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-slate-300 bg-white p-5 text-sm text-slate-500">
+                Henüz aktivite yok.
               </div>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-4">
-              {pendingRequests.length === 0 ? (
-                <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground text-center py-6">
-                  Şu an bekleyen istek yok ✓
+            ) : (
+              recentWorkouts.map((workout) => (
+                <div key={workout.id} className="flex items-center gap-5 rounded-lg border border-slate-200 bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-md">
+                  <div className="relative flex h-14 w-14 items-center justify-center rounded-full border-2 border-slate-100 bg-orange-50 text-lg font-bold text-orange-700">
+                    {workout.client.name.charAt(0).toUpperCase()}
+                    <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-white">
+                      <Check className="h-3 w-3" />
+                    </div>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between">
+                      <h5 className="truncate font-bold text-slate-900">{workout.client.name}</h5>
+                      <span className="text-[10px] text-slate-400">{formatTimeAgo(workout.startedAt)}</span>
+                    </div>
+                    <p className="text-sm text-slate-600">
+                      {workout.status === "COMPLETED" ? "Completed" : "Updated"} <span className="font-bold text-slate-900">{workout.template.name}</span>
+                    </p>
+                    <div className="mt-2 flex gap-2">
+                      <span className="rounded bg-orange-50 px-2 py-0.5 text-[10px] font-bold uppercase text-orange-700">Status: {workout.status}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <DashboardActionMenu clientId={workout.client.id} />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-8">
+          <section>
+            <div className="mb-4 flex items-center justify-between px-2">
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900">New Inquiries</h4>
+              <span className="rounded-full bg-orange-600 px-2 py-0.5 text-[10px] font-black text-white">{pendingRequests.length}</span>
+            </div>
+            <div className="overflow-hidden rounded-lg border border-orange-100 bg-orange-50 p-6">
+              {topInquiry ? (
+                <>
+                  <div className="mb-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-sm border border-orange-100 bg-white text-orange-600">
+                      <MessageCircle className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-900">{topInquiry.client.name}</p>
+                      <p className="text-[10px] font-bold text-orange-600">Applied {formatTimeAgo(topInquiry.createdAt)}</p>
+                    </div>
+                  </div>
+                  <p className="mb-4 text-xs leading-relaxed text-slate-600">{topInquiry.client.email}</p>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <DashboardActionMenu clientId={topInquiry.client.id} />
+                    </div>
+                    <Link href="/coach/clients" className="flex-1 rounded-sm border border-orange-200 py-2 text-center text-xs font-bold text-orange-600 transition-colors hover:bg-orange-100">
+                      Review
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-slate-600">Yeni inquiry yok.</p>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h4 className="mb-4 px-2 text-sm font-black uppercase tracking-widest text-slate-900">Appointments</h4>
+            <div className="space-y-3">
+              {upcomingAppointments.length === 0 ? (
+                <div className="rounded-lg border border-dashed border-slate-300 bg-white p-4 text-xs text-slate-500">
+                  Yakın tarihli planlanmış randevu yok.
                 </div>
               ) : (
-                <>
-                  {pendingRequests.map((request) => (
-                    <div key={request.id} className="rounded-lg bg-muted/40 p-3 text-sm transition hover:bg-muted/70 group">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-semibold text-foreground group-hover:text-primary">{request.client.name}</p>
-                          <p className="text-xs text-muted-foreground">{request.client.email}</p>
-                        </div>
-                        <DashboardActionMenu clientId={request.client.id} />
+                upcomingAppointments.map((appointment) => (
+                  <Link
+                    key={appointment.id}
+                    href={`/coach/clients/${appointment.client.id}/progress`}
+                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white p-4 transition-all hover:border-orange-200"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 flex-col items-center justify-center rounded-full bg-orange-100 text-orange-700">
+                        <span className="text-[10px] font-black uppercase leading-none">{new Date(appointment.scheduledFor).toLocaleDateString("en-US", { month: "short" })}</span>
+                        <span className="text-sm font-black leading-none">{new Date(appointment.scheduledFor).getDate()}</span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-900">{appointment.client.name}</p>
+                        <p className="text-[10px] font-black uppercase text-slate-500">{new Date(appointment.scheduledFor).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</p>
                       </div>
                     </div>
-                  ))}
-                  <Link href="/coach/clients" className="block mt-3">
-                    <Button variant="outline" className="w-full text-xs">
-                      Hepsini Göster →
-                    </Button>
+                    <ChevronRight className="h-4 w-4 text-slate-300" />
                   </Link>
-                </>
+                ))
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
 
-          {/* Recent Activity */}
-          <Card className="lg:col-span-2 border-0 bg-card ring-1 ring-black/5">
-            <CardHeader className="border-b border-black/10 pb-3">
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-secondary" />
-                Son Aktiviteler
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2 pt-4">
-              {recentWorkouts.length === 0 ? (
-                <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground text-center py-6">
-                  Henüz workout aktivitesi yok
-                </div>
+          <section className="rounded-lg border border-slate-200 bg-white p-4">
+            <h4 className="mb-3 text-sm font-black uppercase tracking-widest text-slate-900">Quick Access</h4>
+            <div className="space-y-2">
+              {recentAcceptedClients.length === 0 ? (
+                <p className="text-xs text-slate-500">Henüz kabul edilmiş client yok.</p>
               ) : (
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                  {workoutDayKeys.map((dayKey) => {
-                    const dayDate = new Date(dayKey);
-                    return (
-                      <div key={dayKey} className="rounded-lg bg-muted/30 p-3">
-                        <div className="mb-2 flex items-center justify-between border-b border-black/10 pb-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
-                            {dayDate.toLocaleDateString("tr-TR", { weekday: "long" })}
-                          </p>
-                          <p className="text-sm font-black text-foreground">
-                            {dayDate.toLocaleDateString("tr-TR", { day: "2-digit", month: "2-digit" })}
-                          </p>
-                        </div>
-                        <div className="space-y-2">
-                          {workoutsByDay[dayKey].map((w) => (
-                            <div key={w.id} className="flex items-center justify-between rounded-lg bg-background p-3 text-sm transition hover:bg-muted/60 group ring-1 ring-black/5">
-                              <div className="flex-1 min-w-0">
-                                <p className="font-bold text-foreground group-hover:text-primary truncate">{w.template.name}</p>
-                                <p className="text-xs text-muted-foreground truncate">{w.client.name}</p>
-                              </div>
-                              <div className="flex items-center gap-2 ml-2">
-                                {w.status === "COMPLETED" && <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
-                                {w.status === "IN_PROGRESS" && <Activity className="h-4 w-4 text-primary flex-shrink-0 animate-pulse" />}
-                                {w.status === "ABANDONED" && <AlertCircle className="h-4 w-4 text-orange-600 flex-shrink-0" />}
-                                <DashboardActionMenu clientId={w.client.id} />
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                recentAcceptedClients.map((relation) => (
+                  <Link
+                    key={relation.id}
+                    href={`/coach/clients/${relation.client.id}/progress`}
+                    className="flex items-center justify-between rounded-md border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600"
+                  >
+                    {relation.client.name}
+                    <ChevronRight className="h-4 w-4" />
+                  </Link>
+                ))
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </section>
         </div>
-      </section>
-
-      {/* Client Progress Quick Access */}
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold tracking-tight text-slate-900">Hızlı İlerleme Erişimi</h2>
-          <Link href="/coach/clients" className="text-sm font-medium text-primary hover:opacity-80">
-            Tümünü Göster →
-          </Link>
-        </div>
-        {acceptedClients.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="rounded-2xl border border-dashed p-8 text-center">
-                <Users className="h-8 w-8 text-slate-400 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">Önce bir client kabul etmelisin.</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {acceptedClients.slice(0, 8).map((relation) => (
-              <Link
-                key={relation.id}
-                href={`/coach/clients/${relation.client.id}/progress`}
-                className="group rounded-lg bg-card p-4 shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
-                    {relation.client.name.charAt(0).toUpperCase()}
-                  </div>
-                  <BarChart3 className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <p className="font-semibold text-sm text-foreground group-hover:text-primary">{relation.client.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{relation.client.email}</p>
-                <div className="mt-2 pt-2 border-t border-black/10">
-                  <p className="text-xs font-medium text-slate-600">İlerlemeyi Gör →</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
       </section>
     </div>
   );

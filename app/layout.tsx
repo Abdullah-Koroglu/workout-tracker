@@ -9,8 +9,6 @@ import { ConfirmationProvider } from "@/contexts/ConfirmationContext";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
 import { Navbar } from "@/components/shared/Navbar";
 import { AppSessionProvider } from "@/components/shared/SessionProvider";
-import { GlobalBreadcrumb } from "@/components/shared/GlobalBreadcrumb";
-import { NavbarScrollBehavior } from "@/components/shared/NavbarScrollBehavior";
 import { PwaRegister } from "@/components/shared/PwaRegister";
 import { OfflineResume } from "@/components/shared/OfflineResume";
 
@@ -98,7 +96,7 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/apple-splash-640-1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
         <link rel="apple-touch-startup-image" href="/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
       </head>
-      <body className={lexend.className}>
+      <body className={[  lexend.variable, ""].join(" ")}>
         <ThemeProvider>
           <AppSessionProvider>
             <AuthProvider>
@@ -109,9 +107,7 @@ export default function RootLayout({
                     <OfflineResume />
                   </Suspense>
                   <Navbar />
-                  <NavbarScrollBehavior />
-                  <main className="mx-auto min-h-[calc(100vh-64px)] max-w-6xl px-4 py-6">
-                    <GlobalBreadcrumb />
+                  <main className="mx-auto min-h-[calc(100vh-64px)] md:px-4 pb-6 bottom-0 m-0">
                     {children}
                   </main>
                 </ConfirmationProvider>

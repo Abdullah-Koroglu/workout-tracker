@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Briefcase, ExternalLink, Loader2, Plus, Save, Sparkles, Tag, Trash2, X } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { useNotificationContext } from "@/contexts/NotificationContext";
@@ -160,6 +161,14 @@ export default function CoachProfilePage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Bu bilgiler keşfet sayfasında danışanlara gösterilir.
         </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-3 md:hidden"
+          onClick={() => void signOut({ callbackUrl: "/login" })}
+        >
+          Çıkış Yap
+        </Button>
       </div>
 
       {/* Profile Form */}

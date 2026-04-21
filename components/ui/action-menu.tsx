@@ -30,7 +30,7 @@ export function ActionMenu({ items }: { items: ActionItem[] }) {
       <button
         type="button"
         onClick={() => setOpen((prev) => !prev)}
-        className="inline-flex h-9 w-9 items-center justify-center rounded-full border bg-card hover:bg-accent"
+        className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-card hover:bg-accent"
         aria-label="Islemler"
       >
         <MoreVertical className="h-4 w-4" />

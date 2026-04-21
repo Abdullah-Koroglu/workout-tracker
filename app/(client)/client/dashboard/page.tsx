@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, ArrowRight, CalendarClock, CheckCircle2, Flame, MessageSquare, PlayCircle, Users } from "lucide-react";
+import { Check, List, NotebookText, Play, Plus, TrendingDown, TrendingUp } from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
@@ -9,7 +9,7 @@ export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
 
-  const [assignments, workouts, comments, relations, inProgressWorkout, completedWorkoutCount, unreadMessageCount, totalCommentCount] = await Promise.all([
+  const [assignments, workouts, comments, relations, inProgressWorkout, completedWorkoutCount, unreadMessageCount, totalCommentCount, recentSets] = await Promise.all([
     prisma.templateAssignment.findMany({
       where: { clientId },
       include: {
@@ -62,6 +62,19 @@ export default async function ClientDashboardPage() {
     prisma.comment.count({
       where: { workout: { clientId } }
     })
+    ,
+    prisma.workoutSet.findMany({
+      where: {
+        workout: { clientId }
+      },
+      include: {
+        workout: {
+          select: { startedAt: true }
+        }
+      },
+      orderBy: { workout: { startedAt: "desc" } },
+      take: 250
+    })
   ]);
 
   const today = getCurrentDayStart();
@@ -85,304 +98,227 @@ export default async function ClientDashboardPage() {
   
 
   const todayAssignments = assignmentItems.filter((assignment: DashboardAssignment) => assignment.isToday);
-  const upcomingAssignments = assignmentItems.filter((assignment: DashboardAssignment) => !assignment.isToday);
-  const weeklyWorkoutCount = workouts.length;
-  const completionMomentum = weeklyWorkoutCount > 0 ? Math.round((completedWorkoutCount / Math.max(completedWorkoutCount + 1, 1)) * 100) : 0;
-  const connectedCoachNames = relations.map((relation) => relation.coach.name).join(", ");
+  const todaySession = inProgressWorkout ?? null;
+
+  const startOfWeek = new Date(today);
+  const dayOffset = (startOfWeek.getDay() + 6) % 7;
+  startOfWeek.setDate(startOfWeek.getDate() - dayOffset);
+
+  const weekSlots = Array.from({ length: 6 }).map((_, index) => {
+    const d = new Date(startOfWeek);
+    d.setDate(startOfWeek.getDate() + index);
+    return d;
+  });
+
+  const completedDayKeys = new Set(
+    workouts
+      .filter((workout) => workout.status === "COMPLETED")
+      .map((workout) => {
+        const d = new Date(workout.startedAt);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      })
+  );
+
+  const fallbackTodayAssignment = todayAssignments[0];
+
+  const volumeByDay = weekSlots.map((day) => {
+    const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+    const dayVolume = recentSets.reduce((total, set) => {
+      const started = new Date(set.workout.startedAt);
+      const setKey = `${started.getFullYear()}-${started.getMonth()}-${started.getDate()}`;
+      if (setKey !== key) return total;
+      return total + (set.weightKg ?? 0) * (set.reps ?? 0);
+    }, 0);
+    return dayVolume;
+  });
+
+  const maxVolume = Math.max(...volumeByDay, 1);
+  const latestWeightSet = recentSets.find((set) => typeof set.weightKg === "number" && set.weightKg > 0);
+  const currentWeight = latestWeightSet?.weightKg ?? 0;
+  const weeklyVolumeTons = (volumeByDay.reduce((sum, value) => sum + value, 0) / 1000).toFixed(1);
+  const nutritionProgress = 75;
+
+  const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   type DashboardAssignment = (typeof assignmentItems)[number];
 
-const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
-  return items.reduce<Record<string, DashboardAssignment[]>>((acc, assignment) => {
-    
-    const d = new Date(assignment.scheduledFor);
-    const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(assignment);
-    return acc;
-  }, {} as Record<string, DashboardAssignment[]>);
-};
-
-  const renderCalendarGroups = (items: DashboardAssignment[], showStartButton: boolean) => {
-    const groups = groupAssignmentsByDate(items);
-    const keys = Object.keys(groups).sort((a, b) => a.localeCompare(b));
-
-    return (
-      <div className="space-y-3 md:space-y-4">
-        {keys.map((dateKey) => {
-          const date = new Date(dateKey);
-          const dayItems = groups[dateKey] || [];
-
-          return (
-            <div key={dateKey} className="rounded-3xl border border-black/10 bg-white p-3 shadow-sm md:p-4">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
-                  {date.toLocaleDateString("tr-TR", { weekday: "long" })}
-                </p>
-                <p className="text-base font-black text-foreground md:text-lg">
-                  {date.toLocaleDateString("tr-TR", { day: "2-digit", month: "long" })}
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                {dayItems.map((assignment) => {
-                  const weightItems = assignment.template.exercises.filter(
-                    (item: (typeof assignment.template.exercises)[number]) => item.exercise.type === "WEIGHT"
-                  );
-                  const cardioItems = assignment.template.exercises.filter(
-                    (item: (typeof assignment.template.exercises)[number]) => item.exercise.type === "CARDIO"
-                  );
-
-                  return (
-                    <div key={assignment.id} className="rounded-2xl border border-black/10 bg-surface-container p-3 md:p-4">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
-                        <div className="min-w-0">
-                          <p className="line-clamp-2 text-sm font-bold text-foreground sm:text-base">{assignment.template.name}</p>
-                          <p className="text-[11px] text-muted-foreground md:text-xs">
-                            Atama: {new Date(assignment.createdAt).toLocaleDateString("tr-TR")}
-                          </p>
-                        </div>
-                        {showStartButton ? (
-                          <Link href={`/client/workout/${assignment.id}/start`} className="inline-flex w-full items-center justify-center rounded-full bg-secondary px-4 py-2 text-sm font-medium text-white hover:bg-secondary/90 sm:w-auto">
-                            Basla
-                          </Link>
-                        ) : (
-                          <span className="inline-flex w-fit rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">
-                            Gunu gelmedi
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="mt-3 grid gap-2 md:grid-cols-2 md:gap-3">
-                        <div className="rounded-xl bg-white p-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Agirlik ({weightItems.length})</p>
-                          <div className="mt-1 space-y-1">
-                            {weightItems.length === 0 ? (
-                              <p className="text-xs text-muted-foreground">Yok</p>
-                            ) : (
-                              weightItems.map((item) => (
-                                <p key={item.id} className="text-xs text-slate-700">
-                                  {item.exercise.name}: {item.targetSets ?? "-"}x{item.targetReps ?? "-"} RIR {item.targetRir ?? "-"}
-                                </p>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                        <div className="rounded-xl bg-primary/10 p-2">
-                          <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">Kardiyo ({cardioItems.length})</p>
-                          <div className="mt-1 space-y-1">
-                            {cardioItems.length === 0 ? (
-                              <p className="text-xs text-muted-foreground">Yok</p>
-                            ) : (
-                              cardioItems.map((item) => (
-                                <p key={item.id} className="text-xs text-orange-900">
-                                  {item.exercise.name}: {item.durationMinutes ?? 1} dk / {(item.protocol as unknown[] | null)?.length ?? 0} blok
-                                </p>
-                              ))
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
+  const latestComments = comments.slice(0, 2);
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      <section className="overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-surface via-surface to-primary/10 p-4 shadow-sm md:rounded-[32px] md:p-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Athlete Mission Control</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">Push For Precision</h1>
-            <p className="mt-3 text-sm leading-6 text-slate-600 md:text-base">
-              Bugunku atamalar, mesajlar, aktif seans ve coach geri bildirimleri tek panelde. Karar yorgunlugu olmadan direkt aksiyona gec.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
-            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Aktif Coach</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{relations.length}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Bugun Hazir</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{todayAssignments.length}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Okunmamis</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{unreadMessageCount}</p>
-            </div>
-            <div className="rounded-2xl bg-white px-3 py-2.5 shadow-sm md:px-4 md:py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500 md:text-xs md:tracking-[0.18em]">Tamamlanan</p>
-              <p className="mt-1 text-2xl font-black text-slate-900 md:mt-2 md:text-3xl">{completedWorkoutCount}</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 grid gap-3 md:mt-6 md:grid-cols-3 xl:grid-cols-[1.1fr_1.1fr_0.8fr]">
-          <Link href={inProgressWorkout ? `/client/workout/${inProgressWorkout.assignmentId}/start` : "/client/workouts"} className="rounded-2xl bg-secondary p-4 text-white shadow-sm transition hover:bg-secondary/90 md:rounded-3xl md:p-5">
-            <div className="flex items-center justify-between">
-              <PlayCircle className="h-6 w-6" />
-              <ArrowRight className="h-5 w-5" />
-            </div>
-            <p className="mt-4 text-base font-bold md:mt-6 md:text-lg">{inProgressWorkout ? "Aktif antrenmana dön" : "Geçmiş antrenmanlara git"}</p>
-            <p className="mt-1 text-xs text-slate-200 md:mt-2 md:text-sm">
-              {inProgressWorkout ? inProgressWorkout.template.name : "Tamamlanan tüm antrenmanlarını listele."}
-            </p>
-          </Link>
-          <Link href="/client/coaches" className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-5">
-            <Users className="h-6 w-6 text-primary" />
-            <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Coach bağlantılarını yönet</p>
-            <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">Yeni coach ara, bekleyen ilişkileri kontrol et.</p>
-          </Link>
-          <Link href="/client/workouts" className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-5">
-            <CalendarClock className="h-6 w-6 text-primary" />
-            <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Detaylı geçmiş</p>
-            <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">Set detayları ve coach yorumlarıyla tüm geçmişi aç.</p>
-          </Link>
-          <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
-            <div className="flex items-center justify-between">
-              <Flame className="h-6 w-6 text-primary" />
-              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-                Tempo
-              </span>
-            </div>
-            <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Haftalik hareket ritmi</p>
-            <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">
-              Son gorunen antrenman akisin {weeklyWorkoutCount} kayit ile takipte. Disiplini korumak icin bugunku planlara odaklan.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
-            <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-primary" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Hazirlik Durumu</p>
-            </div>
-            <p className="mt-3 text-2xl font-black text-slate-950">{assignmentItems.length}</p>
-            <p className="mt-1 text-sm text-slate-600">Aktif atama havuzu. Bugun ve yaklasan planlar tek listede.</p>
-          </div>
-          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4 text-sky-700" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Tamamlama Ivmeleri</p>
-            </div>
-            <p className="mt-3 text-2xl font-black text-slate-950">%{completionMomentum}</p>
-            <p className="mt-1 text-sm text-slate-600">Tamamlanan workout sayina gore olusan genel ilerleme hissi.</p>
-          </div>
-          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-violet-700" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">Coach Geri Bildirimi</p>
-            </div>
-            <p className="mt-3 text-2xl font-black text-slate-950">{totalCommentCount}</p>
-            <p className="mt-1 text-sm text-slate-600">Toplam yorum ve not akisi. Son yorumlar asagida listelenir.</p>
-          </div>
-        </div>
+    <div className="space-y-8 pb-8">
+      <section className="space-y-1">
+        <h1 className="leading-none tracking-tighter text-4xl font-black text-slate-900">
+          PUSH FOR <br /> <span className="italic text-orange-600">PRECISION</span>
+        </h1>
+        <p className="text-sm font-medium text-slate-500">{completedWorkoutCount} sessions down. The goal is in sight.</p>
       </section>
 
-      <section className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <h2 className="font-semibold">Atanmış Template'ler</h2>
-          <Link href="/client/workouts" className="text-sm font-medium text-primary hover:text-primary/80">Geçmişi aç</Link>
+      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="mb-6 flex items-center justify-between">
+          <h2 className="font-bold tracking-tight text-slate-900">Weekly Focus</h2>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-orange-600">{new Date().toLocaleDateString("en-US", { month: "long" })}</span>
         </div>
-        {assignmentItems.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-            Bugün veya gelecekte atanmış aktif template yok.
-          </div>
-        ) : (
-          <div className="space-y-5 md:space-y-6">
-            <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Bugün</h3>
-              {todayAssignments.length === 0 ? (
-                <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">Bugüne atanmış template yok.</div>
-              ) : (
-                renderCalendarGroups(todayAssignments, true)
-              )}
-            </div>
+        <div className="flex items-center justify-between text-center">
+          {weekSlots.map((day, index) => {
+            const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+            const isToday = day.toDateString() === today.toDateString();
+            const isCompleted = completedDayKeys.has(key);
 
-            <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-slate-600">Gelecek</h3>
-              {upcomingAssignments.length === 0 ? (
-                <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">Gelecek günler için template yok.</div>
-              ) : (
-                renderCalendarGroups(upcomingAssignments, false)
-              )}
-            </div>
-          </div>
-        )}
-      </section>
-
-      <section className="grid gap-4 md:gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-        <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <h2 className="font-semibold">Son Antrenmanlar</h2>
-            <Link href="/client/workouts" className="text-sm font-medium text-primary hover:text-primary/80">Tümünü gör</Link>
-          </div>
-        {workouts.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-            Henüz tamamlanmış antrenman yok.
-          </div>
-        ) : (
-            <div className="space-y-2.5 md:space-y-3">
-              {workouts.map((workout) => (
-                <Link key={workout.id} href={`/client/workouts/${workout.id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-4">
-                  <div className="min-w-0">
-                    <p className="line-clamp-1 font-semibold text-foreground">{workout.template.name}</p>
-                    <p className="mt-1 text-xs text-muted-foreground md:text-sm">{new Date(workout.startedAt).toLocaleDateString("tr-TR")}</p>
+            return (
+              <div key={key} className="flex flex-col items-center space-y-2">
+                <span className={`text-[10px] ${isToday ? "font-bold text-slate-900" : "text-slate-400"}`}>{dayNames[index]}</span>
+                {isCompleted ? (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white">
+                    <Check className="h-4 w-4" />
                   </div>
-                  <ArrowRight className="h-5 w-5 text-muted-foreground" />
-                </Link>
+                ) : isToday ? (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-600 text-sm font-black text-orange-600">
+                    {day.getDate()}
+                  </div>
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
+                    <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="relative min-h-[300px] overflow-hidden rounded-2xl bg-slate-950 p-6 text-white shadow-xl">
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
+        <div className="relative z-10 mt-20 space-y-4">
+          <div className="inline-flex items-center rounded-sm bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">Today's Session</div>
+          <div className="space-y-1">
+            <h3 className="text-3xl font-black uppercase leading-none tracking-tighter">
+              {todaySession ? todaySession.template.name : fallbackTodayAssignment ? fallbackTodayAssignment.template.name : "Recovery Day"}
+            </h3>
+            <p className="text-sm text-slate-400">
+              {todaySession
+                ? "Focus: Active workout in progress"
+                : fallbackTodayAssignment
+                  ? "Focus: Assigned template ready"
+                  : "Focus: New assignment bekleniyor"}
+            </p>
+          </div>
+          <div className="flex gap-4 text-xs font-bold uppercase tracking-widest text-slate-300">
+            <span className="flex items-center gap-1">
+              <NotebookText className="h-4 w-4" /> {assignmentItems.length} TASKS
+            </span>
+            <span className="flex items-center gap-1">
+              <List className="h-4 w-4" /> {workouts.length} SESSIONS
+            </span>
+          </div>
+          <Link
+            href={todaySession ? `/client/workout/${todaySession.assignmentId}/start` : fallbackTodayAssignment ? `/client/workout/${fallbackTodayAssignment.id}/start` : "/client/workouts"}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-4 text-lg font-black uppercase tracking-tight text-white transition-all hover:bg-orange-700"
+          >
+            START WORKOUT
+            <Play className="h-5 w-5" />
+          </Link>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4">
+        <div className="flex h-40 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Weight</span>
+            <TrendingDown className="h-4 w-4 text-slate-400" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-2xl font-black text-slate-900">{currentWeight.toFixed(1)}<span className="ml-1 text-xs text-slate-400">KG</span></div>
+            <div className="flex h-12 items-end gap-1">
+              {volumeByDay.map((value, index) => (
+                <div
+                  key={`${value}-${index}`}
+                  className={`w-full rounded-t-sm ${index === volumeByDay.length - 1 ? "bg-orange-200" : "bg-slate-100"}`}
+                  style={{ height: `${Math.max(Math.round((value / maxVolume) * 100), 16)}%` }}
+                />
               ))}
             </div>
-        )}
-        </div>
-
-        <div className="space-y-3">
-          <h2 className="font-semibold">Coach Yorumları</h2>
-        {comments.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-            Henüz coach yorumu yok.
           </div>
-        ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="rounded-2xl border border-black/10 bg-white p-3 shadow-sm md:rounded-3xl md:p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <MessageSquare className="mt-1 h-5 w-5 text-primary" />
-                  <div className="flex-1">
-                    <p className="text-sm text-foreground md:text-sm">{comment.content}</p>
-                    <p className="mt-2 text-xs text-muted-foreground">{comment.author.name}</p>
-                  </div>
-                </div>
-              </div>
-            ))
-        )}
+        </div>
+        <div className="flex h-40 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+          <div className="flex items-start justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Volume</span>
+            <TrendingUp className="h-4 w-4 text-orange-600" />
+          </div>
+          <div className="space-y-1">
+            <div className="text-2xl font-black text-slate-900">{weeklyVolumeTons}<span className="ml-1 text-xs text-slate-400">T</span></div>
+            <div className="flex h-12 items-end gap-1">
+              {volumeByDay.map((value, index) => (
+                <div
+                  key={`${value}-v-${index}`}
+                  className={`w-full rounded-t-sm ${index === volumeByDay.length - 1 ? "bg-orange-600" : "bg-slate-100"}`}
+                  style={{ height: `${Math.max(Math.round((value / maxVolume) * 100), 16)}%` }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
-          <Users className="h-6 w-6 text-primary" />
-          <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Bağlı coachlar</p>
-          <p className="mt-2 text-sm text-muted-foreground">{relations.length > 0 ? connectedCoachNames : "Henüz kabul edilmiş coach yok."}</p>
+      <section className="flex items-center justify-between rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
+        <div className="space-y-3">
+          <h4 className="font-bold">Nutrition Status</h4>
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-12 w-12 items-center justify-center">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" className="text-slate-800" />
+                <circle
+                  cx="24"
+                  cy="24"
+                  r="20"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  className="text-orange-500"
+                  strokeDasharray="125"
+                  strokeDashoffset={String(125 - (nutritionProgress / 100) * 125)}
+                />
+              </svg>
+              <span className="absolute text-[10px] font-black text-white">{nutritionProgress}%</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold">Tracking yakinda</span>
+              <span className="text-[10px] text-slate-400">Beslenme log modulu henuz aktif degil</span>
+            </div>
+          </div>
         </div>
-        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
-          <MessageSquare className="h-6 w-6 text-sky-600" />
-          <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Mesaj merkezi sinyali</p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {unreadMessageCount > 0
-              ? `${unreadMessageCount} okunmamis mesajin var. Mesajlasma ekranindan anlik takip et.`
-              : "Su an tum mesajlar okunmus gorunuyor. Yeni geri bildirimler burada oncelik kazanir."}
-          </p>
+        <button type="button" className="rounded-full bg-orange-600 p-3 text-white transition-transform active:scale-95" aria-label="add nutrition">
+          <Plus className="h-5 w-5" />
+        </button>
+      </section>
+
+      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+        <div className="mb-3 flex items-center justify-between">
+          <h4 className="font-bold text-slate-900">Coach Notes</h4>
+          <Link href="/client/messages" className="text-xs font-bold text-orange-600 hover:underline">
+            Message Center ({unreadMessageCount})
+          </Link>
+        </div>
+        {latestComments.length === 0 ? (
+          <p className="text-sm text-slate-500">Henüz coach notu yok.</p>
+        ) : (
+          <div className="space-y-2">
+            {latestComments.map((comment) => (
+              <div key={comment.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-sm text-slate-700">{comment.content}</p>
+                <p className="mt-1 text-xs text-slate-500">{comment.author.name}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="mt-4 grid grid-cols-2 gap-3">
+          <Link href="/client/coaches" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+            Coach Network ({relations.length})
+          </Link>
+          <Link href="/client/workouts" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+            Workout Library
+          </Link>
+          <div className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700">Comments: {totalCommentCount}</div>
+          <div className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700">Completed: {completedWorkoutCount}</div>
         </div>
       </section>
     </div>

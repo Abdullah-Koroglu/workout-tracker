@@ -1,0 +1,5 @@
+Client tarafında gerçek beslenme takibi (kalori, makro, öğün logları) yok. Bu yüzden Nutrition kartı görsel olarak aynı, içerik placeholder mantığında.
+Client tarafında düzenli kilo trendi için ayrı bir body-metrics geçmiş modeli yok. Sadece workout setlerinden türetilen sınırlı veri var.
+Coach tarafında gerçek “Appointments” modülü (takvim etkinliği, platform/Zoom linki, toplantı türü) için ayrı tablo/akış yok.
+Coach activity kartlarında Stitch’teki gelişmiş metrikler (PR etiketi, toplam tonaj gibi her aktiviteye bağlı detaylı feed payload’ı) doğrudan saklanmıyor.
+Stitch mockup’ındaki medya/hero görselleri ve profil fotoğraf akışı uygulama verisinde zorunlu olmadığı için dinamik üretim kullanıldı.

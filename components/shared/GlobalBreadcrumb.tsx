@@ -66,7 +66,7 @@ export function GlobalBreadcrumb() {
   }
 
   return (
-    <div className="mb-4 rounded-xl border bg-card/70 px-4 py-2">
+    <div className="my-auto">
       <Breadcrumb items={items} />
     </div>
   );

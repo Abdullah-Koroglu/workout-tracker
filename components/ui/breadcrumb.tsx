@@ -15,11 +15,11 @@ export function Breadcrumb({ items }: { items: BreadcrumbItem[] }) {
         <div key={item.href} className="flex items-center gap-2">
           {index > 0 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
           {index === items.length - 1 ? (
-            <span className="font-medium text-foreground">{item.label}</span>
+            <span className="md:text-xl font-bold tracking-tight text-slate-900">{item.label}</span>
           ) : (
             <Link
               href={(item.label === "Client" || item.label === "Coach") ? "/" : item.href}
-              className="text-muted-foreground hover:text-foreground transition"
+              className="md:text-xl font-bold tracking-tight text-slate-900 hover:text-slate-700 transition"
             >
               {item.label}
             </Link>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2, Save, User2 } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 import { Button } from "@/components/ui/button";
 import { useNotificationContext } from "@/contexts/NotificationContext";
@@ -95,6 +96,14 @@ export default function ClientProfilePage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Koçunuzun sizi daha iyi tanımasına yardımcı olacak bilgiler.
         </p>
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-3 md:hidden"
+          onClick={() => void signOut({ callbackUrl: "/login" })}
+        >
+          Çıkış Yap
+        </Button>
       </div>
 
       <section className="space-y-5 rounded-xl bg-card p-5 shadow-sm ring-1 ring-black/5 md:p-6">

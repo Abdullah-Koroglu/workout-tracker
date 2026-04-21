@@ -68,9 +68,14 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
             />
           </div>
           <div className="mt-4">
-            <Link href={`/coach/templates/${template.id}/edit`} className="text-sm font-medium text-emerald-700 hover:text-emerald-900">
-              Hızlı düzenle
-            </Link>
+            <div className="flex items-center gap-3 text-sm font-medium">
+              <Link href={`/coach/templates/${template.id}/edit`} className="text-primary hover:opacity-80">
+                Düzenle
+              </Link>
+              <Link href={`/coach/templates/${template.id}/assign`} className="text-secondary hover:opacity-80">
+                Ata
+              </Link>
+            </div>
           </div>
         </div>
       ))}

@@ -94,68 +94,68 @@ export default async function CoachDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Hero Section */}
-      <section className="overflow-hidden rounded-[32px] border border-blue-200/60 bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-6 shadow-sm">
+      <section className="overflow-hidden rounded-xl bg-gradient-to-br from-card via-muted/20 to-background p-6 shadow-sm ring-1 ring-black/5">
         <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-blue-700">Coach Control Room</p>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Yönet, ata, takip et</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Elite Command Center</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">Limits of precision</h1>
             <p className="max-w-2xl text-sm text-slate-600">
-              Tüm client'larınızı, template'lerinizi ve ilerleme metriklerini tek merkezde kontrol edin.
+              Daily command overview: compliance, workload, client feedback ve anlık aksiyonlar tek panelde.
             </p>
           </div>
           <div className="grid gap-3 sm:grid-cols-4">
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-blue-100">
+            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Aktif Client</p>
-              <p className="mt-2 text-3xl font-black text-blue-600">{totalClients}</p>
+              <p className="mt-2 text-3xl font-black text-primary">{totalClients}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-emerald-100">
+            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Bu Hafta</p>
-              <p className="mt-2 text-3xl font-black text-emerald-600">{weeklyActive}</p>
+              <p className="mt-2 text-3xl font-black text-secondary">{weeklyActive}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-purple-100">
+            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Template</p>
-              <p className="mt-2 text-3xl font-black text-purple-600">{totalTemplates}</p>
+              <p className="mt-2 text-3xl font-black text-foreground">{totalTemplates}</p>
             </div>
-            <div className="rounded-2xl bg-white px-4 py-3 shadow-sm border border-orange-100">
+            <div className="rounded-lg bg-background px-4 py-3 shadow-sm ring-1 ring-black/5">
               <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-semibold">Bekleyen</p>
-              <p className="mt-2 text-3xl font-black text-orange-600">{pendingRequests.length}</p>
+              <p className="mt-2 text-3xl font-black text-primary">{pendingRequests.length}</p>
             </div>
           </div>
         </div>
 
         {/* Quick Action Buttons */}
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link href="/coach/clients" className="group rounded-2xl bg-blue-600 p-4 text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md">
+          <Link href="/coach/clients" className="group rounded-lg bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] p-4 text-white shadow-sm transition hover:brightness-105 hover:shadow-md">
             <div className="flex items-center justify-between">
               <Users className="h-5 w-5 group-hover:scale-110 transition-transform" />
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <p className="mt-3 text-sm font-bold">Client Yönetimi</p>
-            <p className="mt-1 text-xs text-blue-100">Kabul, reddet, ata ve yönet</p>
+            <p className="mt-3 text-sm font-bold">Client Roster</p>
+            <p className="mt-1 text-xs text-orange-50">Kabul, reddet, detay ve progress</p>
           </Link>
-          <Link href="/coach/templates" className="group rounded-2xl bg-purple-600 p-4 text-white shadow-sm transition hover:bg-purple-700 hover:shadow-md">
+          <Link href="/coach/templates" className="group rounded-lg bg-slate-900 p-4 text-white shadow-sm transition hover:bg-black hover:shadow-md">
             <div className="flex items-center justify-between">
               <ClipboardList className="h-5 w-5 group-hover:scale-110 transition-transform" />
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <p className="mt-3 text-sm font-bold">Template Kütüphanesi</p>
-            <p className="mt-1 text-xs text-purple-100">Yeni plan ekle, düzenle, sil</p>
+            <p className="mt-3 text-sm font-bold">Program Library</p>
+            <p className="mt-1 text-xs text-slate-200">Yeni plan ekle, düzenle, ata</p>
           </Link>
-          <Link href="/coach/exercises" className="group rounded-2xl bg-amber-600 p-4 text-white shadow-sm transition hover:bg-amber-700 hover:shadow-md">
+          <Link href="/coach/exercises" className="group rounded-lg bg-secondary p-4 text-white shadow-sm transition hover:brightness-110 hover:shadow-md">
             <div className="flex items-center justify-between">
               <Dumbbell className="h-5 w-5 group-hover:scale-110 transition-transform" />
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <p className="mt-3 text-sm font-bold">Egzersiz Kütüphanesi</p>
-            <p className="mt-1 text-xs text-amber-100">Ağırlık ve kardiyoyu yönet</p>
+            <p className="mt-3 text-sm font-bold">Exercise Library</p>
+            <p className="mt-1 text-xs text-blue-100">Ağırlık ve kardiyo havuzu</p>
           </Link>
-          <Link href="/coach/dashboard" className="group rounded-2xl bg-emerald-600 p-4 text-white shadow-sm transition hover:bg-emerald-700 hover:shadow-md">
+          <Link href="/coach/dashboard" className="group rounded-lg bg-background p-4 text-foreground shadow-sm ring-1 ring-black/10 transition hover:bg-muted/50 hover:shadow-md">
             <div className="flex items-center justify-between">
-              <BarChart3 className="h-5 w-5 group-hover:scale-110 transition-transform" />
+              <BarChart3 className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
               <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
-            <p className="mt-3 text-sm font-bold">Performans Grafikleri</p>
-            <p className="mt-1 text-xs text-emerald-100">Analiz ve ilerleme takibi</p>
+            <p className="mt-3 text-sm font-bold">Analytics Lab</p>
+            <p className="mt-1 text-xs text-muted-foreground">KPI ve anlık performans akışı</p>
           </Link>
         </div>
       </section>
@@ -164,17 +164,17 @@ export default async function CoachDashboardPage() {
       <section>
         <h2 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Bu Hafta İstatistikleri</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
+          <Card className="border-0 bg-card ring-1 ring-black/5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Başlanan Antrenmanlar</CardTitle>
-              <Activity className="h-4 w-4 text-blue-600" />
+              <Activity className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{weeklyActive}</div>
               <p className="text-xs text-muted-foreground mt-1">Son 7 gün içinde</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-card ring-1 ring-black/5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Tamamlanan</CardTitle>
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
@@ -184,7 +184,7 @@ export default async function CoachDashboardPage() {
               <p className="text-xs text-muted-foreground mt-1">%{completionRate} başarı oranı</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-card ring-1 ring-black/5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Yarıda Bırakılan</CardTitle>
               <AlertCircle className="h-4 w-4 text-orange-600" />
@@ -194,10 +194,10 @@ export default async function CoachDashboardPage() {
               <p className="text-xs text-muted-foreground mt-1">Müdahale gerekebilir</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-0 bg-card ring-1 ring-black/5">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Toplam Egzersiz</CardTitle>
-              <TrendingUp className="h-4 w-4 text-purple-600" />
+              <TrendingUp className="h-4 w-4 text-secondary" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{totalExercises}</div>
@@ -212,15 +212,15 @@ export default async function CoachDashboardPage() {
         <h2 className="text-lg font-bold tracking-tight text-slate-900 mb-4">Yönetim Paneli</h2>
         <div className="grid gap-6 lg:grid-cols-3">
           {/* Pending Requests */}
-          <Card className="lg:col-span-1 border-orange-200">
-            <CardHeader className="border-b border-orange-200 pb-3">
+          <Card className="lg:col-span-1 border-0 bg-card ring-1 ring-black/5">
+            <CardHeader className="border-b border-black/10 pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-orange-600" />
+                  <AlertCircle className="h-4 w-4 text-primary" />
                   Bekleyen İstekler
                 </CardTitle>
                 {pendingRequests.length > 0 && (
-                  <span className="text-xs font-bold bg-orange-100 text-orange-700 px-2 py-1 rounded-full">{pendingRequests.length}</span>
+                  <span className="text-xs font-bold bg-primary/15 text-foreground px-2 py-1 rounded-full">{pendingRequests.length}</span>
                 )}
               </div>
             </CardHeader>
@@ -232,10 +232,10 @@ export default async function CoachDashboardPage() {
               ) : (
                 <>
                   {pendingRequests.map((request) => (
-                    <div key={request.id} className="rounded-2xl border p-3 text-sm transition hover:border-orange-300 hover:bg-orange-50/40 group">
+                    <div key={request.id} className="rounded-lg bg-muted/40 p-3 text-sm transition hover:bg-muted/70 group">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-semibold text-foreground group-hover:text-orange-700">{request.client.name}</p>
+                          <p className="font-semibold text-foreground group-hover:text-primary">{request.client.name}</p>
                           <p className="text-xs text-muted-foreground">{request.client.email}</p>
                         </div>
                         <DashboardActionMenu clientId={request.client.id} />
@@ -253,10 +253,10 @@ export default async function CoachDashboardPage() {
           </Card>
 
           {/* Recent Activity */}
-          <Card className="lg:col-span-2 border-blue-200">
-            <CardHeader className="border-b border-blue-200 pb-3">
+          <Card className="lg:col-span-2 border-0 bg-card ring-1 ring-black/5">
+            <CardHeader className="border-b border-black/10 pb-3">
               <CardTitle className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-blue-600" />
+                <Clock className="h-4 w-4 text-secondary" />
                 Son Aktiviteler
               </CardTitle>
             </CardHeader>
@@ -270,9 +270,9 @@ export default async function CoachDashboardPage() {
                   {workoutDayKeys.map((dayKey) => {
                     const dayDate = new Date(dayKey);
                     return (
-                      <div key={dayKey} className="rounded-2xl border bg-card p-3">
-                        <div className="mb-2 flex items-center justify-between border-b pb-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-blue-700">
+                      <div key={dayKey} className="rounded-lg bg-muted/30 p-3">
+                        <div className="mb-2 flex items-center justify-between border-b border-black/10 pb-2">
+                          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">
                             {dayDate.toLocaleDateString("tr-TR", { weekday: "long" })}
                           </p>
                           <p className="text-sm font-black text-foreground">
@@ -281,14 +281,14 @@ export default async function CoachDashboardPage() {
                         </div>
                         <div className="space-y-2">
                           {workoutsByDay[dayKey].map((w) => (
-                            <div key={w.id} className="flex items-center justify-between rounded-xl border p-3 text-sm transition hover:border-blue-300 hover:bg-blue-50/40 group">
+                            <div key={w.id} className="flex items-center justify-between rounded-lg bg-background p-3 text-sm transition hover:bg-muted/60 group ring-1 ring-black/5">
                               <div className="flex-1 min-w-0">
-                                <p className="font-bold text-foreground group-hover:text-blue-700 truncate">{w.template.name}</p>
+                                <p className="font-bold text-foreground group-hover:text-primary truncate">{w.template.name}</p>
                                 <p className="text-xs text-muted-foreground truncate">{w.client.name}</p>
                               </div>
                               <div className="flex items-center gap-2 ml-2">
                                 {w.status === "COMPLETED" && <CheckCircle2 className="h-4 w-4 text-emerald-600 flex-shrink-0" />}
-                                {w.status === "IN_PROGRESS" && <Activity className="h-4 w-4 text-blue-600 flex-shrink-0 animate-pulse" />}
+                                {w.status === "IN_PROGRESS" && <Activity className="h-4 w-4 text-primary flex-shrink-0 animate-pulse" />}
                                 {w.status === "ABANDONED" && <AlertCircle className="h-4 w-4 text-orange-600 flex-shrink-0" />}
                                 <DashboardActionMenu clientId={w.client.id} />
                               </div>
@@ -309,7 +309,7 @@ export default async function CoachDashboardPage() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold tracking-tight text-slate-900">Hızlı İlerleme Erişimi</h2>
-          <Link href="/coach/clients" className="text-sm font-medium text-blue-600 hover:text-blue-700">
+          <Link href="/coach/clients" className="text-sm font-medium text-primary hover:opacity-80">
             Tümünü Göster →
           </Link>
         </div>
@@ -328,17 +328,17 @@ export default async function CoachDashboardPage() {
               <Link
                 key={relation.id}
                 href={`/coach/clients/${relation.client.id}/progress`}
-                className="group rounded-2xl border bg-gradient-to-br from-slate-50 to-blue-50 p-4 shadow-sm hover:shadow-md hover:border-blue-300 transition"
+                className="group rounded-lg bg-card p-4 shadow-sm ring-1 ring-black/5 hover:shadow-md transition"
               >
                 <div className="flex items-start justify-between mb-2">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white font-bold text-sm">
                     {relation.client.name.charAt(0).toUpperCase()}
                   </div>
-                  <BarChart3 className="h-4 w-4 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <BarChart3 className="h-4 w-4 text-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <p className="font-semibold text-sm text-foreground group-hover:text-blue-700">{relation.client.name}</p>
+                <p className="font-semibold text-sm text-foreground group-hover:text-primary">{relation.client.name}</p>
                 <p className="text-xs text-muted-foreground truncate">{relation.client.email}</p>
-                <div className="mt-2 pt-2 border-t border-slate-200">
+                <div className="mt-2 pt-2 border-t border-black/10">
                   <p className="text-xs font-medium text-slate-600">İlerlemeyi Gör →</p>
                 </div>
               </Link>

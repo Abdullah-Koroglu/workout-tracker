@@ -146,10 +146,10 @@ export default async function WorkoutDetailPage({
       {/* Hero Header */}
       <div className={`overflow-hidden rounded-2xl md:rounded-3xl shadow-sm ${
         workout.status === "COMPLETED"
-          ? "bg-gradient-to-br from-emerald-50 via-white to-lime-50 border border-emerald-200/60"
+          ? "bg-gradient-to-br from-card via-muted/20 to-background ring-1 ring-black/5"
           : workout.status === "ABANDONED"
-          ? "bg-gradient-to-br from-amber-50 via-white to-orange-50 border border-amber-200/60"
-          : "bg-card border"
+          ? "bg-gradient-to-br from-card via-muted/30 to-background ring-1 ring-black/5"
+          : "bg-card ring-1 ring-black/5"
       }`}>
         <div className="px-4 py-4 md:px-6 md:py-5">
           {/* Back + status */}
@@ -162,12 +162,12 @@ export default async function WorkoutDetailPage({
               Antrenmanlar
             </Link>
             {workout.status === "COMPLETED" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-800">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary/20 px-3 py-1 text-xs font-bold text-secondary">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Tamamlandı
               </span>
             ) : workout.status === "ABANDONED" ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-bold text-amber-800">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-foreground">
                 <XCircle className="h-3.5 w-3.5" />
                 Yarıda Bırakıldı
               </span>
@@ -181,6 +181,9 @@ export default async function WorkoutDetailPage({
           {/* Title */}
           <div className="mt-3">
             <p className="text-[11px] font-bold uppercase tracking-widest text-emerald-700 md:text-xs">
+              Workout Summary
+            </p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-primary md:text-xs hidden">
               Antrenman Özeti
             </p>
             <h1 className="mt-1 text-xl font-black leading-tight text-slate-900 md:text-3xl">
@@ -198,9 +201,9 @@ export default async function WorkoutDetailPage({
 
           {/* Stats Row */}
           <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+            <div className="rounded-lg bg-background px-3 py-2.5 shadow-sm ring-1 ring-black/5 md:px-4 md:py-3">
               <div className="flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-emerald-600" />
+                <Clock className="h-3.5 w-3.5 text-primary" />
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Süre</p>
               </div>
               <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
@@ -209,9 +212,9 @@ export default async function WorkoutDetailPage({
               </p>
             </div>
 
-            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+            <div className="rounded-lg bg-background px-3 py-2.5 shadow-sm ring-1 ring-black/5 md:px-4 md:py-3">
               <div className="flex items-center gap-1.5">
-                <Weight className="h-3.5 w-3.5 text-emerald-600" />
+                <Weight className="h-3.5 w-3.5 text-secondary" />
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Hacim</p>
               </div>
               <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
@@ -220,9 +223,9 @@ export default async function WorkoutDetailPage({
               </p>
             </div>
 
-            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+            <div className="rounded-lg bg-background px-3 py-2.5 shadow-sm ring-1 ring-black/5 md:px-4 md:py-3">
               <div className="flex items-center gap-1.5">
-                <Dumbbell className="h-3.5 w-3.5 text-emerald-600" />
+                <Dumbbell className="h-3.5 w-3.5 text-secondary" />
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Set</p>
               </div>
               <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
@@ -230,9 +233,9 @@ export default async function WorkoutDetailPage({
               </p>
             </div>
 
-            <div className="rounded-xl bg-white/80 px-3 py-2.5 shadow-sm md:px-4 md:py-3">
+            <div className="rounded-lg bg-background px-3 py-2.5 shadow-sm ring-1 ring-black/5 md:px-4 md:py-3">
               <div className="flex items-center gap-1.5">
-                <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                <Trophy className="h-3.5 w-3.5 text-primary" />
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">PR</p>
               </div>
               <p className="mt-1 text-xl font-black text-slate-900 md:text-2xl">
@@ -243,11 +246,11 @@ export default async function WorkoutDetailPage({
 
           {/* PR Banner */}
           {prExerciseNames.length > 0 && (
-            <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200 px-3 py-2.5">
-              <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+            <div className="mt-3 flex items-start gap-2 rounded-lg bg-primary/15 px-3 py-2.5">
+              <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
               <div>
-                <p className="text-xs font-bold text-amber-800">Kişisel Rekor!</p>
-                <p className="mt-0.5 text-xs text-amber-700">
+                <p className="text-xs font-bold text-foreground">Kişisel Rekor!</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
                   {prExerciseNames.join(", ")}
                 </p>
               </div>
@@ -428,7 +431,7 @@ export default async function WorkoutDetailPage({
         </Link>
         <Link
           href="/client/workouts"
-          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition"
+          className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-4 py-3 text-sm font-semibold text-white shadow-sm hover:brightness-105 transition"
         >
           <Dumbbell className="h-4 w-4" />
           Tüm Antrenmanlar

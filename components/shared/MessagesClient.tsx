@@ -195,6 +195,7 @@ export function MessagesClient({
   );
 
   const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
+  const wsStatusDotKineticClass = wsConnected ? "bg-primary" : "bg-secondary";
 
   const selectThread = useCallback((userId: string) => {
     activePeerRef.current = userId;
@@ -632,11 +633,11 @@ export function MessagesClient({
     return (
       <div className="flex h-[calc(100dvh-4rem)] flex-col bg-background">
         {/* Header */}
-        <header className="sticky top-0 z-10 flex items-center justify-between border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <header className="sticky top-0 z-10 flex items-center justify-between border-b border-black/10 bg-background/95 px-4 py-3 backdrop-blur">
           <span className="w-8" />
-          <h1 className="text-base font-bold text-foreground">Mesajlar</h1>
+          <h1 className="text-base font-black tracking-tight text-foreground">Messages</h1>
           <div className="flex items-center gap-1">
-            <span className={`h-2 w-2 rounded-full ${wsStatusDotClass}`} />
+            <span className={`h-2 w-2 rounded-full ${wsStatusDotKineticClass}`} />
             <PushNotificationToggle />
           </div>
         </header>
@@ -651,7 +652,7 @@ export function MessagesClient({
                 type="button"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="rounded-full bg-emerald-600 px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                className="rounded-full bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] px-5 py-2 text-sm font-semibold text-white disabled:opacity-50"
               >
                 Yenile
               </button>
@@ -665,11 +666,11 @@ export function MessagesClient({
                   type="button"
                   onClick={() => selectThread(thread.user.id)}
                   className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
-                    isActive ? "bg-emerald-50" : "hover:bg-muted/40"
+                    isActive ? "bg-primary/15" : "hover:bg-muted/40"
                   }`}
                 >
                   {/* Avatar */}
-                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-sm font-bold text-emerald-700">
+                  <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-secondary/20 text-sm font-bold text-secondary">
                     {getInitials(thread.user.name)}
                   </div>
 
@@ -690,7 +691,7 @@ export function MessagesClient({
                         {thread.lastMessage?.content || "Henüz mesaj yok"}
                       </p>
                       {thread.unreadCount > 0 && (
-                        <span className="shrink-0 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[10px] font-bold text-white">
+                        <span className="shrink-0 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
                           {thread.unreadCount > 99 ? "99+" : thread.unreadCount}
                         </span>
                       )}
@@ -707,7 +708,7 @@ export function MessagesClient({
           type="button"
           onClick={handleRefresh}
           disabled={refreshing}
-          className="absolute bottom-6 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-600 text-white shadow-lg transition hover:bg-emerald-700 disabled:opacity-60"
+          className="absolute bottom-6 right-4 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] text-white shadow-lg transition hover:brightness-105 disabled:opacity-60"
           aria-label="Yenile"
         >
           <Plus className="h-6 w-6" />
@@ -722,7 +723,7 @@ export function MessagesClient({
   return (
     <div className="flex h-[calc(100dvh-4rem)] flex-col bg-background">
       {/* Chat header */}
-      <header className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-3 py-2.5 backdrop-blur">
+      <header className="sticky top-0 z-10 flex items-center gap-3 border-b border-black/10 bg-background/95 px-3 py-2.5 backdrop-blur">
         <button
           type="button"
           onClick={() => setIsThreadPanelOpen(true)}
@@ -732,7 +733,7 @@ export function MessagesClient({
           <ArrowLeft className="h-5 w-5" />
         </button>
 
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary/20 text-xs font-bold text-secondary">
           {getInitials(selectedThread.user.name)}
         </div>
 
@@ -741,7 +742,7 @@ export function MessagesClient({
             {selectedThread.user.name}
           </p>
           <p className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotClass}`} />
+            <span className={`h-1.5 w-1.5 rounded-full ${wsStatusDotKineticClass}`} />
             {wsConnected ? "Çevrimiçi" : "Bağlanıyor..."}
           </p>
         </div>
@@ -756,7 +757,7 @@ export function MessagesClient({
       >
         {loadingMessages ? (
           <div className="flex h-full items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
@@ -797,7 +798,7 @@ export function MessagesClient({
                   >
                     {/* Incoming avatar */}
                     {!mine && (
-                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-[10px] font-bold text-emerald-700">
+                      <div className="mb-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-secondary/20 text-[10px] font-bold text-secondary">
                         {getInitials(selectedThread.user.name)}
                       </div>
                     )}
@@ -806,7 +807,7 @@ export function MessagesClient({
                       <div
                         className={`rounded-2xl px-3.5 py-2 text-sm leading-relaxed ${
                           mine
-                            ? "rounded-br-sm bg-emerald-600 text-white"
+                            ? "rounded-br-sm bg-secondary text-white"
                             : "rounded-bl-sm bg-muted text-foreground"
                         } ${message.optimistic ? "opacity-70" : ""}`}
                       >
@@ -823,7 +824,7 @@ export function MessagesClient({
                           {message.optimistic ? "  ·" : ""}
                         </span>
                         {mine && !message.optimistic && (
-                          <CheckCheck className="h-3 w-3 text-emerald-500" />
+                          <CheckCheck className="h-3 w-3 text-primary" />
                         )}
                       </div>
                     </div>
@@ -853,13 +854,13 @@ export function MessagesClient({
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           placeholder="Mesaj yaz..."
-          className="h-10 flex-1 rounded-full border-0 bg-muted px-4 text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+          className="h-10 flex-1 rounded-full border-0 bg-muted px-4 text-sm outline-none focus:ring-2 focus:ring-primary"
         />
 
         <button
           type="submit"
           disabled={sending || !draft.trim()}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white transition hover:bg-emerald-700 disabled:opacity-50"
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary to-[hsl(24_95%_60%)] text-white transition hover:brightness-105 disabled:opacity-50"
           aria-label="Gönder"
         >
           <Send className="h-4 w-4" />

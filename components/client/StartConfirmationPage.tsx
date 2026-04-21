@@ -101,14 +101,14 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
   return (
     <div className="space-y-4 pb-28 md:space-y-6">
       {/* Mobile Header */}
-      <div className="overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-4 md:rounded-[32px] md:p-6 shadow-sm">
-        <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-emerald-700 hover:text-emerald-900">
+      <div className="overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-surface via-white to-primary/10 p-4 md:rounded-[32px] md:p-6 shadow-sm">
+        <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-primary hover:text-primary/80">
           <ChevronLeft className="h-4 w-4" />
           Geri
         </Link>
         <div className="mt-3 md:mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-emerald-700">Antrenman Başlatma</p>
-          <h1 className="mt-1 text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">Onay Ekranı</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Live Workout Session</p>
+          <h1 className="mt-1 text-2xl md:text-3xl lg:text-4xl font-black tracking-tight text-slate-900">Workout Briefing</h1>
           <p className="mt-2 text-xs md:text-sm text-slate-600">
             Aşağıdaki antrenmanı başlatmak üzeresin. Detayları incele ve onay ver.
           </p>
@@ -140,9 +140,9 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
         {/* Exercises Details */}
         <div className="space-y-3 md:space-y-4">
           {weightExercises.length > 0 && (
-            <div className="rounded-2xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+            <div className="rounded-2xl md:rounded-[32px] border border-black/10 bg-card p-4 md:p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
-                <Dumbbell className="h-5 w-5 text-slate-700" />
+                <Dumbbell className="h-5 w-5 text-secondary" />
                 <p className="font-semibold text-foreground">Ağırlık Antrenmanları</p>
                 <span className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-full bg-slate-100 text-xs font-bold">
                   {weightExercises.length}
@@ -177,22 +177,22 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
           )}
 
           {cardioExercises.length > 0 && (
-            <div className="rounded-2xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+            <div className="rounded-2xl md:rounded-[32px] border border-black/10 bg-card p-4 md:p-6 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
-                <Flame className="h-5 w-5 text-orange-600" />
+                <Flame className="h-5 w-5 text-primary" />
                 <p className="font-semibold text-foreground">Kardiyovaküler Antrenmanlar</p>
-                <span className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-full bg-orange-100 text-xs font-bold text-orange-700">
+                <span className="ml-auto inline-flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-bold text-primary">
                   {cardioExercises.length}
                 </span>
               </div>
               <div className="space-y-3">
                 {cardioExercises.map((ex, idx) => (
-                  <div key={ex.id} className="rounded-xl border border-orange-200/60 bg-orange-50 p-3 space-y-3">
+                  <div key={ex.id} className="rounded-xl border border-primary/30 bg-primary/10 p-3 space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="font-semibold text-sm text-foreground">
                         {idx + 1}. {ex.name}
                       </p>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-orange-700">
+                      <div className="flex items-center gap-1 text-xs font-semibold text-primary">
                         <Clock className="h-3 w-3" />
                         {ex.durationMinutes || 1} dk
                       </div>
@@ -203,7 +203,7 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
                         <p className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">Protokol Blokları</p>
                         <div className="grid grid-cols-1 gap-2">
                           {ex.protocol.map((block, blockIdx) => (
-                            <div key={blockIdx} className="rounded-lg bg-white p-2 border border-orange-200 text-xs">
+                            <div key={blockIdx} className="rounded-lg bg-white p-2 border border-primary/30 text-xs">
                               <div className="flex items-center justify-between gap-2">
                                 <span className="font-semibold text-slate-600">Blok {blockIdx + 1}</span>
                                 <div className="flex items-center gap-3 text-right">
@@ -225,7 +225,7 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
         </div>
 
         {/* Summary Stats */}
-        <div className="rounded-2xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+        <div className="rounded-2xl md:rounded-[32px] border border-black/10 bg-card p-4 md:p-6 shadow-sm">
           <p className="text-sm font-semibold text-foreground">Antrenman Özeti</p>
           <div className="mt-3 grid grid-cols-2 gap-3 md:gap-4">
             <div className="rounded-lg bg-slate-50 p-3 text-center">
@@ -262,7 +262,7 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-2 md:flex-row md:gap-3">
-          <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 text-xs md:text-sm py-5 md:py-6">
+          <Button type="button" variant="outline" onClick={handleCancel} className="flex-1 text-xs md:text-sm py-5 md:py-6 border-secondary/30 hover:bg-secondary/5">
             Geri Dön
           </Button>
           <Button type="button" onClick={handleConfirm} className="flex-1 text-xs md:text-sm py-5 md:py-6">

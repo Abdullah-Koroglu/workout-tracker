@@ -226,22 +226,22 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   return (
     <div className="space-y-3 md:space-y-6 pb-32 md:pb-28">
       {/* Workout Header */}
-      <div className="overflow-hidden rounded-xl md:rounded-[28px] border border-emerald-200/70 bg-gradient-to-br from-emerald-50/95 via-white/95 to-lime-50/95 shadow-sm backdrop-blur">
+      <div className="overflow-hidden rounded-xl md:rounded-[28px] border border-black/10 bg-gradient-to-br from-surface/95 via-white/95 to-primary/10 shadow-sm backdrop-blur">
         <div className="p-3 md:p-4">
             <div className="flex items-center justify-between gap-2">
-              <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-[11px] md:text-xs font-semibold text-emerald-700 hover:text-emerald-900">
+              <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-[11px] md:text-xs font-semibold text-primary hover:text-primary/80">
                 <ChevronLeft className="h-3 w-3" />
                 Dashboard
               </Link>
               <div className="flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] md:text-xs font-semibold text-slate-700">
-                <Clock className="h-3 w-3 text-emerald-600" />
+                <Clock className="h-3 w-3 text-primary" />
                 {formatTime(elapsedSeconds)}
               </div>
             </div>
 
             <div className="mt-2 flex items-center justify-between gap-2">
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-emerald-700">Antrenman Akisi</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Workout Session</p>
                 <h1 className="truncate text-sm md:text-xl font-black text-slate-900">{activeExercise.exercise.exercise.name}</h1>
               </div>
               <div className="text-right">
@@ -265,8 +265,8 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
               </div>
             </div>
 
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-emerald-100">
-              <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-lime-500 transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
+              <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
             </div>
         </div>
       </div>
@@ -278,7 +278,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         <div className="block md:hidden">
           <div className="flex items-center justify-between mb-3">
             <p className="text-sm font-semibold text-foreground">Egzersizler</p>
-            <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full font-semibold">
+            <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full font-semibold">
               {exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}
             </span>
           </div>
@@ -290,7 +290,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                 onClick={() => exerciseManager.setActiveExerciseId(item.exercise.exerciseId)}
                 className={`flex-shrink-0 px-4 py-2 rounded-lg font-semibold text-xs whitespace-nowrap transition border ${
                   item.exercise.exerciseId === activeExercise.exercise.exerciseId
-                    ? "border-emerald-500 bg-emerald-100 text-emerald-900"
+                    ? "border-primary bg-primary/10 text-secondary"
                     : "border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
                 }`}
               >
@@ -316,8 +316,8 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
               onClick={() => exerciseManager.setActiveExerciseId(item.exercise.exerciseId)}
               className={`w-full rounded-2xl border p-3 md:p-4 text-left transition ${
                 item.exercise.exerciseId === activeExercise.exercise.exerciseId
-                  ? "border-emerald-500 bg-emerald-50 shadow-sm"
-                  : "border-border bg-card hover:border-emerald-300 hover:bg-emerald-50/50"
+                  ? "border-primary bg-primary/10 shadow-sm"
+                  : "border-border bg-card hover:border-primary/40 hover:bg-primary/5"
               }`}
             >
               <div className="flex items-start justify-between gap-2">
@@ -328,7 +328,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                     {item.exercise.exercise.type === "CARDIO" ? `${item.exercise.durationMinutes || 1} dk` : `${item.completedCount}/${item.plannedSetCount} set`}
                   </p>
                 </div>
-                {item.isCompleted ? <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" /> : item.exercise.exercise.type === "CARDIO" ? <Flame className="h-5 w-5 text-orange-500 flex-shrink-0" /> : <Dumbbell className="h-5 w-5 text-slate-500 flex-shrink-0" />}
+                {item.isCompleted ? <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" /> : item.exercise.exercise.type === "CARDIO" ? <Flame className="h-5 w-5 text-primary flex-shrink-0" /> : <Dumbbell className="h-5 w-5 text-slate-500 flex-shrink-0" />}
               </div>
             </button>
           ))}
@@ -340,7 +340,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-3 md:p-6 shadow-sm">
             <div className="space-y-3 md:space-y-4">
               <div>
-                <div className="inline-flex rounded-full bg-emerald-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
+                <div className="inline-flex rounded-full bg-primary/10 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                   {activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Ağırlık"}
                 </div>
                 <h2 className="mt-1 md:mt-3 text-base md:text-3xl font-black tracking-tight text-foreground">{activeExercise.exercise.exercise.name}</h2>
@@ -522,8 +522,8 @@ function WeightExerciseSection({
           </div>
         ) : (
           exercise.exerciseSets.map((setItem) => (
-            <div key={setItem.id} className="rounded-lg md:rounded-xl border bg-emerald-50 border-emerald-200 p-2 md:p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-emerald-700">Set {setItem.setNumber}</p>
+            <div key={setItem.id} className="rounded-lg md:rounded-xl border bg-primary/10 border-primary/30 p-2 md:p-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">Set {setItem.setNumber}</p>
               {setItem.isPR ? (
                 <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">
                   PR
@@ -543,7 +543,7 @@ function WeightExerciseSection({
       {!exercise.isCompleted && (
         <div className="space-y-3 pt-2 md:pt-3 border-t">
           <div className="flex items-center gap-2 text-xs md:text-sm font-semibold text-foreground">
-            <Target className="h-4 w-4 text-emerald-600" />
+            <Target className="h-4 w-4 text-primary" />
             <span>SET {exercise.nextSetNumber} / {exercise.plannedSetCount}</span>
           </div>
           <WorkoutSetForm
@@ -559,7 +559,7 @@ function WeightExerciseSection({
       )}
 
       {exercise.isCompleted && (
-        <div className="rounded-lg md:rounded-xl bg-emerald-50 p-3 md:p-4 text-xs md:text-sm font-medium text-emerald-700 border border-emerald-200">
+        <div className="rounded-lg md:rounded-xl bg-primary/10 p-3 md:p-4 text-xs md:text-sm font-medium text-primary border border-primary/30">
           ✓ Bu hareket tamamlandı. Başka harekete geç veya antrenmanı sona erdir.
         </div>
       )}
@@ -627,7 +627,7 @@ function CardioExerciseSection({
         </Button>
       </div>
       {exercise.isCompleted && (
-        <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-emerald-50 border border-emerald-200 text-xs md:text-sm font-medium text-emerald-700">
+        <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-primary/10 border border-primary/30 text-xs md:text-sm font-medium text-primary">
           ✓ Kardiyo tamamlandı.
         </div>
       )}

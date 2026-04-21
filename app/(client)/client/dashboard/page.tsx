@@ -115,9 +115,9 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
           const dayItems = groups[dateKey] || [];
 
           return (
-            <div key={dateKey} className="rounded-2xl border bg-card p-3 shadow-sm md:p-4">
+            <div key={dateKey} className="rounded-3xl border border-black/10 bg-white p-3 shadow-sm md:p-4">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b pb-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700 md:text-sm md:tracking-[0.2em]">
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary md:text-sm md:tracking-[0.2em]">
                   {date.toLocaleDateString("tr-TR", { weekday: "long" })}
                 </p>
                 <p className="text-base font-black text-foreground md:text-lg">
@@ -135,7 +135,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
                   );
 
                   return (
-                    <div key={assignment.id} className="rounded-xl border p-3 md:p-4">
+                    <div key={assignment.id} className="rounded-2xl border border-black/10 bg-surface-container p-3 md:p-4">
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
                         <div className="min-w-0">
                           <p className="line-clamp-2 text-sm font-bold text-foreground sm:text-base">{assignment.template.name}</p>
@@ -144,7 +144,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
                           </p>
                         </div>
                         {showStartButton ? (
-                          <Link href={`/client/workout/${assignment.id}/start`} className="inline-flex w-full items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 sm:w-auto">
+                          <Link href={`/client/workout/${assignment.id}/start`} className="inline-flex w-full items-center justify-center rounded-full bg-secondary px-4 py-2 text-sm font-medium text-white hover:bg-secondary/90 sm:w-auto">
                             Basla
                           </Link>
                         ) : (
@@ -155,7 +155,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
                       </div>
 
                       <div className="mt-3 grid gap-2 md:grid-cols-2 md:gap-3">
-                        <div className="rounded-lg bg-slate-50 p-2">
+                        <div className="rounded-xl bg-white p-2">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">Agirlik ({weightItems.length})</p>
                           <div className="mt-1 space-y-1">
                             {weightItems.length === 0 ? (
@@ -169,7 +169,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
                             )}
                           </div>
                         </div>
-                        <div className="rounded-lg bg-orange-50 p-2">
+                        <div className="rounded-xl bg-primary/10 p-2">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-orange-700">Kardiyo ({cardioItems.length})</p>
                           <div className="mt-1 space-y-1">
                             {cardioItems.length === 0 ? (
@@ -197,13 +197,13 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
 
   return (
     <div className="space-y-6 md:space-y-8">
-      <section className="overflow-hidden rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-4 shadow-sm md:rounded-[32px] md:p-6">
+      <section className="overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-surface via-surface to-primary/10 p-4 shadow-sm md:rounded-[32px] md:p-6">
         <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-700">Client Performance Hub</p>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-950 md:text-4xl">Gunluk planini net gor, ritmini kaybetme.</h1>
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">Athlete Mission Control</p>
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-foreground md:text-4xl">Push For Precision</h1>
             <p className="mt-3 text-sm leading-6 text-slate-600 md:text-base">
-              Bugunku atanmis planlar, okunmamis mesajlar, aktif workout ve coach geri bildirimleri ayni panelde. Karar vermek yerine harekete gec.
+              Bugunku atamalar, mesajlar, aktif seans ve coach geri bildirimleri tek panelde. Karar yorgunlugu olmadan direkt aksiyona gec.
             </p>
           </div>
 
@@ -228,30 +228,30 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         </div>
 
         <div className="mt-4 grid gap-3 md:mt-6 md:grid-cols-3 xl:grid-cols-[1.1fr_1.1fr_0.8fr]">
-          <Link href={inProgressWorkout ? `/client/workout/${inProgressWorkout.assignmentId}/start` : "/client/workouts"} className="rounded-2xl bg-emerald-600 p-4 text-white shadow-sm transition hover:bg-emerald-700 md:rounded-3xl md:p-5">
+          <Link href={inProgressWorkout ? `/client/workout/${inProgressWorkout.assignmentId}/start` : "/client/workouts"} className="rounded-2xl bg-secondary p-4 text-white shadow-sm transition hover:bg-secondary/90 md:rounded-3xl md:p-5">
             <div className="flex items-center justify-between">
               <PlayCircle className="h-6 w-6" />
               <ArrowRight className="h-5 w-5" />
             </div>
             <p className="mt-4 text-base font-bold md:mt-6 md:text-lg">{inProgressWorkout ? "Aktif antrenmana dön" : "Geçmiş antrenmanlara git"}</p>
-            <p className="mt-1 text-xs text-emerald-50 md:mt-2 md:text-sm">
+            <p className="mt-1 text-xs text-slate-200 md:mt-2 md:text-sm">
               {inProgressWorkout ? inProgressWorkout.template.name : "Tamamlanan tüm antrenmanlarını listele."}
             </p>
           </Link>
-          <Link href="/client/coaches" className="rounded-2xl border bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/60 md:rounded-3xl md:p-5">
-            <Users className="h-6 w-6 text-emerald-600" />
+          <Link href="/client/coaches" className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-5">
+            <Users className="h-6 w-6 text-primary" />
             <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Coach bağlantılarını yönet</p>
             <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">Yeni coach ara, bekleyen ilişkileri kontrol et.</p>
           </Link>
-          <Link href="/client/workouts" className="rounded-2xl border bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/60 md:rounded-3xl md:p-5">
-            <CalendarClock className="h-6 w-6 text-emerald-600" />
+          <Link href="/client/workouts" className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-5">
+            <CalendarClock className="h-6 w-6 text-primary" />
             <p className="mt-4 text-base font-bold text-slate-900 md:mt-6 md:text-lg">Detaylı geçmiş</p>
             <p className="mt-1 text-xs text-slate-600 md:mt-2 md:text-sm">Set detayları ve coach yorumlarıyla tüm geçmişi aç.</p>
           </Link>
-          <div className="rounded-2xl border bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
+          <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
             <div className="flex items-center justify-between">
-              <Flame className="h-6 w-6 text-orange-600" />
-              <span className="rounded-full bg-orange-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-orange-700">
+              <Flame className="h-6 w-6 text-primary" />
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                 Tempo
               </span>
             </div>
@@ -263,15 +263,15 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         </div>
 
         <div className="mt-3 grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl border border-emerald-100 bg-white/80 p-4">
+          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
             <div className="flex items-center gap-2">
-              <Activity className="h-4 w-4 text-emerald-700" />
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">Hazirlik Durumu</p>
+              <Activity className="h-4 w-4 text-primary" />
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Hazirlik Durumu</p>
             </div>
             <p className="mt-3 text-2xl font-black text-slate-950">{assignmentItems.length}</p>
             <p className="mt-1 text-sm text-slate-600">Aktif atama havuzu. Bugun ve yaklasan planlar tek listede.</p>
           </div>
-          <div className="rounded-2xl border border-sky-100 bg-white/80 p-4">
+          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-sky-700" />
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">Tamamlama Ivmeleri</p>
@@ -279,7 +279,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
             <p className="mt-3 text-2xl font-black text-slate-950">%{completionMomentum}</p>
             <p className="mt-1 text-sm text-slate-600">Tamamlanan workout sayina gore olusan genel ilerleme hissi.</p>
           </div>
-          <div className="rounded-2xl border border-violet-100 bg-white/80 p-4">
+          <div className="rounded-2xl border border-black/10 bg-white/90 p-4">
             <div className="flex items-center gap-2">
               <MessageSquare className="h-4 w-4 text-violet-700" />
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">Coach Geri Bildirimi</p>
@@ -293,7 +293,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
       <section className="space-y-3">
         <div className="flex items-center justify-between gap-2">
           <h2 className="font-semibold">Atanmış Template'ler</h2>
-          <Link href="/client/workouts" className="text-sm font-medium text-emerald-700 hover:text-emerald-900">Geçmişi aç</Link>
+          <Link href="/client/workouts" className="text-sm font-medium text-primary hover:text-primary/80">Geçmişi aç</Link>
         </div>
         {assignmentItems.length === 0 ? (
           <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
@@ -302,7 +302,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         ) : (
           <div className="space-y-5 md:space-y-6">
             <div>
-              <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-700">Bugün</h3>
+              <h3 className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-primary">Bugün</h3>
               {todayAssignments.length === 0 ? (
                 <div className="rounded-2xl border border-dashed p-4 text-sm text-muted-foreground">Bugüne atanmış template yok.</div>
               ) : (
@@ -326,7 +326,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         <div className="space-y-3">
           <div className="flex items-center justify-between gap-2">
             <h2 className="font-semibold">Son Antrenmanlar</h2>
-            <Link href="/client/workouts" className="text-sm font-medium text-emerald-700 hover:text-emerald-900">Tümünü gör</Link>
+            <Link href="/client/workouts" className="text-sm font-medium text-primary hover:text-primary/80">Tümünü gör</Link>
           </div>
         {workouts.length === 0 ? (
           <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
@@ -335,7 +335,7 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
         ) : (
             <div className="space-y-2.5 md:space-y-3">
               {workouts.map((workout) => (
-                <Link key={workout.id} href={`/client/workouts/${workout.id}`} className="flex items-center justify-between gap-3 rounded-2xl border bg-card p-3 shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50/40 md:rounded-3xl md:p-4">
+                <Link key={workout.id} href={`/client/workouts/${workout.id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-white p-3 shadow-sm transition hover:bg-surface-container md:rounded-3xl md:p-4">
                   <div className="min-w-0">
                     <p className="line-clamp-1 font-semibold text-foreground">{workout.template.name}</p>
                     <p className="mt-1 text-xs text-muted-foreground md:text-sm">{new Date(workout.startedAt).toLocaleDateString("tr-TR")}</p>
@@ -355,9 +355,9 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
           </div>
         ) : (
             comments.map((comment) => (
-              <div key={comment.id} className="rounded-2xl border bg-card p-3 shadow-sm md:rounded-3xl md:p-4">
+              <div key={comment.id} className="rounded-2xl border border-black/10 bg-white p-3 shadow-sm md:rounded-3xl md:p-4">
                 <div className="flex items-start justify-between gap-3">
-                  <MessageSquare className="mt-1 h-5 w-5 text-emerald-600" />
+                  <MessageSquare className="mt-1 h-5 w-5 text-primary" />
                   <div className="flex-1">
                     <p className="text-sm text-foreground md:text-sm">{comment.content}</p>
                     <p className="mt-2 text-xs text-muted-foreground">{comment.author.name}</p>
@@ -370,12 +370,12 @@ const groupAssignmentsByDate = (items: DashboardAssignment[]) => {
       </section>
 
       <section className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border bg-card p-4 shadow-sm md:rounded-3xl md:p-5">
-          <Users className="h-6 w-6 text-emerald-600" />
+        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
+          <Users className="h-6 w-6 text-primary" />
           <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Bağlı coachlar</p>
           <p className="mt-2 text-sm text-muted-foreground">{relations.length > 0 ? connectedCoachNames : "Henüz kabul edilmiş coach yok."}</p>
         </div>
-        <div className="rounded-2xl border bg-card p-4 shadow-sm md:rounded-3xl md:p-5">
+        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:rounded-3xl md:p-5">
           <MessageSquare className="h-6 w-6 text-sky-600" />
           <p className="mt-3 text-base font-bold md:mt-4 md:text-lg">Mesaj merkezi sinyali</p>
           <p className="mt-2 text-sm text-muted-foreground">

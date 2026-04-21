@@ -65,19 +65,24 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
     }
   }, [range]);
 
+  const maxWeightPeak = data.reduce((acc, cur) => Math.max(acc, cur.maxWeight), 0);
+  const maxVolumePeak = data.reduce((acc, cur) => Math.max(acc, cur.totalVolume), 0);
+  const totalSets = data.reduce((acc, cur) => acc + cur.setCount, 0);
+
   return (
     <div className="space-y-6">
       {/* Controls */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-6">
+      <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5 md:p-5">
+        <div className="flex flex-col gap-4 md:flex-row md:items-end md:gap-6">
         {/* Exercise Dropdown */}
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="mb-2 block text-sm font-semibold text-muted-foreground">
             Antrenman Seçin
           </label>
           <select
             value={selectedExerciseId}
             onChange={(e) => setSelectedExerciseId(e.target.value)}
-            className="block w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+            className="block w-full rounded-lg border-0 bg-muted/60 px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           >
             {exercises.map((ex) => (
               <option key={ex.id} value={ex.id}>
@@ -95,19 +100,37 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
               onClick={() => setRange(r)}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 range === r
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                  ? "bg-primary/15 text-foreground ring-1 ring-primary/30"
+                  : "bg-muted text-muted-foreground hover:text-foreground"
               }`}
             >
               {r === "4weeks" ? "4H" : r === "3months" ? "3A" : "Tüm"}
             </button>
           ))}
         </div>
+        </div>
       </div>
+
+      {!loading && data.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Max Ağırlık</p>
+            <p className="mt-1 text-2xl font-black text-primary">{maxWeightPeak} kg</p>
+          </div>
+          <div className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Max Hacim</p>
+            <p className="mt-1 text-2xl font-black text-secondary">{maxVolumePeak}</p>
+          </div>
+          <div className="rounded-lg bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Toplam Set</p>
+            <p className="mt-1 text-2xl font-black text-foreground">{totalSets}</p>
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-100 text-red-800 rounded-lg dark:bg-red-900 dark:text-red-200">
+        <div className="rounded-lg bg-red-100 p-4 text-red-800">
           {error}
         </div>
       )}
@@ -115,14 +138,14 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
       {/* Loading State */}
       {loading && (
         <div className="flex items-center justify-center h-64">
-          <div className="text-gray-500">Yükleniyor...</div>
+          <div className="text-muted-foreground">Yükleniyor...</div>
         </div>
       )}
 
       {/* Empty State */}
       {!loading && data.length === 0 && !error && (
-        <div className="p-8 bg-gray-50 rounded-lg text-center dark:bg-gray-800">
-          <p className="text-gray-500 dark:text-gray-400">
+        <div className="rounded-lg bg-muted/40 p-8 text-center">
+          <p className="text-muted-foreground">
             {rangeLabel} için veri bulunamadı
           </p>
         </div>
@@ -132,27 +155,27 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
       {!loading && data.length > 0 && (
         <>
           {/* Weight Chart */}
-          <div className="bg-white rounded-lg shadow-md p-4 dark:bg-gray-800">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <h3 className="mb-4 text-lg font-black text-slate-900">
               Ağırlık Progresyonu ({rangeLabel})
             </h3>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis
                     dataKey="date"
-                    stroke="#6b7280"
+                    stroke="#64748b"
                     style={{ fontSize: "12px" }}
                   />
                   <YAxis
-                    stroke="#6b7280"
+                    stroke="#64748b"
                     label={{ value: "KG", angle: -90, position: "insideLeft" }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#fff",
-                      border: "1px solid #ccc",
+                      border: "1px solid #e2e8f0",
                       borderRadius: "8px",
                     }}
                     formatter={(value) => `${value} kg`}
@@ -161,7 +184,7 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
                   <Line
                     type="monotone"
                     dataKey="maxWeight"
-                    stroke="#0284c7"
+                    stroke="#f97316"
                     strokeWidth={2}
                     dot={{ r: 4 }}
                     activeDot={{ r: 6 }}
@@ -173,27 +196,27 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
           </div>
 
           {/* Volume Chart */}
-          <div className="bg-white rounded-lg shadow-md p-4 dark:bg-gray-800">
-            <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          <div className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5">
+            <h3 className="mb-4 text-lg font-black text-slate-900">
               Toplam Hacim ({rangeLabel})
             </h3>
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e0e7ff" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                   <XAxis
                     dataKey="date"
-                    stroke="#6b7280"
+                    stroke="#64748b"
                     style={{ fontSize: "12px" }}
                   />
                   <YAxis
-                    stroke="#6b7280"
+                    stroke="#64748b"
                     label={{ value: "KG × Tekrar", angle: -90, position: "insideLeft" }}
                   />
                   <Tooltip
                     contentStyle={{
                       backgroundColor: "#fff",
-                      border: "1px solid #ccc",
+                      border: "1px solid #e2e8f0",
                       borderRadius: "8px",
                     }}
                     formatter={(value) => `${value} kg×rep`}
@@ -201,7 +224,7 @@ export function ProgressCharts({ clientId, exercises }: ProgressChartProps) {
                   <Legend />
                   <Bar
                     dataKey="totalVolume"
-                    fill="#16a34a"
+                    fill="#455f88"
                     name="Toplam Hacim"
                     radius={[8, 8, 0, 0]}
                   />

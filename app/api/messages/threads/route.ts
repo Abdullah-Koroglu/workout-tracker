@@ -9,10 +9,12 @@ type ThreadUser = {
   email: string;
 };
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireAuth();
   if (auth.error) return auth.error;
 
+  const { searchParams } = new URL(request.url);
+  const preferredUserId = searchParams.get("withUserId")?.trim() || "";
   const currentUserId = auth.session.user.id;
   const isCoach = auth.session.user.role === "COACH";
 
@@ -27,9 +29,37 @@ export async function GET() {
     }
   });
 
-  const peers: ThreadUser[] = relations.map((relation) =>
-    isCoach ? relation.client : relation.coach
-  );
+  const relationPeerIds = relations.map((relation) => (isCoach ? relation.clientId : relation.coachId));
+
+  const exchangedMessages = await prisma.message.findMany({
+    where: {
+      OR: [{ senderId: currentUserId }, { receiverId: currentUserId }]
+    },
+    select: {
+      senderId: true,
+      receiverId: true
+    }
+  });
+
+  const peerIds = new Set<string>(relationPeerIds);
+  for (const item of exchangedMessages) {
+    peerIds.add(item.senderId === currentUserId ? item.receiverId : item.senderId);
+  }
+
+  if (preferredUserId && preferredUserId !== currentUserId) {
+    peerIds.add(preferredUserId);
+  }
+
+  const peers: ThreadUser[] = peerIds.size
+    ? await prisma.user.findMany({
+        where: { id: { in: Array.from(peerIds) } },
+        select: {
+          id: true,
+          name: true,
+          email: true
+        }
+      })
+    : [];
 
   const threads = await Promise.all(
     peers.map(async (peer) => {

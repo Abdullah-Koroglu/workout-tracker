@@ -39,7 +39,7 @@ export default async function CoachVitrinPage({
 
   const profile = coach.coachProfile;
   const specialties = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
-  const messageHref = `/messages?withUserId=${coachId}`;
+  const messageHref = `/client/messages?withUserId=${coachId}`;
 
   function getInitials(name: string) {
     return name.split(" ").map((p) => p[0] ?? "").join("").toUpperCase().slice(0, 2);

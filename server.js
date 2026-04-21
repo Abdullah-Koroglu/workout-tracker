@@ -185,21 +185,6 @@ function sendToUser(userId, payload, excludeSocket) {
   }
 }
 
-async function hasAcceptedRelation(userId, otherUserId) {
-  const relation = await prisma.coachClientRelation.findFirst({
-    where: {
-      status: "ACCEPTED",
-      OR: [
-        { coachId: userId, clientId: otherUserId },
-        { coachId: otherUserId, clientId: userId }
-      ]
-    },
-    select: { id: true }
-  });
-
-  return Boolean(relation);
-}
-
 async function handleSendMessage(senderId, ws, data) {
   const receiverId = typeof data.receiverId === "string" ? data.receiverId : "";
   const contentRaw = typeof data.content === "string" ? data.content : "";
@@ -215,12 +200,25 @@ async function handleSendMessage(senderId, ws, data) {
     return;
   }
 
-  const allowed = await hasAcceptedRelation(senderId, receiverId);
-  if (!allowed) {
+  if (receiverId === senderId) {
     safeSend(ws, {
       type: "ws_error",
-      code: "FORBIDDEN",
-      message: "Bu kullaniciya mesaj gonderemezsin."
+      code: "VALIDATION_ERROR",
+      message: "Kendine mesaj gonderemezsin."
+    });
+    return;
+  }
+
+  const receiverUser = await prisma.user.findUnique({
+    where: { id: receiverId },
+    select: { id: true, role: true }
+  });
+
+  if (!receiverUser) {
+    safeSend(ws, {
+      type: "ws_error",
+      code: "NOT_FOUND",
+      message: "Alici bulunamadi."
     });
     return;
   }
@@ -232,8 +230,8 @@ async function handleSendMessage(senderId, ws, data) {
       content
     },
     include: {
-      sender: { select: { id: true, name: true } },
-      receiver: { select: { id: true, name: true } }
+      sender: { select: { id: true, name: true, role: true } },
+      receiver: { select: { id: true, name: true, role: true } }
     }
   });
 
@@ -256,10 +254,11 @@ async function handleSendMessage(senderId, ws, data) {
   sendToUser(receiverId, { type: "new_message", message });
 
   if (!isUserOnline(receiverId)) {
+    const receiverMessagesPath = receiverUser.role === "COACH" ? "/coach/messages" : "/client/messages";
     await sendPushToUser(receiverId, {
       title: `${message.sender.name} yeni mesaj gonderdi`,
       body: content.slice(0, 140),
-      url: `/messages?withUserId=${senderId}`
+      url: `${receiverMessagesPath}?withUserId=${senderId}`
     });
   }
 }

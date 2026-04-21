@@ -6,21 +6,6 @@ import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
 import { conversationQuerySchema, sendMessageSchema } from "@/validations/message";
 
-async function hasAcceptedRelation(userId: string, otherUserId: string) {
-  const relation = await prisma.coachClientRelation.findFirst({
-    where: {
-      status: "ACCEPTED",
-      OR: [
-        { coachId: userId, clientId: otherUserId },
-        { coachId: otherUserId, clientId: userId }
-      ]
-    },
-    select: { id: true }
-  });
-
-  return Boolean(relation);
-}
-
 export async function GET(request: Request) {
   const auth = await requireAuth();
   if (auth.error) return auth.error;
@@ -37,11 +22,6 @@ export async function GET(request: Request) {
   }
 
   const { withUserId, cursor, limit } = parsed.data;
-  const isRelated = await hasAcceptedRelation(auth.session.user.id, withUserId);
-
-  if (!isRelated) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
 
   // Cursor-based pagination: fetch `limit+1` items sorted desc to detect hasMore,
   // then reverse so the client always receives chronological order.
@@ -89,9 +69,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const isRelated = await hasAcceptedRelation(auth.session.user.id, parsed.data.receiverId);
-  if (!isRelated) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (parsed.data.receiverId === auth.session.user.id) {
+    return NextResponse.json({ error: "Kendine mesaj gonderemezsin" }, { status: 400 });
+  }
+
+  const receiver = await prisma.user.findUnique({
+    where: { id: parsed.data.receiverId },
+    select: { id: true, role: true, pushSubscription: true }
+  });
+
+  if (!receiver) {
+    return NextResponse.json({ error: "Alici bulunamadi" }, { status: 404 });
   }
 
   const message = await prisma.message.create({
@@ -115,15 +103,12 @@ export async function POST(request: Request) {
     }
   });
 
-  const receiver = await prisma.user.findUnique({
-    where: { id: parsed.data.receiverId },
-    select: { pushSubscription: true }
-  });
+  const receiverMessagesPath = receiver.role === "COACH" ? "/coach/messages" : "/client/messages";
 
   const pushResult = await sendPushNotification(receiver?.pushSubscription, {
     title: `${message.sender.name} yeni mesaj gonderdi`,
     body: message.content.slice(0, 140),
-    url: `/messages?withUserId=${auth.session.user.id}`
+    url: `${receiverMessagesPath}?withUserId=${auth.session.user.id}`
   });
 
   if (pushResult.expired) {

@@ -25,7 +25,7 @@ type NavItem = { href: string; label: string; icon: React.ElementType };
 const coachLinks: NavItem[] = [
   { href: "/coach/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/coach/clients", label: "Clientler", icon: Users },
-  { href: "/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/coach/templates", label: "Template'ler", icon: ClipboardList },
   { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
   { href: "/coach/profile", label: "Profil", icon: User },
@@ -34,7 +34,7 @@ const coachLinks: NavItem[] = [
 const clientLinks: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/client/coaches", label: "Coach Bul", icon: UserSearch },
-  { href: "/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/workouts", label: "Geçmiş", icon: History },
   { href: "/client/marketplace", label: "Keşfet", icon: Compass },
   { href: "/client/profile", label: "Profil", icon: User },

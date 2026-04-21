@@ -303,8 +303,12 @@ export function MessagesClient({
     try {
       const controller = new AbortController();
       const timeoutId = window.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+      const preferred = preferredPeerRef.current;
+      const threadsUrl = preferred
+        ? `/api/messages/threads?withUserId=${encodeURIComponent(preferred)}`
+        : "/api/messages/threads";
 
-      const response = await fetch("/api/messages/threads", {
+      const response = await fetch(threadsUrl, {
         cache: "no-store",
         signal: controller.signal
       }).finally(() => {
@@ -647,7 +651,7 @@ export function MessagesClient({
           {threads.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
               <MessageCircle className="h-12 w-12 text-muted-foreground/40" />
-              <p className="text-sm">Henüz mesajlaşabileceğin bağlantı yok.</p>
+              <p className="text-sm">Henüz konuşma yok.</p>
               <button
                 type="button"
                 onClick={handleRefresh}

@@ -29,7 +29,7 @@ const coachItems: NavItem[] = [
   { href: "/coach/clients", label: "Clientler", icon: Users },
   { href: "/coach/templates", label: "Program", icon: ClipboardList },
   { href: "/coach/exercises", label: "Egzersiz", icon: Dumbbell },
-  { href: "/messages", label: "Mesaj", icon: MessageCircle },
+  { href: "/coach/messages", label: "Mesaj", icon: MessageCircle },
   { href: "/coach/profile", label: "Profil", icon: User },
 ];
 
@@ -38,7 +38,7 @@ const clientItems: NavItem[] = [
   { href: "/client/workouts", label: "Geçmiş", icon: History },
   { href: "/client/coaches", label: "Koçlar", icon: UserSearch },
   { href: "/client/marketplace", label: "Keşfet", icon: Compass },
-  { href: "/messages", label: "Mesaj", icon: MessageCircle },
+  { href: "/client/messages", label: "Mesaj", icon: MessageCircle },
   { href: "/client/profile", label: "Profil", icon: User },
 ];
 

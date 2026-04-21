@@ -17,3 +17,12 @@ Egzersiz etiketleme (örnek: Chest/Back, Legs) için ayrı classification modeli
 Açıklama: Stitch geçmiş kartlarında kategorik rozetler var, mevcut şemada doğrudan alan bulunmuyor.
 Coach assessment tarafı yalnızca mevcut yorumlardan besleniyor.
 Açıklama: Stitch’teki zengin değerlendirme paneli ayrı “assessment” kaydı gibi davranıyor; bizde comments üzerinden gösterim var.
+
+mesajlar 
+
+Arama kutusu görsel olarak var, gerçek filtreleme davranışı yok.
+Sesli/görüntülü arama ikonları var, gerçek çağrı akışına bağlı değil.
+Resim/dosya eki gönderme UI’ı tam akış olarak bağlı değil.
+Typing indicator (yazıyor...) gerçek zamanlı olay olarak bağlı değil.
+“Canlı/online” durumu anlık presence sistemine değil, websocket bağlantı durumuna dayanıyor.
+Stitch’teki alt sabit özel mesaj nav barı birebir ayrı bir bar olarak kullanılmıyor; uygulamanın mevcut role shell navigasyonu korunuyor.

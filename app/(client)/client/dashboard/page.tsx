@@ -188,7 +188,7 @@ export default async function ClientDashboardPage() {
 
       <section className="relative min-h-[300px] overflow-hidden rounded-2xl bg-slate-950 p-6 text-white shadow-xl">
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
-        <div className="relative z-10 mt-20 space-y-4">
+        <div className="relative z-10 space-y-4">
           <div className="inline-flex items-center rounded-sm bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">Today's Session</div>
           <div className="space-y-1">
             <h3 className="text-3xl font-black uppercase leading-none tracking-tighter">

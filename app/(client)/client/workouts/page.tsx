@@ -47,12 +47,6 @@ export default async function ClientWorkoutsPage() {
             <p className="mb-1 text-sm uppercase tracking-widest text-secondary">Performance History</p>
             <h1 className="text-3xl font-bold text-on-surface md:text-4xl">Log</h1>
           </div>
-          <button
-            type="button"
-            className="rounded-lg bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-sm font-bold uppercase tracking-wider text-on-primary shadow-[0_4px_14px_rgba(157,67,0,0.3)]"
-          >
-            New Log
-          </button>
         </section>
         <div className="rounded-lg bg-surface-container-low p-8 text-center">
           <p className="text-on-surface-variant">
@@ -70,12 +64,6 @@ export default async function ClientWorkoutsPage() {
           <p className="mb-1 text-sm uppercase tracking-widest text-secondary">Performance History</p>
           <h1 className="text-3xl font-bold text-on-surface md:text-4xl">Log</h1>
         </div>
-        <button
-          type="button"
-          className="rounded-lg bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-sm font-bold uppercase tracking-wider text-on-primary shadow-[0_4px_14px_rgba(157,67,0,0.3)]"
-        >
-          New Log
-        </button>
       </section>
 
       <section className="grid grid-cols-3 gap-2 rounded-lg bg-surface-container-low p-3 md:max-w-md">
@@ -111,7 +99,7 @@ export default async function ClientWorkoutsPage() {
                 <Link
                   key={workout.id}
                   href={`/client/workouts/${workout.id}`}
-                  className="group relative block overflow-hidden rounded-lg bg-surface-container-low p-5 transition-colors hover:bg-surface-container"
+                  className="group relative block overflow-hidden rounded-lg p-5 transition-colors hover:bg-surface-container bg-slate-700/20"
                 >
                   <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
                   <div className="mb-3 flex items-start justify-between gap-3">

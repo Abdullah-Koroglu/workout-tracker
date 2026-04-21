@@ -30,33 +30,35 @@ type NavItem = {
 const coachItems: NavItem[] = [
   { href: "/coach/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/coach/clients", label: "Client Roster", icon: Users },
-  { href: "/coach/templates", label: "Workout Builder", icon: ClipboardList },
-  { href: "/coach/exercises", label: "Analytics", icon: Dumbbell },
-  { href: "/coach/messages", label: "Messages", icon: MessageCircle },
-  { href: "/coach/profile", label: "Settings", icon: User },
+  { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
+  { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
+  { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/coach/profile", label: "Profil", icon: User },
 ];
 
 const clientItems: NavItem[] = [
-  { href: "/client/dashboard", label: "Today", icon: LayoutDashboard },
-  { href: "/client/workouts", label: "Library", icon: History },
-  { href: "/client/coaches", label: "Progress", icon: UserSearch },
-  { href: "/client/marketplace", label: "Explore", icon: Compass },
-  { href: "/client/messages", label: "Messages", icon: MessageCircle },
-  { href: "/client/profile", label: "Profile", icon: User },
+  { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/client/workouts", label: "Geçmiş", icon: History },
+  { href: "/client/coaches", label: "Gelişim", icon: UserSearch },
+  { href: "/client/marketplace", label: "Keşfet", icon: Compass },
+  { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/client/profile", label: "Profil", icon: User },
 ];
 
 const coachMobileItems: NavItem[] = [
-  { href: "/coach/dashboard", label: "Today", icon: LayoutDashboard },
-  { href: "/coach/templates", label: "Library", icon: ClipboardList },
-  { href: "/coach/clients", label: "Progress", icon: Users },
-  { href: "/coach/profile", label: "Profile", icon: User },
+  { href: "/coach/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
+  { href: "/coach/clients", label: "Client Roster", icon: Users },
+  { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/coach/profile", label: "Profil", icon: User },
 ];
 
 const clientMobileItems: NavItem[] = [
-  { href: "/client/dashboard", label: "Today", icon: LayoutDashboard },
-  { href: "/client/workouts", label: "Library", icon: History },
-  { href: "/client/coaches", label: "Progress", icon: UserSearch },
-  { href: "/client/profile", label: "Profile", icon: User },
+  { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "/client/workouts", label: "Geçmiş", icon: History },
+  { href: "/client/marketplace", label: "Keşfet", icon: Compass },
+  { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/client/profile", label: "Profil", icon: User },
 ];
 
 function isActive(pathname: string, href: string) {
@@ -73,6 +75,7 @@ export function RoleNavShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isMessagesRoute = pathname.startsWith("/client/messages") || pathname.startsWith("/coach/messages");
   const items = role === "COACH" ? coachItems : clientItems;
   const mobileItems = role === "COACH" ? coachMobileItems : clientMobileItems;
 
@@ -85,6 +88,7 @@ export function RoleNavShell({
 
   return (
     <div className="relative min-h-screen">
+      {!isMessagesRoute ? (
       <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col bg-slate-900 py-8 shadow-2xl md:flex">
         <div className="mb-10 flex items-center gap-3 px-6">
           <Image src="/logo.png" alt="Logo" width={32} height={32} className="h-8 w-8 rounded-full" />
@@ -129,8 +133,13 @@ export function RoleNavShell({
           </div>
         </div>
       </aside>
+      ) : null}
 
-      <main className="min-h-screen pb-24 transition-all duration-300 md:pb-8">
+      <main className={[
+        "min-h-screen transition-all duration-300",
+        isMessagesRoute ? "pb-0" : "pb-24 md:pb-8"
+      ].join(" ")}>
+        {!isMessagesRoute ? (
         <header className="fixed left-0 right-0 z-30 flex h-16 items-center justify-between bg-white/80 px-6 backdrop-blur-md md:left-64">
           <div>
             {/* <h1 className="text-xl font-bold tracking-tight text-slate-900">{currentLabel}</h1> */}
@@ -161,10 +170,15 @@ export function RoleNavShell({
             </button>
           </div>
         </header>
+        ) : null}
 
-        <div className="mx-auto px-4 pt-20 md:pt-24 md:px-8 md:pl-64 md:max-w-[120rem]">{children}</div>
+        <div className={[
+          "mx-auto px-0",
+          isMessagesRoute ? "pt-0 md:pt-0 md:pl-0 md:max-w-none" : "pt-20 md:pt-24 md:pl-64 md:max-w-[120rem]"
+        ].join(" ")}>{children}</div>
       </main>
 
+      {!isMessagesRoute ? (
       <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around rounded-t-xl bg-white/90 px-2 pb-4 backdrop-blur-lg shadow-[0_-4px_24px_rgba(0,0,0,0.06)] md:hidden">
         {mobileItems.map(({ href, label, icon: Icon }) => {
           const active = isActive(pathname, href);
@@ -185,6 +199,7 @@ export function RoleNavShell({
           );
         })}
       </nav>
+      ) : null}
     </div>
   );
 }

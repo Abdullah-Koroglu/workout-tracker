@@ -13,5 +13,5 @@ export default async function CoachMessagesPage() {
     redirect("/client/messages");
   }
 
-  return <MessagesClient currentUserId={session.user.id} currentUserRole={session.user.role} />;
+  return <MessagesClient currentUserId={session.user.id} />;
 }

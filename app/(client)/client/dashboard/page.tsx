@@ -1,325 +1,194 @@
 import Link from "next/link";
-import { Check, List, NotebookText, Play, Plus, TrendingDown, TrendingUp } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Play, Zap } from "lucide-react";
 
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
-import { getCurrentDayStart } from "@/lib/current-date";
+import { prisma } from "@/lib/prisma";
 
 export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
 
-  const [assignments, workouts, comments, relations, inProgressWorkout, completedWorkoutCount, unreadMessageCount, totalCommentCount, recentSets] = await Promise.all([
+  const [assignments, inProgressWorkout, completedWorkoutCount, recentWorkouts] = await Promise.all([
     prisma.templateAssignment.findMany({
       where: { clientId },
       include: {
         template: {
           include: {
             exercises: {
-              include: {
-                exercise: true
-              },
-              orderBy: {
-                order: "asc"
-              }
+              include: { exercise: true },
+              orderBy: { order: "asc" }
             }
           }
         },
-        workouts: {
-          select: { status: true }
-        }
+        workouts: { select: { status: true } }
       },
-      orderBy: { createdAt: "desc" }
-    }),
-    prisma.workout.findMany({
-      where: { clientId, status: { in: ["COMPLETED", "ABANDONED"] } },
-      include: { template: true },
-      orderBy: { startedAt: "desc" },
+      orderBy: { scheduledFor: "asc" },
       take: 6
-    }),
-    prisma.comment.findMany({
-      where: { workout: { clientId } },
-      include: { author: true },
-      orderBy: { createdAt: "desc" },
-      take: 4
-    }),
-    prisma.coachClientRelation.findMany({
-      where: { clientId, status: "ACCEPTED" },
-      include: { coach: true },
-      orderBy: { createdAt: "desc" }
     }),
     prisma.workout.findFirst({
       where: { clientId, status: "IN_PROGRESS" },
       include: { template: true },
       orderBy: { startedAt: "desc" }
     }),
-    prisma.workout.count({
-      where: { clientId, status: "COMPLETED" }
-    }),
-    prisma.message.count({
-      where: { receiverId: clientId, isRead: false }
-    }),
-    prisma.comment.count({
-      where: { workout: { clientId } }
-    })
-    ,
-    prisma.workoutSet.findMany({
-      where: {
-        workout: { clientId }
-      },
-      include: {
-        workout: {
-          select: { startedAt: true }
-        }
-      },
-      orderBy: { workout: { startedAt: "desc" } },
-      take: 250
+    prisma.workout.count({ where: { clientId, status: "COMPLETED" } }),
+    prisma.workout.findMany({
+      where: { clientId },
+      include: { template: true },
+      orderBy: { startedAt: "desc" },
+      take: 6
     })
   ]);
 
-  const today = getCurrentDayStart();
+  const fallbackAssignment = assignments[0] || null;
+  const targetWorkoutName = inProgressWorkout?.template.name || fallbackAssignment?.template.name || "Dinlenme Gunu";
+  const targetWorkoutHref = inProgressWorkout
+    ? `/client/workout/${inProgressWorkout.assignmentId}/start`
+    : fallbackAssignment
+      ? `/client/workout/${fallbackAssignment.id}/start`
+      : "/client/workouts";
 
-  const assignmentItems = assignments.map((assignment: (typeof assignments)[number]) => {
-    const scheduledFor = new Date(assignment.scheduledFor);
-    scheduledFor.setHours(0, 0, 0, 0);
-
-    const isConsumed = assignment.isOneTime && assignment.workouts.some((workout: { status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED" }) =>
-      workout.status === "COMPLETED" || workout.status === "ABANDONED"
-    );
-
-    return {
-      ...assignment,
-      isToday: scheduledFor.toDateString() === today.toDateString(),
-      isPast: scheduledFor.getTime() < today.getTime(),
-      isConsumed
-    };
-  }).filter((assignment: { isPast: boolean; isConsumed: boolean }) => !assignment.isPast && !assignment.isConsumed);
-
-  
-
-  const todayAssignments = assignmentItems.filter((assignment: DashboardAssignment) => assignment.isToday);
-  const todaySession = inProgressWorkout ?? null;
-
-  const startOfWeek = new Date(today);
-  const dayOffset = (startOfWeek.getDay() + 6) % 7;
-  startOfWeek.setDate(startOfWeek.getDate() - dayOffset);
-
-  const weekSlots = Array.from({ length: 6 }).map((_, index) => {
-    const d = new Date(startOfWeek);
-    d.setDate(startOfWeek.getDate() + index);
-    return d;
-  });
-
-  const completedDayKeys = new Set(
-    workouts
-      .filter((workout) => workout.status === "COMPLETED")
-      .map((workout) => {
-        const d = new Date(workout.startedAt);
-        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
-      })
-  );
-
-  const fallbackTodayAssignment = todayAssignments[0];
-
-  const volumeByDay = weekSlots.map((day) => {
-    const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-    const dayVolume = recentSets.reduce((total, set) => {
-      const started = new Date(set.workout.startedAt);
-      const setKey = `${started.getFullYear()}-${started.getMonth()}-${started.getDate()}`;
-      if (setKey !== key) return total;
-      return total + (set.weightKg ?? 0) * (set.reps ?? 0);
-    }, 0);
-    return dayVolume;
-  });
-
-  const maxVolume = Math.max(...volumeByDay, 1);
-  const latestWeightSet = recentSets.find((set) => typeof set.weightKg === "number" && set.weightKg > 0);
-  const currentWeight = latestWeightSet?.weightKg ?? 0;
-  const weeklyVolumeTons = (volumeByDay.reduce((sum, value) => sum + value, 0) / 1000).toFixed(1);
-  const nutritionProgress = 75;
-
-  const dayNames = ["MON", "TUE", "WED", "THU", "FRI", "SAT"];
-
-  type DashboardAssignment = (typeof assignmentItems)[number];
-
-  const latestComments = comments.slice(0, 2);
+  const upcoming = assignments.slice(0, 3);
+  const loadScore = Math.min(95, Math.max(40, completedWorkoutCount * 8));
+  const hrvScore = Math.min(90, Math.max(40, completedWorkoutCount * 6));
 
   return (
     <div className="space-y-8 pb-8">
-      <section className="space-y-1">
-        <h1 className="leading-none tracking-tighter text-4xl font-black text-slate-900">
-          PUSH FOR <br /> <span className="italic text-orange-600">PRECISION</span>
-        </h1>
-        <p className="text-sm font-medium text-slate-500">{completedWorkoutCount} sessions down. The goal is in sight.</p>
+      <section className="space-y-2">
+        <h2 className="text-4xl font-black uppercase tracking-tight text-on-surface md:text-5xl">HEDEFE ODAKLAN</h2>
+        <p className="text-lg font-medium text-secondary">{completedWorkoutCount} seans tamamlandi. Hedef artik cok yakin.</p>
       </section>
 
-      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-bold tracking-tight text-slate-900">Weekly Focus</h2>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-orange-600">{new Date().toLocaleDateString("en-US", { month: "long" })}</span>
-        </div>
-        <div className="flex items-center justify-between text-center">
-          {weekSlots.map((day, index) => {
-            const key = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
-            const isToday = day.toDateString() === today.toDateString();
-            const isCompleted = completedDayKeys.has(key);
-
-            return (
-              <div key={key} className="flex flex-col items-center space-y-2">
-                <span className={`text-[10px] ${isToday ? "font-bold text-slate-900" : "text-slate-400"}`}>{dayNames[index]}</span>
-                {isCompleted ? (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-orange-600 text-white">
-                    <Check className="h-4 w-4" />
-                  </div>
-                ) : isToday ? (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl border-2 border-orange-600 text-sm font-black text-orange-600">
-                    {day.getDate()}
-                  </div>
-                ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100">
-                    <div className="h-1.5 w-1.5 rounded-full bg-slate-300" />
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section className="relative min-h-[300px] overflow-hidden rounded-2xl bg-slate-950 p-6 text-white shadow-xl">
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
-        <div className="relative z-10 space-y-4">
-          <div className="inline-flex items-center rounded-sm bg-orange-600 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-white">Today's Session</div>
+      <section className="relative overflow-hidden rounded-xl bg-secondary text-on-tertiary shadow-xl">
+        <div className="absolute inset-0 z-10 bg-gradient-to-br from-secondary/90 via-secondary/70 to-transparent" />
+        <div className="relative z-20 space-y-6 p-8">
           <div className="space-y-1">
-            <h3 className="text-3xl font-black uppercase leading-none tracking-tighter">
-              {todaySession ? todaySession.template.name : fallbackTodayAssignment ? fallbackTodayAssignment.template.name : "Recovery Day"}
-            </h3>
-            <p className="text-sm text-slate-400">
-              {todaySession
-                ? "Focus: Active workout in progress"
-                : fallbackTodayAssignment
-                  ? "Focus: Assigned template ready"
-                  : "Focus: New assignment bekleniyor"}
-            </p>
+            <span className="text-[10px] font-label uppercase tracking-[0.2em] opacity-80">Bugunun Seansi</span>
+            <h3 className="text-3xl font-extrabold leading-none tracking-tighter">{targetWorkoutName.toUpperCase()}</h3>
           </div>
-          <div className="flex gap-4 text-xs font-bold uppercase tracking-widest text-slate-300">
-            <span className="flex items-center gap-1">
-              <NotebookText className="h-4 w-4" /> {assignmentItems.length} TASKS
-            </span>
-            <span className="flex items-center gap-1">
-              <List className="h-4 w-4" /> {workouts.length} SESSIONS
-            </span>
+
+          <div className="flex items-center gap-6">
+            <div className="flex flex-col">
+              <span className="text-xs font-label uppercase tracking-widest opacity-70">Gorev</span>
+              <span className="text-lg font-bold">{assignments.length} PLAN</span>
+            </div>
+            <div className="h-8 w-px bg-on-tertiary/20" />
+            <div className="flex flex-col">
+              <span className="text-xs font-label uppercase tracking-widest opacity-70">Tamamlanan</span>
+              <span className="text-lg font-bold">{completedWorkoutCount} SEANS</span>
+            </div>
           </div>
+
           <Link
-            href={todaySession ? `/client/workout/${todaySession.assignmentId}/start` : fallbackTodayAssignment ? `/client/workout/${fallbackTodayAssignment.id}/start` : "/client/workouts"}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-600 py-4 text-lg font-black uppercase tracking-tight text-white transition-all hover:bg-orange-700"
+            href={targetWorkoutHref}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-container px-8 py-4 text-lg font-bold uppercase tracking-widest text-white shadow-lg transition-transform active:scale-[0.98]"
           >
-            START WORKOUT
+            ANTRENMANI BASLAT
             <Play className="h-5 w-5" />
           </Link>
         </div>
       </section>
 
-      <section className="grid grid-cols-2 gap-4">
-        <div className="flex h-40 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Weight</span>
-            <TrendingDown className="h-4 w-4 text-slate-400" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-black text-slate-900">{currentWeight.toFixed(1)}<span className="ml-1 text-xs text-slate-400">KG</span></div>
-            <div className="flex h-12 items-end gap-1">
-              {volumeByDay.map((value, index) => (
-                <div
-                  key={`${value}-${index}`}
-                  className={`w-full rounded-t-sm ${index === volumeByDay.length - 1 ? "bg-orange-200" : "bg-slate-100"}`}
-                  style={{ height: `${Math.max(Math.round((value / maxVolume) * 100), 16)}%` }}
-                />
-              ))}
-            </div>
-          </div>
+      <section className="space-y-4">
+        <div className="flex items-end justify-between">
+          <h3 className="text-xl font-bold tracking-tight text-secondary">Yaklasan Plan</h3>
+          <Link href="/client/calendar" className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+            Tum Takvim <CalendarDays className="h-4 w-4" />
+          </Link>
         </div>
-        <div className="flex h-40 flex-col justify-between rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-          <div className="flex items-start justify-between">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Volume</span>
-            <TrendingUp className="h-4 w-4 text-orange-600" />
-          </div>
-          <div className="space-y-1">
-            <div className="text-2xl font-black text-slate-900">{weeklyVolumeTons}<span className="ml-1 text-xs text-slate-400">T</span></div>
-            <div className="flex h-12 items-end gap-1">
-              {volumeByDay.map((value, index) => (
-                <div
-                  key={`${value}-v-${index}`}
-                  className={`w-full rounded-t-sm ${index === volumeByDay.length - 1 ? "bg-orange-600" : "bg-slate-100"}`}
-                  style={{ height: `${Math.max(Math.round((value / maxVolume) * 100), 16)}%` }}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="flex items-center justify-between rounded-2xl bg-slate-900 p-6 text-white shadow-lg">
         <div className="space-y-3">
-          <h4 className="font-bold">Nutrition Status</h4>
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-12 w-12 items-center justify-center">
-              <svg className="h-full w-full -rotate-90" viewBox="0 0 48 48" fill="none">
-                <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="4" className="text-slate-800" />
-                <circle
-                  cx="24"
-                  cy="24"
-                  r="20"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  className="text-orange-500"
-                  strokeDasharray="125"
-                  strokeDashoffset={String(125 - (nutritionProgress / 100) * 125)}
-                />
-              </svg>
-              <span className="absolute text-[10px] font-black text-white">{nutritionProgress}%</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xs font-bold">Tracking yakinda</span>
-              <span className="text-[10px] text-slate-400">Beslenme log modulu henuz aktif degil</span>
-            </div>
-          </div>
+          {upcoming.length === 0 ? (
+            <div className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface-variant">Yaklaşan atama bulunmuyor.</div>
+          ) : (
+            upcoming.map((assignment) => (
+              <Link
+                key={assignment.id}
+                href="/client/calendar"
+                className="group flex cursor-pointer items-center gap-4 rounded-lg bg-surface-container-low p-4 transition-colors active:bg-surface-container-high"
+              >
+                <div className="flex min-w-[3.5rem] flex-col items-center justify-center rounded-lg bg-surface-container-highest py-2">
+                  <span className="text-[10px] font-bold uppercase text-secondary/60">
+                    {new Date(assignment.scheduledFor).toLocaleDateString("tr-TR", { weekday: "short" })}
+                  </span>
+                  <span className="text-xl font-black text-secondary">{new Date(assignment.scheduledFor).getDate()}</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-secondary">{assignment.template.name}</h4>
+                  <p className="text-sm font-medium text-on-surface-variant">
+                    {assignment.template.exercises.length} egzersiz • {assignment.workouts.some((w) => w.status === "COMPLETED") ? "Tamamlandi" : "Planli"}
+                  </p>
+                </div>
+                <div className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase text-primary">
+                  {assignment.workouts.some((w) => w.status === "COMPLETED") ? "Bitti" : "Bekliyor"}
+                </div>
+              </Link>
+            ))
+          )}
         </div>
-        <button type="button" className="rounded-full bg-orange-600 p-3 text-white transition-transform active:scale-95" aria-label="add nutrition">
-          <Plus className="h-5 w-5" />
-        </button>
       </section>
 
-      <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h4 className="font-bold text-slate-900">Coach Notes</h4>
-          <Link href="/client/messages" className="text-xs font-bold text-orange-600 hover:underline">
-            Message Center ({unreadMessageCount})
-          </Link>
-        </div>
-        {latestComments.length === 0 ? (
-          <p className="text-sm text-slate-500">Henüz coach notu yok.</p>
-        ) : (
-          <div className="space-y-2">
-            {latestComments.map((comment) => (
-              <div key={comment.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-sm text-slate-700">{comment.content}</p>
-                <p className="mt-1 text-xs text-slate-500">{comment.author.name}</p>
-              </div>
-            ))}
+      <section className="grid grid-cols-2 gap-4">
+        <div className="rounded-lg border-l-4 border-primary bg-white p-6 shadow-sm">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Yuk Skoru</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-3xl font-black text-secondary">{loadScore}</span>
+            <span className="text-xs font-bold text-slate-400">/100</span>
           </div>
-        )}
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <Link href="/client/coaches" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
-            Coach Network ({relations.length})
-          </Link>
-          <Link href="/client/workouts" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
-            Workout Library
-          </Link>
-          <div className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700">Comments: {totalCommentCount}</div>
-          <div className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700">Completed: {completedWorkoutCount}</div>
         </div>
+        <div className="rounded-lg border-l-4 border-tertiary bg-white p-6 shadow-sm">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">HRV Durumu</span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-3xl font-black text-secondary">{hrvScore}</span>
+            <span className="text-xs font-bold text-slate-400">ms</span>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg bg-on-surface p-6 text-surface">
+        <h3 className="relative z-10 text-lg font-black tracking-tight">HAFTALIK ODAK</h3>
+        <div className="relative z-10 mt-4 space-y-4">
+          <div className="flex items-end justify-between">
+            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Toplam Stres</span>
+            <span className="text-2xl font-black text-primary-container">{300 + completedWorkoutCount * 20} <span className="text-xs">TSS</span></span>
+          </div>
+          <div className="h-1 w-full overflow-hidden rounded-full bg-surface/10">
+            <div className="h-full bg-primary-container" style={{ width: `${Math.min(95, 40 + completedWorkoutCount * 8)}%` }} />
+          </div>
+          <p className="text-[10px] leading-relaxed opacity-70">Toparlanma için bu gece uyku ve beslenme rutininizi koruyun.</p>
+        </div>
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="text-sm font-black tracking-tight text-secondary">Son Seanslar</h3>
+        {recentWorkouts.length === 0 ? (
+          <div className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface-variant">Henüz geçmiş seans yok.</div>
+        ) : (
+          recentWorkouts.slice(0, 2).map((workout) => (
+            <div key={workout.id} className="flex items-center gap-3 rounded-lg bg-surface-container-low p-4">
+              <CheckCircle2 className="h-5 w-5 text-primary" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-on-surface">{workout.template.name}</p>
+                <p className="text-xs text-secondary">{new Date(workout.startedAt).toLocaleString("tr-TR")}</p>
+              </div>
+              <Zap className="h-4 w-4 text-tertiary" />
+            </div>
+          ))
+        )}
+      </section>
+
+      <section className="grid grid-cols-2 gap-3">
+        <Link href="/client/calendar" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+          Takvim Plani
+        </Link>
+        <Link href="/client/workouts" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+          Antreman Arsivi
+        </Link>
+        <Link href="/client/coaches" className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+          Koc Agi
+        </Link>
+        <Link href="/client/messages" className="inline-flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600">
+          Mesajlar <ArrowRight className="h-4 w-4" />
+        </Link>
       </section>
     </div>
   );

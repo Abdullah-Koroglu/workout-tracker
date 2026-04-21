@@ -268,7 +268,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       <section className="grid grid-cols-2 gap-4">
         <div className="h-24 rounded-sm border-l-4 border-primary bg-secondary p-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">Total Volume</p>
-          <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-white">{exerciseManager.exerciseSets.length} sets</p>
+          <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-white">{exerciseManager.exerciseState.reduce((acc, ex) => acc + ex.exerciseSets.length, 0)} sets</p>
         </div>
         <div className="h-24 rounded-sm border-2 border-secondary/10 bg-white p-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-outline">Target RPE</p>

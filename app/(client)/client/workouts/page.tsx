@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, ChevronRight, ClipboardList, MessageSquareText, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
@@ -41,14 +41,21 @@ export default async function ClientWorkoutsPage() {
 
   if (workouts.length === 0) {
     return (
-      <div className="space-y-4">
-        <section className="overflow-hidden rounded-xl bg-gradient-to-br from-card via-muted/20 to-background p-4 shadow-sm ring-1 ring-black/5 md:p-6">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary md:text-xs">Performance History</p>
-          <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">Antrenman Geçmişi</h1>
-          <p className="mt-2 text-xs text-slate-600 md:text-sm">Tamamlanan ve yarıda bırakılan tüm antrenmanlarını buradan takip et.</p>
+      <div className="space-y-6">
+        <section className="mb-2 flex items-end justify-between">
+          <div>
+            <p className="mb-1 text-sm uppercase tracking-widest text-secondary">Performance History</p>
+            <h1 className="text-3xl font-bold text-on-surface md:text-4xl">Log</h1>
+          </div>
+          <button
+            type="button"
+            className="rounded-lg bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-sm font-bold uppercase tracking-wider text-on-primary shadow-[0_4px_14px_rgba(157,67,0,0.3)]"
+          >
+            New Log
+          </button>
         </section>
-        <div className="rounded-xl bg-muted/40 p-8 text-center">
-          <p className="text-muted-foreground">
+        <div className="rounded-lg bg-surface-container-low p-8 text-center">
+          <p className="text-on-surface-variant">
             Henüz tamamlanan antrenman bulunmamaktadır
           </p>
         </div>
@@ -57,35 +64,39 @@ export default async function ClientWorkoutsPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-5">
-      <section className="overflow-hidden rounded-xl bg-gradient-to-br from-card via-muted/20 to-background p-4 shadow-sm ring-1 ring-black/5 md:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary md:text-xs">Performance History</p>
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 md:text-3xl">Antrenman Geçmişi</h1>
-            <p className="mt-2 text-xs text-slate-600 md:text-sm">Set ve yorum detaylarıyla eski antrenmanlarını incele.</p>
-          </div>
-          <div className="grid grid-cols-3 gap-2 sm:w-auto">
-            <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Toplam</p>
-              <p className="mt-1 text-lg font-black text-slate-900">{workouts.length}</p>
-            </div>
-            <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Tamam</p>
-              <p className="mt-1 text-lg font-black text-secondary">{completedCount}</p>
-            </div>
-            <div className="rounded-lg bg-background px-3 py-2 shadow-sm ring-1 ring-black/5">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-slate-500">Yarıda</p>
-              <p className="mt-1 text-lg font-black text-primary">{abandonedCount}</p>
-            </div>
-          </div>
+    <div className="space-y-6 pb-8">
+      <section className="mb-2 flex items-end justify-between">
+        <div>
+          <p className="mb-1 text-sm uppercase tracking-widest text-secondary">Performance History</p>
+          <h1 className="text-3xl font-bold text-on-surface md:text-4xl">Log</h1>
+        </div>
+        <button
+          type="button"
+          className="rounded-lg bg-gradient-to-br from-primary to-primary-container px-4 py-2 text-sm font-bold uppercase tracking-wider text-on-primary shadow-[0_4px_14px_rgba(157,67,0,0.3)]"
+        >
+          New Log
+        </button>
+      </section>
+
+      <section className="grid grid-cols-3 gap-2 rounded-lg bg-surface-container-low p-3 md:max-w-md">
+        <div className="rounded-md bg-surface px-3 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Toplam</p>
+          <p className="mt-1 text-lg font-black text-on-surface">{workouts.length}</p>
+        </div>
+        <div className="rounded-md bg-surface px-3 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Tamam</p>
+          <p className="mt-1 text-lg font-black text-secondary">{completedCount}</p>
+        </div>
+        <div className="rounded-md bg-surface px-3 py-2 text-center">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Yarıda</p>
+          <p className="mt-1 text-lg font-black text-primary">{abandonedCount}</p>
         </div>
       </section>
 
       <div className="space-y-6">
         {Object.entries(grouped).map(([month, monthWorkouts]) => (
-          <section key={month} className="space-y-2.5 md:space-y-3">
-            <h2 className="text-sm font-black uppercase tracking-[0.18em] text-muted-foreground">{month}</h2>
+          <section key={month} className="space-y-4">
+            <h2 className="sticky top-16 z-10 bg-surface/90 py-2 text-lg font-semibold text-on-surface-variant backdrop-blur-sm">{month}</h2>
 
             {monthWorkouts.map((workout) => {
               const date = workout.finishedAt
@@ -100,49 +111,39 @@ export default async function ClientWorkoutsPage() {
                 <Link
                   key={workout.id}
                   href={`/client/workouts/${workout.id}`}
-                  className="group block rounded-xl bg-card p-3.5 shadow-sm ring-1 ring-black/5 transition-all hover:-translate-y-0.5 hover:shadow-md md:p-4"
+                  className="group relative block overflow-hidden rounded-lg bg-surface-container-low p-5 transition-colors hover:bg-surface-container"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="line-clamp-2 text-base font-semibold text-gray-900 md:text-lg group-hover:text-primary">
+                  <div className="absolute bottom-0 left-0 top-0 w-1 bg-primary opacity-0 transition-opacity group-hover:opacity-100" />
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <div>
+                      <h3 className="text-xl font-bold text-on-surface transition-colors group-hover:text-primary">
                         {workout.template.name}
                       </h3>
-                      <div className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground md:text-sm">
-                        <CalendarDays className="h-3.5 w-3.5" />
-                        {date}
-                      </div>
-                      <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <p className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold md:text-xs ${workout.status === "ABANDONED" ? "bg-primary/15 text-foreground" : "bg-secondary/20 text-secondary"}`}>
-                          {workout.status === "ABANDONED" ? "Yarıda bırakıldı" : "Tamamlandı"}
-                        </p>
-                        {hasPr ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-1 text-[11px] font-bold text-foreground">
-                            <Trophy className="h-3 w-3" />
-                            PR
-                          </span>
-                        ) : null}
-                      </div>
+                      <p className="mt-1 text-sm text-secondary">
+                        {date} • {setCount} set • {Math.max(1, Math.round(setCount * 2.5))} dk
+                      </p>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <ChevronRight className="h-5 w-5 text-slate-400" />
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="rounded-md bg-muted/50 px-2 py-1.5 text-right">
-                          <p className="inline-flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
-                            <ClipboardList className="h-3 w-3" />
-                            Set
-                          </p>
-                          <p className="text-sm font-semibold text-foreground md:text-base">{setCount}</p>
-                        </div>
-                        <div className="rounded-md bg-muted/50 px-2 py-1.5 text-right">
-                          <p className="inline-flex items-center justify-end gap-1 text-[11px] text-muted-foreground">
-                            <MessageSquareText className="h-3 w-3" />
-                            Yorum
-                          </p>
-                          <p className="text-sm font-semibold text-foreground md:text-base">{commentCount}</p>
-                        </div>
-                      </div>
-                    </div>
+                    <span className="rounded-full bg-secondary-container px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">
+                      {workout.status === "ABANDONED" ? "Abandoned" : "Completed"}
+                    </span>
                   </div>
+
+                  <div className="flex items-center gap-3 text-sm">
+                    <span className="text-on-surface-variant">Yorum: {commentCount}</span>
+                    {hasPr ? (
+                      <span className="inline-flex items-center gap-1 font-bold text-primary">
+                        <Trophy className="h-4 w-4" />
+                        {workout.sets.filter((s) => s.completed).length > 0 ? "PR Set" : "PR"}
+                      </span>
+                    ) : null}
+                    <span className="ml-auto text-xs font-bold uppercase tracking-widest text-on-surface-variant">Detail</span>
+                  </div>
+
+                  {workout.status === "COMPLETED" ? (
+                    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-surface-variant">
+                      <div className="h-full w-[88%] bg-gradient-to-r from-primary to-primary-container" />
+                    </div>
+                  ) : null}
                 </Link>
               );
             })}

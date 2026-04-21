@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, Plus, Sparkles, Target, X } from "lucide-react";
+import { Bell, CheckCircle2, ChevronLeft, Dumbbell, Flame, Plus, Settings, Sparkles, Target, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import { CardioTimer } from "@/components/client/CardioTimer";
@@ -216,7 +216,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       success("Antrenman iptal edildi ve kaydedildi.");
       router.push("/client/dashboard");
       router.refresh();
-    } catch (err) {
+    } catch {
       warning("Antrenman iptal edilirken bir hata oluştu.");
       setCancelling(false);
     }
@@ -224,52 +224,57 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
 
   return (
-    <div className="space-y-3 md:space-y-6 pb-32 md:pb-28">
-      {/* Workout Header */}
-      <div className="overflow-hidden rounded-xl md:rounded-[28px] border border-black/10 bg-gradient-to-br from-surface/95 via-white/95 to-primary/10 shadow-sm backdrop-blur">
-        <div className="p-3 md:p-4">
-            <div className="flex items-center justify-between gap-2">
-              <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-[11px] md:text-xs font-semibold text-primary hover:text-primary/80">
-                <ChevronLeft className="h-3 w-3" />
-                Dashboard
-              </Link>
-              <div className="flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[10px] md:text-xs font-semibold text-slate-700">
-                <Clock className="h-3 w-3 text-primary" />
-                {formatTime(elapsedSeconds)}
-              </div>
+    <div className="space-y-4 pb-32 md:space-y-6 md:pb-28">
+      <div className="sticky top-0 z-20 -mx-4 border-b border-outline-variant/30 bg-white/90 px-4 py-3 backdrop-blur-xl md:mx-0 md:rounded-lg md:border">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link href="/client/dashboard" className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary/80">
+              <ChevronLeft className="h-3.5 w-3.5" /> Dashboard
+            </Link>
+            <div className="hidden items-center gap-1.5 rounded-sm bg-primary/10 px-2 py-0.5 sm:inline-flex">
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Wake Lock Active</span>
             </div>
-
-            <div className="mt-2 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-primary">Workout Session</p>
-                <h1 className="truncate text-sm md:text-xl font-black text-slate-900">{activeExercise.exercise.exercise.name}</h1>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] md:text-xs text-slate-500">Ilerleme</p>
-                <p className="text-sm md:text-lg font-black text-slate-900">%{exerciseManager.progressPercent}</p>
-              </div>
-            </div>
-
-            <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] md:text-xs">
-              <div className="rounded-lg bg-white px-2 py-1.5">
-                <p className="text-slate-500">Tamamlanan</p>
-                <p className="font-bold text-slate-900">{exerciseManager.completedExercises}/{exerciseManager.exerciseState.length}</p>
-              </div>
-              <div className="rounded-lg bg-white px-2 py-1.5">
-                <p className="text-slate-500">Mod</p>
-                <p className="font-bold text-slate-900">{activeExercise.exercise.exercise.type === "CARDIO" ? "Cardio" : "Weight"}</p>
-              </div>
-              <div className="rounded-lg bg-white px-2 py-1.5">
-                <p className="text-slate-500">Sıradaki</p>
-                <p className="font-bold text-slate-900">Set {activeExercise.nextSetNumber}</p>
-              </div>
-            </div>
-
-            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-primary/15">
-              <div className="h-full rounded-full bg-gradient-to-r from-primary to-secondary transition-all duration-500" style={{ width: `${exerciseManager.progressPercent}%` }} />
-            </div>
+          </div>
+          <div className="flex items-center gap-3 text-slate-700">
+            <Bell className="h-4 w-4" />
+            <Settings className="h-4 w-4" />
+          </div>
         </div>
       </div>
+
+      <section className="space-y-4">
+        <div className="flex flex-col gap-1">
+          <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
+            Exercise {Math.min(exerciseManager.completedExercises + 1, exerciseManager.exerciseState.length)} of {exerciseManager.exerciseState.length}
+          </span>
+          <h1 className="text-3xl font-black uppercase leading-[0.9] tracking-tighter text-secondary md:text-4xl">
+            {activeExercise.exercise.exercise.name}
+          </h1>
+        </div>
+
+        <div className="relative aspect-video overflow-hidden rounded-sm border-2 border-secondary bg-surface-container-high">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(249,115,22,0.20),transparent_35%),radial-gradient(circle_at_80%_70%,rgba(15,23,42,0.18),transparent_40%),linear-gradient(120deg,#f1f5f9,#e2e8f0)]" />
+          <div className="absolute bottom-4 right-4 flex items-center gap-2">
+            <div className="rounded-sm bg-secondary/80 px-3 py-2 text-xs font-black uppercase tracking-widest text-white">
+              {formatTime(elapsedSeconds)}
+            </div>
+            <div className="rounded-sm bg-primary px-3 py-2 text-xs font-black uppercase tracking-widest text-white">
+              %{exerciseManager.progressPercent}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid grid-cols-2 gap-4">
+        <div className="h-24 rounded-sm border-l-4 border-primary bg-secondary p-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">Total Volume</p>
+          <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-white">{exerciseManager.exerciseSets.length} sets</p>
+        </div>
+        <div className="h-24 rounded-sm border-2 border-secondary/10 bg-white p-4">
+          <p className="text-[10px] font-black uppercase tracking-widest text-outline">Target RPE</p>
+          <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-secondary">{activeExercise.suggestedValues.rir ? Math.max(1, 10 - activeExercise.suggestedValues.rir) : 8.5}</p>
+        </div>
+      </section>
 
       {/* Main Layout: Mobile Tabs + Desktop Sidebar */}
       <div className="space-y-3 md:space-y-6 md:grid md:gap-6 md:grid-cols-[280px_minmax(0,1fr)]">
@@ -401,7 +406,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
             <CardioExerciseSection
               exercise={activeExercise}
               workoutId={workoutState.workoutId}
-              cardioSeconds={cardioSeconds}
               cardioReachedEnd={cardioReachedEnd}
               onSecondChange={handleCardioSecondChange}
               onReachedEnd={handleCardioReachedEnd}
@@ -487,11 +491,11 @@ function WeightExerciseSection({
   savingKey: string | null;
 }) {
   return (
-    <div className="space-y-3 md:space-y-4 rounded-xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
+    <div className="space-y-3 rounded-sm border-2 border-secondary/5 bg-white p-4 md:space-y-4 md:p-6">
       <div className="space-y-3 md:space-y-0 md:flex md:flex-col md:gap-4 md:lg:flex-row md:lg:items-center md:lg:justify-between">
         <div>
-          <p className="text-xs md:text-sm font-semibold text-foreground">Set Planı</p>
-          <p className="text-xs md:text-sm text-muted-foreground mt-1">
+          <p className="text-xs font-black uppercase tracking-widest text-outline">Active Timer</p>
+          <p className="mt-1 text-xs text-muted-foreground md:text-sm">
             Planlanan {exercise.plannedSetCount} set. Artırabilir veya erken bitirebilirsin.
           </p>
         </div>
@@ -515,24 +519,29 @@ function WeightExerciseSection({
       </div>
 
       {/* Completed Sets Display */}
-      <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+      <div className="space-y-1.5">
+        <div className="grid grid-cols-5 border-b border-outline-variant/30 px-3 py-2 text-[10px] font-black uppercase tracking-[0.2em] text-outline">
+          <div>Set</div>
+          <div>Lbs</div>
+          <div>Reps</div>
+          <div>RIR</div>
+          <div className="text-right">Done</div>
+        </div>
         {exercise.exerciseSets.length === 0 ? (
-          <div className="col-span-2 md:col-span-3 rounded-lg border border-dashed p-3 md:p-4 text-xs md:text-sm text-muted-foreground bg-muted/30">
+          <div className="rounded-sm border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground md:p-4 md:text-sm">
             İlk seti gir. Öneriler alındı.
           </div>
         ) : (
           exercise.exerciseSets.map((setItem) => (
-            <div key={setItem.id} className="rounded-lg md:rounded-xl border bg-primary/10 border-primary/30 p-2 md:p-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-primary">Set {setItem.setNumber}</p>
-              {setItem.isPR ? (
-                <span className="mt-1 inline-flex rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-amber-700">
-                  PR
-                </span>
-              ) : null}
-              <div className="mt-2 space-y-1 text-xs md:text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">Kg:</span> <strong>{setItem.weightKg ?? 0}</strong></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">Rep:</span> <strong>{setItem.reps ?? 0}</strong></div>
-                <div className="flex justify-between"><span className="text-muted-foreground">RIR:</span> <strong>{setItem.rir ?? 0}</strong></div>
+            <div key={setItem.id} className="grid grid-cols-5 items-center rounded-sm bg-surface-container-low px-3 py-3">
+              <div className="font-bold text-secondary">{setItem.setNumber}</div>
+              <div className="font-bold text-secondary">{setItem.weightKg ?? 0}</div>
+              <div className="font-bold text-secondary">{setItem.reps ?? 0}</div>
+              <div className="font-bold text-secondary">{setItem.rir ?? 0}</div>
+              <div className="flex justify-end">
+                <div className="flex h-7 w-7 items-center justify-center rounded-sm bg-secondary text-white">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
               </div>
             </div>
           ))
@@ -574,7 +583,6 @@ function WeightExerciseSection({
 function CardioExerciseSection({
   exercise,
   workoutId,
-  cardioSeconds,
   cardioReachedEnd,
   onSecondChange,
   onReachedEnd,
@@ -584,7 +592,6 @@ function CardioExerciseSection({
 }: {
   exercise: ExerciseState;
   workoutId: string;
-  cardioSeconds: Record<string, number>;
   cardioReachedEnd: Record<string, boolean>;
   onSecondChange: (seconds: number) => void;
   onReachedEnd: () => void;

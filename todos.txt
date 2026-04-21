@@ -3,3 +3,17 @@ Client tarafında düzenli kilo trendi için ayrı bir body-metrics geçmiş mod
 Coach tarafında gerçek “Appointments” modülü (takvim etkinliği, platform/Zoom linki, toplantı türü) için ayrı tablo/akış yok.
 Coach activity kartlarında Stitch’teki gelişmiş metrikler (PR etiketi, toplam tonaj gibi her aktiviteye bağlı detaylı feed payload’ı) doğrudan saklanmıyor.
 Stitch mockup’ındaki medya/hero görselleri ve profil fotoğraf akışı uygulama verisinde zorunlu olmadığı için dinamik üretim kullanıldı.
+
+Athlete Log kalıcı veri modeli yok.
+Açıklama: Stitch bitiş/detay ekranındaki sporcu notu alanı tasarımda var ama veritabanına kaydedilen ayrı workout note alanı yok.
+Intensity rating kaydı yok.
+Açıklama: 1-10 yoğunluk seçim UI’ı eklendi ama henüz API/model tarafında saklanmıyor.
+Egzersiz bazlı medya içerik akışı yok.
+Açıklama: Stitch aktif antrenman ekranındaki gerçek egzersiz görsel/video, fullscreen ve play overlay kontrolü veriyle bağlı değil.
+Hedef RPE, rest goal, previous volume gibi performans hedefleri için ayrı plan verisi yok.
+Açıklama: Stitch’te metrikler bir program performans sistemi gibi; mevcut yapıda bunların bir kısmı türetilmiş, bir kısmı placeholder.
+History ekranındaki New Log aksiyonu gerçek bir manual log oluşturma akışına bağlı değil.
+Egzersiz etiketleme (örnek: Chest/Back, Legs) için ayrı classification modeli yok.
+Açıklama: Stitch geçmiş kartlarında kategorik rozetler var, mevcut şemada doğrudan alan bulunmuyor.
+Coach assessment tarafı yalnızca mevcut yorumlardan besleniyor.
+Açıklama: Stitch’teki zengin değerlendirme paneli ayrı “assessment” kaydı gibi davranıyor; bizde comments üzerinden gösterim var.

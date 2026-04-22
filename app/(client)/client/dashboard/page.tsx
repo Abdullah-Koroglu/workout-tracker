@@ -8,6 +8,8 @@ export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
 
+  const toDayKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+
   const [assignments, inProgressWorkout, completedWorkoutCount, recentWorkouts] = await Promise.all([
     prisma.templateAssignment.findMany({
       where: { clientId },
@@ -39,13 +41,11 @@ export default async function ClientDashboardPage() {
     })
   ]);
 
-  const fallbackAssignment = assignments[0] || null;
-  const targetWorkoutName = inProgressWorkout?.template.name || fallbackAssignment?.template.name || "Dinlenme Gunu";
-  const targetWorkoutHref = inProgressWorkout
-    ? `/client/workout/${inProgressWorkout.assignmentId}/start`
-    : fallbackAssignment
-      ? `/client/workout/${fallbackAssignment.id}/start`
-      : "/client/workouts";
+  const todayKey = toDayKey(new Date());
+  const todaysAssignments = assignments.filter((assignment) => toDayKey(new Date(assignment.scheduledFor)) === todayKey);
+  const inProgressTodayAssignment = inProgressWorkout
+    ? todaysAssignments.find((assignment) => assignment.id === inProgressWorkout.assignmentId) || null
+    : null;
 
   const upcoming = assignments.slice(0, 3);
   const loadScore = Math.min(95, Math.max(40, completedWorkoutCount * 8));
@@ -58,18 +58,23 @@ export default async function ClientDashboardPage() {
         <p className="text-lg font-medium text-secondary">{completedWorkoutCount} seans tamamlandi. Hedef artik cok yakin.</p>
       </section>
 
-      <section className="relative overflow-hidden rounded-xl bg-secondary text-on-tertiary shadow-xl">
-        <div className="absolute inset-0 z-10 bg-gradient-to-br from-secondary/90 via-secondary/70 to-transparent" />
+      <section className="relative overflow-hidden rounded-xl bg-on-surface text-surface shadow-xl">
+        <div className="absolute inset-0 z-10 bg-gradient-to-br from-secondary/70 via-on-surface to-on-surface" />
+        <div className="pointer-events-none absolute -right-14 -top-16 h-56 w-56 rounded-full bg-secondary/35 blur-3xl" />
         <div className="relative z-20 space-y-6 p-8">
           <div className="space-y-1">
             <span className="text-[10px] font-label uppercase tracking-[0.2em] opacity-80">Bugunun Seansi</span>
-            <h3 className="text-3xl font-extrabold leading-none tracking-tighter">{targetWorkoutName.toUpperCase()}</h3>
+            <h3 className="text-3xl font-extrabold leading-none tracking-tighter">
+              {todaysAssignments.length > 0
+                ? `${todaysAssignments.length} ANTRENMAN`
+                : "PLANLI ANTRENMAN YOK"}
+            </h3>
           </div>
 
           <div className="flex items-center gap-6">
             <div className="flex flex-col">
               <span className="text-xs font-label uppercase tracking-widest opacity-70">Gorev</span>
-              <span className="text-lg font-bold">{assignments.length} PLAN</span>
+              <span className="text-lg font-bold">{todaysAssignments.length} BUGUN</span>
             </div>
             <div className="h-8 w-px bg-on-tertiary/20" />
             <div className="flex flex-col">
@@ -78,13 +83,35 @@ export default async function ClientDashboardPage() {
             </div>
           </div>
 
-          <Link
-            href={targetWorkoutHref}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-container px-8 py-4 text-lg font-bold uppercase tracking-widest text-white shadow-lg transition-transform active:scale-[0.98]"
-          >
-            ANTRENMANI BASLAT
-            <Play className="h-5 w-5" />
-          </Link>
+          {todaysAssignments.length > 0 ? (
+            <div className="space-y-2">
+              {todaysAssignments.map((assignment) => {
+                const isCompleted = assignment.workouts.some((w) => w.status === "COMPLETED");
+                const isInProgress = assignment.workouts.some((w) => w.status === "IN_PROGRESS") || inProgressTodayAssignment?.id === assignment.id;
+
+                return (
+                  <Link
+                    key={assignment.id}
+                    href={`/client/workout/${assignment.id}/start`}
+                    className="flex items-center justify-between gap-3 rounded-lg border border-surface/15 bg-surface/10 px-4 py-3 transition-colors hover:bg-surface/15"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-extrabold uppercase tracking-wide">{assignment.template.name}</p>
+                      <p className="text-xs opacity-75">{assignment.template.exercises.length} egzersiz</p>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-container/85 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
+                      {isCompleted ? "Tamamlandi" : isInProgress ? "Devam Et" : "Baslat"}
+                      <Play className="h-3.5 w-3.5" />
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-surface/15 bg-surface/10 p-4 text-sm font-semibold text-surface/90">
+              Bugune atanmis antremaniniz yok, takviminizi kontrol edin.
+            </div>
+          )}
         </div>
       </section>
 

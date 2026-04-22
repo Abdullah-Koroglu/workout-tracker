@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Play, ChevronLeft, ChevronRight, X, Dumbbell, Timer, CalendarCheck, Utensils, Info } from "lucide-react";
 
 type ExerciseItem = {
@@ -41,6 +41,20 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
   const [monthCursor, setMonthCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const [selectedDayKey, setSelectedDayKey] = useState<string>(dayKey(now));
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+
+  // Animate in when modal opens
+  useEffect(() => {
+    if (selectedAssignmentId) {
+      const raf = requestAnimationFrame(() => setModalVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [selectedAssignmentId]);
+
+  function closeModal() {
+    setModalVisible(false);
+    setTimeout(() => setSelectedAssignmentId(null), 320);
+  }
 
   const monthDate = useMemo(() => new Date(monthCursor.year, monthCursor.month, 1), [monthCursor]);
 
@@ -90,13 +104,8 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
     [assignments]
   );
 
-  // Selected day: show its assignments (active/scheduled); if none → empty state
+  // Selected day assignments
   const selectedDayAssignments = byDay.get(selectedDayKey) || [];
-  const selectedDayActive =
-    selectedDayAssignments.find((a) => getStatus(a) === "IN_PROGRESS") ??
-    selectedDayAssignments.find((a) => getStatus(a) === "SCHEDULED") ??
-    selectedDayAssignments.find((a) => getStatus(a) === "COMPLETED") ??
-    null;
 
   // Selected assignment for modal — ONLY when explicitly clicked
   const selectedAssignment = selectedAssignmentId ? (assignments.find((a) => a.id === selectedAssignmentId) ?? null) : null;
@@ -213,6 +222,11 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                       />
                     ) : null}
                   </div>
+                  {cell.items.length > 1 ? (
+                    <span className={`mt-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-black ${isToday || isSelected ? "bg-white/25 text-white" : "bg-primary/15 text-primary"}`}>
+                      {cell.items.length}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
@@ -264,31 +278,47 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
             </button>
           ) : null}
 
-          {/* Selected day assignment */}
-          {selectedDayActive ? (
-            <button
-              type="button"
-              onClick={() => setSelectedAssignmentId(selectedDayActive.id)}
-              className="bg-primary/5 rounded-lg border-l-4 border-primary p-6 relative overflow-hidden w-full text-left"
-            >
-              <div className="relative z-10 space-y-4">
-                <div className="flex justify-between items-start gap-4">
-                  <div className="min-w-0">
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded ${getStatus(selectedDayActive) === "IN_PROGRESS" ? "bg-primary-container text-white" : getStatus(selectedDayActive) === "COMPLETED" ? "bg-secondary text-white" : "bg-primary text-white"}`}>
-                      {getStatus(selectedDayActive) === "IN_PROGRESS" ? "DEVAM EDIYOR" : getStatus(selectedDayActive) === "COMPLETED" ? "TAMAMLANDI" : "PLANLI"}
-                    </span>
-                    <h4 className="text-xl font-black mt-2 truncate">{selectedDayActive.templateName}</h4>
-                    <p className="text-slate-500 text-sm">
-                      {selectedDayActive.exercises.length} egzersiz • {new Date(selectedDayActive.scheduledFor).toLocaleDateString("tr-TR")}
-                    </p>
-                  </div>
-                  <span className="bg-primary-container text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">DETAY</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-xs font-bold text-secondary">Koc tarafindan atandi</span>
-                </div>
-              </div>
-            </button>
+          {selectedDayAssignments.length > 0 ? (
+            <div className="space-y-3">
+              {selectedDayAssignments
+                .slice()
+                .sort((a, b) => {
+                  const priority = { IN_PROGRESS: 0, SCHEDULED: 1, ABANDONED: 2, COMPLETED: 3 } as const;
+                  const statusA = getStatus(a);
+                  const statusB = getStatus(b);
+                  return priority[statusA] - priority[statusB];
+                })
+                .map((assignment) => {
+                  const assignmentStatus = getStatus(assignment);
+
+                  return (
+                    <button
+                      key={assignment.id}
+                      type="button"
+                      onClick={() => setSelectedAssignmentId(assignment.id)}
+                      className="bg-primary/5 rounded-lg border-l-4 border-primary p-6 relative overflow-hidden w-full text-left"
+                    >
+                      <div className="relative z-10 space-y-4">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="min-w-0">
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded ${assignmentStatus === "IN_PROGRESS" ? "bg-primary-container text-white" : assignmentStatus === "COMPLETED" ? "bg-secondary text-white" : assignmentStatus === "ABANDONED" ? "bg-tertiary text-white" : "bg-primary text-white"}`}>
+                              {assignmentStatus === "IN_PROGRESS" ? "DEVAM EDIYOR" : assignmentStatus === "COMPLETED" ? "TAMAMLANDI" : assignmentStatus === "ABANDONED" ? "YARIDA" : "PLANLI"}
+                            </span>
+                            <h4 className="text-xl font-black mt-2 truncate">{assignment.templateName}</h4>
+                            <p className="text-slate-500 text-sm">
+                              {assignment.exercises.length} egzersiz • {new Date(assignment.scheduledFor).toLocaleDateString("tr-TR")}
+                            </p>
+                          </div>
+                          <span className="bg-primary-container text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">DETAY</span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <span className="text-xs font-bold text-secondary">Koc tarafindan atandi</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+            </div>
           ) : (
             <div className="bg-surface-container-low rounded-lg p-8 text-center space-y-2">
               <p className="font-bold text-on-surface-variant">Bu gün için antreman yok</p>
@@ -373,14 +403,18 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
       {selectedAssignment ? (
         <div
           className="fixed inset-0 z-[60] flex items-end md:items-center justify-center !mt-0"
-          onClick={() => setSelectedAssignmentId(null)}
+          onClick={closeModal}
         >
-          {/* Backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          {/* Backdrop — fades in */}
+          <div className={`absolute inset-0 bg-black/60 transition-[opacity,backdrop-filter] duration-300 ease-out ${modalVisible ? "opacity-100 backdrop-blur-sm" : "opacity-0 backdrop-blur-none"}`} />
 
-          {/* Sheet */}
+          {/* Sheet — slides up on mobile, scales up on desktop */}
           <div
-            className="relative w-full max-w-lg md:mx-6 bg-surface rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col max-h-[92dvh] overflow-hidden bg-white"
+            className={`relative w-full max-w-lg md:mx-6 bg-white rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col max-h-[92dvh] overflow-hidden transition-all duration-300 ease-out ${
+              modalVisible
+                ? "translate-y-0 opacity-100 md:scale-100"
+                : "translate-y-full opacity-0 md:translate-y-4 md:scale-95"
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Drag handle (mobile) */}
@@ -412,7 +446,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 <button
                   type="button"
                   className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-surface-container hover:bg-surface-container-high transition-colors text-on-surface-variant"
-                  onClick={() => setSelectedAssignmentId(null)}
+                  onClick={closeModal}
                 >
                   <X className="h-4 w-4" />
                 </button>

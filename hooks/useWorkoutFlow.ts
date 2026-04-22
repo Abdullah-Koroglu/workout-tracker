@@ -53,6 +53,7 @@ type UseWorkoutFlowState = {
 
 type UseWorkoutFlowActions = {
   addSet: (set: SavedSet) => void;
+  removeSet: (setId: string) => void;
   clearError: () => void;
 };
 
@@ -75,6 +76,13 @@ export function useWorkoutFlow(assignmentId: string): [UseWorkoutFlowState, UseW
       );
       return { ...prev, savedSets: [...filtered, set] };
     });
+  }, []);
+
+  const removeSet = useCallback((setId: string) => {
+    setState((prev) => ({
+      ...prev,
+      savedSets: prev.savedSets.filter((s) => s.id !== setId)
+    }));
   }, []);
 
   const clearError = useCallback(() => {
@@ -133,5 +141,5 @@ export function useWorkoutFlow(assignmentId: string): [UseWorkoutFlowState, UseW
     initWorkout();
   }, [assignmentId, router, warning]);
 
-  return [state, { addSet, clearError }];
+  return [state, { addSet, removeSet, clearError }];
 }

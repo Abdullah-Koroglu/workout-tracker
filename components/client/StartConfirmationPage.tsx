@@ -99,7 +99,7 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
   const cardioExercises = summary.exercises.filter((e) => e.type === "CARDIO");
 
   return (
-    <div className="space-y-4 pb-28 md:space-y-6">
+    <div className="space-y-4 md:pb-28 md:space-y-6">
       {/* Mobile Header */}
       <div className="overflow-hidden rounded-2xl border border-black/10 bg-gradient-to-br from-surface via-white to-primary/10 p-4 md:rounded-[32px] md:p-6 shadow-sm">
         <Link href="/client/dashboard" className="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-primary hover:text-primary/80">

@@ -97,3 +97,37 @@ export async function POST(
     { status: 201 }
   );
 }
+
+export async function DELETE(
+  request: Request,
+  { params }: { params: Promise<{ workoutId: string }> }
+) {
+  const auth = await requireAuth("CLIENT");
+  if (auth.error) return auth.error;
+
+  const { workoutId } = await params;
+
+  const workout = await prisma.workout.findUnique({ where: { id: workoutId } });
+  if (!workout || workout.clientId !== auth.session.user.id) {
+    return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+  }
+
+  if (workout.status === "COMPLETED") {
+    return NextResponse.json({ error: "Workout already completed" }, { status: 400 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const setId = typeof body?.setId === "string" ? body.setId : "";
+  if (!setId) {
+    return NextResponse.json({ error: "setId zorunlu" }, { status: 400 });
+  }
+
+  const existingSet = await prisma.workoutSet.findUnique({ where: { id: setId } });
+  if (!existingSet || existingSet.workoutId !== workoutId) {
+    return NextResponse.json({ error: "Set bulunamadi" }, { status: 404 });
+  }
+
+  await prisma.workoutSet.delete({ where: { id: setId } });
+
+  return NextResponse.json({ success: true }, { status: 200 });
+}

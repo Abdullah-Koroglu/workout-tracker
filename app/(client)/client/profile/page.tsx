@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Loader2, Save, User2 } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -96,6 +97,12 @@ export default function ClientProfilePage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Koçunuzun sizi daha iyi tanımasına yardımcı olacak bilgiler.
         </p>
+        <Link
+          href="/client/coaches"
+          className="mt-3 inline-flex items-center rounded-lg border border-secondary/25 bg-secondary/10 px-3 py-2 text-sm font-semibold text-secondary transition-colors hover:border-secondary/40 hover:bg-secondary/15"
+        >
+          Koç Bağlantılarını Yönet
+        </Link>
         <Button
           type="button"
           variant="outline"

@@ -273,9 +273,36 @@ export function useSaveSet(workoutId: string) {
     }
   };
 
+  const deleteSet = async (setId: string): Promise<boolean> => {
+    if (!workoutId) return false;
+
+    try {
+      const response = await fetch(`/api/client/workouts/${workoutId}/sets`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ setId })
+      });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        notifyError(data.error || "Set silinemedi.");
+        return false;
+      }
+
+      success("Set silindi.");
+      refreshPendingCount();
+      return true;
+    } catch {
+      notifyError("Set silinirken bir hata oluştu.");
+      return false;
+    }
+  };
+
   return {
     saveWeightSet,
     saveCardio,
+    deleteSet,
     pendingSyncCount,
     isSyncing,
     syncPendingSets

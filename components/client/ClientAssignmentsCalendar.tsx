@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Play, ChevronLeft, ChevronRight, X, Dumbbell, Timer, CalendarCheck, Utensils, Info } from "lucide-react";
+import Link from "next/link";
 
 type ExerciseItem = {
   id: string;
@@ -309,7 +310,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                               {assignment.exercises.length} egzersiz • {new Date(assignment.scheduledFor).toLocaleDateString("tr-TR")}
                             </p>
                           </div>
-                          <span className="bg-primary-container text-white px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">DETAY</span>
+                          <span className="bg-primary-container text-primary px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">DETAY</span>
                         </div>
                         <div className="flex items-center gap-4">
                           <span className="text-xs font-bold text-secondary">Koc tarafindan atandi</span>
@@ -506,9 +507,9 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                   {getStatus(selectedAssignment) === "IN_PROGRESS" ? "Devam Et" : "Şimdi Başlat"}
                 </a>
               ) : (
-                <div className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-container py-4">
+                <Link href={`/client/workouts/${selectedAssignment.id}`} className="flex w-full items-center justify-center gap-2 rounded-2xl bg-surface-container py-4">
                   <span className="font-bold text-sm text-tertiary">✓ Bu seans tamamlandı</span>
-                </div>
+                </Link>
               )}
             </div>
           </div>

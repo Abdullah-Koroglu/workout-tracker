@@ -4,6 +4,7 @@ import { Briefcase, ChevronLeft, ExternalLink, MessageCircle, Star, Tag } from "
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { RequestCoachButton } from "./RequestCoachButton";
 
 export default async function CoachVitrinPage({
   params,
@@ -32,6 +33,11 @@ export default async function CoachVitrinPage({
           },
         },
       },
+      coachRelationsAsCoach: {
+        where: { clientId: session.user.id },
+        select: { status: true },
+        take: 1,
+      },
     },
   });
 
@@ -39,6 +45,7 @@ export default async function CoachVitrinPage({
 
   const profile = coach.coachProfile;
   const specialties = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
+  const relationStatus = coach.coachRelationsAsCoach[0]?.status ?? null;
   const messageHref = `/client/messages?withUserId=${coachId}`;
 
   function getInitials(name: string) {
@@ -91,6 +98,12 @@ export default async function CoachVitrinPage({
               <MessageCircle className="h-4 w-4" />
               Mesaj Gönder
             </Link>
+
+            <RequestCoachButton
+              coachId={coachId}
+              initialStatus={relationStatus}
+              className="hidden shrink-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2.5 text-sm font-semibold text-primary transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-70 sm:inline-flex"
+            />
           </div>
 
           {/* Bio */}
@@ -126,6 +139,12 @@ export default async function CoachVitrinPage({
             <MessageCircle className="h-4 w-4" />
             Mesaj Gönder
           </Link>
+
+          <RequestCoachButton
+            coachId={coachId}
+            initialStatus={relationStatus}
+            className="mt-3 flex items-center justify-center gap-2 rounded-lg border border-primary/30 bg-primary/10 py-3 text-sm font-semibold text-primary transition hover:bg-primary/15 disabled:cursor-not-allowed disabled:opacity-70 sm:hidden"
+          />
         </div>
       </div>
 

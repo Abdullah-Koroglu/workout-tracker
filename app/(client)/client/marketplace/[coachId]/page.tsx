@@ -33,7 +33,7 @@ export default async function CoachVitrinPage({
           },
         },
       },
-      coachRelationsAsCoach: {
+      coachRelations: {
         where: { clientId: session.user.id },
         select: { status: true },
         take: 1,
@@ -45,7 +45,7 @@ export default async function CoachVitrinPage({
 
   const profile = coach.coachProfile;
   const specialties = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
-  const relationStatus = coach.coachRelationsAsCoach[0]?.status ?? null;
+  const relationStatus = coach.coachRelations[0]?.status ?? null;
   const messageHref = `/client/messages?withUserId=${coachId}`;
 
   function getInitials(name: string) {

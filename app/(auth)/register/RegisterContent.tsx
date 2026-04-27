@@ -131,7 +131,7 @@ export function RegisterContent() {
       {/* Logo + nav */}
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo.png" alt="FitCoach" width={32} height={32} className="object-contain" style={{ filter: "brightness(0) invert(1)", opacity: 0.9 }} />
+          <Image src="/logo.png" alt="FitCoach" width={32} height={32} className="object-contain" style={{ opacity: 0.9 }} />
           <span className="text-base font-black tracking-tight text-white">FitCoach OS</span>
         </div>
         {step === 2 ? (

@@ -1,10 +1,23 @@
 import Link from "next/link";
-import { Calendar, CheckCircle2, ChevronLeft, Clock, Dumbbell, Flame, MessageSquare, Share2, Trophy, Weight, XCircle } from "lucide-react";
 import { notFound } from "next/navigation";
+import {
+  Award,
+  CheckCircle2,
+  ChevronLeft,
+  Clock,
+  Dumbbell,
+  Flame,
+  MessageSquare,
+  Trophy,
+  Weight,
+  XCircle,
+  Zap,
+} from "lucide-react";
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { WorkoutShareCard } from "@/components/client/WorkoutShareCard";
+import { PageHero } from "@/components/shared/PageHero";
 
 export default async function WorkoutDetailPage({
   params,
@@ -12,9 +25,7 @@ export default async function WorkoutDetailPage({
   params: Promise<{ workoutId: string }>;
 }) {
   const session = await auth();
-  if (!session || session.user.role !== "CLIENT") {
-    return null;
-  }
+  if (!session || session.user.role !== "CLIENT") return null;
 
   const { workoutId } = await params;
 
@@ -33,58 +44,41 @@ export default async function WorkoutDetailPage({
     },
   });
 
-  if (!workout || workout.clientId !== session.user.id) {
-    notFound();
-  }
+  if (!workout || workout.clientId !== session.user.id) notFound();
 
-  const setsByExercise: Record<
-    string,
-    Array<{
-      id: string;
-      setNumber: number;
-      weightKg: number | null;
-      reps: number | null;
-      rir: number | null;
-      exerciseId: string;
-    }>
-  > = {};
+  /* ── Derived data ── */
+  const isCompleted = workout.status === "COMPLETED";
 
+  const setsByExercise: Record<string, typeof workout.sets> = {};
   workout.sets.forEach((set) => {
-    if (!setsByExercise[set.exercise.name]) {
-      setsByExercise[set.exercise.name] = [];
-    }
-
-    setsByExercise[set.exercise.name].push({
-      id: set.id,
-      setNumber: set.setNumber,
-      weightKg: set.weightKg,
-      reps: set.reps,
-      rir: set.rir,
-      exerciseId: set.exerciseId,
-    });
+    const key = set.exercise.name;
+    if (!setsByExercise[key]) setsByExercise[key] = [];
+    setsByExercise[key].push(set);
   });
 
-  const workoutDate = workout.finishedAt
-    ? new Date(workout.finishedAt)
-    : new Date(workout.startedAt);
-
-  const workoutDuration = workout.finishedAt
+  const workoutDate = workout.finishedAt ?? workout.startedAt;
+  const durationMin = workout.finishedAt
     ? Math.round((workout.finishedAt.getTime() - workout.startedAt.getTime()) / 60000)
     : null;
 
-  const totalVolumeKg = workout.sets.reduce((sum, set) => {
-    if (!set.completed || set.weightKg === null || set.reps === null) {
-      return sum;
-    }
-
-    return sum + set.weightKg * set.reps;
+  const totalVolumeKg = workout.sets.reduce((sum, s) => {
+    if (!s.completed || s.weightKg === null || s.reps === null) return sum;
+    return sum + s.weightKg * s.reps;
   }, 0);
 
+  const completedSets = workout.sets.filter((s) => s.completed).length;
+
+  const intensityScore = Math.min(
+    10,
+    Math.max(1, Math.round((completedSets / Math.max(workout.sets.length, 1)) * 10))
+  );
+
+  /* PR detection */
   const weightExerciseIds = Array.from(
     new Set(
       workout.sets
-        .filter((set) => set.completed && set.weightKg !== null)
-        .map((set) => set.exerciseId)
+        .filter((s) => s.completed && s.weightKg !== null)
+        .map((s) => s.exerciseId)
     )
   );
 
@@ -97,181 +91,292 @@ export default async function WorkoutDetailPage({
           workout: {
             clientId: session.user.id,
             status: "COMPLETED",
-            startedAt: {
-              lt: workout.startedAt,
-            },
+            startedAt: { lt: workout.startedAt },
           },
         },
-        select: {
-          exerciseId: true,
-          weightKg: true,
-        },
+        select: { exerciseId: true, weightKg: true },
       })
     : [];
 
-  const previousMaxByExercise = previousSets.reduce<Record<string, number>>((acc, item) => {
-    if (item.weightKg === null) {
-      return acc;
-    }
-
-    const current = acc[item.exerciseId] ?? 0;
-    if (item.weightKg > current) {
-      acc[item.exerciseId] = item.weightKg;
-    }
-
+  const prevMaxByExercise = previousSets.reduce<Record<string, number>>((acc, s) => {
+    if (s.weightKg === null) return acc;
+    acc[s.exerciseId] = Math.max(acc[s.exerciseId] ?? 0, s.weightKg);
     return acc;
   }, {});
 
   const prExerciseNames = Array.from(
     new Set(
       workout.sets
-        .filter((set) => {
-          if (!set.completed || set.weightKg === null) {
-            return false;
-          }
-
-          const previousMax = previousMaxByExercise[set.exerciseId];
-          return previousMax === undefined || set.weightKg > previousMax;
+        .filter((s) => {
+          if (!s.completed || s.weightKg === null) return false;
+          const prev = prevMaxByExercise[s.exerciseId];
+          return prev === undefined || s.weightKg > prev;
         })
-        .map((set) => set.exercise.name)
+        .map((s) => s.exercise.name)
     )
   );
 
-  const totalSets = workout.sets.filter((s) => s.completed).length;
-  const durationText = workoutDuration ? `${Math.floor(workoutDuration / 60)}h ${workoutDuration % 60}m` : "-";
-  const intensityScore = Math.min(10, Math.max(1, Math.round((totalSets / Math.max(workout.sets.length, 1)) * 10)));
+  const durationText = durationMin
+    ? durationMin >= 60
+      ? `${Math.floor(durationMin / 60)}s ${durationMin % 60}dk`
+      : `${durationMin} dk`
+    : "—";
+
+  /* ── Stat cards config ── */
+  const stats = [
+    {
+      icon: Clock,
+      label: "Süre",
+      value: durationText,
+      color: "#2563EB",
+      bg: "rgba(37,99,235,0.08)",
+    },
+    {
+      icon: Weight,
+      label: "Toplam Hacim",
+      value: `${Math.round(totalVolumeKg).toLocaleString("tr-TR")} kg`,
+      color: "#FB923C",
+      bg: "rgba(249,115,22,0.08)",
+    },
+    {
+      icon: Dumbbell,
+      label: "Tamamlanan Set",
+      value: `${completedSets}`,
+      color: "#1A365D",
+      bg: "rgba(26,54,93,0.08)",
+    },
+    {
+      icon: Zap,
+      label: "Yoğunluk",
+      value: `${intensityScore} / 10`,
+      color: "#16A34A",
+      bg: "rgba(22,163,74,0.08)",
+    },
+  ];
 
   return (
-    <div className="space-y-8 pb-8">
-      <section className="flex items-center justify-between">
-        <Link href="/client/workouts" className="inline-flex items-center gap-2 rounded-full p-2 text-slate-500 hover:bg-slate-100">
-          <ChevronLeft className="h-4 w-4" />
-          <span className="text-xs font-semibold uppercase tracking-widest">Back</span>
-        </Link>
-        <button type="button" className="inline-flex items-center gap-2 rounded-lg bg-surface-container-high px-4 py-2 text-sm font-bold text-on-secondary-container hover:bg-surface-dim">
-          <Share2 className="h-4 w-4" />
-          Export Data
-        </button>
-      </section>
+    <div className="space-y-6 pb-12">
 
-      {workout.status === "COMPLETED" ? (
-        <section className="py-6 text-center">
-          <div className="mx-auto mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-tr from-primary to-primary-container shadow-[0_0_40px_rgba(249,115,22,0.3)]">
-            <Trophy className="h-12 w-12 text-on-primary" />
-          </div>
-          <h2 className="text-4xl font-black uppercase tracking-tight text-on-surface">Workout Complete!</h2>
-          <p className="mt-2 text-lg text-secondary">{workout.template.name}</p>
-        </section>
-      ) : (
-        <section className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <span className="rounded-full bg-secondary-container px-3 py-1 text-xs font-bold uppercase tracking-widest text-on-secondary-container">Historical Detail</span>
-            <span className="inline-flex items-center gap-1 text-sm text-on-surface-variant">
-              <Calendar className="h-4 w-4" />
-              {workoutDate.toLocaleDateString("tr-TR")}
+      {/* ── Back link ── */}
+      <Link
+        href="/client/workouts"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 transition-colors hover:text-slate-700"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+        Antrenman Geçmişi
+      </Link>
+
+      {/* ── Hero banner ── */}
+      <PageHero
+        title={workout.template.name}
+        subtitle={workoutDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
+        glowColor={isCompleted ? "green" : "amber"}
+        badge={isCompleted
+          ? { label: "Tamamlandı",     color: "#22C55E", bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.25)",  icon: CheckCircle2 }
+          : { label: "Yarıda Bırakıldı", color: "#F59E0B", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.25)", icon: XCircle }
+        }
+      >
+        {isCompleted && prExerciseNames.length > 0 && (
+          <div
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5"
+            style={{ background: "rgba(251,191,36,0.12)", border: "1px solid rgba(251,191,36,0.2)" }}
+          >
+            <Trophy className="h-4 w-4 text-amber-400" />
+            <span className="text-xs font-black text-amber-300">
+              {prExerciseNames.length} yeni PR kırıldı! &nbsp;—&nbsp;
+              <span className="font-semibold opacity-80">
+                {prExerciseNames.slice(0, 3).join(", ")}
+                {prExerciseNames.length > 3 ? ` +${prExerciseNames.length - 3}` : ""}
+              </span>
             </span>
           </div>
-          <h1 className="text-4xl font-black tracking-tight text-on-surface">{workout.template.name}</h1>
-          <p className="text-sm text-on-surface-variant">Completed at Elite Performance Center</p>
-        </section>
-      )}
+        )}
+      </PageHero>
 
-      <section className="grid grid-cols-2 gap-4 md:grid-cols-4">
-        <div className="relative overflow-hidden rounded-lg bg-surface-container-low p-5">
-          <div className="flex items-center gap-2 text-secondary">
-            <Clock className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Time</span>
-          </div>
-          <div className="mt-1 text-3xl font-bold text-on-surface">{durationText}</div>
-        </div>
-        <div className="relative overflow-hidden rounded-lg bg-surface-container-low p-5">
-          <div className="flex items-center gap-2 text-secondary">
-            <Weight className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Volume</span>
-          </div>
-          <div className="mt-1 text-3xl font-bold text-primary">{Math.round(totalVolumeKg).toLocaleString("tr-TR")} <span className="text-sm font-normal text-secondary">kg</span></div>
-        </div>
-        <div className="relative overflow-hidden rounded-lg bg-surface-container-low p-5">
-          <div className="flex items-center gap-2 text-secondary">
-            <Dumbbell className="h-4 w-4" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Sets</span>
-          </div>
-          <div className="mt-1 text-3xl font-bold text-on-surface">{totalSets}</div>
-        </div>
-        <div className="relative overflow-hidden rounded-lg border-b-2 border-primary bg-surface-container-highest p-5">
-          <div className="flex items-center gap-2 text-secondary">
-            <Flame className="h-4 w-4 text-primary" />
-            <span className="text-[10px] font-bold uppercase tracking-widest">Intensity</span>
-          </div>
-          <div className="mt-1 text-3xl font-bold text-primary">{intensityScore} <span className="text-sm font-normal text-secondary">/ 10</span></div>
-        </div>
-      </section>
-
-      {prExerciseNames.length > 0 ? (
-        <section className="rounded-lg bg-surface-container-low p-6">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-2 text-secondary">
-              <Trophy className="h-4 w-4 text-tertiary" />
-              <span className="text-[10px] font-bold uppercase tracking-widest">New PRs</span>
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        {stats.map(({ icon: Icon, label, value, color, bg }) => (
+          <div
+            key={label}
+            className="flex flex-col rounded-2xl bg-white p-5"
+            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <div
+              className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl"
+              style={{ background: bg }}
+            >
+              <Icon className="h-4 w-4" style={{ color }} />
             </div>
-            <span className="rounded-full bg-tertiary-fixed px-2 py-1 text-xs font-bold text-on-tertiary-container">{prExerciseNames.length} Achieved</span>
+            <p className="text-2xl font-black text-slate-800 leading-none">{value}</p>
+            <p className="mt-1.5 text-[10px] font-black uppercase tracking-wider text-slate-400">{label}</p>
           </div>
-          <div className="space-y-2">
-            {prExerciseNames.map((name) => (
-              <div key={name} className="flex items-center justify-between text-sm">
-                <span className="font-medium text-on-surface">{name}</span>
-                <span className="font-bold text-tertiary">PR</span>
-              </div>
-            ))}
-          </div>
-        </section>
-      ) : null}
+        ))}
+      </div>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <section className="flex flex-col gap-6 lg:col-span-2">
-          <h2 className="border-b border-surface-container-high pb-4 text-2xl font-bold text-on-surface">Exercise Breakdown</h2>
-          {Object.entries(setsByExercise).length === 0 ? (
-            <div className="rounded-lg border border-dashed p-8 text-center text-sm text-on-surface-variant">Bu antrenman icin kayitli set yok.</div>
+      {/* ── Main 2-col layout ── */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+
+        {/* ── LEFT: Exercise breakdown ── */}
+        <div className="xl:col-span-2 space-y-4">
+          <div className="flex items-center gap-2">
+            <div
+              className="flex h-8 w-8 items-center justify-center rounded-xl"
+              style={{ background: "rgba(249,115,22,0.1)" }}
+            >
+              <Dumbbell className="h-4 w-4 text-orange-500" />
+            </div>
+            <h2 className="text-base font-black text-slate-800">Egzersiz Detayı</h2>
+            <span
+              className="rounded-full px-2.5 py-0.5 text-xs font-black"
+              style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}
+            >
+              {Object.keys(setsByExercise).length}
+            </span>
+          </div>
+
+          {Object.keys(setsByExercise).length === 0 ? (
+            <div
+              className="rounded-2xl bg-white p-8 text-center"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
+            >
+              <p className="text-sm text-slate-400">Bu antrenman için kayıtlı set bulunamadı.</p>
+            </div>
           ) : (
             Object.entries(setsByExercise).map(([exerciseName, sets]) => {
-              const firstSet = sets[0];
-              const isCardio = firstSet.weightKg === null && firstSet.reps === null;
+              const isCardio = sets[0].weightKg === null && sets[0].reps === null;
+              const hasPr    = sets.some((s) => {
+                if (!s.completed || s.weightKg === null) return false;
+                const prev = prevMaxByExercise[s.exerciseId];
+                return prev === undefined || s.weightKg > prev;
+              });
 
               return (
-                <div key={exerciseName} className="overflow-hidden rounded-lg bg-surface-container-lowest shadow-[0_4px_24px_rgba(0,0,0,0.02)]">
-                  <div className="flex items-center justify-between bg-surface-container-low p-4">
+                <div
+                  key={exerciseName}
+                  className="overflow-hidden rounded-2xl bg-white"
+                  style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                >
+                  {/* Card header */}
+                  <div
+                    className="flex items-center justify-between px-5 py-3.5"
+                    style={{ background: "#F8FAFC", borderBottom: "1px solid #F1F5F9" }}
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-on-secondary">
-                        {isCardio ? <Flame className="h-4 w-4" /> : <Dumbbell className="h-4 w-4" />}
+                      <div
+                        className="flex h-9 w-9 items-center justify-center rounded-xl"
+                        style={
+                          isCardio
+                            ? { background: "rgba(37,99,235,0.1)" }
+                            : { background: "rgba(26,54,93,0.1)" }
+                        }
+                      >
+                        {isCardio ? (
+                          <Flame className="h-4 w-4 text-blue-500" />
+                        ) : (
+                          <Dumbbell className="h-4 w-4 text-[#1A365D]" />
+                        )}
                       </div>
-                      <h3 className="text-lg font-bold text-on-surface">{exerciseName}</h3>
+                      <div>
+                        <p className="font-black text-slate-800 text-sm">{exerciseName}</p>
+                        <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                          {isCardio ? "Kardiyo" : "Ağırlık"}
+                        </p>
+                      </div>
                     </div>
-                    <span className="rounded-full bg-surface-variant px-3 py-1 text-xs font-bold uppercase tracking-widest text-on-surface-variant">{isCardio ? "Cardio" : "Primary"}</span>
+                    <div className="flex items-center gap-2">
+                      {hasPr && (
+                        <span
+                          className="flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
+                          style={{ background: "rgba(251,191,36,0.15)", color: "#D97706" }}
+                        >
+                          <Award className="h-3 w-3" />
+                          PR
+                        </span>
+                      )}
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[10px] font-black"
+                        style={{ background: "rgba(249,115,22,0.08)", color: "#EA580C" }}
+                      >
+                        {sets.length} set
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-4">
-                    <table className="w-full border-collapse text-left">
+
+                  {/* Set table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
                       <thead>
-                        <tr className="border-b border-surface-container-high">
-                          <th className="w-16 py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Set</th>
-                          <th className="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Weight</th>
-                          <th className="py-2 text-xs font-bold uppercase tracking-widest text-on-surface-variant">Reps</th>
-                          <th className="py-2 text-right text-xs font-bold uppercase tracking-widest text-on-surface-variant">RIR</th>
+                        <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
+                          {["Set", "Ağırlık", "Tekrar", "RIR", "Durum"].map((h) => (
+                            <th
+                              key={h}
+                              className="px-5 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400"
+                            >
+                              {h}
+                            </th>
+                          ))}
                         </tr>
                       </thead>
                       <tbody>
                         {sets.map((set) => {
-                          const prev = previousMaxByExercise[set.exerciseId];
-                          const isPrSet = set.weightKg !== null && (prev === undefined || set.weightKg > prev);
+                          const isPrSet =
+                            set.completed &&
+                            set.weightKg !== null &&
+                            (prevMaxByExercise[set.exerciseId] === undefined ||
+                              set.weightKg > (prevMaxByExercise[set.exerciseId] ?? 0));
 
                           return (
-                            <tr key={set.id} className="border-b border-surface-container last:border-b-0">
-                              <td className="py-3 text-sm font-medium text-on-surface">{set.setNumber}</td>
-                              <td className="py-3 text-sm font-bold text-on-surface">
-                                {set.weightKg ?? "-"} {set.weightKg !== null ? "kg" : ""}
-                                {isPrSet ? <span className="ml-2 text-[10px] font-black uppercase text-primary">PR</span> : null}
+                            <tr
+                              key={set.id}
+                              style={{ borderBottom: "1px solid #F8FAFC" }}
+                              className="last:border-b-0"
+                            >
+                              <td className="px-5 py-3 text-sm font-black text-slate-500">
+                                {set.setNumber}
                               </td>
-                              <td className="py-3 text-sm font-bold text-on-surface">{set.reps ?? "-"}</td>
-                              <td className="py-3 text-right text-sm text-on-surface-variant">{set.rir ?? "-"}</td>
+                              <td className="px-5 py-3 text-sm font-black text-slate-800">
+                                {set.weightKg != null ? (
+                                  <span className="flex items-center gap-1.5">
+                                    {set.weightKg} 
+                                    {/* kg */}
+                                    {isPrSet && (
+                                      <span
+                                        className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase"
+                                        style={{ background: "rgba(251,191,36,0.2)", color: "#B45309" }}
+                                      >
+                                        PR
+                                      </span>
+                                    )}
+                                  </span>
+                                ) : (
+                                  <span className="text-slate-400">—</span>
+                                )}
+                              </td>
+                              <td className="px-5 py-3 text-sm font-bold text-slate-700">
+                                {set.reps ?? <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-5 py-3 text-sm text-slate-500">
+                                {set.rir ?? <span className="text-slate-400">—</span>}
+                              </td>
+                              <td className="px-5 py-3 overflow-hidden">
+                                {set.completed ? (
+                                  <span
+                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black"
+                                    style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
+                                  >
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    Tamam
+                                  </span>
+                                ) : (
+                                  <span
+                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black"
+                                    style={{ background: "rgba(148,163,184,0.1)", color: "#94A3B8" }}
+                                  >
+                                    <XCircle className="h-3 w-3" />
+                                    Atlandı
+                                  </span>
+                                )}
+                              </td>
                             </tr>
                           );
                         })}
@@ -282,78 +387,126 @@ export default async function WorkoutDetailPage({
               );
             })
           )}
-        </section>
+        </div>
 
-        <section className="flex flex-col gap-6 lg:col-span-1">
-          <div className="relative overflow-hidden rounded-lg bg-secondary p-6 text-on-secondary shadow-[0_8px_32px_rgba(0,0,0,0.08)]">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest">
-              <CheckCircle2 className="h-4 w-4" /> Coach Assessment
-            </h2>
-            {workout.comments.length === 0 ? (
-              <p className="text-sm leading-relaxed text-secondary-fixed">Henuz coach degerlendirmesi yok.</p>
-            ) : (
-              <div className="space-y-3">
-                {workout.comments.slice(0, 2).map((comment) => (
-                  <div key={comment.id}>
-                    <p className="text-xs text-secondary-fixed-dim">{comment.author.name}</p>
-                    <p className="text-sm leading-relaxed text-secondary-fixed">"{comment.content}"</p>
+        {/* ── RIGHT: Sidebar ── */}
+        <div className="space-y-4">
+
+          {/* Coach feedback */}
+          <div
+            className="rounded-2xl overflow-hidden"
+            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <div
+              className="px-5 py-4"
+              style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <MessageSquare className="h-4 w-4 text-white/60" />
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-white/60">
+                  Koç Yorumları
+                </h3>
+              </div>
+              {workout.comments.length === 0 ? (
+                <p className="text-sm text-white/50">Henüz koç değerlendirmesi yok.</p>
+              ) : (
+                <div className="space-y-3">
+                  {workout.comments.slice(0, 3).map((c) => (
+                    <div
+                      key={c.id}
+                      className="rounded-xl p-3"
+                      style={{ background: "rgba(255,255,255,0.08)", borderLeft: "3px solid rgba(249,115,22,0.6)" }}
+                    >
+                      <p className="text-xs font-black text-white/50 mb-1">{c.author.name}</p>
+                      <p className="text-sm leading-relaxed text-white/85">"{c.content}"</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Intensity scale */}
+          {isCompleted && (
+            <div
+              className="rounded-2xl bg-white p-5"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+            >
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-xl"
+                  style={{ background: "rgba(249,115,22,0.1)" }}
+                >
+                  <Zap className="h-4 w-4 text-orange-500" />
+                </div>
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                  Yoğunluk Skoru
+                </h3>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                  <div
+                    key={n}
+                    className="flex h-9 w-9 items-center justify-center rounded-xl text-sm font-black"
+                    style={
+                      n === intensityScore
+                        ? {
+                            background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                            color: "#fff",
+                            boxShadow: "0 4px 12px rgba(249,115,22,0.4)",
+                            transform: "scale(1.1)",
+                          }
+                        : n < intensityScore
+                        ? { background: "rgba(249,115,22,0.1)", color: "#EA580C" }
+                        : { background: "#F8FAFC", color: "#CBD5E1" }
+                    }
+                  >
+                    {n}
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-
-          <div className="rounded-lg bg-surface-container-low p-6">
-            <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-on-surface">
-              <MessageSquare className="h-4 w-4" /> Athlete Log
-            </h2>
-            <p className="border-l-2 border-outline-variant py-1 pl-4 text-sm italic leading-relaxed text-on-surface-variant">
-              Bu ekranda athlete serbest not kaydi Stitch tasariminda mevcut. Uygulama tarafinda henuz workout bazli athlete note modeli yok.
-            </p>
-          </div>
-
-          {workout.status === "COMPLETED" ? (
-            <div className="rounded-lg border border-outline-variant/15 bg-surface-container-lowest p-6 shadow-[0_8px_32px_rgba(0,0,0,0.02)]">
-              <h3 className="mb-3 text-lg font-bold text-on-surface">Rate Intensity</h3>
-              <p className="mb-3 text-sm text-secondary">How challenging was this session overall?</p>
-              <div className="flex flex-wrap gap-2">
-                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    className={`h-10 w-10 rounded-full font-bold transition-colors ${
-                      n === intensityScore
-                        ? "scale-110 bg-primary text-on-primary shadow-[0_4px_12px_rgba(157,67,0,0.3)]"
-                        : "bg-surface-container-low text-secondary hover:bg-surface-container"
-                    }`}
-                  >
-                    {n}
-                  </button>
-                ))}
-              </div>
             </div>
-          ) : null}
-        </section>
+          )}
+
+          {/* Nav buttons */}
+          <div className="space-y-2">
+            <Link
+              href="/client/workouts"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+              style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Geçmişe Dön
+            </Link>
+            <Link
+              href="/client/dashboard"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black text-white transition hover:opacity-90"
+              style={{
+                background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
+              }}
+            >
+              {isCompleted ? (
+                <><CheckCircle2 className="h-4 w-4" /> Dashboard'a Git</>
+              ) : (
+                <><Dumbbell className="h-4 w-4" /> Tekrar Dene</>
+              )}
+            </Link>
+          </div>
+        </div>
       </div>
 
-      <WorkoutShareCard
-        title={workout.template.name}
-        durationMinutes={workoutDuration}
-        totalVolumeKg={Math.round(totalVolumeKg)}
-        prExerciseNames={prExerciseNames}
-        workoutDate={workoutDate}
-        totalSets={totalSets}
-      />
-
-      <section className="grid gap-3 sm:grid-cols-2">
-        <Link href="/client/workouts" className="inline-flex items-center justify-center gap-2 rounded-lg bg-surface-container-high px-4 py-4 font-bold text-on-secondary-container hover:bg-surface-container-highest">
-          <ChevronLeft className="h-4 w-4" /> Back to History
-        </Link>
-        <Link href="/client/dashboard" className="inline-flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-primary to-primary-container px-4 py-4 font-bold text-on-primary shadow-[0_8px_24px_rgba(249,115,22,0.25)]">
-          {workout.status === "ABANDONED" ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
-          Continue
-        </Link>
-      </section>
+      {/* ── Share card (full width) ── */}
+      {isCompleted && (
+        <WorkoutShareCard
+          title={workout.template.name}
+          durationMinutes={durationMin}
+          totalVolumeKg={Math.round(totalVolumeKg)}
+          prExerciseNames={prExerciseNames}
+          workoutDate={workoutDate}
+          totalSets={completedSets}
+        />
+      )}
     </div>
   );
 }

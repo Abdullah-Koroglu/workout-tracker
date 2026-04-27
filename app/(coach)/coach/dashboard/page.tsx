@@ -1,13 +1,37 @@
 import Link from "next/link";
-import { CheckCircle2, ChevronRight, MessageCircle, TrendingUp } from "lucide-react";
+import { Bell, CheckCircle2, ChevronRight } from "lucide-react";
 
 import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <div
+      className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: `linear-gradient(135deg, ${bg}, ${bg}cc)`,
+        fontSize: size * 0.36,
+        boxShadow: `0 2px 8px ${bg}44`,
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 export default async function CoachDashboardPage() {
   const session = await auth();
   const coachId = session?.user.id || "";
+  const userName = session?.user.name || "Koç";
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -22,202 +46,416 @@ export default async function CoachDashboardPage() {
     completedThisWeek,
     workoutsToday,
     monthlyNewClients,
-    upcomingAppointments
+    upcomingAppointments,
+    topClientRelations,
   ] = await Promise.all([
     prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
     prisma.workout.count({
       where: {
         client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: sevenDaysAgo }
-      }
+        startedAt: { gte: sevenDaysAgo },
+      },
     }),
     prisma.workout.findMany({
       where: {
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } }
+        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
       },
       include: { client: true, template: true },
       orderBy: { startedAt: "desc" },
-      take: 6
+      take: 5,
     }),
     prisma.coachClientRelation.findMany({
       where: { coachId, status: "PENDING" },
       include: { client: true },
       orderBy: { createdAt: "desc" },
-      take: 4
+      take: 4,
     }),
     prisma.workout.count({
       where: {
         status: "COMPLETED",
         client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: sevenDaysAgo }
-      }
+        startedAt: { gte: sevenDaysAgo },
+      },
     }),
     prisma.workout.count({
       where: {
         client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: todayStart }
-      }
+        startedAt: { gte: todayStart },
+      },
     }),
     prisma.coachClientRelation.count({
-      where: { coachId, status: "ACCEPTED", createdAt: { gte: thirtyDaysAgo } }
+      where: { coachId, status: "ACCEPTED", createdAt: { gte: thirtyDaysAgo } },
     }),
     prisma.templateAssignment.findMany({
-      where: {
-        template: { coachId },
-        scheduledFor: { gte: todayStart }
-      },
+      where: { template: { coachId }, scheduledFor: { gte: todayStart } },
       include: { client: true },
       orderBy: { scheduledFor: "asc" },
-      take: 3
-    })
+      take: 3,
+    }),
+    prisma.coachClientRelation.findMany({
+      where: { coachId, status: "ACCEPTED" },
+      include: {
+        client: {
+          select: {
+            id: true,
+            name: true,
+            workouts: {
+              where: { startedAt: { gte: thirtyDaysAgo } },
+              select: { status: true, startedAt: true },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 4,
+    }),
   ]);
 
-  const completionRate = weeklyActive > 0 ? Math.round((completedThisWeek / weeklyActive) * 100) : 0;
+  const completionRate =
+    weeklyActive > 0 ? Math.round((completedThisWeek / weeklyActive) * 100) : 0;
   const pendingReviewCount = Math.max(weeklyActive - completedThisWeek, 0);
-  const topInquiry = pendingRequests[0] || null;
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
     const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 60) return `${Math.max(minutes, 1)} dk once`;
+    if (minutes < 60) return `${Math.max(minutes, 1)} dk önce`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} sa once`;
-    const days = Math.floor(hours / 24);
-    return `${days} gun once`;
+    if (hours < 24) return `${hours} sa önce`;
+    return `${Math.floor(hours / 24)} gün önce`;
   };
 
+  const topClients = topClientRelations.map((rel) => {
+    const total = rel.client.workouts.length;
+    const completed = rel.client.workouts.filter(
+      (w) => w.status === "COMPLETED",
+    ).length;
+    const compliance = total > 0 ? Math.round((completed / total) * 100) : 0;
+    const lastWorkout = rel.client.workouts[0]?.startedAt ?? null;
+    return {
+      id: rel.client.id,
+      name: rel.client.name,
+      compliance,
+      lastWorkout,
+    };
+  });
+
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-10 pb-6">
-      <section className="mb-12">
-        <h1 className="text-5xl font-black uppercase leading-tight tracking-tighter text-on-surface md:text-6xl">
-          HASSASIYETIN
-          <br />
-          <span className="bg-gradient-to-r from-primary to-primary-container bg-clip-text text-transparent">SINIRLARINI ZORLA</span>
-        </h1>
-        <p className="mt-4 max-w-2xl text-lg font-medium text-secondary">
-          Gunluk komuta gorunumu. Uyumlulugu izle, yuk durumunu takip et ve oncelikli danisanlara hizli aksiyon al.
-        </p>
-      </section>
-
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-12">
-        <div className="grid grid-cols-1 gap-6 md:col-span-8 sm:grid-cols-3">
-          <div className="relative overflow-hidden rounded-lg bg-surface-container-lowest p-6 shadow-sm">
-            <p className="z-10 mb-2 text-xs font-bold uppercase tracking-widest text-secondary">Aktif Danisan</p>
-            <h2 className="z-10 text-5xl font-black text-on-surface">{totalClients}</h2>
-            <div className="z-10 mt-4 flex items-center text-sm font-medium text-primary">
-              <TrendingUp className="mr-1 h-4 w-4" /> +{monthlyNewClients} bu ay
-            </div>
-          </div>
-
-          <div className="relative overflow-hidden rounded-lg bg-surface-container-lowest p-6 shadow-sm">
-            <p className="z-10 mb-2 text-xs font-bold uppercase tracking-widest text-secondary">Gunluk Uyumluluk</p>
-            <h2 className="z-10 text-5xl font-black text-on-surface">
-              {completionRate}
-              <span className="text-3xl text-secondary">%</span>
+    <div className="min-h-screen">
+      {/* ── Hero ── */}
+      <div
+        className="-mx-4 px-5 pt-5 pb-6 -mt-4"
+        style={{ background: "linear-gradient(160deg, #1A365D, #2D4A7A)" }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <p className="text-white/60 text-[13px] m-0">Koç Paneli</p>
+            <h2 className="text-white text-[20px] font-black m-0 leading-tight tracking-tight">
+              {userName}
             </h2>
-            <div className="z-10 mt-4 text-sm font-medium text-secondary">Optimum Aralik</div>
           </div>
-
-          <div className="rounded-lg bg-surface-container-lowest p-6 shadow-sm ring-1 ring-outline-variant/15">
-            <p className="mb-2 text-xs font-bold uppercase tracking-widest text-secondary">Bugunku Antreman</p>
-            <div className="flex items-baseline space-x-2">
-              <h2 className="text-5xl font-black text-on-surface">{workoutsToday}</h2>
-              <span className="rounded-full bg-primary-container/10 px-2 py-1 text-sm font-bold text-primary">{pendingReviewCount} Bekliyor</span>
+          <div className="relative">
+            <div className="bg-white/10 rounded-xl w-10 h-10 flex items-center justify-center">
+              <Bell className="h-5 w-5 text-white" />
             </div>
-            <Link href="/coach/clients" className="mt-4 inline-flex items-center text-sm font-bold text-primary transition-colors hover:text-primary-container">
-              Simdi Incele <ChevronRight className="ml-1 h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-
-        <div className="md:col-span-4">
-          <div className="flex h-full flex-col rounded-lg bg-surface-container-low p-6 shadow-sm">
-            <div className="mb-6 flex items-center justify-between">
-              <h3 className="font-bold text-on-surface">Yeni Talepler</h3>
-              <span className="rounded-full bg-primary px-2 py-1 text-xs font-bold text-on-primary">{pendingRequests.length} Yeni</span>
-            </div>
-
-            <div className="flex flex-1 flex-col rounded-lg bg-surface-container-lowest p-4">
-              {topInquiry ? (
-                <>
-                  <div className="mb-4 flex items-center space-x-3">
-                    <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-surface-container-high text-secondary">
-                      <MessageCircle className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-on-surface">{topInquiry.client.name}</h4>
-                      <p className="text-xs font-medium text-secondary">Hedef: Program Takibi</p>
-                    </div>
-                  </div>
-
-                  <p className="mb-6 flex-1 text-sm text-on-surface-variant">{topInquiry.client.email}</p>
-
-                  <div className="mt-auto flex space-x-3">
-                    <div className="flex-1">
-                      <DashboardActionMenu clientId={topInquiry.client.id} />
-                    </div>
-                    <Link href="/coach/clients" className="flex-1 rounded-lg bg-surface-container-high py-2 text-center text-sm font-bold text-on-secondary-container">
-                      Incele
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-on-surface-variant">Yeni talep bulunmuyor.</p>
-              )}
-            </div>
+            {pendingRequests.length > 0 && (
+              <div
+                className="absolute -top-1 -right-1 rounded-full w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white"
+                style={{ background: "#F97316" }}
+              >
+                {pendingRequests.length}
+              </div>
+            )}
           </div>
         </div>
-      </section>
 
-      <section className="space-y-4">
-        <h3 className="font-bold text-on-surface">Son Aktiviteler</h3>
-        <div className="space-y-2">
-          {recentWorkouts.length === 0 ? (
-            <div className="rounded-lg bg-surface-container-lowest p-4 text-sm text-on-surface-variant shadow-sm">Henüz aktivite yok.</div>
-          ) : (
-            recentWorkouts.map((workout) => (
-              <div key={workout.id} className="flex items-center justify-between rounded-lg bg-surface-container-lowest p-4 shadow-sm">
-                <div className="flex items-center space-x-4">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-container-high text-primary">
-                    <CheckCircle2 className="h-5 w-5" />
+        <div className="grid grid-cols-3 gap-2.5">
+          {[
+            { label: "Aktif Danışan", val: totalClients, sub: `+${monthlyNewClients} bu ay`, color: "#fff" },
+            { label: "Uyumluluk", val: `${completionRate}%`, sub: "Optimum aralık", color: "#FED7AA" },
+            { label: "Bugün", val: workoutsToday, sub: `${pendingReviewCount} bekliyor`, color: "#fff" },
+          ].map((m) => (
+            <div
+              key={m.label}
+              className="rounded-[14px] p-3"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+            >
+              <div
+                className="text-[22px] font-extrabold leading-none"
+                style={{ color: m.color }}
+              >
+                {m.val}
+              </div>
+              <div className="text-[10px] text-white/55 mt-1 leading-tight">
+                {m.label}
+              </div>
+              <div className="text-[10px] text-white/35 mt-0.5">{m.sub}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Content ── */}
+      <div className="mt-4 flex flex-col gap-5">
+        {/* Pending Requests */}
+        {pendingRequests.length > 0 && (
+          <div
+            className="bg-white rounded-[18px] shadow-sm p-4"
+            style={{
+              border: "1px solid rgba(0,0,0,0.06)",
+              borderLeft: "4px solid #F97316",
+            }}
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[15px] font-bold text-slate-800">
+                Yeni Talepler
+              </span>
+              <span
+                className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(249,115,22,0.12)", color: "#F97316" }}
+              >
+                {pendingRequests.length}
+              </span>
+            </div>
+
+            <div className="flex flex-col gap-2.5">
+              {pendingRequests.map((req) => (
+                <div key={req.id} className="flex items-center gap-3">
+                  <Avatar name={req.client.name} size={40} bg="#1A365D" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold text-slate-800 truncate">
+                      {req.client.name}
+                    </div>
+                    <div className="text-[12px] text-slate-400 truncate">
+                      {req.client.email}
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-on-surface">
-                      <span className="font-bold">{workout.client.name}</span> <span>{workout.status === "COMPLETED" ? "tamamladi" : "guncelledi"}</span>{" "}
-                      <span className="font-bold">{workout.template.name}</span>
-                    </p>
-                    <p className="mt-1 text-xs text-secondary">{formatTimeAgo(workout.startedAt)}</p>
+                  <div className="shrink-0">
+                    <DashboardActionMenu clientId={req.client.id} />
                   </div>
                 </div>
-                <Link href={`/coach/clients/${workout.client.id}/progress`} className="text-secondary transition-colors hover:text-primary">
-                  <ChevronRight className="h-5 w-5" />
+              ))}
+            </div>
+
+            <Link
+              href="/coach/clients"
+              className="mt-3 block text-center py-2 rounded-xl text-[13px] font-bold text-orange-500 border border-orange-500"
+            >
+              Tümünü Gör
+            </Link>
+          </div>
+        )}
+
+        {/* Upcoming Appointments */}
+        {upcomingAppointments.length > 0 && (
+          <div>
+            <span className="text-[15px] font-bold text-slate-800 block mb-2.5">
+              Yaklaşan Randevular
+            </span>
+            <div className="flex flex-col gap-2">
+              {upcomingAppointments.map((a) => (
+                <Link
+                  key={a.id}
+                  href={`/coach/clients/${a.client.id}/progress`}
+                  className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                  style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                >
+                  <div className="bg-slate-100 rounded-xl px-3 py-2 text-center shrink-0 min-w-[48px]">
+                    <div className="text-[11px] text-slate-400 font-medium leading-none">
+                      {new Date(a.scheduledFor).toLocaleDateString("tr-TR", {
+                        month: "short",
+                      })}
+                    </div>
+                    <div className="text-[18px] font-black text-slate-700 leading-tight">
+                      {new Date(a.scheduledFor).getDate()}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold text-slate-800 truncate">
+                      {a.client.name}
+                    </div>
+                    <div className="text-[12px] text-slate-400">
+                      {new Date(a.scheduledFor).toLocaleTimeString("tr-TR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </div>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
                 </Link>
-              </div>
-            ))
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Activities */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[15px] font-bold text-slate-800">
+              Son Aktiviteler
+            </span>
+          </div>
+
+          {recentWorkouts.length === 0 ? (
+            <div
+              className="bg-white rounded-[18px] p-4 shadow-sm text-center text-[13px] text-slate-400"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              Henüz aktivite yok.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {recentWorkouts.map((w) => {
+                const isCompleted = w.status === "COMPLETED";
+                return (
+                  <div
+                    key={w.id}
+                    className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                    style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                  >
+                    <Avatar
+                      name={w.client.name}
+                      size={36}
+                      bg={isCompleted ? "#22C55E" : "#F59E0B"}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[13px] text-slate-800">
+                        <strong>{w.client.name}</strong>{" "}
+                        <span
+                          className={
+                            isCompleted ? "text-green-500" : "text-amber-500"
+                          }
+                        >
+                          {isCompleted ? "tamamladı" : "yarıda bıraktı"}
+                        </span>
+                        {" — "}
+                        <span className="font-semibold">{w.template.name}</span>
+                      </div>
+                      <div className="text-[11px] text-slate-400 mt-0.5">
+                        {formatTimeAgo(w.startedAt)}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center ${isCompleted ? "bg-green-500/15" : "bg-amber-500/15"}`}
+                      >
+                        <CheckCircle2
+                          className={`h-3 w-3 ${isCompleted ? "text-green-500" : "text-amber-500"}`}
+                        />
+                      </div>
+                      <Link
+                        href={`/coach/clients/${w.client.id}/progress`}
+                        className="text-slate-300 hover:text-slate-500"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
         </div>
-      </section>
 
-      <section className="space-y-3">
-        <h3 className="font-bold text-on-surface">Yaklasan Randevular</h3>
-        {upcomingAppointments.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-outline bg-surface-container-low p-4 text-sm text-on-surface-variant">Yakın tarihli randevu yok.</div>
-        ) : (
-          upcomingAppointments.map((appointment) => (
+        {/* Top Clients with Compliance */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[15px] font-bold text-slate-800">
+              Danışanlar
+            </span>
             <Link
-              key={appointment.id}
-              href={`/coach/clients/${appointment.client.id}/progress`}
-              className="flex items-center justify-between rounded-lg border border-outline-variant/20 bg-surface-container-lowest p-4"
+              href="/coach/clients"
+              className="text-[12px] text-orange-500 font-semibold"
             >
-              <div>
-                <p className="font-semibold text-on-surface">{appointment.client.name}</p>
-                <p className="text-xs text-secondary">{new Date(appointment.scheduledFor).toLocaleString("tr-TR")}</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-secondary" />
+              Tümü →
             </Link>
-          ))
-        )}
-      </section>
+          </div>
+
+          {topClients.length === 0 ? (
+            <div
+              className="bg-white rounded-[18px] p-4 shadow-sm text-center text-[13px] text-slate-400"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              Henüz danışan yok.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {topClients.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/coach/clients/${c.id}/progress`}
+                  className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                  style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                >
+                  <Avatar name={c.name} size={40} bg="#1A365D" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold text-slate-800 truncate">
+                      {c.name}
+                    </div>
+                    {c.lastWorkout && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 h-1 bg-slate-100 rounded-full max-w-[80px]">
+                          <div
+                            className="h-1 rounded-full"
+                            style={{
+                              width: `${c.compliance}%`,
+                              background:
+                                c.compliance >= 80 ? "#22C55E" : "#F59E0B",
+                            }}
+                          />
+                        </div>
+                        <span
+                          className="text-[11px] font-bold"
+                          style={{
+                            color: c.compliance >= 80 ? "#22C55E" : "#F59E0B",
+                          }}
+                        >
+                          %{c.compliance}
+                        </span>
+                      </div>
+                    )}
+                    {!c.lastWorkout && (
+                      <div className="text-[12px] text-slate-400">
+                        Henüz antrenman yok
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right shrink-0">
+                    <div
+                      className="text-[14px] font-extrabold"
+                      style={{
+                        color: c.compliance >= 80 ? "#22C55E" : "#F59E0B",
+                      }}
+                    >
+                      %{c.compliance}
+                    </div>
+                    <div className="text-[10px] text-slate-400">uyumluluk</div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { href: "/coach/clients", label: "Danışanlar" },
+            { href: "/coach/templates", label: "Şablonlar" },
+            { href: "/coach/messages", label: "Mesajlar" },
+            { href: "/coach/profile", label: "Profil" },
+          ].map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="bg-white rounded-xl p-3 text-[13px] font-semibold text-slate-700 flex items-center justify-between transition-colors hover:border-orange-200 hover:text-orange-600 shadow-sm"
+              style={{ border: "1px solid #E2E8F0" }}
+            >
+              {label}
+              <ChevronRight className="h-4 w-4 text-slate-300" />
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

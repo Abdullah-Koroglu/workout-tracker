@@ -1,16 +1,51 @@
 import Link from "next/link";
-import { ArrowRight, CalendarDays, CheckCircle2, Play, Zap } from "lucide-react";
+import { Bell, CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <div
+      className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
+      style={{
+        width: size,
+        height: size,
+        background: `linear-gradient(135deg, ${bg}, ${bg}cc)`,
+        fontSize: size * 0.36,
+        boxShadow: `0 2px 8px ${bg}44`,
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
 export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
+  const userName = session?.user.name || "Kullanıcı";
 
-  const toDayKey = (date: Date) => `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  const toDayKey = (date: Date) =>
+    `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  const today = new Date();
+  const todayKey = toDayKey(today);
 
-  const [assignments, inProgressWorkout, completedWorkoutCount, recentWorkouts] = await Promise.all([
+  const [
+    assignments,
+    inProgressWorkout,
+    completedWorkoutCount,
+    recentWorkouts,
+    activeCoachCount,
+    recentComments,
+    commentCount,
+  ] = await Promise.all([
     prisma.templateAssignment.findMany({
       where: { clientId },
       include: {
@@ -18,35 +53,49 @@ export default async function ClientDashboardPage() {
           include: {
             exercises: {
               include: { exercise: true },
-              orderBy: { order: "asc" }
-            }
-          }
+              orderBy: { order: "asc" },
+            },
+          },
         },
-        workouts: { select: { status: true } }
+        workouts: { select: { status: true } },
       },
       orderBy: { scheduledFor: "asc" },
-      take: 30
+      take: 30,
     }),
     prisma.workout.findFirst({
       where: { clientId, status: "IN_PROGRESS" },
-      include: { template: true },
-      orderBy: { startedAt: "desc" }
+      select: { assignmentId: true },
+      orderBy: { startedAt: "desc" },
     }),
     prisma.workout.count({ where: { clientId, status: "COMPLETED" } }),
     prisma.workout.findMany({
       where: { clientId },
       include: { template: true },
       orderBy: { startedAt: "desc" },
-      take: 6
-    })
+      take: 3,
+    }),
+    prisma.coachClientRelation.count({ where: { clientId, status: "ACCEPTED" } }),
+    prisma.comment.findMany({
+      where: { workout: { clientId }, author: { role: "COACH" } },
+      include: { author: { select: { name: true } } },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+    }),
+    prisma.comment.count({
+      where: { workout: { clientId }, author: { role: "COACH" } },
+    }),
   ]);
 
-  const todayKey = toDayKey(new Date());
-  const today = new Date();
-  const todaysAssignments = assignments.filter((assignment) => toDayKey(new Date(assignment.scheduledFor)) === todayKey);
-  const inProgressTodayAssignment = inProgressWorkout
-    ? todaysAssignments.find((assignment) => assignment.id === inProgressWorkout.assignmentId) || null
-    : null;
+  const todaysAssignments = assignments.filter(
+    (a) => toDayKey(new Date(a.scheduledFor)) === todayKey,
+  );
+  const upcomingAssignments = assignments
+    .filter(
+      (a) =>
+        toDayKey(new Date(a.scheduledFor)) !== todayKey &&
+        new Date(a.scheduledFor) >= today,
+    )
+    .slice(0, 3);
 
   const mondayStart = new Date(today);
   const weekDayOffset = (today.getDay() + 6) % 7;
@@ -57,284 +106,362 @@ export default async function ClientDashboardPage() {
     const dayDate = new Date(mondayStart);
     dayDate.setDate(mondayStart.getDate() + index);
     const key = toDayKey(dayDate);
-    const dayAssignments = assignments.filter((assignment) => toDayKey(new Date(assignment.scheduledFor)) === key);
-    const hasCompleted = dayAssignments.some((assignment) => assignment.workouts.some((w) => w.status === "COMPLETED"));
-    const hasInProgress = dayAssignments.some((assignment) => assignment.workouts.some((w) => w.status === "IN_PROGRESS"));
-
+    const dayAssignments = assignments.filter(
+      (a) => toDayKey(new Date(a.scheduledFor)) === key,
+    );
+    const hasCompleted = dayAssignments.some((a) =>
+      a.workouts.some((w) => w.status === "COMPLETED"),
+    );
     return {
       key,
-      date: dayDate,
-      dayLabel: dayDate.toLocaleDateString("tr-TR", { weekday: "short" }).toUpperCase(),
+      dayLabel: dayDate
+        .toLocaleDateString("tr-TR", { weekday: "short" })
+        .toUpperCase(),
       dayNumber: dayDate.getDate(),
       isToday: key === todayKey,
       hasCompleted,
-      hasInProgress,
-      hasPlanned: dayAssignments.length > 0
+      hasPlanned: dayAssignments.length > 0,
     };
   });
 
-  const upcoming = assignments.slice(0, 3);
-  const loadScore = Math.min(95, Math.max(40, completedWorkoutCount * 8));
-  const hrvScore = Math.min(90, Math.max(40, completedWorkoutCount * 6));
+  const stats = [
+    { label: "Aktif Koç", val: activeCoachCount.toString() },
+    { label: "Program", val: assignments.length.toString() },
+    { label: "Tamamlanan", val: completedWorkoutCount.toString() },
+    { label: "Yorum", val: commentCount.toString() },
+  ];
 
   return (
-    <div className="space-y-8 pb-8">
-      <section className="space-y-2">
-        <h2 className="text-4xl font-black uppercase tracking-tight text-on-surface md:text-5xl">
-          HEDEFE ODAKLAN
-        </h2>
-        <p className="text-lg font-medium text-secondary">
-          {completedWorkoutCount} seans tamamlandi. Hedef artik cok yakin.
-        </p>
-      </section>
-
-      <section className="rounded-2xl border border-surface-container-high bg-surface p-5 shadow-sm">
-        <Link href="/client/calendar" className="mb-5 flex items-center justify-between">
-          <h3 className="text-lg font-black tracking-tight text-on-surface">
-            Haftalık Odağın
-          </h3>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-primary">
-            {today.toLocaleDateString("tr-TR", { month: "long" }).toUpperCase()}
-          </span>
-        </Link>
-        <Link href="/client/calendar" className="flex items-center justify-between gap-2 overflow-x-hidden pb-1">
-          {weeklyFocusDays.map((day) => (
+    <div className="min-h-screen">
+      {/* ── Hero ── */}
+      <div
+        className="-mx-4 px-5 pt-5 pb-7 -mt-4"
+        style={{ background: "linear-gradient(160deg, #1A365D, #2D4A7A)" }}
+      >
+        <div className="flex items-center justify-between mb-5">
+          <div>
+            <p className="text-white/60 text-[13px] m-0">Merhaba,</p>
+            <h2 className="text-white text-[22px] font-black m-0 leading-tight">
+              {userName} 👋
+            </h2>
+          </div>
+          <div className="bg-white/10 rounded-xl w-10 h-10 flex items-center justify-center">
+            <Bell className="h-5 w-5 text-white" />
+          </div>
+        </div>
+        <div className="grid grid-cols-4 gap-2.5">
+          {stats.map((stat) => (
             <div
-              key={day.key}
-              className="flex flex-col items-center gap-2 text-center"
+              key={stat.label}
+              className="rounded-xl py-2.5 px-2 text-center"
+              style={{ background: "rgba(255,255,255,0.1)" }}
             >
-              <span
-                className={`text-[10px] font-bold uppercase ${day.isToday ? "text-on-surface" : "text-secondary"}`}
-              >
-                {day.dayLabel}
-              </span>
-              <div
-                className={`flex h-10 w-10 items-center justify-center rounded-xl text-xs font-black ${day.hasCompleted ? "bg-primary text-white" : day.isToday ? "border-2 border-primary bg-white text-primary" : day.hasInProgress ? "bg-primary-container text-white" : day.hasPlanned ? "bg-surface-container-low text-on-surface" : "bg-surface-container-lowest text-secondary"}`}
-              >
-                {day.hasCompleted ? "✓" : day.dayNumber}
+              <div className="text-[20px] font-extrabold text-white leading-none">
+                {stat.val}
+              </div>
+              <div className="text-[10px] text-white/60 mt-1 leading-tight">
+                {stat.label}
               </div>
             </div>
           ))}
-        </Link>
-      </section>
+        </div>
+      </div>
 
-      <section className="relative overflow-hidden rounded-xl bg-on-surface text-surface shadow-xl">
-        <div className="absolute inset-0 z-10 bg-gradient-to-br from-secondary/70 via-on-surface to-on-surface" />
-        <div className="pointer-events-none absolute -right-14 -top-16 h-56 w-56 rounded-full bg-secondary/35 blur-3xl" />
-        <div className="relative z-20 space-y-6 p-6 text-white bg-gradient-to-br from-slate-900 via-on-surface to-on-surface">
-          <div className="space-y-1">
-            <span className="text-[10px] font-label uppercase tracking-[0.2em] opacity-80">
-              Bugunun Seansi
-            </span>
-            <h3 className="text-3xl font-extrabold leading-none tracking-tighter">
-              {todaysAssignments.length > 0
-                ? `${todaysAssignments.length} ANTRENMAN`
-                : "PLANLI ANTRENMAN YOK"}
+      {/* ── Content ── */}
+      <div className="mt-4 flex flex-col gap-5">
+        {/* Weekly Focus */}
+        <div
+          className="bg-white rounded-[18px] p-4 shadow-sm"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+        >
+          <Link
+            href="/client/calendar"
+            className="flex items-center justify-between mb-4"
+          >
+            <h3 className="text-[15px] font-bold text-slate-800">
+              Haftalık Plan
             </h3>
+            <span className="text-[12px] text-orange-500 font-semibold">
+              Takvim →
+            </span>
+          </Link>
+          <div className="flex items-center justify-between">
+            {weeklyFocusDays.map((day) => (
+              <div key={day.key} className="flex flex-col items-center gap-1.5">
+                <span
+                  className={`text-[10px] font-bold ${day.isToday ? "text-slate-800" : "text-slate-400"}`}
+                >
+                  {day.dayLabel}
+                </span>
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-xl text-[11px] font-black ${
+                    day.hasCompleted
+                      ? "bg-orange-500 text-white"
+                      : day.isToday
+                        ? "border-2 border-orange-500 bg-white text-orange-500"
+                        : day.hasPlanned
+                          ? "bg-slate-100 text-slate-700"
+                          : "bg-slate-50 text-slate-300"
+                  }`}
+                >
+                  {day.hasCompleted ? "✓" : day.dayNumber}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Today's Workout */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[15px] font-bold text-slate-800">Bugün</span>
+            <Link
+              href="/client/calendar"
+              className="text-[12px] text-orange-500 font-semibold"
+            >
+              Takvimi Gör →
+            </Link>
           </div>
 
-          <div className="flex items-center gap-6">
-            <div className="flex flex-col">
-              <span className="text-xs font-label uppercase tracking-widest opacity-70">
-                Gorev
-              </span>
-              <span className="text-lg font-bold">
-                {todaysAssignments.length} BUGUN
-              </span>
+          {todaysAssignments.length === 0 ? (
+            <div
+              className="bg-white rounded-[18px] p-5 shadow-sm text-center"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              <div className="text-3xl mb-2">😴</div>
+              <p className="text-slate-400 text-[13px] m-0">
+                Bugün için antrenman planlanmamış.
+              </p>
             </div>
-            <div className="h-8 w-px bg-on-tertiary/20" />
-            <div className="flex flex-col">
-              <span className="text-xs font-label uppercase tracking-widest opacity-70">
-                Tamamlanan
-              </span>
-              <span className="text-lg font-bold">
-                {completedWorkoutCount} SEANS
-              </span>
-            </div>
-          </div>
-
-          {todaysAssignments.length > 0 ? (
-            <div className="space-y-2">
+          ) : (
+            <div className="flex flex-col gap-2">
               {todaysAssignments.map((assignment) => {
                 const isCompleted = assignment.workouts.some(
                   (w) => w.status === "COMPLETED",
                 );
                 const isInProgress =
-                  assignment.workouts.some((w) => w.status === "IN_PROGRESS") ||
-                  inProgressTodayAssignment?.id === assignment.id;
+                  assignment.workouts.some(
+                    (w) => w.status === "IN_PROGRESS",
+                  ) || inProgressWorkout?.assignmentId === assignment.id;
+
+                return (
+                  <div
+                    key={assignment.id}
+                    className="bg-white rounded-[18px] shadow-sm p-4"
+                    style={{
+                      border: "1px solid rgba(0,0,0,0.06)",
+                      borderLeft: "4px solid #F97316",
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <span className="bg-orange-500/10 text-orange-500 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                          Bugün
+                        </span>
+                        <h3 className="text-[17px] font-black text-slate-800 mt-1.5 mb-0 leading-tight">
+                          {assignment.template.name}
+                        </h3>
+                      </div>
+                      <Link
+                        href={`/client/workout/${assignment.id}/start`}
+                        className="shrink-0 ml-3 rounded-xl px-3.5 py-2 text-[13px] font-bold text-white"
+                        style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
+                      >
+                        {isCompleted
+                          ? "✓ Bitti"
+                          : isInProgress
+                            ? "Devam →"
+                            : "Başla →"}
+                      </Link>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {assignment.template.exercises.slice(0, 4).map((ex, i) => (
+                        <span
+                          key={i}
+                          className="bg-slate-100 rounded-lg px-2.5 py-1 text-[11px] text-slate-600 font-medium"
+                        >
+                          {ex.exercise.name}
+                          {ex.targetSets && ex.targetReps
+                            ? ` ${ex.targetSets}×${ex.targetReps}`
+                            : ex.durationMinutes
+                              ? ` ${ex.durationMinutes}dk`
+                              : ""}
+                        </span>
+                      ))}
+                      {assignment.template.exercises.length > 4 && (
+                        <span className="bg-slate-100 rounded-lg px-2.5 py-1 text-[11px] text-slate-500 font-medium">
+                          +{assignment.template.exercises.length - 4}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Upcoming */}
+        {upcomingAssignments.length > 0 && (
+          <div>
+            <span className="text-[15px] font-bold text-slate-800 block mb-2.5">
+              Yaklaşan
+            </span>
+            <div className="flex flex-col gap-2">
+              {upcomingAssignments.map((a) => (
+                <div
+                  key={a.id}
+                  className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                  style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                >
+                  <div className="bg-slate-100 rounded-xl px-3 py-2 text-center shrink-0 min-w-[48px]">
+                    <div className="text-[11px] text-slate-400 font-medium leading-none">
+                      {new Date(a.scheduledFor).toLocaleDateString("tr-TR", {
+                        month: "short",
+                      })}
+                    </div>
+                    <div className="text-[18px] font-black text-slate-700 leading-tight">
+                      {new Date(a.scheduledFor).getDate()}
+                    </div>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[14px] font-bold text-slate-800 truncate">
+                      {a.template.name}
+                    </div>
+                    <div className="text-[12px] text-slate-400">
+                      {a.template.exercises.length} egzersiz
+                    </div>
+                  </div>
+                  <span className="bg-slate-100 text-slate-400 text-[10px] font-bold px-2 py-1 rounded-full shrink-0">
+                    Yaklaşıyor
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Recent Workouts */}
+        <div>
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[15px] font-bold text-slate-800">
+              Son Antrenmanlar
+            </span>
+            <Link
+              href="/client/workouts"
+              className="text-[12px] text-orange-500 font-semibold"
+            >
+              Tümü →
+            </Link>
+          </div>
+
+          {recentWorkouts.length === 0 ? (
+            <div
+              className="bg-white rounded-[18px] p-4 shadow-sm text-center text-[13px] text-slate-400"
+              style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+            >
+              Henüz antrenman yok.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {recentWorkouts.map((w) => {
+                const durationMin =
+                  w.finishedAt
+                    ? Math.round(
+                        (new Date(w.finishedAt).getTime() -
+                          new Date(w.startedAt).getTime()) /
+                          60000,
+                      )
+                    : null;
 
                 return (
                   <Link
-                    key={assignment.id}
-                    href={`/client/workout/${assignment.id}/start`}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-surface/15 bg-surface/10 px-4 py-3 transition-colors hover:bg-surface/15 bg-slate-700"
+                    key={w.id}
+                    href={`/client/workouts/${w.id}`}
+                    className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                    style={{ border: "1px solid rgba(0,0,0,0.06)" }}
                   >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-extrabold uppercase tracking-wide">
-                        {assignment.template.name}
-                      </p>
-                      <p className="text-xs opacity-75">
-                        {assignment.template.exercises.length} egzersiz
-                      </p>
+                    <div
+                      className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                        w.status === "COMPLETED"
+                          ? "bg-green-500/15"
+                          : "bg-amber-500/15"
+                      }`}
+                    >
+                      {w.status === "COMPLETED" ? (
+                        <CheckCircle2 className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <XCircle className="h-5 w-5 text-amber-500" />
+                      )}
                     </div>
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary-container/85 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
-                      {isCompleted
-                        ? "Tamamlandi"
-                        : isInProgress
-                          ? "Devam Et"
-                          : "Baslat"}
-                      <Play className="h-3.5 w-3.5" />
-                    </span>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[14px] font-bold text-slate-800 truncate">
+                        {w.template.name}
+                      </div>
+                      <div className="text-[12px] text-slate-400">
+                        {new Date(w.startedAt).toLocaleDateString("tr-TR")}
+                        {durationMin ? ` · ${durationMin} dk` : ""}
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-slate-300 shrink-0" />
                   </Link>
                 );
               })}
             </div>
-          ) : (
-            <div className="rounded-lg border border-surface/15 bg-surface/10 p-4 text-sm font-semibold text-surface/90">
-              Bugune atanmis antremaniniz yok, takviminizi kontrol edin.
-            </div>
           )}
         </div>
-      </section>
 
-      <section className="space-y-4">
-        <div className="flex items-end justify-between">
-          <h3 className="text-xl font-bold tracking-tight text-secondary">
-            Yaklasan Plan
-          </h3>
-          <Link
-            href="/client/calendar"
-            className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary"
-          >
-            Tum Takvim <CalendarDays className="h-4 w-4" />
-          </Link>
-        </div>
-
-        <div className="space-y-3">
-          {upcoming.length === 0 ? (
-            <div className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface-variant">
-              Yaklaşan atama bulunmuyor.
-            </div>
-          ) : (
-            upcoming.map((assignment) => (
-              <Link
-                key={assignment.id}
-                href="/client/calendar"
-                className="group flex cursor-pointer items-center gap-4 rounded-lg bg-surface-container-low p-4 transition-colors active:bg-surface-container-high"
-              >
-                <div className="flex min-w-[3.5rem] flex-col items-center justify-center rounded-lg bg-surface-container-highest py-2">
-                  <span className="text-[10px] font-bold uppercase text-secondary/60">
-                    {new Date(assignment.scheduledFor).toLocaleDateString(
-                      "tr-TR",
-                      { weekday: "short" },
-                    )}
-                  </span>
-                  <span className="text-xl font-black text-secondary">
-                    {new Date(assignment.scheduledFor).getDate()}
-                  </span>
-                </div>
-                <div className="flex-1">
-                  <h4 className="font-bold text-secondary">
-                    {assignment.template.name}
-                  </h4>
-                  <p className="text-sm font-medium text-on-surface-variant">
-                    {assignment.template.exercises.length} egzersiz •{" "}
-                    {assignment.workouts.some((w) => w.status === "COMPLETED")
-                      ? "Tamamlandi"
-                      : "Planli"}
+        {/* Coach Feedback */}
+        {recentComments.length > 0 && (
+          <div>
+            <span className="text-[15px] font-bold text-slate-800 block mb-2.5">
+              Koç Yorumları
+            </span>
+            <div className="flex flex-col gap-2">
+              {recentComments.map((c) => (
+                <div
+                  key={c.id}
+                  className="bg-white rounded-[18px] shadow-sm p-3.5"
+                  style={{
+                    border: "1px solid rgba(0,0,0,0.06)",
+                    borderLeft: "3px solid #2563EB",
+                  }}
+                >
+                  <p className="text-[13px] text-slate-600 mb-2 leading-relaxed m-0">
+                    {c.content}
                   </p>
+                  <div className="flex items-center gap-1.5">
+                    <Avatar name={c.author.name} size={20} bg="#1A365D" />
+                    <span className="text-[12px] text-slate-400 font-semibold">
+                      {c.author.name}
+                    </span>
+                  </div>
                 </div>
-                <div className="rounded-full bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase text-primary">
-                  {assignment.workouts.some((w) => w.status === "COMPLETED")
-                    ? "Bitti"
-                    : "Bekliyor"}
-                </div>
-              </Link>
-            ))
-          )}
-        </div>
-      </section>
-
-      <section className="grid grid-cols-2 gap-4">
-        <div className="rounded-lg border-l-4 border-primary bg-white p-6 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            Yuk Skoru
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-3xl font-black text-secondary">
-              {loadScore}
-            </span>
-            <span className="text-xs font-bold text-slate-400">/100</span>
-          </div>
-        </div>
-        <div className="rounded-lg border-l-4 border-tertiary bg-white p-6 shadow-sm">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-            HRV Durumu
-          </span>
-          <div className="mt-1 flex items-baseline gap-1">
-            <span className="text-3xl font-black text-secondary">
-              {hrvScore}
-            </span>
-            <span className="text-xs font-bold text-slate-400">ms</span>
-          </div>
-        </div>
-      </section>
-
-      <section className="space-y-2">
-        <h3 className="text-sm font-black tracking-tight text-secondary">
-          Son Seanslar
-        </h3>
-        {recentWorkouts.length === 0 ? (
-          <div className="rounded-lg bg-surface-container-low p-4 text-sm text-on-surface-variant">
-            Henüz geçmiş seans yok.
-          </div>
-        ) : (
-          recentWorkouts.slice(0, 2).map((workout) => (
-            <div
-              key={workout.id}
-              className="flex items-center gap-3 rounded-lg bg-surface-container-low p-4"
-            >
-              <CheckCircle2 className="h-5 w-5 text-primary" />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-on-surface">
-                  {workout.template.name}
-                </p>
-                <p className="text-xs text-secondary">
-                  {new Date(workout.startedAt).toLocaleString("tr-TR")}
-                </p>
-              </div>
-              <Zap className="h-4 w-4 text-tertiary" />
+              ))}
             </div>
-          ))
+          </div>
         )}
-      </section>
 
-      <section className="grid grid-cols-2 gap-3">
-        <Link
-          href="/client/calendar"
-          className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600"
-        >
-          Takvim Plani
-        </Link>
-        <Link
-          href="/client/workouts"
-          className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600"
-        >
-          Antreman Arsivi
-        </Link>
-        <Link
-          href="/client/coaches"
-          className="rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600"
-        >
-          Koc Agi
-        </Link>
-        <Link
-          href="/client/messages"
-          className="inline-flex items-center justify-between rounded-xl border border-slate-200 p-3 text-sm font-semibold text-slate-700 transition-colors hover:border-orange-200 hover:text-orange-600"
-        >
-          Mesajlar <ArrowRight className="h-4 w-4" />
-        </Link>
-      </section>
+        {/* Quick Links */}
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { href: "/client/calendar", label: "Takvim Planı" },
+            { href: "/client/workouts", label: "Antrenman Arşivi" },
+            { href: "/client/coaches", label: "Koç Ağı" },
+            { href: "/client/messages", label: "Mesajlar" },
+          ].map(({ href, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className="bg-white rounded-xl p-3 text-[13px] font-semibold text-slate-700 flex items-center justify-between transition-colors hover:border-orange-200 hover:text-orange-600 shadow-sm"
+              style={{ border: "1px solid #E2E8F0" }}
+            >
+              {label}
+              <ChevronRight className="h-4 w-4 text-slate-300" />
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

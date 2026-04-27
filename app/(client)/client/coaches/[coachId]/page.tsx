@@ -13,6 +13,7 @@ import {
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { PageHero } from "@/components/shared/PageHero";
 import { RequestCoachButton } from "./RequestCoachButton";
 
 function getInitials(name: string) {
@@ -80,103 +81,49 @@ export default async function CoachVitrinPage({
       </Link>
 
       {/* ── Hero banner ── */}
-      <div
-        className="relative overflow-hidden rounded-2xl"
-        style={{ background: "linear-gradient(135deg, #1A365D 0%, #0F172A 100%)" }}
+      <PageHero
+        eyebrow="Elite Coach"
+        title={coach.name}
+        subtitle={profile?.experienceYears != null ? `${profile.experienceYears} yıl tecrübe` : undefined}
+        variant="navy"
+        avatar={{ initials: getInitials(coach.name), variant: "navy" }}
+        statBoxes={[
+          { label: "Deneyim",  value: profile?.experienceYears ? `${profile.experienceYears} yıl` : "—", icon: Star },
+          { label: "Uzmanlık", value: `${specialties.length}`, icon: Award },
+          { label: "Paket",    value: `${pkgCount}`, icon: Briefcase },
+        ]}
       >
-        {/* glow */}
-        <div
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(249,115,22,0.2) 0%, transparent 70%)" }}
-        />
-
-        <div className="relative z-10 p-6 md:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between">
-
-            {/* Avatar + name */}
-            <div className="flex items-start gap-4">
-              <div
-                className="flex h-20 w-20 flex-shrink-0 items-center justify-center rounded-2xl text-2xl font-black text-white"
-                style={{
-                  background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
-                  boxShadow: "0 4px 20px rgba(26,54,93,0.6)",
-                  border: "2px solid rgba(249,115,22,0.35)",
-                }}
+        {/* Bio */}
+        {profile?.bio && (
+          <p className="text-sm leading-relaxed text-slate-300 max-w-2xl">{profile.bio}</p>
+        )}
+        {/* Social link */}
+        {profile?.socialMediaUrl && (
+          <a
+            href={profile.socialMediaUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Sosyal Medya
+          </a>
+        )}
+        {/* Specialties */}
+        {specialties.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {specialties.map((s) => (
+              <span
+                key={s}
+                className="rounded-full px-3 py-1 text-xs font-bold"
+                style={{ background: "rgba(249,115,22,0.15)", color: "#FB923C", border: "1px solid rgba(249,115,22,0.2)" }}
               >
-                {getInitials(coach.name)}
-              </div>
-              <div>
-                <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-1">
-                  Elite Coach
-                </span>
-                <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">
-                  {coach.name}
-                </h1>
-                {profile?.experienceYears != null && (
-                  <p className="mt-1 flex items-center gap-1.5 text-sm text-slate-400">
-                    <Star className="h-3.5 w-3.5 text-amber-400" />
-                    {profile.experienceYears} yıl tecrübe
-                  </p>
-                )}
-                {profile?.socialMediaUrl && (
-                  <a
-                    href={profile.socialMediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Sosyal Medya
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Stat pills — desktop */}
-            <div className="hidden sm:flex flex-wrap gap-3 flex-shrink-0">
-              {[
-                { icon: Star,      label: "Deneyim",  value: profile?.experienceYears ? `${profile.experienceYears} yıl` : "—" },
-                { icon: Award,     label: "Uzmanlık", value: `${specialties.length}` },
-                { icon: Briefcase, label: "Paket",    value: `${pkgCount}` },
-              ].map(({ icon: Icon, label, value }) => (
-                <div
-                  key={label}
-                  className="flex flex-col items-center rounded-xl px-4 py-2.5"
-                  style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
-                >
-                  <Icon className="mb-1 h-3.5 w-3.5 text-slate-400" />
-                  <span className="text-lg font-black text-white leading-none">{value}</span>
-                  <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
+                {s}
+              </span>
+            ))}
           </div>
-
-          {/* Bio */}
-          {profile?.bio && (
-            <p className="mt-5 text-sm leading-relaxed text-slate-300 max-w-2xl">
-              {profile.bio}
-            </p>
-          )}
-
-          {/* Specialties */}
-          {specialties.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {specialties.map((s) => (
-                <span
-                  key={s}
-                  className="rounded-full px-3 py-1 text-xs font-bold"
-                  style={{ background: "rgba(249,115,22,0.15)", color: "#FB923C", border: "1px solid rgba(249,115,22,0.2)" }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+        )}
+      </PageHero>
 
       {/* ── Desktop 2-col layout ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

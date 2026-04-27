@@ -154,20 +154,20 @@ export function RoleNavShell({
             >
               <Bell className="h-5 w-5" />
             </button>
-            <button
+            {/* <button
               type="button"
               onClick={() => void signOut({ callbackUrl: "/login" })}
               className="text-slate-500 transition-colors duration-200 hover:text-orange-500"
               aria-label="Sign out"
             >
               <User className="h-5 w-5" />
-            </button>
+            </button> */}
           </div>
         </header>
 
         <div className={[
           "mx-auto px-0",
-          isMessagesRoute ? "pt-16 md:pt-16 md:pl-64" : "pt-20 md:pt-24 md:pl-64 md:max-w-[120rem]"
+          isMessagesRoute ? "pt-16 md:pt-16 md:pl-64" : "pt-20 md:pt-20 md:pl-64"
         ].join(" ")}>{children}</div>
       </main>
 

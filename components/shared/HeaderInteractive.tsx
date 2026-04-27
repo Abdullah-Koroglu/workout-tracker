@@ -97,7 +97,8 @@ export function HeaderInteractive({
             Kayıt Ol
           </Link>
         </div>
-      </>
+       
+      </> 
     );
   }
 

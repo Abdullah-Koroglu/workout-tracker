@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useNotificationContext } from "@/contexts/NotificationContext";
+import { PageHero } from "@/components/shared/PageHero";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -177,58 +178,22 @@ export default function CoachProfilePage() {
     <div className="space-y-6 pb-16">
 
       {/* ── Hero banner ── */}
-      <div
-        className="relative overflow-hidden rounded-2xl p-6 md:p-8"
-        style={{ background: "linear-gradient(135deg, #1A365D 0%, #0F172A 100%)" }}
-      >
-        <div
-          className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(249,115,22,0.2) 0%, transparent 70%)" }}
-        />
-        <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            <div
-              className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl text-xl font-black text-white"
-              style={{
-                background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
-                boxShadow: "0 4px 14px rgba(26,54,93,0.5)",
-                border: "2px solid rgba(249,115,22,0.4)",
-              }}
-            >
-              {getInitials(name)}
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-0.5">
-                Elite Coach
-              </span>
-              <h1 className="text-2xl font-black tracking-tight text-white">{name}</h1>
-              <p className="text-sm text-slate-400">
-                {experienceYears ? `${experienceYears} yıl deneyim` : "Profil & Vitrin"}
-                {packages.length > 0 ? ` · ${packages.length} aktif paket` : ""}
-              </p>
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="flex flex-wrap gap-3">
-            {[
-              { icon: Star,  label: "Deneyim", value: experienceYears ? `${experienceYears} yıl` : "—" },
-              { icon: Award, label: "Uzmanlık", value: `${specialties.length}` },
-              { icon: Briefcase, label: "Paket", value: `${packages.length}` },
-            ].map(({ icon: Icon, label, value }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center rounded-xl px-4 py-2.5"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <Icon className="mb-1 h-3.5 w-3.5 text-slate-400" />
-                <span className="text-lg font-black text-white leading-none">{value}</span>
-                <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PageHero
+        eyebrow="Elite Coach"
+        title={name}
+        subtitle={
+          experienceYears
+            ? `${experienceYears} yıl deneyim${packages.length > 0 ? ` · ${packages.length} aktif paket` : ""}`
+            : "Profil & Vitrin"
+        }
+        variant="navy"
+        avatar={{ initials: getInitials(name), variant: "navy" }}
+        statBoxes={[
+          { label: "Deneyim", value: experienceYears ? `${experienceYears} yıl` : "—", icon: Star },
+          { label: "Uzmanlık", value: `${specialties.length}`, icon: Award },
+          { label: "Paket", value: `${packages.length}`, icon: Briefcase },
+        ]}
+      />
 
       {/* ── 2-col desktop layout ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

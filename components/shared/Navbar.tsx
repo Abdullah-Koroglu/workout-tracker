@@ -62,6 +62,10 @@ export async function Navbar() {
       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
       : "";
 
+      if (!session?.user) {
+        return <></>;
+      }
+
   return (
     <header
       id="app-navbar"
@@ -77,7 +81,13 @@ export async function Navbar() {
             <div
               className={`flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br shadow-sm transition-shadow group-hover:shadow-md`}
             >
-              <Image src="/logo.png" alt="Fit Coach Logo" width={32} height={32} className="aspect-square"/>
+              <Image
+                src="/logo.png"
+                alt="Fit Coach Logo"
+                width={32}
+                height={32}
+                className="aspect-square"
+              />
             </div>
             <span
               className={`bg-gradient-to-r ${logoText} bg-clip-text text-lg font-black tracking-tight text-transparent`}
@@ -87,20 +97,23 @@ export async function Navbar() {
           </Link>
 
           {/* All interactive parts delegated to client component */}
-          <HeaderInteractive
-            role={session ? (session.user.role as "COACH" | "CLIENT") : undefined}
-            userName={session?.user.name}
-            initials={initials}
-            activeWorkoutHref={
-              activeWorkout
-                ? `/client/workout/${activeWorkout.assignmentId}/start`
-                : undefined
-            }
-            avatarBg={avatarBg}
-            roleBadgeClass={roleBadgeClass}
-            isCoach={isCoach}
-            isClient={isClient}
-          />
+          
+            <HeaderInteractive
+              role={
+                session ? (session.user.role as "COACH" | "CLIENT") : undefined
+              }
+              userName={session?.user.name}
+              initials={initials}
+              activeWorkoutHref={
+                activeWorkout
+                  ? `/client/workout/${activeWorkout.assignmentId}/start`
+                  : undefined
+              }
+              avatarBg={avatarBg}
+              roleBadgeClass={roleBadgeClass}
+              isCoach={isCoach}
+              isClient={isClient}
+            />
         </div>
       </div>
 

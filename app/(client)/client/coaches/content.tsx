@@ -19,6 +19,7 @@ import {
 import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { ActionMenu } from "@/components/ui/action-menu";
+import { PageHero } from "@/components/shared/PageHero";
 
 /* ─── Types ──────────────────────────────────────────── */
 type Coach = {
@@ -156,43 +157,16 @@ export default function ClientCoachesContent() {
     <div className="space-y-6 pb-10">
 
       {/* ── Hero header ── */}
-      <div
-        className="relative overflow-hidden rounded-2xl p-6 md:p-8"
-        style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
-      >
-        {/* glow */}
-        <div
-          className="absolute top-0 right-0 w-64 h-64 -mr-32 -mt-32 rounded-full pointer-events-none"
-          style={{ background: "radial-gradient(circle, rgba(249,115,22,0.2) 0%, transparent 70%)" }}
-        />
-        <div className="relative z-10">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-1">
-            Koç Ağı
-          </span>
-          <h1 className="text-2xl font-black tracking-tight text-white md:text-3xl">Koçlarım</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Koç bul, bağlantı yönet ve iletişim kur.
-          </p>
-
-          {/* Stat pills */}
-          <div className="mt-5 flex flex-wrap gap-3">
-            {[
-              { label: "Aktif Koç",      value: stats.accepted, color: "#22C55E", bg: "rgba(34,197,94,0.15)" },
-              { label: "Bekleyen İstek", value: stats.pending,  color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
-              { label: "Koç Havuzu",     value: stats.pool,     color: "#2563EB", bg: "rgba(37,99,235,0.15)" },
-            ].map(({ label, value, color, bg }) => (
-              <div
-                key={label}
-                className="flex items-center gap-2 rounded-xl px-4 py-2.5"
-                style={{ background: bg, border: `1px solid ${color}33` }}
-              >
-                <span className="text-2xl font-black" style={{ color }}>{value}</span>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">{label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PageHero
+        eyebrow="Koç Ağı"
+        title="Koçlarım"
+        subtitle="Koç bul, bağlantı yönet ve iletişim kur."
+        stats={[
+          { label: "Aktif Koç",      value: stats.accepted, color: "#22C55E", bg: "rgba(34,197,94,0.15)" },
+          { label: "Bekleyen İstek", value: stats.pending,  color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
+          { label: "Koç Havuzu",     value: stats.pool,     color: "#2563EB", bg: "rgba(37,99,235,0.15)" },
+        ]}
+      />
 
       {/* ── Tabs ── */}
       <div className="flex border-b border-slate-200">

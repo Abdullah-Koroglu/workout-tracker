@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useNotificationContext } from "@/contexts/NotificationContext";
+import { PageHero } from "@/components/shared/PageHero";
 
 /* ─── Types & constants ─────────────────────────────── */
 type ClientProfileData = {
@@ -129,67 +130,17 @@ export default function ClientProfilePage() {
     <div className="space-y-6 pb-16">
 
       {/* ── Hero banner ── */}
-      <div
-        className="relative overflow-hidden rounded-2xl p-6 md:p-8"
-        style={{ background: "linear-gradient(135deg, #1E293B 0%, #0F172A 100%)" }}
-      >
-        {/* glow */}
-        <div
-          className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full"
-          style={{ background: "radial-gradient(circle, rgba(249,115,22,0.25) 0%, transparent 70%)" }}
-        />
-        <div className="relative z-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-4">
-            {/* Avatar */}
-            <div
-              className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-2xl text-xl font-black text-white"
-              style={{
-                background: "linear-gradient(135deg, #FB923C, #EA580C)",
-                boxShadow: "0 4px 14px rgba(249,115,22,0.4)",
-              }}
-            >
-              {getInitials(name)}
-            </div>
-            <div>
-              <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-orange-400 mb-0.5">
-                Danışan
-              </span>
-              <h1 className="text-2xl font-black tracking-tight text-white">{name}</h1>
-              <p className="text-sm text-slate-400">
-                {GOALS.find((g) => g.value === goal)?.label ?? "Hedef belirlenmedi"}
-              </p>
-            </div>
-          </div>
-
-          {/* Quick stats */}
-          <div className="flex flex-wrap gap-3">
-            {[
-              { icon: Ruler, label: "Boy", value: heightCm ? `${heightCm} cm` : "—" },
-              { icon: Scale, label: "Kilo", value: weightKg ? `${weightKg} kg` : "—" },
-              ...(bmiInfo
-                ? [{ icon: Activity, label: "BMI", value: bmiInfo.val, valueColor: bmiInfo.color }]
-                : []),
-            ].map(({ icon: Icon, label, value, valueColor }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center rounded-xl px-4 py-2.5 text-center"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <Icon className="mb-1 h-3.5 w-3.5 text-slate-400" />
-                <span
-                  className="text-lg font-black leading-none"
-                  style={{ color: valueColor ?? "#fff" }}
-                >
-                  {value}
-                </span>
-                <span className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                  {label}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      <PageHero
+        eyebrow="Danışan"
+        title={name}
+        subtitle={GOALS.find((g) => g.value === goal)?.label ?? "Hedef belirlenmedi"}
+        avatar={{ initials: getInitials(name), variant: "orange" }}
+        statBoxes={[
+          { label: "Boy",  value: heightCm ? `${heightCm} cm` : "—", icon: Ruler },
+          { label: "Kilo", value: weightKg ? `${weightKg} kg` : "—", icon: Scale },
+          ...(bmiInfo ? [{ label: "BMI", value: bmiInfo.val, icon: Activity }] : []),
+        ]}
+      />
 
       {/* ── Desktop 2-col layout ── */}
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">

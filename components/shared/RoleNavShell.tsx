@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Search,
   User,
-  UserSearch,
   Users,
 } from "lucide-react";
 import { GlobalBreadcrumb } from "./GlobalBreadcrumb";
@@ -39,8 +38,7 @@ const coachItems: NavItem[] = [
 const clientItems: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/client/workouts", label: "Geçmiş", icon: History },
-  { href: "/client/coaches", label: "Gelişim", icon: UserSearch },
-  { href: "/client/marketplace", label: "Keşfet", icon: Compass },
+  { href: "/client/coaches", label: "Koçlar", icon: Compass },
   { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/profile", label: "Profil", icon: User },
 ];
@@ -56,7 +54,7 @@ const coachMobileItems: NavItem[] = [
 const clientMobileItems: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/client/workouts", label: "Geçmiş", icon: History },
-  { href: "/client/marketplace", label: "Keşfet", icon: Compass },
+  { href: "/client/coaches", label: "Koçlar", icon: Compass },
   { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/profile", label: "Profil", icon: User },
 ];

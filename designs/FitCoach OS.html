@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FitCoach OS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f1117;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Lexend', sans-serif;
+      padding: 20px;
+    }
+
+    /* ── Phone Shell ─────────────────────────────────── */
+    .phone-shell {
+      width: 393px;
+      height: 852px;
+      border-radius: 48px;
+      background: #1a1a1a;
+      box-shadow:
+        0 0 0 1px #333,
+        0 0 0 8px #111,
+        0 40px 80px rgba(0,0,0,0.7),
+        inset 0 0 0 1px #2a2a2a;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-inner {
+      flex: 1;
+      border-radius: 44px;
+      overflow: hidden;
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Dynamic island */
+    .dynamic-island {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 120px;
+      height: 34px;
+      background: #111;
+      border-radius: 20px;
+      z-index: 100;
+    }
+
+    /* Screen transition */
+    .screen-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: fadeIn 0.18s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Scrollbar hide */
+    ::-webkit-scrollbar { display: none; }
+
+    /* Sidebar labels */
+    .sidebar {
+      position: absolute;
+      left: -180px;
+      top: 0;
+      bottom: 0;
+      width: 160px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 8px;
+    }
+    .sidebar-label {
+      font-family: 'Lexend', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      text-align: right;
+      padding: 2px 0;
+      cursor: pointer;
+      transition: color 0.15s;
+    }
+    .sidebar-label:hover { color: #F97316; }
+    .sidebar-label.active { color: #F97316; }
+    .sidebar-label.section-head {
+      color: #888;
+      font-size: 10px;
+      margin-top: 10px;
+      font-weight: 700;
+    }
+
+    /* Right panel — screen list */
+    .screen-list {
+      position: absolute;
+      right: -200px;
+      top: 0;
+      width: 180px;
+    }
+  </style>
+</head>
+<body>
+
+<div style="position:relative; display:flex; align-items:center; justify-content:center;">
+
+  <!-- Left sidebar: quick navigation -->
+  <div class="sidebar">
+    <div class="sidebar-label section-head">Auth</div>
+    <div class="sidebar-label" id="nav-landing">Landing</div>
+    <div class="sidebar-label" id="nav-login">Login</div>
+    <div class="sidebar-label" id="nav-register">Register</div>
+
+    <div class="sidebar-label section-head">Client</div>
+    <div class="sidebar-label" id="nav-client-dashboard">Dashboard</div>
+    <div class="sidebar-label" id="nav-client-calendar">Takvim</div>
+    <div class="sidebar-label" id="nav-client-workouts">Antrenmanlar</div>
+    <div class="sidebar-label" id="nav-client-workout-start">Antrenman Yap</div>
+    <div class="sidebar-label" id="nav-client-coaches">Koçlarım</div>
+    <div class="sidebar-label" id="nav-client-marketplace">Marketplace</div>
+    <div class="sidebar-label" id="nav-client-messages">Mesajlar</div>
+    <div class="sidebar-label" id="nav-client-profile">Profil</div>
+
+    <div class="sidebar-label section-head">Coach</div>
+    <div class="sidebar-label" id="nav-coach-dashboard">Dashboard</div>
+    <div class="sidebar-label" id="nav-coach-templates">Templates</div>
+    <div class="sidebar-label" id="nav-coach-template-new">Yeni Template</div>
+    <div class="sidebar-label" id="nav-coach-clients">Danışanlar</div>
+    <div class="sidebar-label" id="nav-coach-client-progress">İlerleme</div>
+    <div class="sidebar-label" id="nav-coach-messages">Mesajlar</div>
+    <div class="sidebar-label" id="nav-coach-profile">Profil</div>
+  </div>
+
+  <!-- Phone -->
+  <div class="phone-shell">
+    <div class="dynamic-island"></div>
+    <div class="phone-inner">
+      <div id="app" style="display:flex;flex-direction:column;height:100%;overflow:hidden;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Load components in order -->
+<script type="text/babel" src="fitcoach-shared.jsx"></script>
+<script type="text/babel" src="fitcoach-auth.jsx"></script>
+<script type="text/babel" src="fitcoach-client.jsx"></script>
+<script type="text/babel" src="fitcoach-coach.jsx"></script>
+
+<script type="text/babel">
+// ── Bottom-nav tab resolution ────────────────────────
+function resolveTab(screen) {
+  if (screen.startsWith('coach-')) {
+    if (screen.includes('template')) return 'coach-templates';
+    if (screen.includes('client')) return 'coach-clients';
+    if (screen.includes('message')) return 'coach-messages';
+    if (screen.includes('profile')) return 'coach-profile';
+    return 'coach-dashboard';
+  } else {
+    if (screen.includes('calendar')) return 'client-calendar';
+    if (screen.includes('workout')) return 'client-workouts';
+    if (screen.includes('message')) return 'client-messages';
+    if (screen.includes('profile') && !screen.includes('coach-profile')) return 'client-profile';
+    if (screen.includes('marketplace') || screen.includes('coaches') || screen.includes('coach-profile')) return 'client-coaches';
+    return 'client-dashboard';
+  }
+}
+
+// ── Auth screens (no bottom nav) ─────────────────────
+const AUTH_SCREENS = new Set(['landing', 'login', 'register']);
+
+// ── App Shell ────────────────────────────────────────
+function App() {
+  const [screen, setScreen] = React.useState('landing');
+  const [params, setParams] = React.useState({});
+  const [role, setRole] = React.useState('client');
+  const [history, setHistory] = React.useState([]);
+
+  function navigate(to, p = {}) {
+    // Infer role from route or params
+    if (to.startsWith('coach-')) setRole('coach');
+    else if (to.startsWith('client-')) setRole('client');
+    if (p.role) setRole(p.role);
+    setHistory(h => [...h, { screen, params }]);
+    setScreen(to);
+    setParams(p);
+    // Sync sidebar
+    setTimeout(() => updateSidebar(to), 0);
+  }
+
+  function goBack() {
+    if (history.length === 0) return;
+    const prev = history[history.length - 1];
+    setHistory(h => h.slice(0, -1));
+    setScreen(prev.screen);
+    setParams(prev.params);
+    setTimeout(() => updateSidebar(prev.screen), 0);
+  }
+
+  const isAuth = AUTH_SCREENS.has(screen);
+  const showNav = !isAuth && !['client-workout-start'].includes(screen);
+  const activeTab = resolveTab(screen);
+
+  function renderScreen() {
+    const nav = { onNavigate: navigate, params };
+    switch (screen) {
+      case 'landing': return <LandingScreen {...nav} />;
+      case 'login': return <LoginScreen {...nav} />;
+      case 'register': return <RegisterScreen {...nav} />;
+      case 'client-dashboard': return <ClientDashboard {...nav} />;
+      case 'client-workouts': return <ClientWorkoutsScreen {...nav} />;
+      case 'client-workout-detail': return <WorkoutDetailScreen {...nav} />;
+      case 'client-workout-start': return <WorkoutExecutionScreen {...nav} />;
+      case 'client-calendar': return <CalendarScreen {...nav} />;
+      case 'client-coaches': return <ClientCoachesScreen {...nav} />;
+      case 'client-marketplace': return <MarketplaceScreen {...nav} />;
+      case 'client-coach-profile': return <CoachProfileDetailScreen {...nav} />;
+      case 'client-messages': return <ClientMessagesScreen {...nav} />;
+      case 'client-profile': return <ClientProfileScreen {...nav} />;
+      case 'coach-dashboard': return <CoachDashboard {...nav} />;
+      case 'coach-templates': return <TemplatesScreen {...nav} />;
+      case 'coach-template-new': return <NewTemplateScreen {...nav} />;
+      case 'coach-template-assign': return <TemplateAssignScreen {...nav} />;
+      case 'coach-clients': return <CoachClientsScreen {...nav} />;
+      case 'coach-client-progress': return <ClientProgressScreen {...nav} />;
+      case 'coach-messages': return <CoachMessagesScreen {...nav} />;
+      case 'coach-profile': return <CoachProfileScreen {...nav} />;
+      default: return <LandingScreen {...nav} />;
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#F8FAFC', fontFamily: 'Lexend, sans-serif' }}>
+      {!isAuth && <StatusBar />}
+      <div className="screen-wrap" key={screen} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0 }}>
+        {renderScreen()}
+      </div>
+      {showNav && (
+        <BottomNav
+          role={role}
+          active={activeTab}
+          onNavigate={navigate}
+        />
+      )}
+    </div>
+  );
+}
+
+// Sidebar sync
+function updateSidebar(screen) {
+  document.querySelectorAll('.sidebar-label').forEach(el => el.classList.remove('active'));
+  const key = screen.replace(/-\d+$/, ''); // strip trailing ids
+  const el = document.getElementById('nav-' + key);
+  if (el) el.classList.add('active');
+}
+
+// Sidebar click handlers
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.sidebar-label[id]').forEach(el => {
+    el.addEventListener('click', () => {
+      const screen = el.id.replace('nav-', '');
+      window.__appNavigate && window.__appNavigate(screen);
+    });
+  });
+});
+
+// Mount App
+const root = ReactDOM.createRoot(document.getElementById('app'));
+
+// Wrapper to expose navigate fn
+function AppWrapper() {
+  const navigateRef = React.useRef(null);
+  const [screen, setScreen] = React.useState('landing');
+  const [params, setParams] = React.useState({});
+  const [role, setRole] = React.useState('client');
+  const [history, setHistory] = React.useState([]);
+
+  function navigate(to, p = {}) {
+    if (to.startsWith('coach-')) setRole('coach');
+    else if (to.startsWith('client-')) setRole('client');
+    if (p.role) setRole(p.role);
+    setHistory(h => [...h, { screen, params }]);
+    setScreen(to);
+    setParams(p);
+    setTimeout(() => updateSidebar(to), 0);
+  }
+
+  React.useEffect(() => {
+    window.__appNavigate = navigate;
+    updateSidebar('landing');
+  }, []);
+
+  const isAuth = AUTH_SCREENS.has(screen);
+  const showNav = !isAuth && screen !== 'client-workout-start';
+  const activeTab = resolveTab(screen);
+
+  function renderScreen() {
+    const nav = { onNavigate: navigate, params };
+    switch (screen) {
+      case 'landing':               return <LandingScreen {...nav} />;
+      case 'login':                 return <LoginScreen {...nav} />;
+      case 'register':              return <RegisterScreen {...nav} />;
+      case 'client-dashboard':      return <ClientDashboard {...nav} />;
+      case 'client-workouts':       return <ClientWorkoutsScreen {...nav} />;
+      case 'client-workout-detail': return <WorkoutDetailScreen {...nav} />;
+      case 'client-workout-start':  return <WorkoutExecutionScreen {...nav} />;
+      case 'client-calendar':       return <CalendarScreen {...nav} />;
+      case 'client-coaches':         return <ClientCoachesScreen {...nav} />;
+      case 'client-marketplace':     return <MarketplaceScreen {...nav} />;
+      case 'client-coach-profile':   return <CoachProfileDetailScreen {...nav} />;
+      case 'client-messages':       return <ClientMessagesScreen {...nav} />;
+      case 'client-profile':        return <ClientProfileScreen {...nav} />;
+      case 'coach-dashboard':       return <CoachDashboard {...nav} />;
+      case 'coach-templates':       return <TemplatesScreen {...nav} />;
+      case 'coach-template-new':    return <NewTemplateScreen {...nav} />;
+      case 'coach-template-assign': return <TemplateAssignScreen {...nav} />;
+      case 'coach-clients':         return <CoachClientsScreen {...nav} />;
+      case 'coach-client-progress': return <ClientProgressScreen {...nav} />;
+      case 'coach-messages':        return <CoachMessagesScreen {...nav} />;
+      case 'coach-profile':         return <CoachProfileScreen {...nav} />;
+      default:                      return <LandingScreen {...nav} />;
+    }
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: '#F8FAFC', fontFamily: 'Lexend, sans-serif' }}>
+      {!isAuth && <StatusBar />}
+      <div key={screen} style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', minHeight: 0, animation: 'fadeIn 0.18s ease' }}>
+        {renderScreen()}
+      </div>
+      {showNav && <BottomNav role={role} active={activeTab} onNavigate={navigate} />}
+    </div>
+  );
+}
+
+root.render(<AppWrapper />);
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+import { NextResponse } from "next/server";
+
+import { requireAuth } from "@/lib/api-auth";
+import { prisma } from "@/lib/prisma";
+
+// GET /api/coaches/[coachId]
+// Aliases /api/marketplace/coaches/[coachId] — kept for forward compatibility
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ coachId: string }> }
+) {
+  const auth = await requireAuth("CLIENT");
+  if ("error" in auth) return auth.error;
+
+  const { coachId } = await params;
+
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId, role: "COACH" },
+    select: {
+      id: true,
+      name: true,
+      coachProfile: {
+        select: {
+          bio: true,
+          specialties: true,
+          experienceYears: true,
+          socialMediaUrl: true,
+          packages: {
+            where: { isActive: true },
+            orderBy: { createdAt: "asc" },
+          },
+        },
+      },
+    },
+  });
+
+  if (!coach) {
+    return NextResponse.json({ error: "Koç bulunamadı." }, { status: 404 });
+  }
+
+  return NextResponse.json({ coach });
+}

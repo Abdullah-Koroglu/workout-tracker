@@ -435,7 +435,7 @@ export default function ClientCoachesContent() {
                 return (
                   <Link
                     key={coach.id}
-                    href={`/client/marketplace/${coach.id}`}
+                    href={`/client/coaches/${coach.id}`}
                     className="group bg-white rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:shadow-lg"
                     style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                   >

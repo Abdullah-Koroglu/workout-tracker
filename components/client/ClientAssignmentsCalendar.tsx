@@ -134,12 +134,13 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
   }, [selectedDayKey]);
 
   return (
-    <div className="mb-24 mx-auto max-w-5xl space-y-8 px-0">
+    <div className="mb-24 mx-auto max-w-5xl space-y-8">
       <section className="space-y-6">
+        {/* Month header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <span className="font-label text-xs font-bold uppercase tracking-widest text-secondary">
-              Antreman Donemi
+              Antrenman Dönemi
             </span>
             <h2 className="text-3xl font-black tracking-tight text-on-surface">
               {monthDate
@@ -165,9 +166,11 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
           </div>
         </div>
 
+        {/* Calendar grid */}
         <div className="bg-surface-container-low rounded-lg p-6">
+          {/* Day labels */}
           <div className="grid grid-cols-7 gap-2 mb-4">
-            {["Pzt", "Sal", "Car", "Per", "Cum", "Cmt", "Paz"].map((day) => (
+            {["Pzt", "Sal", "Çar", "Per", "Cum", "Cmt", "Paz"].map((day) => (
               <div
                 key={day}
                 className="text-center font-label text-[10px] font-bold text-slate-400 uppercase tracking-tighter"
@@ -177,16 +180,29 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
             ))}
           </div>
 
+          {/* Day cells */}
           <div className="grid grid-cols-7 gap-2">
             {calendarCells.map((cell) => {
               const isToday = cell.key === todayKey;
               const isSelected = cell.key === selectedDayKey && !isToday;
+
+              // Determine bottom border color from design: completed=tertiary, inProgress=primary-container, scheduled=primary
+              const borderClass = !isToday && !isSelected && cell.inMonth
+                ? cell.hasCompleted
+                  ? "border-b-2 border-tertiary"
+                  : cell.hasInProgress
+                    ? "border-b-2 border-primary-container"
+                    : cell.hasAny
+                      ? "border-b-2 border-primary"
+                      : ""
+                : "";
+
               const bgClass = isToday
                 ? "bg-primary text-white shadow-lg ring-4 ring-primary/20 cursor-pointer"
                 : isSelected
                   ? "bg-secondary text-white shadow-md cursor-pointer"
                   : cell.inMonth
-                    ? "bg-surface-container-lowest rounded-lg hover:bg-surface-container-high cursor-pointer transition-colors"
+                    ? `bg-surface-container-lowest hover:bg-surface-container-high cursor-pointer transition-colors ${borderClass}`
                     : "text-slate-300 opacity-20 cursor-default";
 
               return (
@@ -199,35 +215,29 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                   <span className="text-sm font-bold">
                     {String(cell.date.getDate()).padStart(2, "0")}
                   </span>
-                  {isToday ? (
-                    <p className="text-[8px] mt-1 font-bold leading-none">
-                      BUGUN
-                    </p>
-                  ) : null}
-                  <div className="mt-2 flex gap-1">
-                    {cell.hasAny &&
-                    !cell.hasCompleted &&
-                    !cell.hasInProgress ? (
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${isToday || isSelected ? "bg-white" : "bg-primary"}`}
-                      />
-                    ) : null}
-                    {cell.hasInProgress ? (
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${isToday || isSelected ? "bg-white" : "bg-primary-container"}`}
-                      />
-                    ) : null}
-                    {cell.hasCompleted ? (
-                      <div
-                        className={`w-1.5 h-1.5 rounded-full ${isToday || isSelected ? "bg-white" : "bg-tertiary"}`}
-                      />
-                    ) : null}
-                  </div>
-                  {cell.items.length > 1 ? (
+                  {isToday && (
+                    <p className="text-[8px] mt-1 font-bold leading-none">BUGÜN</p>
+                  )}
+                  {/* Dots inside today/selected cells */}
+                  {(isToday || isSelected) && cell.hasAny && (
+                    <div className="mt-2 flex gap-1">
+                      {cell.hasAny && !cell.hasCompleted && !cell.hasInProgress && (
+                        <div className="w-1 h-1 rounded-full bg-white" />
+                      )}
+                      {cell.hasInProgress && (
+                        <div className="w-1 h-1 rounded-full bg-white" />
+                      )}
+                      {cell.hasCompleted && (
+                        <div className="w-1 h-1 rounded-full bg-white" />
+                      )}
+                    </div>
+                  )}
+                  {/* Count badge */}
+                  {cell.items.length > 1 && (
                     <span className={`mt-1 inline-flex rounded-full px-1.5 py-0.5 text-[9px] font-black ${isToday || isSelected ? "bg-white/25 text-white" : "bg-primary/15 text-primary"}`}>
                       {cell.items.length}
                     </span>
-                  ) : null}
+                  )}
                 </button>
               );
             })}
@@ -236,28 +246,28 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-12 gap-8">
-        {/* LEFT: Daily agenda for selected day */}
+        {/* LEFT: Daily Agenda */}
         <div className="md:col-span-8 space-y-6">
           <div className="flex items-end justify-between">
-            <h3 className="text-2xl font-black tracking-tight">GUNLUK AJANDA</h3>
+            <h3 className="text-2xl font-black tracking-tight">GÜNLÜK AJANDA</h3>
             <span className="font-label text-sm font-bold text-primary capitalize">{agendaLabel}</span>
           </div>
 
-          {/* Last completed workout — always shown */}
-          {lastCompletedWorkout ? (
+          {/* Last completed workout — bento card like design */}
+          {lastCompletedWorkout && (
             <button
               type="button"
               onClick={() => setSelectedAssignmentId(lastCompletedWorkout.id)}
-              className="bg-surface-container-highest rounded-lg overflow-hidden relative w-full text-left"
+              className="bg-surface-container-highest rounded-lg overflow-hidden group relative w-full text-left"
             >
               <div className="absolute top-0 right-0 p-4">
-                <span className="bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full">SON TAMAMLANDI</span>
+                <span className="bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full">TAMAMLANDI</span>
               </div>
               <div className="p-6 flex flex-col md:flex-row gap-6">
-                <div className="w-full md:w-28 h-28 rounded-lg bg-surface-container-high overflow-hidden flex-shrink-0 flex items-center justify-center">
-                  <Dumbbell className="h-10 w-10 text-on-surface-variant/30" />
+                <div className="w-full md:w-32 h-32 rounded-lg bg-surface-dim overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  <Dumbbell className="h-10 w-10 text-on-surface-variant opacity-30 group-hover:opacity-60 transition-opacity duration-500" />
                 </div>
-                <div className="flex-grow space-y-3 pt-1">
+                <div className="flex-grow space-y-3">
                   <div>
                     <h4 className="text-lg font-bold pr-24">{lastCompletedWorkout.templateName}</h4>
                     <p className="text-secondary text-sm font-medium">
@@ -277,43 +287,64 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 </div>
               </div>
             </button>
-          ) : null}
+          )}
 
+          {/* Selected day assignments */}
           {selectedDayAssignments.length > 0 ? (
             <div className="space-y-3">
               {selectedDayAssignments
                 .slice()
                 .sort((a, b) => {
                   const priority = { IN_PROGRESS: 0, SCHEDULED: 1, ABANDONED: 2, COMPLETED: 3 } as const;
-                  const statusA = getStatus(a);
-                  const statusB = getStatus(b);
-                  return priority[statusA] - priority[statusB];
+                  return priority[getStatus(a)] - priority[getStatus(b)];
                 })
                 .map((assignment) => {
                   const assignmentStatus = getStatus(assignment);
+                  const statusColors: Record<string, string> = {
+                    IN_PROGRESS: "bg-primary-container text-white",
+                    COMPLETED: "bg-secondary text-white",
+                    ABANDONED: "bg-tertiary text-white",
+                    SCHEDULED: "bg-primary text-white",
+                  };
+                  const statusLabels: Record<string, string> = {
+                    IN_PROGRESS: "DEVAM EDİYOR",
+                    COMPLETED: "TAMAMLANDI",
+                    ABANDONED: "YARIDA",
+                    SCHEDULED: "PLANLI",
+                  };
 
                   return (
                     <button
                       key={assignment.id}
                       type="button"
                       onClick={() => setSelectedAssignmentId(assignment.id)}
-                      className="bg-primary/5 rounded-lg border-l-4 border-primary p-6 relative overflow-hidden w-full text-left"
+                      className="bg-primary/5 rounded-lg border-l-4 border-primary p-6 relative overflow-hidden w-full text-left hover:bg-primary/10 transition-colors"
                     >
+                      {/* Decorative icon */}
+                      <div className="absolute -right-4 -bottom-4 opacity-10 pointer-events-none">
+                        <Dumbbell className="w-24 h-24" />
+                      </div>
                       <div className="relative z-10 space-y-4">
                         <div className="flex justify-between items-start gap-4">
                           <div className="min-w-0">
-                            <span className={`text-[10px] font-bold px-2 py-1 rounded ${assignmentStatus === "IN_PROGRESS" ? "bg-primary-container text-white" : assignmentStatus === "COMPLETED" ? "bg-secondary text-white" : assignmentStatus === "ABANDONED" ? "bg-tertiary text-white" : "bg-primary text-white"}`}>
-                              {assignmentStatus === "IN_PROGRESS" ? "DEVAM EDIYOR" : assignmentStatus === "COMPLETED" ? "TAMAMLANDI" : assignmentStatus === "ABANDONED" ? "YARIDA" : "PLANLI"}
+                            <span className={`text-[10px] font-bold px-2 py-1 rounded ${statusColors[assignmentStatus]}`}>
+                              {statusLabels[assignmentStatus]}
                             </span>
                             <h4 className="text-xl font-black mt-2 truncate">{assignment.templateName}</h4>
                             <p className="text-slate-500 text-sm">
                               {assignment.exercises.length} egzersiz • {new Date(assignment.scheduledFor).toLocaleDateString("tr-TR")}
                             </p>
                           </div>
-                          <span className="bg-primary-container text-primary px-4 py-2 rounded-lg font-bold text-sm whitespace-nowrap flex-shrink-0">DETAY</span>
+                          <button
+                            type="button"
+                            className="bg-primary-container text-white px-4 py-2 rounded-lg font-bold text-sm hover:opacity-90 transition-opacity whitespace-nowrap flex-shrink-0"
+                            onClick={(e) => { e.stopPropagation(); setSelectedAssignmentId(assignment.id); }}
+                          >
+                            DETAY
+                          </button>
                         </div>
                         <div className="flex items-center gap-4">
-                          <span className="text-xs font-bold text-secondary">Koc tarafindan atandi</span>
+                          <span className="text-xs font-bold text-secondary">Koç tarafından atandı</span>
                         </div>
                       </div>
                     </button>
@@ -322,20 +353,21 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
             </div>
           ) : (
             <div className="bg-surface-container-low rounded-lg p-8 text-center space-y-2">
-              <p className="font-bold text-on-surface-variant">Bu gün için antreman yok</p>
+              <p className="font-bold text-on-surface-variant">Bu gün için antrenman yok</p>
               <p className="text-sm text-on-surface-variant/60">Takvimden başka bir gün seçebilirsin</p>
             </div>
           )}
         </div>
 
-        {/* RIGHT: Weekly load + reminders */}
+        {/* RIGHT: Weekly Load + Reminders */}
         <div className="md:col-span-4 space-y-6">
+          {/* Dark Weekly Load panel */}
           <div className="bg-on-surface text-surface rounded-lg p-6 space-y-6 overflow-hidden relative">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 blur-3xl -mr-16 -mt-16" />
-            <h3 className="text-lg font-black tracking-tight relative z-10">HAFTALIK YUK</h3>
+            <h3 className="text-lg font-black tracking-tight relative z-10">HAFTALIK YÜK</h3>
             <div className="space-y-4 relative z-10">
               <div className="flex justify-between items-end">
-                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Bu Haftaki Antreman</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">Bu Haftaki Antrenman</span>
                 <span className="text-2xl font-black text-primary-container">
                   {assignments.filter((a) => {
                     const d = new Date(a.scheduledFor);
@@ -368,22 +400,23 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 />
               </div>
               <p className="text-[10px] leading-relaxed opacity-60">
-                {assignments.filter((a) => getStatus(a) === "COMPLETED").length} tamamlandi,{" "}
-                {assignments.filter((a) => getStatus(a) === "SCHEDULED").length} planli.
+                {assignments.filter((a) => getStatus(a) === "COMPLETED").length} tamamlandı,{" "}
+                {assignments.filter((a) => getStatus(a) === "SCHEDULED").length} planlandı.
               </p>
             </div>
           </div>
 
+          {/* Upcoming Deadlines / Reminders */}
           <div className="bg-surface-container-low rounded-lg p-6 space-y-4">
-            <h3 className="text-sm font-black tracking-tight text-secondary">YAKLASAN HATIRLATMALAR</h3>
+            <h3 className="text-sm font-black tracking-tight text-secondary">YAKLAŞAN HATIRLATMALAR</h3>
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-2 hover:bg-surface-container rounded transition-colors cursor-pointer">
                 <div className="w-8 h-8 rounded-lg bg-tertiary/10 flex items-center justify-center text-tertiary">
                   <CalendarCheck className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold">Haftalik Performans Kontrolu</p>
-                  <p className="text-[10px] text-slate-400">Takvim uzerinden detaylandir</p>
+                  <p className="text-xs font-bold">Haftalık Performans Kontrolü</p>
+                  <p className="text-[10px] text-slate-400">Takvim üzerinden detaylandır</p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-2 hover:bg-surface-container rounded transition-colors cursor-pointer">
@@ -392,10 +425,13 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 </div>
                 <div>
                   <p className="text-xs font-bold">Beslenme Takibi</p>
-                  <p className="text-[10px] text-slate-400">Gun sonuna kadar tamamla</p>
+                  <p className="text-[10px] text-slate-400">Gün sonuna kadar tamamla</p>
                 </div>
               </div>
             </div>
+            <button type="button" className="w-full py-3 text-[10px] font-black uppercase tracking-widest text-primary border-t border-outline-variant/20 mt-2 hover:opacity-70 transition-opacity">
+              Tüm Programı Gör
+            </button>
           </div>
         </div>
       </section>

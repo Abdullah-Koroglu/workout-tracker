@@ -79,7 +79,7 @@ export async function POST(request: Request) {
     const totalRelevant = completedCount + abandonedCount;
     const completionRate = totalRelevant > 0 ? Math.round((completedCount / totalRelevant) * 100) : 0;
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 
     const result = await sendTemplatedEmail({
       to: coach.email,

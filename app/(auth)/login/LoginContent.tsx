@@ -125,7 +125,7 @@ export function LoginContent() {
           Desktop: clean white panel, centered
       ── */}
       <div className="relative z-10 flex flex-col bg-white md:w-[480px] md:min-h-screen md:justify-center md:shadow-[-24px_0_48px_rgba(0,0,0,0.07)]">
-        <div className="mx-auto w-full max-w-sm flex-1 px-4 pb-8 md:flex-none md:max-w-none md:w-full md:px-10 md:py-12 md:flex-initial">
+        <div className="mx-auto w-full max-w-sm flex-1 px-4 pb-8 md:max-w-none md:w-full md:px-10 md:py-12 md:flex-none">
 
           {/* Card wrapper: shadow + rounding only on mobile */}
           <div

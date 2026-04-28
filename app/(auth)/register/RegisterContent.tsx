@@ -119,7 +119,7 @@ export function RegisterContent() {
     router.push("/login");
   };
 
-  /* ── Colored left panel (shared across steps) ── */
+  /* ── Colored left panel ── */
   const leftPanel = (
     <div
       className="relative flex flex-col overflow-hidden px-6 pb-14 pt-8 md:sticky md:top-0 md:h-screen md:flex-1 md:px-14 md:pb-12 md:pt-12"
@@ -228,8 +228,7 @@ export function RegisterContent() {
 
         {/* Right: role cards */}
         <div className="flex flex-col bg-white md:w-[480px] md:min-h-screen md:justify-center md:shadow-[-24px_0_48px_rgba(0,0,0,0.07)]">
-          <div className="mx-auto w-full max-w-sm flex-1 space-y-3 px-4 pb-8 pt-6 md:flex-none md:px-10 md:pt-0">
-
+          <div className="mx-auto w-full max-w-sm flex-1 space-y-3 px-4 pb-8 pt-6 md:max-w-none md:w-full md:flex-none md:px-10 md:pt-0">
             <div className="mb-6 hidden md:block">
               <h2 className="text-2xl font-black tracking-tight text-slate-800">Hesap Türünü Seç</h2>
               <p className="mt-1 text-sm text-slate-400">Platforma nasıl katılmak istiyorsun?</p>
@@ -258,102 +257,115 @@ export function RegisterContent() {
     );
   }
 
-  /* ── STEP 2: Registration form ── */
-  const registerForm = (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-      <div>
-        <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Ad Soyad</label>
-        <input
-          type="text"
-          placeholder="Adınızı girin"
-          {...form.register("name")}
-          className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
-        />
-        {form.formState.errors.name && (
-          <p className="mt-1 text-xs text-red-500">{form.formState.errors.name.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">E-posta</label>
-        <input
-          type="email"
-          placeholder="ornek@email.com"
-          {...form.register("email")}
-          className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
-        />
-        {form.formState.errors.email && (
-          <p className="mt-1 text-xs text-red-500">{form.formState.errors.email.message}</p>
-        )}
-      </div>
-
-      <div>
-        <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">Şifre</label>
-        <div className="relative">
-          <input
-            type={showPass ? "text" : "password"}
-            placeholder="En az 8 karakter"
-            {...form.register("password")}
-            className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 pr-11 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
-          />
-          <button type="button" onClick={() => setShowPass((p) => !p)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-            {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-        {form.formState.errors.password && (
-          <p className="mt-1 text-xs text-red-500">{form.formState.errors.password.message}</p>
-        )}
-      </div>
-
-      <div className="h-px bg-slate-100" />
-
-      {error && (
-        <div className="rounded-xl px-4 py-3 text-sm font-bold text-red-700" style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}>
-          {error}
-        </div>
-      )}
-
-      <button
-        type="submit"
-        disabled={form.formState.isSubmitting}
-        className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black text-white transition hover:opacity-90 disabled:opacity-60"
-        style={accentStyle}
-      >
-        {form.formState.isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-        {form.formState.isSubmitting ? "Oluşturuluyor..." : "Hesabı Oluştur →"}
-      </button>
-    </form>
-  );
-
+  /* ── STEP 2: Registration form ──
+     Form rendered ONCE; card styling shown only on mobile via CSS.
+  ── */
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       {leftPanel}
 
       <div className="relative z-10 flex flex-col bg-white md:w-[480px] md:min-h-screen md:justify-center md:shadow-[-24px_0_48px_rgba(0,0,0,0.07)]">
+        <div className="mx-auto w-full max-w-sm flex-1 px-4 pb-8 md:max-w-none md:w-full md:flex-none md:px-10 md:py-12">
 
-        {/* Mobile: floating card */}
-        <div className="mx-auto w-full max-w-sm flex-1 px-4 pb-8 md:hidden">
-          <div className="-mt-8 relative rounded-2xl bg-white p-6" style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}>
-            {registerForm}
+          {/* Card wrapper: shadow + rounding on mobile only */}
+          <div
+            className="-mt-8 rounded-2xl bg-white p-6 md:mt-0 md:rounded-none md:bg-transparent md:p-0"
+            style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}
+          >
+            {/* Desktop title */}
+            <div className="mb-6 hidden md:block">
+              <h2 className="text-2xl font-black tracking-tight text-slate-800">Bilgilerini Gir</h2>
+              <p className="mt-1 text-sm text-slate-400">
+                {isCoach ? "Koç" : "Danışan"} hesabı oluşturmak üzeresin
+              </p>
+            </div>
+
+            {/* ── Form (rendered ONCE) ── */}
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Ad Soyad
+                </label>
+                <input
+                  type="text"
+                  placeholder="Adınızı girin"
+                  {...form.register("name")}
+                  className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+                {form.formState.errors.name && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.name.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  E-posta
+                </label>
+                <input
+                  type="email"
+                  placeholder="ornek@email.com"
+                  {...form.register("email")}
+                  className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
+                />
+                {form.formState.errors.email && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.email.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="mb-1.5 block text-xs font-black uppercase tracking-wider text-slate-500">
+                  Şifre
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPass ? "text" : "password"}
+                    placeholder="En az 8 karakter"
+                    {...form.register("password")}
+                    className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 pr-11 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPass((p) => !p)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showPass ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {form.formState.errors.password && (
+                  <p className="mt-1 text-xs text-red-500">{form.formState.errors.password.message}</p>
+                )}
+              </div>
+
+              <div className="h-px bg-slate-100" />
+
+              {error && (
+                <div
+                  className="rounded-xl px-4 py-3 text-sm font-bold text-red-700"
+                  style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)" }}
+                >
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl text-sm font-black text-white transition hover:opacity-90 disabled:opacity-60"
+                style={accentStyle}
+              >
+                {form.formState.isSubmitting
+                  ? <Loader2 className="h-4 w-4 animate-spin" />
+                  : <UserPlus className="h-4 w-4" />}
+                {form.formState.isSubmitting ? "Oluşturuluyor..." : "Hesabı Oluştur →"}
+              </button>
+            </form>
           </div>
+
           <p className="mt-5 text-center text-sm text-slate-500">
             Zaten hesabın var mı?{" "}
-            <Link href="/login" className="font-black text-orange-500 hover:underline">Giriş Yap</Link>
-          </p>
-        </div>
-
-        {/* Desktop: clean form */}
-        <div className="hidden w-full px-10 py-12 md:block">
-          <div className="mb-8">
-            <h2 className="text-2xl font-black tracking-tight text-slate-800">Bilgilerini Gir</h2>
-            <p className="mt-1 text-sm text-slate-400">
-              {isCoach ? "Koç" : "Danışan"} hesabı oluşturmak üzeresin
-            </p>
-          </div>
-          {registerForm}
-          <p className="mt-6 text-center text-sm text-slate-500">
-            Zaten hesabın var mı?{" "}
-            <Link href="/login" className="font-black text-orange-500 hover:underline">Giriş Yap</Link>
+            <Link href="/login" className="font-black text-orange-500 hover:underline">
+              Giriş Yap
+            </Link>
           </p>
         </div>
       </div>

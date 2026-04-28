@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     });
 
     if (coach && coach.role === "COACH") {
-      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 
       await sendTemplatedEmail({
         to: coach.email,

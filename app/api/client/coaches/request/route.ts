@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createElement } from "react";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/api-auth";
@@ -7,6 +8,7 @@ import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { CoachRequestEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 const schema = z.object({
   coachId: z.string().min(1)
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   if (shouldNotifyCoach) {
     const coach = await prisma.user.findUnique({
       where: { id: parsed.data.coachId },
-      select: { email: true, name: true, role: true }
+      select: { email: true, name: true, role: true, pushSubscription: true }
     });
 
     if (coach && coach.role === "COACH") {
@@ -69,6 +71,19 @@ export async function POST(request: Request) {
         },
       });
       void emitNotificationViaWs(parsed.data.coachId, notifPayload(connNotif));
+
+      const pushResult = await sendPushNotification(coach.pushSubscription, {
+        title: connNotif.title,
+        body: connNotif.body,
+        url: "/coach/dashboard"
+      });
+
+      if (pushResult.expired) {
+        await prisma.user.update({
+          where: { id: parsed.data.coachId },
+          data: { pushSubscription: Prisma.DbNull }
+        });
+      }
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 

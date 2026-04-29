@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 export async function PATCH(
   request: Request,
@@ -32,10 +33,17 @@ export async function PATCH(
 
   // Notify the client about acceptance/rejection
   if (status === "ACCEPTED" || status === "REJECTED") {
-    const coach = await prisma.user.findUnique({
-      where: { id: auth.session.user.id },
-      select: { name: true },
-    });
+    const [coach, client] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: auth.session.user.id },
+        select: { name: true }
+      }),
+      prisma.user.findUnique({
+        where: { id: clientId },
+        select: { pushSubscription: true }
+      })
+    ]);
+
     const relationNotif = await prisma.notification.create({
       data: {
         userId: clientId,
@@ -48,6 +56,19 @@ export async function PATCH(
       },
     });
     void emitNotificationViaWs(clientId, notifPayload(relationNotif));
+
+    const pushResult = await sendPushNotification(client?.pushSubscription, {
+      title: relationNotif.title,
+      body: relationNotif.body,
+      url: "/client/coaches"
+    });
+
+    if (pushResult.expired) {
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { pushSubscription: null }
+      });
+    }
   }
 
   return NextResponse.json({ relation });

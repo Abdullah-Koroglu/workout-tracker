@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { completeWorkoutSchema } from "@/validations/workout";
 
 export async function PATCH(
@@ -59,6 +61,24 @@ export async function PATCH(
       },
     });
     void emitNotificationViaWs(coachId, notifPayload(notif));
+
+    const coach = await prisma.user.findUnique({
+      where: { id: coachId },
+      select: { pushSubscription: true }
+    });
+
+    const pushResult = await sendPushNotification(coach?.pushSubscription, {
+      title: notif.title,
+      body: notif.body,
+      url: "/coach/dashboard"
+    });
+
+    if (pushResult.expired) {
+      await prisma.user.update({
+        where: { id: coachId },
+        data: { pushSubscription: Prisma.DbNull }
+      });
+    }
   }
 
   return NextResponse.json({ workout: updated });

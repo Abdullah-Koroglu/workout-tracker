@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { createElement } from "react";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { AssignmentEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth("COACH");
@@ -77,7 +79,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const [client, coach] = await Promise.all([
     prisma.user.findUnique({
       where: { id: clientId },
-      select: { email: true, name: true, role: true }
+      select: { email: true, name: true, role: true, pushSubscription: true }
     }),
     prisma.user.findUnique({
       where: { id: auth.session.user.id },
@@ -96,6 +98,19 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       },
     });
     void emitNotificationViaWs(clientId, notifPayload(assignNotif));
+
+    const pushResult = await sendPushNotification(client.pushSubscription, {
+      title: "Yeni antrenman atandı",
+      body: `${coach?.name ?? "Koçun"} sana "${template.name}" programını atadı.`,
+      url: "/client/dashboard"
+    });
+
+    if (pushResult.expired) {
+      await prisma.user.update({
+        where: { id: clientId },
+        data: { pushSubscription: Prisma.DbNull }
+      });
+    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 

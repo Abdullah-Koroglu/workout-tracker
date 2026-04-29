@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Bell, Check, CheckCheck, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 
 type AppNotification = {
   id: string;
@@ -82,7 +82,7 @@ export function NotificationBell() {
       if (mountedRef.current) {
         connectWsRef.current();
       }
-    }, 2500);
+    }, 1200);
   }, []);
 
   // ── REST fetch ─────────────────────────────────────────────────
@@ -119,6 +119,7 @@ export function NotificationBell() {
       ws.onopen = () => {
         if (!mountedRef.current) { ws.close(); return; }
         setWsConnected(true);
+        void fetchNotifications();
         if (reconnectRef.current) {
           clearTimeout(reconnectRef.current);
           reconnectRef.current = null;
@@ -138,7 +139,7 @@ export function NotificationBell() {
             const n: AppNotification = msg.notification;
             setNotifications((prev) => {
               if (prev.some((item) => item.id === n.id)) return prev;
-              return [n, ...prev].slice(0, 30);
+              return [n, ...prev].slice(0, 10);
             });
             setUnreadCount((c) => c + (n.isRead ? 0 : 1));
           }
@@ -157,7 +158,7 @@ export function NotificationBell() {
       setWsConnected(false);
       scheduleReconnect();
     }
-  }, [scheduleReconnect]);
+  }, [fetchNotifications, scheduleReconnect]);
 
   useEffect(() => {
     connectWsRef.current = () => {
@@ -171,8 +172,8 @@ export function NotificationBell() {
     void fetchNotifications();
     void connectWs();
 
-    // Fallback polling every 30 s (catches non-WS notifications)
-    const pollId = setInterval(() => void fetchNotifications(), 30000);
+    // Fallback polling every 5 s if WS drops or server-side emit is missed.
+    const pollId = setInterval(() => void fetchNotifications(), 5000);
 
     return () => {
       mountedRef.current = false;
@@ -223,32 +224,6 @@ export function NotificationBell() {
         setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       } catch { /* silent */ }
     }
-  };
-
-  const markOne = async (id: string) => {
-    try {
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      );
-      setUnreadCount((c) => Math.max(0, c - 1));
-    } catch { /* silent */ }
-  };
-
-  const markAll = async () => {
-    try {
-      await fetch("/api/notifications", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      setUnreadCount(0);
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    } catch { /* silent */ }
   };
 
   // ── Render ─────────────────────────────────────────────────────
@@ -346,7 +321,7 @@ export function NotificationBell() {
                 </p>
               </div>
             ) : (
-              notifications.map((n) => (
+              notifications.slice(0, 10).map((n) => (
                 <div
                   key={n.id}
                   className="flex items-start gap-3 px-4 py-3"
@@ -381,41 +356,10 @@ export function NotificationBell() {
                       {timeAgo(n.createdAt)}
                     </p>
                   </div>
-                  {!n.isRead && (
-                    <button
-                      type="button"
-                      onClick={() => void markOne(n.id)}
-                      className="mt-0.5 flex-shrink-0 rounded-lg p-1 transition-colors hover:bg-slate-100"
-                      title="Okundu işaretle"
-                    >
-                      <Check
-                        className="h-3.5 w-3.5"
-                        style={{ color: "#F97316" }}
-                      />
-                    </button>
-                  )}
                 </div>
               ))
             )}
           </div>
-
-          {/* Panel footer */}
-          {notifications.length > 0 && (
-            <div
-              className="px-4 py-2.5"
-              style={{ borderTop: "1px solid #F1F5F9" }}
-            >
-              <button
-                type="button"
-                onClick={() => void markAll()}
-                className="flex items-center gap-1.5 text-[11px] font-bold transition-opacity hover:opacity-70"
-                style={{ color: "#F97316" }}
-              >
-                <CheckCheck className="h-3.5 w-3.5" />
-                Tümünü okundu işaretle
-              </button>
-            </div>
-          )}
           </div>
         </>
       )}

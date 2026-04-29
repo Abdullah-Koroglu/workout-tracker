@@ -32,10 +32,17 @@ export default async function WorkoutDetailPage({
   const workout = await prisma.workout.findUnique({
     where: { id: workoutId },
     include: {
-      template: true,
+      template: {
+        include: {
+          exercises: {
+            orderBy: { order: "asc" },
+            include: { exercise: true },
+          },
+        },
+      },
       sets: {
         include: { exercise: true },
-        orderBy: [{ exerciseId: "asc" }, { setNumber: "asc" }],
+        orderBy: [{ setNumber: "asc" }],
       },
       client: { select: { name: true } },
       comments: {
@@ -54,6 +61,11 @@ export default async function WorkoutDetailPage({
 
   /* ── Derived data ── */
   const isCompleted = workout.status === "COMPLETED";
+
+  /* Build exercise order from template */
+  const exerciseOrderMap = new Map(
+    workout.template.exercises.map((te) => [te.exercise.name, te.order])
+  );
 
   const setsByExercise: Record<string, typeof workout.sets> = {};
   workout.sets.forEach((set) => {
@@ -248,7 +260,9 @@ export default async function WorkoutDetailPage({
               <p className="text-sm text-slate-400">Bu antrenman için kayıtlı set bulunamadı.</p>
             </div>
           ) : (
-            Object.entries(setsByExercise).map(([exerciseName, sets]) => {
+            Object.entries(setsByExercise)
+              .sort(([a], [b]) => (exerciseOrderMap.get(a) ?? 999) - (exerciseOrderMap.get(b) ?? 999))
+              .map(([exerciseName, sets]) => {
               const isCardio = sets[0].weightKg === null && sets[0].reps === null;
               const hasPr    = sets.some((s) => {
                 if (!s.completed || s.weightKg === null) return false;
@@ -511,7 +525,9 @@ export default async function WorkoutDetailPage({
           prExerciseNames={prExerciseNames}
           workoutDate={workoutDate}
           totalSets={completedSets}
-          exercises={Object.entries(setsByExercise).map(([name, sets]) => ({
+          exercises={Object.entries(setsByExercise)
+              .sort(([a], [b]) => (exerciseOrderMap.get(a) ?? 999) - (exerciseOrderMap.get(b) ?? 999))
+              .map(([name, sets]) => ({
               name,
               maxWeightKg: sets.reduce<number | null>((max, s) => {
                 if (!s.completed || s.weightKg === null) return max;

@@ -623,7 +623,7 @@ export function MessagesClient({
       return;
     }
 
-    success("Mesaj gonderildi.");
+    // success("Mesaj gonderildi.");
     setMessages((prev) => {
       const withoutTemp = prev.filter((item) => item.id !== tempId);
       return mergeMessage(withoutTemp, data.message);

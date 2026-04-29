@@ -19,8 +19,6 @@ export async function Navbar() {
   const isCoach = session?.user.role === "COACH";
   const isClient = session?.user.role === "CLIENT";
 
-  if (isCoach || isClient) return null;
-
   const activeWorkout =
     isClient && session?.user.id
       ? await prisma.workout.findFirst({
@@ -62,9 +60,9 @@ export async function Navbar() {
       ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
       : "";
 
-      if (!session?.user) {
-        return <></>;
-      }
+  if (!session?.user) {
+    return <></>;
+  }
 
   return (
     <header

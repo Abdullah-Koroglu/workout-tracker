@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
 import { conversationQuerySchema, sendMessageSchema } from "@/validations/message";
@@ -94,7 +95,7 @@ export async function POST(request: Request) {
     }
   });
 
-  await prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       userId: parsed.data.receiverId,
       title: `${message.sender.name} yeni mesaj gonderdi`,
@@ -102,6 +103,8 @@ export async function POST(request: Request) {
       type: "DIRECT_MESSAGE"
     }
   });
+
+  void emitNotificationViaWs(parsed.data.receiverId, notifPayload(notification));
 
   const receiverMessagesPath = receiver.role === "COACH" ? "/coach/messages" : "/client/messages";
 

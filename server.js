@@ -235,7 +235,7 @@ async function handleSendMessage(senderId, ws, data) {
     }
   });
 
-  await prisma.notification.create({
+  const notification = await prisma.notification.create({
     data: {
       userId: receiverId,
       title: `${message.sender.name} yeni mesaj gonderdi`,
@@ -253,6 +253,19 @@ async function handleSendMessage(senderId, ws, data) {
   sendToUser(senderId, { type: "new_message", message }, ws);
   sendToUser(receiverId, { type: "new_message", message });
 
+  // Real-time notification event to receiver
+  sendToUser(receiverId, {
+    type: "notification_created",
+    notification: {
+      id: notification.id,
+      title: notification.title,
+      body: notification.body,
+      type: notification.type,
+      isRead: false,
+      createdAt: notification.createdAt.toISOString()
+    }
+  });
+
   if (!isUserOnline(receiverId)) {
     const receiverMessagesPath = receiverUser.role === "COACH" ? "/coach/messages" : "/client/messages";
     await sendPushToUser(receiverId, {
@@ -268,6 +281,35 @@ function startWsServer() {
     if (req.url === "/health") {
       res.writeHead(200, { "content-type": "application/json" });
       res.end(JSON.stringify({ ok: true }));
+      return;
+    }
+
+    // Internal endpoint — only accessible from localhost
+    if (req.method === "POST" && req.url === "/internal/notify") {
+      const remote = req.socket.remoteAddress || "";
+      const isLocal =
+        remote === "127.0.0.1" ||
+        remote === "::1" ||
+        remote === "::ffff:127.0.0.1";
+
+      if (!isLocal) {
+        res.writeHead(403, { "content-type": "application/json" });
+        res.end(JSON.stringify({ error: "Forbidden" }));
+        return;
+      }
+
+      let body = "";
+      req.on("data", (chunk) => { body += chunk; });
+      req.on("end", () => {
+        try {
+          const { userId, notification } = JSON.parse(body);
+          if (userId && notification) {
+            sendToUser(userId, { type: "notification_created", notification });
+          }
+        } catch { /* ignore parse errors */ }
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+      });
       return;
     }
 

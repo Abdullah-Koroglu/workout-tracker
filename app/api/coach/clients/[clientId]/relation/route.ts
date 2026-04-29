@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 
 export async function PATCH(
   request: Request,
@@ -35,7 +36,7 @@ export async function PATCH(
       where: { id: auth.session.user.id },
       select: { name: true },
     });
-    await prisma.notification.create({
+    const relationNotif = await prisma.notification.create({
       data: {
         userId: clientId,
         title: status === "ACCEPTED" ? "Koç bağlantısı kabul edildi" : "Koç bağlantısı reddedildi",
@@ -46,6 +47,7 @@ export async function PATCH(
         type: status === "ACCEPTED" ? "COACH_ACCEPTED" : "COACH_REJECTED",
       },
     });
+    void emitNotificationViaWs(clientId, notifPayload(relationNotif));
   }
 
   return NextResponse.json({ relation });

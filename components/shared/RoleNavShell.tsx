@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { GlobalBreadcrumb } from "./GlobalBreadcrumb";
 import Image from "next/image";
+import { NotificationBell } from "./NotificationBell";
 
 type Role = "COACH" | "CLIENT";
 
@@ -152,7 +153,7 @@ export function RoleNavShell({
               type="button"
               className="text-slate-500 transition-colors duration-200 hover:text-orange-500"
             >
-              <Bell className="h-5 w-5" />
+              <NotificationBell />
             </button>
             {/* <button
               type="button"

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { completeWorkoutSchema } from "@/validations/workout";
 
 export async function PATCH(
@@ -12,7 +13,12 @@ export async function PATCH(
   if (auth.error) return auth.error;
 
   const { workoutId } = await params;
-  const workout = await prisma.workout.findUnique({ where: { id: workoutId } });
+  const workout = await prisma.workout.findUnique({
+    where: { id: workoutId },
+    include: {
+      template: { select: { name: true, coachId: true } },
+    },
+  });
 
   if (!workout || workout.clientId !== auth.session.user.id) {
     return NextResponse.json({ error: "Workout not found" }, { status: 404 });
@@ -39,6 +45,21 @@ export async function PATCH(
       ...(intensityScore !== null ? { intensityScore } : {}),
     },
   });
+
+  // Notify coach if workout was completed (not abandoned)
+  if (parsed.data.mode === "COMPLETED") {
+    const clientName = auth.session.user.name ?? "Danışanın";
+    const coachId = workout.template.coachId;
+    const notif = await prisma.notification.create({
+      data: {
+        userId: coachId,
+        title: "Antrenman tamamlandı",
+        body: `${clientName} "${workout.template.name}" programını tamamladı.`,
+        type: "WORKOUT_COMPLETED",
+      },
+    });
+    void emitNotificationViaWs(coachId, notifPayload(notif));
+  }
 
   return NextResponse.json({ workout: updated });
 }

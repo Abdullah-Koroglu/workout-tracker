@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CheckCircle2, ChevronRight, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -144,9 +144,6 @@ export default async function ClientDashboardPage() {
             <h2 className="text-white text-[22px] font-black m-0 leading-tight">
               {userName} 👋
             </h2>
-          </div>
-          <div className="bg-white/10 rounded-xl w-10 h-10 flex items-center justify-center">
-            <Bell className="h-5 w-5 text-white" />
           </div>
         </div>
         <div className="grid grid-cols-4 gap-2.5">

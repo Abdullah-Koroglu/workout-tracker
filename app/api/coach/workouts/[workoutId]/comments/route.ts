@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/api-auth";
 import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { commentSchema } from "@/validations/workout";
 
 export async function POST(
@@ -58,14 +59,16 @@ export async function POST(
     }
   });
 
-  await prisma.notification.create({
+  const coachName = auth.session.user.name ?? "Koçun";
+  const notif = await prisma.notification.create({
     data: {
       userId: workout.clientId,
-      title: "Coach yeni bir yorum birakti",
+      title: `${coachName} antrenmanına yorum bıraktı`,
       body: parsed.data.content.slice(0, 140),
-      type: "WORKOUT_COMMENT"
-    }
+      type: "WORKOUT_COMMENT",
+    },
   });
+  void emitNotificationViaWs(workout.clientId, notifPayload(notif));
 
   const pushResult = await sendPushNotification(workout.client.pushSubscription, {
     title: "Coach yeni bir yorum birakti",

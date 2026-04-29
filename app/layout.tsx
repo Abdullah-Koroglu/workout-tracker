@@ -106,7 +106,7 @@ export default function RootLayout({
                   <Suspense fallback={null}>
                     <OfflineResume />
                   </Suspense>
-                  <Navbar />
+                  {/* <Navbar /> */}
                   <main className="mx-auto min-h-[calc(100vh-64px)] bottom-0 m-0">
                     {children}
                   </main>

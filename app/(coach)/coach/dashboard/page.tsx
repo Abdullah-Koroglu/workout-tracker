@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, CheckCircle2, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronRight } from "lucide-react";
 
 import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
 import { auth } from "@/lib/auth";
@@ -152,19 +152,6 @@ export default async function CoachDashboardPage() {
             <h2 className="text-white text-[20px] font-black m-0 leading-tight tracking-tight">
               {userName}
             </h2>
-          </div>
-          <div className="relative">
-            <div className="bg-white/10 rounded-xl w-10 h-10 flex items-center justify-center">
-              <Bell className="h-5 w-5 text-white" />
-            </div>
-            {pendingRequests.length > 0 && (
-              <div
-                className="absolute -top-1 -right-1 rounded-full w-[18px] h-[18px] flex items-center justify-center text-[10px] font-bold text-white"
-                style={{ background: "#F97316" }}
-              >
-                {pendingRequests.length}
-              </div>
-            )}
           </div>
         </div>
 

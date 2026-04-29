@@ -5,6 +5,7 @@ import { requireAuth } from "@/lib/api-auth";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { AssignmentEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth("COACH");
@@ -85,8 +86,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   ]);
 
   if (client && client.role === "CLIENT") {
-    // In-app notification
-    await prisma.notification.create({
+    // In-app notification + WS real-time
+    const assignNotif = await prisma.notification.create({
       data: {
         userId: clientId,
         title: "Yeni antrenman atandı",
@@ -94,6 +95,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         type: "NEW_ASSIGNMENT",
       },
     });
+    void emitNotificationViaWs(clientId, notifPayload(assignNotif));
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 

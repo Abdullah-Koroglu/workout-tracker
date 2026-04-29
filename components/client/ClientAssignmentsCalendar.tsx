@@ -272,7 +272,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
         </div>
 
         {/* ── Selected-day detail panel ── */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 w-full">
           {/* Panel header */}
           <div className="flex items-end justify-between mb-4">
             <div>
@@ -312,13 +312,19 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                       type="button"
                       onClick={() => setSelectedAssignmentId(assignment.id)}
                       className="group w-full text-left bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md"
-                      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                      style={{
+                        boxShadow:
+                          "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+                      }}
                     >
                       <div className="flex">
                         {/* Left accent bar */}
-                        <div className="w-1 flex-shrink-0 rounded-l-2xl" style={{ background: cfg.dot }} />
+                        <div
+                          className="w-1 flex-shrink-0 rounded-l-2xl"
+                          style={{ background: cfg.dot }}
+                        />
 
-                        <div className="flex-1 p-4 relative overflow-hidden">
+                        <div className="flex-1 p-4 relative overflow-hidden w-full">
                           {/* Decorative bg icon */}
                           <div className="absolute -right-3 -bottom-3 opacity-[0.04] pointer-events-none">
                             <Dumbbell className="w-20 h-20" />
@@ -330,20 +336,17 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                               className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
                               style={{ background: cfg.bg }}
                             >
-                              <Dumbbell className="h-5 w-5" style={{ color: cfg.color }} />
+                              <Dumbbell
+                                className="h-5 w-5"
+                                style={{ color: cfg.color }}
+                              />
                             </div>
 
                             {/* Info */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-1.5 mb-0.5">
-                                <span
-                                  className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
-                                  style={{ background: cfg.bg, color: cfg.color }}
-                                >
-                                  {cfg.label}
-                                </span>
-                              </div>
-                              <h4 className="text-sm font-black text-slate-800 truncate">{assignment.templateName}</h4>
+                            <div className="flex-1 w-1/2 mr-auto">
+                              <h4 className="text-sm font-black text-slate-800 truncate">
+                                {assignment.templateName}
+                              </h4>
                               <p className="text-[11px] text-slate-400 mt-0.5">
                                 {assignment.exercises.length} egzersiz
                               </p>
@@ -355,17 +358,23 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                                 <span
                                   className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wider px-3 py-2 rounded-xl text-white"
                                   style={{
-                                    background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                                    background:
+                                      "linear-gradient(135deg, #FB923C, #EA580C)",
                                     boxShadow: "0 3px 8px rgba(249,115,22,0.3)",
                                   }}
                                 >
                                   <Play className="h-3 w-3 fill-current" />
-                                  {status === "IN_PROGRESS" ? "Devam" : "Başlat"}
+                                  {status === "IN_PROGRESS"
+                                    ? "Devam"
+                                    : "Başlat"}
                                 </span>
                               ) : (
                                 <span
                                   className="flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-xl"
-                                  style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
+                                  style={{
+                                    background: "rgba(34,197,94,0.1)",
+                                    color: "#16A34A",
+                                  }}
                                 >
                                   ✓ Tamam
                                 </span>

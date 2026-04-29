@@ -9,7 +9,7 @@ export const saveSetSchema = z.object({
   setNumber: z.number().int().positive(),
   weightKg: z.number().nonnegative().optional(),
   reps: z.number().int().positive().optional(),
-  rir: z.number().int().min(0).max(5).optional(),
+  rir: z.number().int().min(0).max(10).optional(),
   durationMinutes: z.number().int().positive().optional(),
   durationSeconds: z.number().int().min(0).optional(),
   completed: z.boolean().default(true)

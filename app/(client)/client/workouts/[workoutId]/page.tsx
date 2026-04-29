@@ -37,6 +37,7 @@ export default async function WorkoutDetailPage({
         include: { exercise: true },
         orderBy: [{ exerciseId: "asc" }, { setNumber: "asc" }],
       },
+      client: { select: { name: true } },
       comments: {
         include: { author: true },
         orderBy: { createdAt: "desc" },
@@ -45,6 +46,11 @@ export default async function WorkoutDetailPage({
   });
 
   if (!workout || workout.clientId !== session.user.id) notFound();
+
+  const coachRelation = await prisma.coachClientRelation.findFirst({
+    where: { clientId: session.user.id, status: "ACCEPTED" },
+    include: { coach: { select: { name: true } } },
+  });
 
   /* ── Derived data ── */
   const isCompleted = workout.status === "COMPLETED";
@@ -505,6 +511,15 @@ export default async function WorkoutDetailPage({
           prExerciseNames={prExerciseNames}
           workoutDate={workoutDate}
           totalSets={completedSets}
+          exercises={Object.entries(setsByExercise).map(([name, sets]) => ({
+              name,
+              maxWeightKg: sets.reduce<number | null>((max, s) => {
+                if (!s.completed || s.weightKg === null) return max;
+                return max === null ? s.weightKg : Math.max(max, s.weightKg);
+              }, null),
+            }))}
+          clientName={workout.client?.name ?? session.user.name ?? undefined}
+          coachName={coachRelation?.coach.name ?? undefined}
         />
       )}
     </div>

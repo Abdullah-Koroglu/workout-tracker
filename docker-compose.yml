@@ -1,14 +1,32 @@
 services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=fitcoach
+      - POSTGRES_USER=fitcoach
+      - POSTGRES_PASSWORD=fitcoach
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcoach -d fitcoach"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
   nextjs_app:
     build: .
     ports:
       - "3000:3000"
       - "5555:5555"
-    volumes:
-      - ./prisma/dev.db:/app/prisma/dev.db # SQLite dosyasini hostta kalici tutar
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach?schema=public
       - AUTH_TRUST_HOST=true
       - NEXTAUTH_URL=${NEXTAUTH_URL}
       - AUTH_SECRET=${NEXTAUTH_SECRET}
@@ -21,16 +39,20 @@ services:
 
   ws_server:
     build: .
-    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
+    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && npm run start:ws"]
     ports:
       - "3001:3001"
-    volumes:
-      - ./prisma/dev.db:/app/prisma/dev.db # SQLite dosyasini hostta kalici tutar
     restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      - DATABASE_URL=file:/app/prisma/dev.db
+      - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach?schema=public
       - AUTH_SECRET=${NEXTAUTH_SECRET}
       - WS_PORT=3001
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
+
+volumes:
+  postgres_data:

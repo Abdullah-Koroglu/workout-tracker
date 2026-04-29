@@ -106,7 +106,7 @@ Tüm ekranlar önce mobil için tasarlanmıştır. Mesaj ekranı gerçek bir mob
 ## Neler Henüz Yok / Kısıtlamalar
 
 - **Ödeme sistemi yok.** Coach-client ilişkisi ücretsiz kurulur.
-- **Veritabanı SQLite.** Geliştirme ve küçük ölçekli production için uygundur; büyük ölçekte PostgreSQL'e geçiş gerekir.
+- **Veritabanı PostgreSQL.** Uygulama üretim senaryoları için PostgreSQL üzerinde çalışır.
 - **Sadece iki kullanıcı rolü var.** Gym yönetimi, grup antrenmanları gibi gelişmiş yapılar henüz desteklenmiyor.
 - **Medya paylaşımı yok.** Mesajlarda resim/video gönderilemez (UI hazır, backend yok).
 - **Koç analitikleri sınırlı.** Detaylı istatistik paneli henüz yok.

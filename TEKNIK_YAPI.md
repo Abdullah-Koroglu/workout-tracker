@@ -9,7 +9,7 @@ Uygulama iki bağımsız Node.js sürecinden oluşur:
 | Next.js App | 3000 | Tüm sayfalar, REST API route'ları, auth |
 | WebSocket Server | 3001 | Gerçek zamanlı mesajlaşma (server.js) |
 
-Hem Next.js hem de WS sunucusu aynı Dockerfile üzerinden derlenir; production ortamında iki ayrı Docker container olarak koşar (nextjs_app, ws_server). Her iki container da aynı SQLite dosyasını (host üzerinden volume mount) ve aynı AUTH_SECRET'ı paylaşır.
+Hem Next.js hem de WS sunucusu aynı Dockerfile üzerinden derlenir; production ortamında üç container olarak koşar (nextjs_app, ws_server, postgres). Next.js ve WS sunucusu aynı PostgreSQL veritabanına bağlanır ve aynı AUTH_SECRET'ı paylaşır.
 
 ---
 
@@ -21,7 +21,7 @@ Hem Next.js hem de WS sunucusu aynı Dockerfile üzerinden derlenir; production 
 | UI | React | 19.0.0 |
 | Dil | TypeScript | ^5 |
 | ORM | Prisma | 6.6.0 |
-| Veritabanı | SQLite | — |
+| Veritabanı | PostgreSQL | 16 |
 | Auth | NextAuth v5 beta | 5.0.0-beta.25 |
 | Şifreleme | bcryptjs | 2.4.3 |
 | Stil | Tailwind CSS | 3.4.17 |
@@ -66,7 +66,7 @@ server.js           → Bağımsız WebSocket sunucusu
 
 ---
 
-## Veritabanı Şeması (Prisma / SQLite)
+## Veritabanı Şeması (Prisma / PostgreSQL)
 
 ### Modeller ve İlişkiler
 
@@ -232,7 +232,7 @@ services:
 - Her iki servis de tek `Dockerfile`'dan derlenir.
 - `ws_server` komutu: `prisma generate && npm run start:ws`
 - `nextjs_app` komutu: `prisma generate && prisma db push && next start`
-- SQLite dosyası host'ta kalıcı: `./prisma/dev.db:/app/prisma/dev.db`
+- PostgreSQL verisi Docker volume'da kalıcı: `postgres_data:/var/lib/postgresql/data`
 - `.dockerignore`: `node_modules`, `.next`, `test-results`, `e2e` dahil edilmez.
 - Her iki servis `restart: always`.
 

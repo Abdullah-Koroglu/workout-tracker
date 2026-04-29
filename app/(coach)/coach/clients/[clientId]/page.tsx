@@ -227,7 +227,6 @@ export default async function CoachClientDetailPage({
                   )
                 : null,
             status: w.status,
-            template: { name: w.template.name },
             sets: w.sets.map((s) => ({
               id: s.id,
               setNumber: s.setNumber,

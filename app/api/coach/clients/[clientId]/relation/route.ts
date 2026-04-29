@@ -1,4 +1,4 @@
-import { RelationStatus } from "@prisma/client";
+import { Prisma, RelationStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
@@ -66,7 +66,7 @@ export async function PATCH(
     if (pushResult.expired) {
       await prisma.user.update({
         where: { id: clientId },
-        data: { pushSubscription: null }
+        data: { pushSubscription: Prisma.DbNull }
       });
     }
   }

@@ -29,6 +29,25 @@ export async function PATCH(
     }
   });
 
+  // Notify the client about acceptance/rejection
+  if (status === "ACCEPTED" || status === "REJECTED") {
+    const coach = await prisma.user.findUnique({
+      where: { id: auth.session.user.id },
+      select: { name: true },
+    });
+    await prisma.notification.create({
+      data: {
+        userId: clientId,
+        title: status === "ACCEPTED" ? "Koç bağlantısı kabul edildi" : "Koç bağlantısı reddedildi",
+        body:
+          status === "ACCEPTED"
+            ? `${coach?.name ?? "Koçun"} koçluk isteğini kabul etti. Artık antrenman atayabilir.`
+            : `${coach?.name ?? "Koç"} koçluk isteğini reddetti.`,
+        type: status === "ACCEPTED" ? "COACH_ACCEPTED" : "COACH_REJECTED",
+      },
+    });
+  }
+
   return NextResponse.json({ relation });
 }
 

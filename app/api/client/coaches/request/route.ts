@@ -58,6 +58,16 @@ export async function POST(request: Request) {
     });
 
     if (coach && coach.role === "COACH") {
+      // In-app notification for coach
+      await prisma.notification.create({
+        data: {
+          userId: parsed.data.coachId,
+          title: "Yeni danışan isteği",
+          body: `${auth.session.user.name ?? "Bir danışan"} koçluk isteği gönderdi.`,
+          type: "NEW_CONNECTION_REQUEST",
+        },
+      });
+
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 
       await sendTemplatedEmail({

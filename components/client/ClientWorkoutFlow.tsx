@@ -22,6 +22,8 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const { confirm } = useConfirmation();
   const [savingKey, setSavingKey] = useState<string | null>(null);
   const [finishing, setFinishing] = useState(false);
+  const [intensityModal, setIntensityModal] = useState<{ mode: "COMPLETED" | "ABANDONED" } | null>(null);
+  const [pendingIntensity, setPendingIntensity] = useState<number>(7);
   const [cardioSeconds, setCardioSeconds] = useState<Record<string, number>>({});
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -193,24 +195,32 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   };
 
   const handleCompleteWorkout = async (mode: "COMPLETED" | "ABANDONED") => {
-    const message = mode === "COMPLETED"
-      ? "Antrenmanı kaydedip bitirmek istediğine emin misin?"
-      : "Antrenmanı yarıda bırakıp kaydetmek istediğine emin misin?";
-
-    const approved = await confirm({
-      title: mode === "COMPLETED" ? "Antrenmani bitir" : "Antrenmani yarida birak",
-      description: message,
-      confirmText: mode === "COMPLETED" ? "Kaydet ve Bitir" : "Yarida Birak",
-      cancelText: "Vazgec",
-      danger: mode === "ABANDONED"
-    });
-
-    if (!approved) {
+    if (mode === "COMPLETED") {
+      // Show intensity picker modal instead of generic confirm
+      setPendingIntensity(7);
+      setIntensityModal({ mode });
       return;
     }
 
+    const approved = await confirm({
+      title: "Antrenmani yarida birak",
+      description: "Antrenmanı yarıda bırakıp kaydetmek istediğine emin misin?",
+      confirmText: "Yarida Birak",
+      cancelText: "Vazgec",
+      danger: true
+    });
+    if (!approved) return;
+
     setFinishing(true);
     await completeWorkout(workoutState.workoutId, mode);
+    setFinishing(false);
+  };
+
+  const handleIntensityConfirm = async () => {
+    if (!intensityModal) return;
+    setIntensityModal(null);
+    setFinishing(true);
+    await completeWorkout(workoutState.workoutId, intensityModal.mode, pendingIntensity);
     setFinishing(false);
   };
 
@@ -588,6 +598,110 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           </div>
         </div>
       </div>
+
+      {/* Intensity Score Modal */}
+      {intensityModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center p-4 md:items-center"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
+        >
+          <div
+            className="w-full max-w-sm rounded-[24px] p-6"
+            style={{
+              background: "#fff",
+              boxShadow: "0 20px 60px rgba(0,0,0,0.2)",
+            }}
+          >
+            <div className="text-center mb-5">
+              <div className="text-3xl mb-2">💪</div>
+              <h3
+                className="text-[18px] font-black"
+                style={{ color: "#1E293B", letterSpacing: -0.5 }}
+              >
+                Nasıl Hissettin?
+              </h3>
+              <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
+                Antrenmanın zorluk seviyesini seç (1–10)
+              </p>
+            </div>
+
+            {/* 1-10 grid */}
+            <div className="grid grid-cols-5 gap-2 mb-5">
+              {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => {
+                const active = pendingIntensity === n;
+                const color =
+                  n <= 3 ? "#22C55E" : n <= 6 ? "#F59E0B" : n <= 8 ? "#F97316" : "#EF4444";
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setPendingIntensity(n)}
+                    className="flex flex-col items-center rounded-xl py-2.5 transition-all"
+                    style={
+                      active
+                        ? {
+                            background: color,
+                            boxShadow: `0 4px 12px ${color}55`,
+                            color: "#fff",
+                            transform: "scale(1.08)",
+                          }
+                        : {
+                            background: "#F8FAFC",
+                            color: "#94A3B8",
+                            border: "1px solid #E2E8F0",
+                          }
+                    }
+                  >
+                    <span className="text-[15px] font-black">{n}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Label */}
+            <p
+              className="text-center text-[12px] font-semibold mb-5"
+              style={{ color: "#64748B" }}
+            >
+              {pendingIntensity <= 3
+                ? "Kolay — Rahat geçti"
+                : pendingIntensity <= 6
+                ? "Orta — İyi bir antrenman"
+                : pendingIntensity <= 8
+                ? "Zor — Çok güzel iş"
+                : "Maksimum — Mükemmel!"}
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setIntensityModal(null)}
+                className="flex-1 rounded-xl py-3 text-[13px] font-bold"
+                style={{
+                  background: "#F1F5F9",
+                  color: "#64748B",
+                  border: "none",
+                }}
+              >
+                Vazgeç
+              </button>
+              <button
+                type="button"
+                onClick={handleIntensityConfirm}
+                disabled={finishing}
+                className="flex-[2] rounded-xl py-3 text-[13px] font-bold text-white disabled:opacity-50"
+                style={{
+                  background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                  boxShadow: "0 4px 14px rgba(249,115,22,0.4)",
+                  border: "none",
+                }}
+              >
+                {finishing ? "Kaydediliyor..." : "Kaydet ve Bitir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

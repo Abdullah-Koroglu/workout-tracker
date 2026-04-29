@@ -20,6 +20,8 @@ import {
   User,
 } from "lucide-react";
 
+import { NotificationBell } from "@/components/shared/NotificationBell";
+
 type NavItem = { href: string; label: string; icon: React.ElementType };
 
 const coachLinks: NavItem[] = [
@@ -131,6 +133,9 @@ export function HeaderInteractive({
 
       {/* User area */}
       <div className="flex items-center gap-1 sm:gap-2">
+        {/* Notification Bell */}
+        <NotificationBell />
+
         {/* Avatar + name — hidden on very small screens */}
         <div className="hidden items-center gap-2.5 sm:flex">
           <div

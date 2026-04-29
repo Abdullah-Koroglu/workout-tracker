@@ -315,7 +315,8 @@ export function useCompleteWorkout() {
 
   const completeWorkout = async (
     workoutId: string,
-    mode: "COMPLETED" | "ABANDONED"
+    mode: "COMPLETED" | "ABANDONED",
+    intensityScore?: number
   ): Promise<boolean> => {
     if (!workoutId) return false;
 
@@ -323,7 +324,7 @@ export function useCompleteWorkout() {
       const response = await fetch(`/api/client/workouts/${workoutId}/complete`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode })
+        body: JSON.stringify({ mode, ...(intensityScore ? { intensityScore } : {}) })
       });
 
       if (!response.ok) {

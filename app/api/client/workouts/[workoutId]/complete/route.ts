@@ -24,12 +24,20 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const intensityScore =
+    typeof body.intensityScore === "number" &&
+    body.intensityScore >= 1 &&
+    body.intensityScore <= 10
+      ? Math.round(body.intensityScore)
+      : null;
+
   const updated = await prisma.workout.update({
     where: { id: workoutId },
     data: {
       status: parsed.data.mode,
-      finishedAt: new Date()
-    }
+      finishedAt: new Date(),
+      ...(intensityScore !== null ? { intensityScore } : {}),
+    },
   });
 
   return NextResponse.json({ workout: updated });

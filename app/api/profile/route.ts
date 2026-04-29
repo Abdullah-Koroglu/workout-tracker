@@ -11,15 +11,21 @@ export async function GET() {
   const role = auth.session.user.role;
 
   if (role === "COACH") {
-    const profile = await prisma.coachProfile.findUnique({
-      where: { userId },
-      include: { packages: { where: { isActive: true }, orderBy: { createdAt: "asc" } } },
-    });
-    return NextResponse.json({ profile });
+    const [user, profile] = await Promise.all([
+      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+      prisma.coachProfile.findUnique({
+        where: { userId },
+        include: { packages: { where: { isActive: true }, orderBy: { createdAt: "asc" } } },
+      }),
+    ]);
+    return NextResponse.json({ profile: { ...profile, name: user?.name } });
   }
 
-  const profile = await prisma.clientProfile.findUnique({ where: { userId } });
-  return NextResponse.json({ profile });
+  const [user, profile] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
+    prisma.clientProfile.findUnique({ where: { userId } }),
+  ]);
+  return NextResponse.json({ profile: { ...profile, name: user?.name } });
 }
 
 export async function PUT(request: Request) {
@@ -33,9 +39,18 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
+  const { name } = body as Record<string, unknown>;
+
+  // Update User.name if provided
+  if (typeof name === "string" && name.trim()) {
+    await prisma.user.update({
+      where: { id: userId },
+      data: { name: name.trim() },
+    });
+  }
+
   if (role === "COACH") {
     const { bio, specialties, experienceYears, socialMediaUrl } = body as Record<string, unknown>;
-
     const profile = await prisma.coachProfile.upsert({
       where: { userId },
       create: {
@@ -57,7 +72,6 @@ export async function PUT(request: Request) {
 
   // CLIENT
   const { birthDate, heightCm, weightKg, goal, fitnessLevel } = body as Record<string, unknown>;
-
   const profile = await prisma.clientProfile.upsert({
     where: { userId },
     create: {

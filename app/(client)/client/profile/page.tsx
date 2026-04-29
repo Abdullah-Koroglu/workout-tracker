@@ -99,6 +99,7 @@ export default function ClientProfilePage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        name:         name.trim() || undefined,
         birthDate:    birthDate    || null,
         heightCm:     heightCm    ? Number(heightCm) : null,
         weightKg:     weightKg    ? Number(weightKg) : null,
@@ -161,6 +162,20 @@ export default function ClientProfilePage() {
                 <User2 className="h-4 w-4 text-orange-500" />
               </div>
               <h2 className="text-base font-black text-slate-800">Fiziksel Bilgiler</h2>
+            </div>
+
+            <div className="mb-4">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+                <User2 className="h-3.5 w-3.5" />
+                Ad Soyad
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Adınız ve soyadınız"
+                className={inputCls}
+              />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">

@@ -85,6 +85,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   ]);
 
   if (client && client.role === "CLIENT") {
+    // In-app notification
+    await prisma.notification.create({
+      data: {
+        userId: clientId,
+        title: "Yeni antrenman atandı",
+        body: `${coach?.name ?? "Koçun"} sana "${template.name}" programını ${scheduledForRaw.toLocaleDateString("tr-TR")} için atadı.`,
+        type: "NEW_ASSIGNMENT",
+      },
+    });
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 
     await sendTemplatedEmail({

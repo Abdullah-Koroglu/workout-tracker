@@ -1,19 +1,17 @@
-import { LoadingSkeleton } from "@/components/shared/LoadingSkeleton";
-
 export default function CoachClientsLoading() {
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <LoadingSkeleton className="h-8 w-40" />
-        <LoadingSkeleton className="h-10 w-32" />
+    <div className="space-y-5 animate-pulse">
+      <div className="h-32 rounded-2xl bg-secondary/20" />
+      <div className="grid grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-16 rounded-2xl bg-muted" />
+        ))}
       </div>
-
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="space-y-2 p-4 bg-white rounded-lg shadow dark:bg-gray-800">
-            <LoadingSkeleton className="h-6 w-48" />
-            <LoadingSkeleton className="h-4 w-32" />
-          </div>
+      <div className="h-10 rounded-xl bg-muted" />
+      <div className="h-11 rounded-xl bg-muted" />
+      <div className="space-y-2.5">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-16 rounded-2xl bg-muted" />
         ))}
       </div>
     </div>

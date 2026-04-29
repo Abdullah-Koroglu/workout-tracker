@@ -129,7 +129,7 @@ export function LoginContent() {
 
           {/* Card wrapper: shadow + rounding only on mobile */}
           <div
-            className="-mt-8 rounded-2xl bg-white p-6 md:mt-0 md:rounded-none md:bg-transparent md:p-0"
+            className="-mt-8 rounded-2xl bg-white p-6"
             style={{ boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }}
           >
             {/* Desktop title */}

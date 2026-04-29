@@ -2,10 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
+import { MessageCircle, Check, X, ChevronRight, Search } from "lucide-react";
 
-import { ActionMenu } from "@/components/ui/action-menu";
-import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 
@@ -15,11 +13,72 @@ type ClientRelationItem = {
   name: string;
   email: string;
   status: "PENDING" | "ACCEPTED" | "REJECTED";
+  compliance?: number;
 };
+
+function ClientAvatar({ name, size = 44 }: { name: string; size?: number }) {
+  const initials = name
+    .split(" ")
+    .map((n) => n[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+  return (
+    <div
+      className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+      style={{
+        width: size,
+        height: size,
+        fontSize: size * 0.36,
+        background: "linear-gradient(135deg, #1A365D, #2D4A7ACC)",
+        boxShadow: "0 2px 8px #1A365D44",
+      }}
+    >
+      {initials}
+    </div>
+  );
+}
+
+function MetricCard({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: number;
+  accent: string;
+}) {
+  return (
+    <div
+      className="flex-1 rounded-[18px] p-3.5"
+      style={{
+        background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
+        borderLeft: `3px solid ${accent}`,
+        boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+        border: `1px solid rgba(0,0,0,0.06)`,
+        borderLeftColor: accent,
+        borderLeftWidth: 3,
+      }}
+    >
+      <div
+        className="text-[10px] font-bold uppercase tracking-wide"
+        style={{ color: "#94A3B8" }}
+      >
+        {label}
+      </div>
+      <div
+        className="text-[26px] font-black leading-tight mt-0.5"
+        style={{ color: accent }}
+      >
+        {value}
+      </div>
+    </div>
+  );
+}
 
 export function CoachClientsManager({
   accepted,
-  pending
+  pending,
 }: {
   accepted: ClientRelationItem[];
   pending: ClientRelationItem[];
@@ -28,206 +87,233 @@ export function CoachClientsManager({
   const { push } = useNotificationContext();
   const { confirm } = useConfirmation();
   const [activeClientId, setActiveClientId] = useState<string | null>(null);
+  const [tab, setTab] = useState<"accepted" | "pending">("accepted");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState<"ALL" | "ACCEPTED" | "PENDING">("ALL");
 
-  const updateRelation = async (clientId: string, status: "ACCEPTED" | "REJECTED") => {
+  const updateRelation = async (
+    clientId: string,
+    status: "ACCEPTED" | "REJECTED"
+  ) => {
     setActiveClientId(clientId);
     const response = await fetch(`/api/coach/clients/${clientId}/relation`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status })
+      body: JSON.stringify({ status }),
     });
     setActiveClientId(null);
-
-    if (!response.ok) {
-      push("İstek güncellenemedi.");
-      return;
-    }
-
+    if (!response.ok) { push("İstek güncellenemedi."); return; }
     push(status === "ACCEPTED" ? "Danışan isteği kabul edildi." : "Danışan isteği reddedildi.");
     router.refresh();
   };
 
   const removeClient = async (clientId: string) => {
     const approved = await confirm({
-      title: "Client baglantisini kaldir",
+      title: "Bağlantıyı kaldır",
       description: "Bu danışan ile ilişkiyi kaldırmak istediğinize emin misiniz?",
-      confirmText: "Kaldir",
-      cancelText: "Vazgec",
-      danger: true
+      confirmText: "Kaldır",
+      cancelText: "Vazgeç",
+      danger: true,
     });
-
-    if (!approved) {
-      return;
-    }
-
+    if (!approved) return;
     setActiveClientId(clientId);
-    const response = await fetch(`/api/coach/clients/${clientId}/relation`, {
-      method: "DELETE"
-    });
+    const response = await fetch(`/api/coach/clients/${clientId}/relation`, { method: "DELETE" });
     const data = await response.json().catch(() => ({}));
     setActiveClientId(null);
-
-    if (!response.ok) {
-      push(data.error || "Danışan bağlantısı kaldırılamadı.");
-      return;
-    }
-
+    if (!response.ok) { push(data.error || "Danışan bağlantısı kaldırılamadı."); return; }
     push("Danışan bağlantısı kaldırıldı.");
     router.refresh();
   };
 
-  const acceptedFiltered = accepted.filter((item) => {
+  const filterList = (list: ClientRelationItem[]) => {
     const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return item.name.toLowerCase().includes(q) || item.email.toLowerCase().includes(q);
-  });
+    if (!q) return list;
+    return list.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) || c.email.toLowerCase().includes(q)
+    );
+  };
 
-  const pendingFiltered = pending.filter((item) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return true;
-    return item.name.toLowerCase().includes(q) || item.email.toLowerCase().includes(q);
-  });
-
-  const allCount = accepted.length + pending.length;
+  const acceptedFiltered = filterList(accepted);
+  const pendingFiltered = filterList(pending);
+  const list = tab === "accepted" ? acceptedFiltered : pendingFiltered;
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5 md:p-5">
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="relative w-full max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Danışan adı veya e-posta ara..."
-              className="h-10 w-full rounded-lg border-0 bg-muted/60 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+    <div className="flex flex-col gap-3.5">
+      {/* Metric Cards */}
+      <div className="flex gap-2.5">
+        <MetricCard label="Toplam" value={accepted.length + pending.length} accent="#1E293B" />
+        <MetricCard label="Aktif" value={accepted.length} accent="#22C55E" />
+        <MetricCard label="Bekleyen" value={pending.length} accent="#F59E0B" />
+      </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => setFilter("ALL")}
-              className={[
-                "rounded-full px-3 py-1 font-semibold",
-                filter === "ALL" ? "bg-primary/15 text-foreground ring-1 ring-primary/30" : "bg-muted text-muted-foreground",
-              ].join(" ")}
-            >
-              Tümü ({allCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("ACCEPTED")}
-              className={[
-                "rounded-full px-3 py-1 font-semibold",
-                filter === "ACCEPTED" ? "bg-secondary/20 text-secondary ring-1 ring-secondary/30" : "bg-muted text-muted-foreground",
-              ].join(" ")}
-            >
-              Aktif ({accepted.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setFilter("PENDING")}
-              className={[
-                "rounded-full px-3 py-1 font-semibold",
-                filter === "PENDING" ? "bg-primary/15 text-foreground ring-1 ring-primary/30" : "bg-muted text-muted-foreground",
-              ].join(" ")}
-            >
-              Bekleyen ({pending.length})
-            </button>
-          </div>
-        </div>
-      </section>
+      {/* Search */}
+      <div
+        className="flex items-center gap-2 rounded-xl px-3"
+        style={{
+          background: "#F1F5F9",
+          height: 44,
+          border: "1.5px solid #E2E8F0",
+        }}
+      >
+        <Search className="w-4 h-4 flex-shrink-0" style={{ color: "#94A3B8" }} />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Danışan adı veya e-posta ara..."
+          className="flex-1 bg-transparent text-sm outline-none"
+          style={{ color: "#1E293B" }}
+        />
+      </div>
 
-      {(filter === "ALL" || filter === "ACCEPTED") && (
-        <section className="space-y-3">
-          <h2 className="font-semibold">Aktif Danışanlar</h2>
-          {acceptedFiltered.length === 0 ? (
-            <div className="rounded-xl bg-muted/50 p-6 text-sm text-muted-foreground">
-              Aktif danışan bulunamadı.
-            </div>
-          ) : (
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {acceptedFiltered.map((client) => (
-                <div key={client.relationId} className="rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="truncate text-base font-bold text-foreground">{client.name}</p>
-                      <p className="truncate text-sm text-muted-foreground">{client.email}</p>
+      {/* Tab Bar */}
+      <div
+        className="flex rounded-xl p-1 gap-1"
+        style={{ background: "#F1F5F9" }}
+      >
+        {[
+          { key: "accepted" as const, label: `Aktif (${accepted.length})` },
+          { key: "pending" as const, label: `Bekleyen (${pending.length})` },
+        ].map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className="flex-1 py-2 rounded-[10px] text-[13px] font-semibold transition-all"
+            style={{
+              background: tab === t.key ? "#fff" : "transparent",
+              color: tab === t.key ? "#1E293B" : "#94A3B8",
+              boxShadow: tab === t.key ? "0 1px 4px rgba(0,0,0,0.08)" : "none",
+              border: "none",
+              cursor: "pointer",
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Client List */}
+      <div className="flex flex-col gap-2.5">
+        {list.length === 0 ? (
+          <div
+            className="rounded-[18px] p-8 text-center text-sm"
+            style={{ background: "#F8FAFC", color: "#94A3B8", border: "1px solid rgba(0,0,0,0.06)" }}
+          >
+            {tab === "accepted" ? "Aktif danışan bulunamadı." : "Bekleyen istek yok."}
+          </div>
+        ) : tab === "accepted" ? (
+          list.map((client) => (
+            <div
+              key={client.relationId}
+              onClick={() => router.push(`/coach/clients/${client.id}`)}
+              className="rounded-[18px] p-4 cursor-pointer"
+              style={{
+                background: "#fff",
+                boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+                border: "1px solid rgba(0,0,0,0.06)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <ClientAvatar name={client.name} size={44} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
+                    {client.name}
+                  </div>
+                  <div className="text-xs truncate mt-0.5" style={{ color: "#94A3B8" }}>
+                    {client.email}
+                  </div>
+                  {client.compliance !== undefined && (
+                    <div className="flex items-center gap-2 mt-1.5">
+                      <div
+                        className="h-1 rounded-full overflow-hidden"
+                        style={{ background: "#F1F5F9", maxWidth: 80, flex: 1 }}
+                      >
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${client.compliance}%`,
+                            background: client.compliance >= 80 ? "#22C55E" : "#F59E0B",
+                          }}
+                        />
+                      </div>
+                      <span
+                        className="text-[11px] font-bold"
+                        style={{ color: client.compliance >= 80 ? "#22C55E" : "#F59E0B" }}
+                      >
+                        %{client.compliance}
+                      </span>
                     </div>
-                    <ActionMenu
-                      items={[
-                        {
-                          label: "Detay",
-                          onClick: () => {
-                            router.push(`/coach/clients/${client.id}`);
-                          }
-                        },
-                        {
-                          label: "İlerleme",
-                          onClick: () => {
-                            router.push(`/coach/clients/${client.id}/progress`);
-                          }
-                        },
-                        {
-                          label: "Danışanı kaldır",
-                          danger: true,
-                          onClick: () => {
-                            void removeClient(client.id);
-                          }
-                        }
-                      ]}
-                    />
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); router.push("/coach/messages"); }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                    style={{ background: "#2563EB15", color: "#2563EB" }}
+                    title="Mesaj gönder"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); void removeClient(client.id); }}
+                    disabled={activeClientId === client.id}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                    style={{ background: "#F1F5F9", color: "#94A3B8" }}
+                    title="Kaldır"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  <ChevronRight className="w-4 h-4" style={{ color: "#CBD5E1" }} />
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          list.map((client) => (
+            <div
+              key={client.relationId}
+              className="rounded-[18px] p-4"
+              style={{
+                background: "#fff",
+                boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
+                border: "1px solid rgba(0,0,0,0.06)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <ClientAvatar name={client.name} size={44} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
+                    {client.name}
+                  </div>
+                  <div className="text-xs truncate mt-0.5" style={{ color: "#94A3B8" }}>
+                    {client.email}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </section>
-      )}
-
-      {(filter === "ALL" || filter === "PENDING") && (
-        <section className="space-y-3">
-          <h2 className="font-semibold">Bekleyen İstekler</h2>
-          {pendingFiltered.length === 0 ? (
-            <div className="rounded-xl bg-muted/50 p-6 text-sm text-muted-foreground">
-              Bekleyen istek yok.
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {pendingFiltered.map((client) => (
-                <div key={client.relationId} className="flex flex-col gap-3 rounded-xl bg-card p-4 ring-1 ring-black/5 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <p className="font-semibold">{client.name}</p>
-                    <p className="text-sm text-muted-foreground">{client.email}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      disabled={activeClientId === client.id}
-                      onClick={() => updateRelation(client.id, "ACCEPTED")}
-                    >
-                      Kabul Et
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="text-red-600"
-                      disabled={activeClientId === client.id}
-                      onClick={() => updateRelation(client.id, "REJECTED")}
-                    >
-                      Reddet
-                    </Button>
-                  </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => updateRelation(client.id, "ACCEPTED")}
+                    disabled={activeClientId === client.id}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                    style={{ background: "#22C55E15", color: "#22C55E" }}
+                    title="Kabul et"
+                  >
+                    <Check className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => updateRelation(client.id, "REJECTED")}
+                    disabled={activeClientId === client.id}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
+                    style={{ background: "#EF444415", color: "#EF4444" }}
+                    title="Reddet"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              ))}
+              </div>
             </div>
-          )}
-        </section>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }

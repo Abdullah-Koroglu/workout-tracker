@@ -21,6 +21,7 @@ export type HeroStatBox = {
 export type HeroAvatar = {
   initials: string;
   variant?: "orange" | "navy";
+  imageUrl?: string | null;
 };
 
 export type HeroBadge = {
@@ -164,7 +165,15 @@ export function PageHero({
                 className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-lg font-black text-white sm:h-[60px] sm:w-[60px]"
                 style={AVATAR_STYLE[avatar.variant ?? "orange"]}
               >
-                {avatar.initials}
+                {avatar.imageUrl ? (
+                  <img
+                    src={avatar.imageUrl}
+                    alt="Avatar"
+                    className="h-full w-full rounded-2xl object-cover"
+                  />
+                ) : (
+                  avatar.initials
+                )}
               </div>
             )}
 

@@ -10,8 +10,14 @@ type WorkoutItem = {
   startedAt: string;
   finishedAt: string | null;
   durationMinutes: number | null;
+  intensityScore: number | null;
   status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
-  template: { name: string };
+  assignment: {
+    id: string;
+    scheduledFor: string;
+    createdAt: string;
+  };
+  template: { name: string; description: string | null };
   sets: Array<{
     id: string;
     setNumber: number;
@@ -19,6 +25,7 @@ type WorkoutItem = {
     reps: number | null;
     rir: number | null;
     durationMinutes: number | null;
+    durationSeconds: number | null;
     completed: boolean;
     exercise: { name: string; type: "WEIGHT" | "CARDIO" };
   }>;
@@ -35,8 +42,8 @@ const statusConfig: Record<
   { label: string; emoji: string; bg: string; color: string; badgeBg: string }
 > = {
   COMPLETED:   { label: "Tamamlandı",    emoji: "✅", bg: "#22C55E18", color: "#22C55E", badgeBg: "#22C55E18" },
-  ABANDONED:   { label: "Yarıda bırakıldı", emoji: "⚠️", bg: "#F59E0B18", color: "#F59E0B", badgeBg: "#F59E0B18" },
-  IN_PROGRESS: { label: "Devam ediyor",  emoji: "🏃", bg: "#2563EB18", color: "#2563EB", badgeBg: "#2563EB18" },
+  ABANDONED:   { label: "Yapılmadı", emoji: "⚠️", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
+  IN_PROGRESS: { label: "Yapılmadı",  emoji: "⏳", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
 };
 
 export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
@@ -68,6 +75,21 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
           year: "numeric",
         });
         const completedSets = workout.sets.filter((s) => s.completed).length;
+        const totalSets = workout.sets.length;
+        const totalVolume = workout.sets.reduce((sum, set) => {
+          if (!set.completed || set.weightKg == null || set.reps == null) return sum;
+          return sum + set.weightKg * set.reps;
+        }, 0);
+        const completionPercent = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
+        const totalCardioMinutes = workout.sets.reduce((sum, set) => {
+          if (set.exercise.type !== "CARDIO") return sum;
+          if (set.durationMinutes != null) return sum + set.durationMinutes;
+          if (set.durationSeconds != null) return sum + Math.round(set.durationSeconds / 60);
+          return sum;
+        }, 0);
+        const startedAt = new Date(workout.startedAt);
+        const finishedAt = workout.finishedAt ? new Date(workout.finishedAt) : null;
+        const scheduledFor = new Date(workout.assignment.scheduledFor);
 
         return (
           <div
@@ -96,7 +118,7 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
                 </div>
                 <div className="text-[11px] mt-0.5" style={{ color: "#94A3B8" }}>
                   {date}
-                  {completedSets > 0 && ` · ${completedSets} set`}
+                  {totalSets > 0 && ` · ${completedSets}/${totalSets} set`}
                   {workout.durationMinutes !== null && ` · ${workout.durationMinutes} dk`}
                 </div>
               </div>
@@ -129,6 +151,44 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
                 className="px-3.5 pb-4 pt-1 flex flex-col gap-3"
                 style={{ borderTop: "1px solid #F1F5F9" }}
               >
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Durum", value: cfg.label },
+                    { label: "Planlanan Gün", value: scheduledFor.toLocaleDateString("tr-TR") },
+                    { label: "Başlangıç", value: startedAt.toLocaleString("tr-TR") },
+                    { label: "Bitiş", value: finishedAt ? finishedAt.toLocaleString("tr-TR") : "-" },
+                    { label: "Tamamlanma", value: `%${completionPercent}` },
+                    { label: "Yoğunluk", value: workout.intensityScore != null ? `${workout.intensityScore}/10` : "-" },
+                    { label: "Toplam Hacim", value: `${Math.round(totalVolume)} kg` },
+                    { label: "Kardiyo Süresi", value: `${totalCardioMinutes} dk` },
+                    { label: "Atama ID", value: workout.assignment.id },
+                  ].map((item) => (
+                    <div
+                      key={item.label}
+                      className="rounded-xl px-3 py-2"
+                      style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
+                    >
+                      <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
+                        {item.label}
+                      </div>
+                      <div className="mt-0.5 break-all text-[12px] font-semibold" style={{ color: "#1E293B" }}>
+                        {item.value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {workout.template.description && (
+                  <div className="rounded-xl px-3 py-2.5" style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}>
+                    <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: "#94A3B8" }}>
+                      Program Açıklaması
+                    </div>
+                    <p className="mt-1 text-[12px] leading-relaxed" style={{ color: "#334155" }}>
+                      {workout.template.description}
+                    </p>
+                  </div>
+                )}
+
                 {/* Sets */}
                 {workout.sets.length > 0 && (
                   <div className="flex flex-col gap-1.5">
@@ -155,7 +215,7 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
                         <div className="text-[12px] font-semibold" style={{ color: "#475569" }}>
                           {s.exercise.type === "WEIGHT"
                             ? `${s.weightKg ?? "—"} kg · ${s.reps ?? "—"} tek · RIR ${s.rir ?? "—"}`
-                            : `${s.durationMinutes ?? 0} dk kardiyo`}
+                            : `${s.durationMinutes ?? (s.durationSeconds != null ? Math.round(s.durationSeconds / 60) : 0)} dk kardiyo`}
                         </div>
                       </div>
                     ))}

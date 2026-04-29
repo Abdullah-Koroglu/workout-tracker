@@ -6,6 +6,7 @@ import { AssignmentList } from "@/components/coach/AssignmentList";
 import { AssignTemplateModal } from "@/components/coach/AssignTemplateModal";
 import { CoachClientActionsMenu } from "@/components/coach/CoachClientActionsMenu";
 import { WorkoutHistoryPanel } from "@/components/coach/WorkoutHistoryPanel";
+import { PaginationControls } from "@/components/shared/PaginationControls";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -45,11 +46,17 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export default async function CoachClientDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ clientId: string }>;
+  searchParams: Promise<{ page?: string }>;
 }) {
   const session = await auth();
   const { clientId } = await params;
+  const qp = await searchParams;
+  const currentPage = Number.isFinite(Number(qp.page)) && Number(qp.page) > 0 ? Number(qp.page) : 1;
+  const pageSize = 10;
+  const skip = (currentPage - 1) * pageSize;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -72,27 +79,53 @@ export default async function CoachClientDetailPage({
         },
         orderBy: { createdAt: "desc" },
       },
-      workouts: {
-        include: {
-          template: true,
-          sets: {
-            include: { exercise: true },
-            orderBy: [{ exerciseId: "asc" }, { setNumber: "asc" }],
-          },
-          comments: {
-            include: { author: true },
-            orderBy: { createdAt: "asc" },
-          },
-        },
-        orderBy: { startedAt: "desc" },
-        take: 10,
-      },
     },
   });
   if (!client) return notFound();
 
-  const completedCount = client.workouts.filter((w) => w.status === "COMPLETED").length;
-  const totalWorkouts = client.workouts.length;
+  const [workouts, totalWorkouts] = await Promise.all([
+    prisma.workout.findMany({
+      where: { clientId },
+      include: {
+        template: true,
+        assignment: {
+          select: {
+            id: true,
+            scheduledFor: true,
+            createdAt: true,
+            assignedBy: true
+          }
+        },
+        sets: {
+          include: {
+            exercise: {
+              select: {
+                name: true,
+                type: true
+              }
+            }
+          },
+          orderBy: [{ exerciseId: "asc" }, { setNumber: "asc" }]
+        },
+        comments: {
+          include: {
+            author: { select: { name: true } }
+          },
+          orderBy: { createdAt: "asc" }
+        }
+      },
+      orderBy: { startedAt: "desc" },
+      skip,
+      take: pageSize
+    }),
+    prisma.workout.count({ where: { clientId } })
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(totalWorkouts / pageSize));
+
+  const completedCount = await prisma.workout.count({
+    where: { clientId, status: "COMPLETED" }
+  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -177,10 +210,16 @@ export default async function CoachClientDetailPage({
       <section>
         <SectionLabel>Son Antrenmanlar</SectionLabel>
         <WorkoutHistoryPanel
-          workouts={client.workouts.map((w) => ({
+          workouts={workouts.map((w) => ({
             id: w.id,
             startedAt: w.startedAt.toISOString(),
             finishedAt: w.finishedAt ? w.finishedAt.toISOString() : null,
+            intensityScore: w.intensityScore,
+            assignment: {
+              id: w.assignment.id,
+              scheduledFor: w.assignment.scheduledFor.toISOString(),
+              createdAt: w.assignment.createdAt.toISOString()
+            },
             durationMinutes:
               w.finishedAt
                 ? Math.round(
@@ -196,6 +235,7 @@ export default async function CoachClientDetailPage({
               reps: s.reps,
               rir: s.rir,
               durationMinutes: s.durationMinutes,
+              durationSeconds: s.durationSeconds,
               completed: s.completed,
               exercise: { name: s.exercise.name, type: s.exercise.type },
             })),
@@ -205,8 +245,19 @@ export default async function CoachClientDetailPage({
               createdAt: c.createdAt.toISOString(),
               author: { name: c.author.name },
             })),
+            template: {
+              name: w.template.name,
+              description: w.template.description
+            }
           }))}
         />
+        <div className="mt-3">
+          <PaginationControls
+            basePath={`/coach/clients/${clientId}`}
+            currentPage={Math.min(currentPage, totalPages)}
+            totalPages={totalPages}
+          />
+        </div>
       </section>
     </div>
   );

@@ -114,7 +114,7 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
               >
                 <span
                   className="text-[11px] font-bold uppercase tracking-wide"
-                  style={{ color: "#22C55E" }}
+                  style={{ color: "#DC2626" }}
                 >
                   {weekday}
                 </span>
@@ -136,9 +136,9 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
                     >
                       <div
                         className="w-8 h-8 rounded-[10px] flex items-center justify-center flex-shrink-0"
-                        style={{ background: "#F97316" + "18" }}
+                        style={{ background: "#EF4444" + "18" }}
                       >
-                        <CalendarDays className="w-4 h-4" style={{ color: "#F97316" }} />
+                        <CalendarDays className="w-4 h-4" style={{ color: "#EF4444" }} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <div
@@ -179,7 +179,7 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
         <div>
           <div
             className="text-[10px] font-bold uppercase tracking-wider mb-2"
-            style={{ color: "#22C55E" }}
+            style={{ color: "#DC2626" }}
           >
             Bugün
           </div>
@@ -190,7 +190,7 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
         <div>
           <div
             className="text-[10px] font-bold uppercase tracking-wider mb-2"
-            style={{ color: "#94A3B8" }}
+            style={{ color: "#DC2626" }}
           >
             Gelecek
           </div>

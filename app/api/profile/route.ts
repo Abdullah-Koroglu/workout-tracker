@@ -1,7 +1,22 @@
 import { NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+
+async function getCoachAvatarUrl(userId: string): Promise<string | null> {
+  const dir = path.join(process.cwd(), "public", "uploads", "avatars");
+
+  try {
+    const entries = await fs.readdir(dir);
+    const fileName = entries.find((name) => name.startsWith(`${userId}.`));
+    if (!fileName) return null;
+    return `/uploads/avatars/${fileName}`;
+  } catch {
+    return null;
+  }
+}
 
 export async function GET() {
   const auth = await requireAuth();
@@ -11,14 +26,15 @@ export async function GET() {
   const role = auth.session.user.role;
 
   if (role === "COACH") {
-    const [user, profile] = await Promise.all([
+    const [user, profile, avatarUrl] = await Promise.all([
       prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
       prisma.coachProfile.findUnique({
         where: { userId },
         include: { packages: { where: { isActive: true }, orderBy: { createdAt: "asc" } } },
       }),
+      getCoachAvatarUrl(userId),
     ]);
-    return NextResponse.json({ profile: { ...profile, name: user?.name } });
+    return NextResponse.json({ profile: { ...profile, name: user?.name, avatarUrl } });
   }
 
   const [user, profile] = await Promise.all([

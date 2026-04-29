@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import {
   Award,
   Briefcase,
@@ -19,6 +19,8 @@ import {
   X,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { PageHero } from "@/components/shared/PageHero";
 
@@ -38,6 +40,7 @@ type CoachProfileData = {
   socialMediaUrl: string | null;
   packages: CoachPackage[];
   name?: string;
+  avatarUrl?: string | null;
 };
 
 const SPECIALTY_SUGGESTIONS = [
@@ -66,11 +69,15 @@ const textareaCls =
 
 /* ─── Component ─────────────────────────────────────── */
 export default function CoachProfilePage() {
+  const { update } = useSession();
+  const router = useRouter();
   const { success, error: notifyError } = useNotificationContext();
 
   const [loading, setSaving_]     = useState(true);   // reuse name for clarity below
   const [saving, setSaving]       = useState(false);
   const [name, setName]           = useState("Koç");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
 
   // Profile form
   const [bio,              setBio]              = useState("");
@@ -102,6 +109,7 @@ export default function CoachProfilePage() {
         setSocialMediaUrl(p.socialMediaUrl ?? "");
         setPackages(p.packages ?? []);
         if (p.name) setName(p.name);
+        setAvatarUrl(p.avatarUrl ?? null);
       }
       setLoading(false);
     })();
@@ -114,6 +122,7 @@ export default function CoachProfilePage() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        name:            name.trim() || undefined,
         bio:             bio             || null,
         specialties:     specialties.length > 0 ? specialties : null,
         experienceYears: experienceYears ? Number(experienceYears) : null,
@@ -122,7 +131,49 @@ export default function CoachProfilePage() {
     });
     setSaving(false);
     if (!res.ok) { notifyError("Profil kaydedilemedi."); return; }
+    await update({ name: name.trim() || name });
+    router.refresh();
     success("Profil güncellendi.");
+  };
+
+  const handleAvatarUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const allowed = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowed.includes(file.type)) {
+      notifyError("Sadece JPG, PNG veya WEBP yüklenebilir.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      notifyError("Avatar dosyası en fazla 2MB olabilir.");
+      event.target.value = "";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    setAvatarUploading(true);
+    const response = await fetch("/api/profile/avatar", {
+      method: "POST",
+      body: formData
+    });
+    setAvatarUploading(false);
+
+    if (!response.ok) {
+      const data = (await response.json().catch(() => ({}))) as { error?: string };
+      notifyError(data.error ?? "Avatar yüklenemedi.");
+      event.target.value = "";
+      return;
+    }
+
+    const data = (await response.json()) as { avatarUrl?: string };
+    setAvatarUrl(data.avatarUrl ?? null);
+    success("Avatar güncellendi.");
+    event.target.value = "";
   };
 
   const addSpecialty = (val: string) => {
@@ -187,7 +238,7 @@ export default function CoachProfilePage() {
             : "Profil & Vitrin"
         }
         variant="navy"
-        avatar={{ initials: getInitials(name), variant: "navy" }}
+        avatar={{ initials: getInitials(name), variant: "navy", imageUrl: avatarUrl }}
         statBoxes={[
           { label: "Deneyim", value: experienceYears ? `${experienceYears} yıl` : "—", icon: Star },
           { label: "Uzmanlık", value: `${specialties.length}`, icon: Award },
@@ -217,6 +268,19 @@ export default function CoachProfilePage() {
               <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-slate-400">
                 Keşfet sayfasında görünür
               </span>
+            </div>
+
+            <div className="mb-5 space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                İsim Soyisim
+              </label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ad Soyad"
+                className={inputCls}
+              />
             </div>
 
             {/* Bio */}
@@ -525,6 +589,39 @@ export default function CoachProfilePage() {
         <div className="space-y-4">
 
           {/* Profile completeness */}
+          <div
+            className="rounded-2xl bg-white p-5"
+            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+          >
+            <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Avatar</h3>
+            <div className="flex items-center gap-3">
+              <div className="h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Coach avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-sm font-black text-slate-500">
+                    {getInitials(name)}
+                  </div>
+                )}
+              </div>
+              <label
+                className="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
+              >
+                {avatarUploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+                {avatarUploading ? "Yükleniyor..." : "Avatar Yükle"}
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  className="hidden"
+                  onChange={(e) => void handleAvatarUpload(e)}
+                  disabled={avatarUploading}
+                />
+              </label>
+            </div>
+            <p className="mt-2 text-[11px] text-slate-400">Maksimum 2MB. JPG, PNG, WEBP.</p>
+          </div>
+
           <div
             className="rounded-2xl bg-white p-5"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}

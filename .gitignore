@@ -28,3 +28,5 @@ pnpm-debug.log*
 *.tsbuildinfo
 dev.db
 .vscode/mcp.json
+
+/public/uploads/avatars

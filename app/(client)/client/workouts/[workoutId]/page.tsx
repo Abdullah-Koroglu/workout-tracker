@@ -201,7 +201,7 @@ export default async function WorkoutDetailPage({
           >
             <Trophy className="h-4 w-4 text-amber-400" />
             <span className="text-xs font-black text-amber-300">
-              {prExerciseNames.length} yeni PR kırıldı! &nbsp;—&nbsp;
+              {prExerciseNames.length + ' '} yeni PR kırıldı! &nbsp;—&nbsp;
               <span className="font-semibold opacity-80">
                 {prExerciseNames.slice(0, 3).join(", ")}
                 {prExerciseNames.length > 3 ? ` +${prExerciseNames.length - 3}` : ""}
@@ -327,7 +327,7 @@ export default async function WorkoutDetailPage({
                     <table className="w-full text-left">
                       <thead>
                         <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
-                          {["Set", "Ağırlık", "Tekrar", "RIR", "Durum"].map((h) => (
+                          {["Set", "Ağırlık", "Tekrar", "RIR"].map((h) => (
                             <th
                               key={h}
                               className="px-5 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400"
@@ -377,25 +377,6 @@ export default async function WorkoutDetailPage({
                               </td>
                               <td className="px-5 py-3 text-sm text-slate-500">
                                 {set.rir ?? <span className="text-slate-400">—</span>}
-                              </td>
-                              <td className="px-5 py-3 overflow-hidden">
-                                {set.completed ? (
-                                  <span
-                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black"
-                                    style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
-                                  >
-                                    <CheckCircle2 className="h-3 w-3" />
-                                    Tamam
-                                  </span>
-                                ) : (
-                                  <span
-                                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black"
-                                    style={{ background: "rgba(148,163,184,0.1)", color: "#94A3B8" }}
-                                  >
-                                    <XCircle className="h-3 w-3" />
-                                    Atlandı
-                                  </span>
-                                )}
                               </td>
                             </tr>
                           );

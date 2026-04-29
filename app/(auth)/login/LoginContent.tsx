@@ -200,37 +200,6 @@ export function LoginContent() {
                 {form.formState.isSubmitting ? "Giriş yapılıyor..." : "Giriş Yap"}
               </button>
             </form>
-
-            {/* Role switcher */}
-            <div className="mt-5 flex items-center gap-3">
-              <div className="h-px flex-1 bg-slate-100" />
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">ya da</span>
-              <div className="h-px flex-1 bg-slate-100" />
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <Link
-                href="/login?role=client"
-                className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition"
-                style={
-                  !isCoach
-                    ? { background: "rgba(249,115,22,0.1)", color: "#EA580C", border: "1px solid rgba(249,115,22,0.2)" }
-                    : { background: "#F8FAFC", color: "#64748B", border: "1px solid #E2E8F0" }
-                }
-              >
-                🏃 Danışan Girişi
-              </Link>
-              <Link
-                href="/login?role=coach"
-                className="flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition"
-                style={
-                  isCoach
-                    ? { background: "rgba(26,54,93,0.1)", color: "#1A365D", border: "1px solid rgba(26,54,93,0.2)" }
-                    : { background: "#F8FAFC", color: "#64748B", border: "1px solid #E2E8F0" }
-                }
-              >
-                🏋️ Koç Girişi
-              </Link>
-            </div>
           </div>
 
           <p className="mt-5 text-center text-sm text-slate-500">

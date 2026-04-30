@@ -74,6 +74,107 @@ export function CardioTimer({
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const reachedEndRef = useRef(false);
+  const previousBlockIndexRef = useRef<number | null>(null);
+
+  const playTransitionBeep = () => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) {
+      return;
+    }
+
+    try {
+      const ctx = new AudioCtx();
+      const gain = ctx.createGain();
+      gain.gain.value = 0.0001;
+      gain.connect(ctx.destination);
+
+      const now = ctx.currentTime;
+      const first = ctx.createOscillator();
+      first.type = "sine";
+      first.frequency.value = 880;
+      first.connect(gain);
+      first.start(now);
+      first.stop(now + 0.12);
+
+      const second = ctx.createOscillator();
+      second.type = "sine";
+      second.frequency.value = 1175;
+      second.connect(gain);
+      second.start(now + 0.14);
+      second.stop(now + 0.26);
+
+      gain.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+
+      setTimeout(() => {
+        void ctx.close().catch(() => undefined);
+      }, 320);
+    } catch {
+      // Ignore audio failures (autoplay policies/device support).
+    }
+  };
+
+  const notifyBlockTransitionInBackground = async (nextBlock: number) => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    if (typeof document !== "undefined" && document.visibilityState === "visible") {
+      return;
+    }
+
+    if (!("Notification" in window) || Notification.permission !== "granted") {
+      return;
+    }
+
+    if (!("serviceWorker" in navigator)) {
+      return;
+    }
+
+    const payload = {
+      type: "CARDIO_BLOCK_TRANSITION",
+      block: nextBlock,
+      totalBlocks: protocol.length,
+      title: "Kardiyo Blok Geçişi",
+      body: `Yeni blok başladı: ${nextBlock}/${protocol.length}`
+    };
+
+    try {
+      if (navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage(payload);
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      await registration.showNotification(payload.title, {
+        body: payload.body,
+        icon: "/manifest-icon-192.maskable.png",
+        badge: "/favicon-196.png",
+        tag: "cardio-block-transition",
+        renotify: true,
+        vibrate: [120, 80, 120],
+        data: { url: window.location.pathname }
+      });
+    } catch {
+      // Ignore notification failures to keep timer flow uninterrupted.
+    }
+  };
+
+  const withNotificationPermission = async (action: () => void) => {
+    if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch {
+        // Ignore permission prompt failures.
+      }
+    }
+    action();
+  };
+
   useEffect(() => {
     if (seconds >= totalSeconds && onReachedEnd && !reachedEndRef.current) {
       reachedEndRef.current = true;
@@ -84,6 +185,32 @@ export function CardioTimer({
     if (seconds < totalSeconds) reachedEndRef.current = false;
   }, [seconds, totalSeconds]);
   useEffect(() => { onSecondChange?.(seconds); }, [onSecondChange, seconds]);
+
+  useEffect(() => {
+    const previousIndex = previousBlockIndexRef.current;
+    if (previousIndex === null) {
+      previousBlockIndexRef.current = currentIndex;
+      return;
+    }
+
+    const hasAdvanced = currentIndex > previousIndex;
+    if (hasAdvanced && isRunning && seconds > 0 && seconds < totalSeconds) {
+      playTransitionBeep();
+      void notifyBlockTransitionInBackground(currentIndex + 1);
+
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate?.(120);
+      }
+    }
+
+    previousBlockIndexRef.current = currentIndex;
+  }, [currentIndex, isRunning, seconds, totalSeconds, protocol.length]);
+
+  useEffect(() => {
+    if (!isRunning && seconds === 0) {
+      previousBlockIndexRef.current = null;
+    }
+  }, [isRunning, seconds]);
 
   const badge = intensityBadge(current?.speed ?? 0, current?.incline ?? 0);
 
@@ -238,7 +365,9 @@ export function CardioTimer({
           {!hasStarted && !hasFinished ? (
             <button
               type="button"
-              onClick={start}
+              onClick={() => {
+                void withNotificationPermission(start);
+              }}
               className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold text-white"
               style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.44)", border: "none" }}
             >
@@ -256,7 +385,9 @@ export function CardioTimer({
           ) : !hasFinished ? (
             <button
               type="button"
-              onClick={resume}
+              onClick={() => {
+                void withNotificationPermission(resume);
+              }}
               className="flex h-11 flex-1 items-center justify-center gap-1.5 rounded-xl text-[13px] font-bold text-white"
               style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.44)", border: "none" }}
             >

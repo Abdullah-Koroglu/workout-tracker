@@ -57,8 +57,6 @@ export default async function CoachClientDetailPage({
   const currentPage = Number.isFinite(Number(qp.page)) && Number(qp.page) > 0 ? Number(qp.page) : 1;
   const pageSize = 10;
   const skip = (currentPage - 1) * pageSize;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
   const relation = await prisma.coachClientRelation.findFirst({
     where: { coachId: session?.user.id, clientId, status: "ACCEPTED" },
@@ -70,14 +68,16 @@ export default async function CoachClientDetailPage({
     include: {
       assignments: {
         where: {
-          scheduledFor: { gte: today },
-          workouts: { none: {} },
+          workouts: { none: { status: "COMPLETED" } },
         },
         include: {
           template: true,
           _count: { select: { workouts: true } },
         },
-        orderBy: { createdAt: "desc" },
+        orderBy: [
+          { scheduledFor: "asc" },
+          { createdAt: "desc" },
+        ],
       },
     },
   });

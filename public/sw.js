@@ -192,3 +192,27 @@ self.addEventListener("notificationclick", (event) => {
     })
   );
 });
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== "CARDIO_BLOCK_TRANSITION") {
+    return;
+  }
+
+  const title = data.title || "Kardiyo Blok Geçişi";
+  const body = data.body || "Yeni blok başladı.";
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/manifest-icon-192.maskable.png",
+      badge: "/favicon-196.png",
+      tag: "cardio-block-transition",
+      renotify: true,
+      vibrate: [120, 80, 120],
+      data: {
+        url: "/client/workouts"
+      }
+    })
+  );
+});

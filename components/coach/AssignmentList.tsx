@@ -70,6 +70,12 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
     return d.getTime() === today.getTime();
   });
 
+  const overdueItems = assignments.filter((a) => {
+    const d = new Date(a.scheduledFor);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() < today.getTime();
+  });
+
   const upcomingItems = assignments.filter((a) => {
     const d = new Date(a.scheduledFor);
     d.setHours(0, 0, 0, 0);
@@ -175,6 +181,17 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
 
   return (
     <div className="flex flex-col gap-4">
+      {overdueItems.length > 0 && (
+        <div>
+          <div
+            className="text-[10px] font-bold uppercase tracking-wider mb-2"
+            style={{ color: "#DC2626" }}
+          >
+            Geciken
+          </div>
+          {renderGroup(overdueItems)}
+        </div>
+      )}
       {todayItems.length > 0 && (
         <div>
           <div

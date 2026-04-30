@@ -36,7 +36,12 @@ export async function POST(request: Request) {
   const userId = auth.session.user.id;
   const uploadsDir = path.join(process.cwd(), "public", "uploads", "avatars");
 
-  await fs.mkdir(uploadsDir, { recursive: true });
+  try {
+    await fs.mkdir(uploadsDir, { recursive: true });
+  } catch (error) {
+    console.error("Directory creation error:", error);
+    return NextResponse.json({ error: "Klasör oluşturulamadı." }, { status: 500 });
+  }
 
   const existing = await fs.readdir(uploadsDir).catch(() => [] as string[]);
   const staleFiles = existing.filter((name) => name.startsWith(`${userId}.`));
@@ -54,8 +59,13 @@ export async function POST(request: Request) {
   const fileName = `${userId}.${ext}`;
   const dest = path.join(uploadsDir, fileName);
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  await fs.writeFile(dest, buffer);
+  try {
+    const buffer = Buffer.from(await file.arrayBuffer());
+    await fs.writeFile(dest, buffer);
+  } catch (error) {
+    console.error("Avatar write error:", error);
+    return NextResponse.json({ error: "Dosya kaydedilemedi." }, { status: 500 });
+  }
 
   const avatarUrl = `/uploads/avatars/${fileName}?v=${Date.now()}`;
   return NextResponse.json({ avatarUrl });

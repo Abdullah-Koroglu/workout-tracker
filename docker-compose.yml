@@ -25,6 +25,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - ./public:/app/public
     environment:
       - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach?schema=public
       - AUTH_TRUST_HOST=true

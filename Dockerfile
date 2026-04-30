@@ -28,6 +28,9 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/server.js ./server.js
 
+# Ensure upload directories exist
+RUN mkdir -p /app/public/uploads/avatars && chmod 755 /app/public/uploads
+
 EXPOSE 3000
 ENV PORT 3000
 CMD ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && npm run start"]

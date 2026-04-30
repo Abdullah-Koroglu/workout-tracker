@@ -39,7 +39,7 @@ export async function POST(request: Request) {
   try {
     await fs.mkdir(uploadsDir, { recursive: true });
   } catch (error) {
-    console.error("Directory creation error:", error);
+    console.error("[Avatar] Directory creation error:", { userId, uploadsDir, error });
     return NextResponse.json({ error: "Klasör oluşturulamadı." }, { status: 500 });
   }
 
@@ -62,8 +62,9 @@ export async function POST(request: Request) {
   try {
     const buffer = Buffer.from(await file.arrayBuffer());
     await fs.writeFile(dest, buffer);
+    console.log("[Avatar] File uploaded successfully:", { userId, fileName, size: buffer.length, path: dest });
   } catch (error) {
-    console.error("Avatar write error:", error);
+    console.error("[Avatar] Write error:", { userId, fileName, dest, error });
     return NextResponse.json({ error: "Dosya kaydedilemedi." }, { status: 500 });
   }
 

@@ -51,6 +51,7 @@ export default async function CoachDashboardPage() {
     totalClients,
     weeklyActive,
     recentWorkouts,
+    activeWorkouts,
     pendingRequests,
     completedThisWeek,
     workoutsToday,
@@ -72,6 +73,18 @@ export default async function CoachDashboardPage() {
       include: { client: true, template: true },
       orderBy: { startedAt: "desc" },
       take: 5,
+    }),
+    prisma.workout.findMany({
+      where: {
+        status: "IN_PROGRESS",
+        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+      },
+      include: {
+        client: { select: { id: true, name: true } },
+        template: { select: { name: true } },
+      },
+      orderBy: { startedAt: "desc" },
+      take: 20,
     }),
     prisma.coachClientRelation.findMany({
       where: { coachId, status: "PENDING" },
@@ -148,6 +161,22 @@ export default async function CoachDashboardPage() {
     };
   });
 
+  // Keep one active workout story per client (latest one)
+  const activeStories = Array.from(
+    new Map(
+      activeWorkouts.map((workout) => [
+        workout.client.id,
+        {
+          clientId: workout.client.id,
+          clientName: workout.client.name,
+          workoutId: workout.id,
+          templateName: workout.template.name,
+          startedAt: workout.startedAt,
+        },
+      ])
+    ).values()
+  );
+
   return (
     <div className="min-h-screen">
       {/* ── Hero ── */}
@@ -192,6 +221,62 @@ export default async function CoachDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        {/* Active Workout Stories */}
+        {activeStories.length > 0 && (
+          <div>
+            <div className="mb-2.5 flex items-center justify-between">
+              <span className="text-[15px] font-bold text-slate-800">
+                Şu An Aktif Antrenman
+              </span>
+              <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-red-500">
+                Live {activeStories.length}
+              </span>
+            </div>
+
+            <div
+              className="flex gap-3 overflow-x-auto pb-1"
+              style={{ scrollbarWidth: "thin" }}
+            >
+              {activeStories.map((story) => (
+                <Link
+                  key={story.workoutId}
+                  href={`/coach/clients/${story.clientId}`}
+                  className="group min-w-[96px] max-w-[96px] rounded-2xl bg-white px-2.5 py-3 text-center shadow-sm transition-all hover:-translate-y-0.5"
+                  style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+                >
+                  <div className="mx-auto mb-2.5 relative flex h-14 w-14 items-center justify-center rounded-full"
+                    style={{
+                      background: "conic-gradient(from 0deg, #FB923C, #EF4444, #FB923C)",
+                      boxShadow: "0 6px 14px rgba(239,68,68,0.25)",
+                    }}>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#1A365D] text-sm font-black text-white">
+                      {story.clientName
+                        .split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .toUpperCase()
+                        .slice(0, 2)}
+                    </div>
+                    <span className="absolute -bottom-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
+                      canlı
+                    </span>
+                  </div>
+
+                  <p className="truncate text-[11px] font-black text-slate-800">
+                    {story.clientName}
+                  </p>
+                  <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-slate-400">
+                    {story.templateName}
+                  </p>
+                  <p className="mt-1 text-[10px] font-semibold text-red-500">
+                    {formatTimeAgo(story.startedAt)}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Quota Widget */}
         <QuotaWidget tier={subscriptionTier} currentClientCount={totalClients} />
 

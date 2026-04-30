@@ -369,7 +369,7 @@ export function CoachClientsManager({
               }}
             >
               <div className="flex items-center gap-3">
-                <ClientAvatar name={client.name} size={44} />
+                <ComplianceRing name={client.name} size={44} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
                     {client.name}

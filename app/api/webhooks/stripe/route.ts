@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
+import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionTier } from "@prisma/client";
 
 const PRICE_TO_TIER: Record<string, SubscriptionTier> = {
-  [process.env.STRIPE_PRO_PRICE_ID!]: "PRO",
-  [process.env.STRIPE_ELITE_PRICE_ID!]: "ELITE",
+  [process.env.STRIPE_PRO_PRICE_ID!]: "TIER_1",
+  [process.env.STRIPE_ELITE_PRICE_ID!]: "TIER_2",
 };
 
 export async function POST(request: Request) {
+  const stripe = getStripe();
   const body = await request.text();
   const signature = request.headers.get("stripe-signature");
 
@@ -32,8 +33,8 @@ export async function POST(request: Request) {
     if (userId && tier && subscriptionId) {
       await prisma.coachProfile.upsert({
         where: { userId },
-        update: { subscriptionTier: tier, stripeSubscriptionId: subscriptionId },
-        create: { userId, subscriptionTier: tier, stripeSubscriptionId: subscriptionId },
+        update: { subscriptionTier: tier },
+        create: { userId, subscriptionTier: tier },
       });
     }
   }
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     if (tier && typeof sub.customer === "string") {
       await prisma.coachProfile.updateMany({
         where: { stripeCustomerId: sub.customer },
-        data: { subscriptionTier: tier, stripeSubscriptionId: sub.id },
+        data: { subscriptionTier: tier },
       });
     }
   }
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
     if (typeof sub.customer === "string") {
       await prisma.coachProfile.updateMany({
         where: { stripeCustomerId: sub.customer },
-        data: { subscriptionTier: "FREE", stripeSubscriptionId: null },
+        data: { subscriptionTier: "FREE" },
       });
     }
   }

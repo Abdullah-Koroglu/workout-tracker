@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
+import { SubscriptionTier } from "@prisma/client";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { stripe, STRIPE_PRICE_IDS } from "@/lib/stripe";
+import { getStripe, STRIPE_PRICE_IDS } from "@/lib/stripe";
+
+const PLAN_TO_TIER: Record<"PRO" | "ELITE", SubscriptionTier> = {
+  PRO: "TIER_1",
+  ELITE: "TIER_2",
+};
 
 export async function POST(request: Request) {
+  const stripe = getStripe();
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
 
@@ -58,7 +65,7 @@ export async function POST(request: Request) {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${origin}/coach/subscription?success=1`,
     cancel_url: `${origin}/coach/subscription?canceled=1`,
-    metadata: { userId: auth.session.user.id, tier },
+    metadata: { userId: auth.session.user.id, tier: PLAN_TO_TIER[tier] },
   });
 
   return NextResponse.json({ url: session.url });

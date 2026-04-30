@@ -5,9 +5,9 @@ export const TIER_LIMITS: Record<
   { maxClients: number; price: number; name: string }
 > = {
   FREE:   { maxClients: 3,    price: 0,   name: "Starter" },
-  TIER_1: { maxClients: 15,   price: 29,  name: "Pro" },
-  TIER_2: { maxClients: 50,   price: 79,  name: "Elite" },
-  AGENCY: { maxClients: 9999, price: 199, name: "Agency" },
+  TIER_1: { maxClients: 15,   price: 2500,  name: "Pro" },
+  TIER_2: { maxClients: 50,   price: 7900,  name: "Elite" },
+  AGENCY: { maxClients: 9999, price: 19900, name: "Agency" },
 };
 
 export function canAcceptNewClient(

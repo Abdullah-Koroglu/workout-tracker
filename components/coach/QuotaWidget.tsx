@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { SubscriptionTier } from "@prisma/client";
 import { TIER_LIMITS } from "@/lib/config/pricing";
+
+type SubscriptionTier = "FREE" | "TIER_1" | "TIER_2" | "AGENCY";
 
 type Props = {
   tier: SubscriptionTier;
@@ -65,7 +66,7 @@ export function QuotaWidget({ tier, currentClientCount }: Props) {
         <div className="mt-3 flex items-center justify-between gap-2">
           <p className="text-xs font-bold text-red-500">Kapasite doldu!</p>
           <Link
-            href="/coach/subscription"
+            href="/coach/billing"
             className="rounded-xl px-3 py-1.5 text-xs font-black text-white transition hover:opacity-90"
             style={{ background: color }}
           >

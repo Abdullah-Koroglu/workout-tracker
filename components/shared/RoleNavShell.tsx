@@ -7,6 +7,7 @@ import {
   Bell,
   ClipboardList,
   Compass,
+  CreditCard,
   Dumbbell,
   History,
   LayoutDashboard,
@@ -33,6 +34,7 @@ const coachItems: NavItem[] = [
   { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
   { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
   { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/coach/billing", label: "Faturalandırma", icon: CreditCard },
   { href: "/coach/profile", label: "Profil", icon: User },
 ];
 

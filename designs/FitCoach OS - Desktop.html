@@ -134,6 +134,7 @@ function Sidebar({screen,role,onNav,onRoleSwitch}){
     {key:'coach-clients',label:'Danışanlar',icon:Ic.clients},
     {key:'coach-messages',label:'Mesajlar',icon:Ic.messages},
     {key:'coach-profile',label:'Profil',icon:Ic.profile},
+    {key:'coach-billing',label:'Faturalama',icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>},
   ];
   const clientNav=[
     {key:'client-dashboard',label:'Ana Sayfa',icon:Ic.home},
@@ -1493,6 +1494,281 @@ function ClientHub({ onNav }) {
   );
 }
 
+// ── BILLING & SUBSCRIPTION ───────────────────────────────
+function BillingPage({ onNav }) {
+  const [billingCycle, setBillingCycle] = React.useState('monthly');
+  const [upgrading, setUpgrading] = React.useState(false);
+  const [upgraded, setUpgraded] = React.useState(false);
+
+  const tiers = [
+    {
+      key: 'starter', name: 'Starter', price: { monthly: 0, yearly: 0 },
+      clients: 3, features: ['3 Aktif Danışan', 'Temel Antrenman Şablonları', 'Mesajlaşma', '—', '—'],
+      status: 'downgrade', color: C.gray400,
+    },
+    {
+      key: 'pro', name: 'Pro', price: { monthly: 29, yearly: 23 },
+      clients: 15, features: ['15 Aktif Danışan', 'Özel Antrenman Şablonları', 'Mesajlaşma', 'Temel Analitik', '—'],
+      status: 'current', color: C.tertiary, popular: false,
+    },
+    {
+      key: 'elite', name: 'Elite', price: { monthly: 79, yearly: 63 },
+      clients: 50, features: ['50 Aktif Danışan', 'Özel Antrenman Şablonları', 'Mesajlaşma', 'Gelişmiş Analitik', 'Toplu Mesaj & Öncelikli Destek'],
+      status: 'upgrade', color: C.primary, popular: true,
+    },
+  ];
+
+  const invoices = [
+    { id: 'INV-2026-04', date: '01 Nis 2026', desc: 'Pro Tier — Aylık', amount: '$29.00', status: 'Ödendi' },
+    { id: 'INV-2026-03', date: '01 Mar 2026', desc: 'Pro Tier — Aylık', amount: '$29.00', status: 'Ödendi' },
+    { id: 'INV-2026-02', date: '01 Şub 2026', desc: 'Pro Tier — Aylık', amount: '$29.00', status: 'Ödendi' },
+    { id: 'INV-2026-01', date: '01 Oca 2026', desc: 'Starter → Pro Yükseltme', amount: '$29.00', status: 'Ödendi' },
+  ];
+
+  function handleUpgrade() {
+    setUpgrading(true);
+    setTimeout(() => { setUpgrading(false); setUpgraded(true); }, 1400);
+  }
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', background: C.gray50, animation: 'fadeUp .2s ease', fontFamily: 'Lexend, sans-serif' }}>
+      <Topbar
+        title="Faturalama & Abonelik"
+        subtitle="Koç planını, danışan limitini ve faturalama geçmişini yönet."
+        onBack={() => onNav('coach-dashboard')}
+      />
+
+      <div style={{ padding: '24px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+
+        {/* ── Current Usage Widget ── */}
+        <div style={{ background: `linear-gradient(135deg, ${C.secondary} 0%, ${C.secondaryLight} 60%, #1e3a5f 100%)`, borderRadius: 20, padding: 28, position: 'relative', overflow: 'hidden', boxShadow: `0 8px 32px ${C.secondary}44` }}>
+          <div style={{ position: 'absolute', top: -50, right: -50, width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }} />
+          <div style={{ position: 'absolute', bottom: -40, left: 200, width: 160, height: 160, borderRadius: '50%', background: `${C.primary}18` }} />
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 24, position: 'relative', zIndex: 1 }}>
+            {/* Plan info */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Mevcut Plan</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+                <div style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: -.8 }}>Pro Tier</div>
+                <span style={{ background: C.primary + '30', color: C.primaryLight, borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700, border: `1px solid ${C.primary}40` }}>Aktif</span>
+              </div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: C.primaryLight, letterSpacing: -.5 }}>$29<span style={{ fontSize: 13, fontWeight: 500, color: 'rgba(255,255,255,0.4)', letterSpacing: 0 }}>/ay</span></div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 6 }}>
+                🔄 15 Mayıs 2026'da yenilenir
+              </div>
+            </div>
+
+            {/* Client quota */}
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Danışan Kotası</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
+                <span style={{ fontSize: 28, fontWeight: 800, color: '#fff', letterSpacing: -.8 }}>14<span style={{ fontSize: 16, fontWeight: 500, color: 'rgba(255,255,255,0.5)' }}>/15</span></span>
+                <span style={{ fontSize: 12, color: C.warning, fontWeight: 700, background: C.warning + '20', padding: '3px 10px', borderRadius: 20 }}>⚠ Kritik</span>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 6, height: 8, marginBottom: 8, overflow: 'hidden' }}>
+                <div style={{ width: '93%', height: 8, borderRadius: 6, background: `linear-gradient(90deg, ${C.warning}, ${C.primary})`, boxShadow: `0 0 10px ${C.warning}88`, transition: 'width .6s ease' }} />
+              </div>
+              <div style={{ fontSize: 11, color: C.warning, fontWeight: 600, lineHeight: 1.4 }}>
+                Danışan limitine yaklaşıyorsunuz. Yeni danışan kabul etmek için Elite'e geçin.
+              </div>
+            </div>
+
+            {/* Quick stats */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+              {[
+                { l: 'Aylık Gelir', v: '$29', icon: '💳' },
+                { l: 'Sonraki Fatura', v: '15 May', icon: '📅' },
+                { l: 'Aktif Süre', v: '4 ay', icon: '⏳' },
+                { l: 'Toplam Ödeme', v: '$116', icon: '💰' },
+              ].map(m => (
+                <div key={m.l} style={{ background: 'rgba(255,255,255,0.07)', borderRadius: 12, padding: '10px 12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                  <div style={{ fontSize: 14, marginBottom: 4 }}>{m.icon}</div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: -.3 }}>{m.v}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2, textTransform: 'uppercase', letterSpacing: .5 }}>{m.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── Billing Cycle Toggle ── */}
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+          <div style={{ background: '#fff', borderRadius: 12, padding: 4, display: 'flex', gap: 4, boxShadow: C.cardShadow, border: `1px solid ${C.gray100}` }}>
+            {[{ k: 'monthly', l: 'Aylık' }, { k: 'yearly', l: 'Yıllık' }].map(opt => (
+              <button key={opt.k} onClick={() => setBillingCycle(opt.k)}
+                style={{ padding: '8px 20px', borderRadius: 9, border: 'none', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lexend, sans-serif', background: billingCycle === opt.k ? C.primaryGrad : 'transparent', color: billingCycle === opt.k ? '#fff' : C.gray400, transition: 'all .15s', boxShadow: billingCycle === opt.k ? `0 3px 10px ${C.primary}44` : 'none' }}>
+                {opt.l}
+              </button>
+            ))}
+          </div>
+          {billingCycle === 'yearly' && (
+            <span style={{ background: C.success + '18', color: C.success, borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700 }}>🎉 2 ay ücretsiz</span>
+          )}
+        </div>
+
+        {/* ── Pricing Tiers ── */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18 }}>
+          {tiers.map(tier => {
+            const isCurrent = upgraded ? tier.key === 'elite' : tier.key === 'pro';
+            const price = billingCycle === 'yearly' ? tier.price.yearly : tier.price.monthly;
+
+            return (
+              <div key={tier.key} style={{
+                background: tier.popular ? `linear-gradient(160deg, #0D1B2E, #152436)` : '#fff',
+                borderRadius: 20,
+                padding: 24,
+                border: tier.popular ? `1.5px solid ${C.primary}60` : `1px solid ${C.gray100}`,
+                boxShadow: tier.popular ? `0 0 0 1px ${C.primary}20, 0 8px 32px ${C.primary}22, ${C.cardShadow}` : C.cardShadow,
+                position: 'relative',
+                overflow: 'hidden',
+                transition: 'transform .15s, box-shadow .15s',
+              }}
+                onMouseEnter={e => { if (!tier.popular) { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; } }}
+                onMouseLeave={e => { if (!tier.popular) { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = C.cardShadow; } }}
+              >
+                {/* Glow */}
+                {tier.popular && <div style={{ position: 'absolute', top: -60, right: -60, width: 180, height: 180, borderRadius: '50%', background: `radial-gradient(circle, ${C.primary}25, transparent 70%)`, pointerEvents: 'none' }} />}
+
+                {/* Popular badge */}
+                {tier.popular && (
+                  <div style={{ position: 'absolute', top: 16, right: 16 }}>
+                    <span style={{ background: C.primaryGrad, color: '#fff', borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700, boxShadow: `0 3px 10px ${C.primary}44` }}>🔥 En Popüler</span>
+                  </div>
+                )}
+
+                {/* Current badge */}
+                {isCurrent && (
+                  <div style={{ position: 'absolute', top: 16, right: tier.popular ? 120 : 16 }}>
+                    <span style={{ background: C.success + '18', color: C.success, borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700, border: `1px solid ${C.success}30` }}>✓ Mevcut</span>
+                  </div>
+                )}
+
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: tier.popular ? 'rgba(255,255,255,0.5)' : C.gray400, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>{tier.name}</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4 }}>
+                    <span style={{ fontSize: 36, fontWeight: 800, color: tier.popular ? '#fff' : C.gray800, letterSpacing: -1.5 }}>
+                      {price === 0 ? 'Ücretsiz' : `$${price}`}
+                    </span>
+                    {price > 0 && <span style={{ fontSize: 13, color: tier.popular ? 'rgba(255,255,255,0.4)' : C.gray400 }}>/ay</span>}
+                  </div>
+                  {billingCycle === 'yearly' && price > 0 && (
+                    <div style={{ fontSize: 11, color: tier.popular ? 'rgba(255,255,255,0.4)' : C.gray400 }}>
+                      ${price * 12}/yıl olarak faturalandırılır
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16, padding: '10px 12px', background: tier.popular ? 'rgba(255,255,255,0.06)' : C.gray50, borderRadius: 10 }}>
+                  <span style={{ fontSize: 18 }}>👥</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: tier.popular ? '#fff' : C.gray800 }}>{tier.clients} Danışan</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+                  {tier.features.map((f, i) => {
+                    const disabled = f === '—';
+                    return (
+                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 18, height: 18, borderRadius: '50%', background: disabled ? (tier.popular ? 'rgba(255,255,255,0.06)' : C.gray100) : tier.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                          {!disabled && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={tier.color} strokeWidth="3"><polyline points="20,6 9,17 4,12"/></svg>}
+                          {disabled && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke={tier.popular ? 'rgba(255,255,255,0.2)' : C.gray300} strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>}
+                        </div>
+                        <span style={{ fontSize: 13, color: disabled ? (tier.popular ? 'rgba(255,255,255,0.25)' : C.gray300) : (tier.popular ? 'rgba(255,255,255,0.85)' : C.gray700), fontWeight: disabled ? 400 : 500 }}>{disabled ? 'Dahil değil' : f}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* CTA Button */}
+                {tier.status === 'downgrade' && (
+                  <button disabled style={{ width: '100%', padding: '11px', borderRadius: 12, border: `1.5px solid ${C.gray200}`, background: 'transparent', color: C.gray300, fontSize: 13, fontWeight: 700, cursor: 'not-allowed', fontFamily: 'Lexend, sans-serif' }}>Düşür</button>
+                )}
+                {isCurrent && (
+                  <button disabled style={{ width: '100%', padding: '11px', borderRadius: 12, border: `1.5px solid ${C.success}40`, background: C.success + '12', color: C.success, fontSize: 13, fontWeight: 700, cursor: 'not-allowed', fontFamily: 'Lexend, sans-serif' }}>✓ Mevcut Plan</button>
+                )}
+                {tier.status === 'upgrade' && !isCurrent && (
+                  <button onClick={handleUpgrade} disabled={upgrading}
+                    style={{ width: '100%', padding: '12px', borderRadius: 12, border: 'none', background: upgrading ? C.gray400 : C.primaryGrad, color: '#fff', fontSize: 14, fontWeight: 700, cursor: upgrading ? 'not-allowed' : 'pointer', fontFamily: 'Lexend, sans-serif', boxShadow: upgrading ? 'none' : `0 4px 16px ${C.primary}55`, transition: 'all .2s' }}>
+                    {upgrading ? '⏳ İşleniyor...' : 'Elite\'e Yükselt →'}
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Billing History ── */}
+        <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: C.cardShadow, border: `1px solid ${C.gray100}` }}>
+          <div style={{ padding: '20px 24px', borderBottom: `1px solid ${C.gray100}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: C.gray800, letterSpacing: -.3 }}>Faturalama Geçmişi</div>
+              <div style={{ fontSize: 12, color: C.gray400, marginTop: 2 }}>Tüm fatura ve ödemeler</div>
+            </div>
+            <button style={{ background: C.gray50, border: `1px solid ${C.gray200}`, borderRadius: 10, padding: '8px 16px', fontSize: 12, fontWeight: 700, color: C.gray600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Lexend, sans-serif' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              Tümünü İndir
+            </button>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: C.gray50 }}>
+                {['Fatura No', 'Tarih', 'Açıklama', 'Tutar', 'Durum', ''].map(h => (
+                  <th key={h} style={{ padding: '11px 20px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: .5 }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {invoices.map((inv, i) => (
+                <tr key={inv.id} style={{ borderTop: `1px solid ${C.gray100}`, transition: 'background .1s' }}
+                  onMouseEnter={e => e.currentTarget.style.background = C.gray50}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <td style={{ padding: '14px 20px', fontSize: 12, fontWeight: 700, color: C.gray400, fontFamily: 'monospace' }}>{inv.id}</td>
+                  <td style={{ padding: '14px 20px', fontSize: 13, color: C.gray600 }}>{inv.date}</td>
+                  <td style={{ padding: '14px 20px', fontSize: 13, fontWeight: 600, color: C.gray800 }}>{inv.desc}</td>
+                  <td style={{ padding: '14px 20px', fontSize: 14, fontWeight: 800, color: C.gray800 }}>{inv.amount}</td>
+                  <td style={{ padding: '14px 20px' }}>
+                    <span style={{ background: C.success + '15', color: C.success, borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700 }}>✓ {inv.status}</span>
+                  </td>
+                  <td style={{ padding: '14px 20px' }}>
+                    <button style={{ background: 'transparent', border: `1px solid ${C.gray200}`, borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, color: C.gray500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5, fontFamily: 'Lexend, sans-serif', transition: 'all .15s' }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = C.primary; e.currentTarget.style.color = C.primary; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = C.gray200; e.currentTarget.style.color = C.gray500; }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+                      PDF
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* ── Payment Method ── */}
+        <div style={{ background: '#fff', borderRadius: 20, padding: 24, boxShadow: C.cardShadow, border: `1px solid ${C.gray100}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ width: 52, height: 36, background: `linear-gradient(135deg, #1a1a2e, #16213e)`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
+              <svg width="28" height="18" viewBox="0 0 48 32" fill="none">
+                <circle cx="18" cy="16" r="11" fill="#EB001B" opacity=".9"/>
+                <circle cx="30" cy="16" r="11" fill="#F79E1B" opacity=".9"/>
+                <path d="M24 7.5a11 11 0 010 17" fill="#FF5F00" opacity=".7"/>
+              </svg>
+            </div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: C.gray800 }}>Mastercard •••• 4242</div>
+              <div style={{ fontSize: 12, color: C.gray400, marginTop: 2 }}>Son kullanma: 12/2028</div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button style={{ background: C.gray50, border: `1px solid ${C.gray200}`, borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: C.gray600, cursor: 'pointer', fontFamily: 'Lexend, sans-serif' }}>Değiştir</button>
+            <button style={{ background: C.primaryGrad, border: 'none', borderRadius: 10, padding: '8px 16px', fontSize: 13, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'Lexend, sans-serif', boxShadow: `0 4px 12px ${C.primary}44` }}>Yeni Kart Ekle</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────
 function App(){
   const [role,setRole]=React.useState('coach');
@@ -1508,6 +1784,7 @@ function App(){
       if(screen.includes('template')) return 'coach-templates';
       if(screen.includes('client')) return 'coach-clients';
       if(screen.includes('message')) return 'coach-messages';
+    if(screen.includes('billing')) return 'coach-billing';
       if(screen.includes('profile')) return 'coach-profile';
       return 'coach-dashboard';
     } else {
@@ -1529,6 +1806,7 @@ function App(){
       case 'coach-client-progress': return <ClientHub {...p}/>;
       case 'coach-messages': return <CoachMessages {...p}/>;
       case 'coach-profile': return <CoachDashboard {...p}/>;
+      case 'coach-billing': return <BillingPage {...p}/>;
       case 'client-dashboard': return <ClientDashboard {...p}/>;
       case 'client-coaches': return <ClientCoachesDesktop {...p}/>;
       case 'client-messages': return <CoachMessages {...p}/>;

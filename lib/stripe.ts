@@ -18,6 +18,12 @@ export function getStripe(): Stripe {
 }
 
 export const STRIPE_PRICE_IDS = {
-  PRO: process.env.STRIPE_PRO_PRICE_ID!,
-  ELITE: process.env.STRIPE_ELITE_PRICE_ID!,
+  PRO: {
+    monthly: process.env.STRIPE_PRO_PRICE_ID ?? "",
+    yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? "",
+  },
+  ELITE: {
+    monthly: process.env.STRIPE_ELITE_PRICE_ID ?? "",
+    yearly: process.env.STRIPE_ELITE_YEARLY_PRICE_ID ?? "",
+  },
 } as const;

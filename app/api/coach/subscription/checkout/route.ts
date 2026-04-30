@@ -9,6 +9,8 @@ const PLAN_TO_TIER: Record<"PRO" | "ELITE", SubscriptionTier> = {
   ELITE: "TIER_2",
 };
 
+type BillingCycle = "monthly" | "yearly";
+
 export async function POST(request: Request) {
   const stripe = getStripe();
   const auth = await requireAuth("COACH");
@@ -16,14 +18,15 @@ export async function POST(request: Request) {
 
   const body = await request.json();
   const tier = body.tier as "PRO" | "ELITE";
+  const cycle = body.cycle === "yearly" ? "yearly" : "monthly";
 
   if (!["PRO", "ELITE"].includes(tier)) {
     return NextResponse.json({ error: "Geçersiz plan." }, { status: 400 });
   }
 
-  const priceId = STRIPE_PRICE_IDS[tier];
+  const priceId = STRIPE_PRICE_IDS[tier][cycle as BillingCycle];
   if (!priceId) {
-    return NextResponse.json({ error: "Plan yapılandırması eksik." }, { status: 500 });
+    return NextResponse.json({ error: cycle === "yearly" ? "Yillik plan henuz tanimli degil." : "Plan yapilandirmasi eksik." }, { status: 500 });
   }
 
   let coachProfile = await prisma.coachProfile.findUnique({
@@ -63,9 +66,9 @@ export async function POST(request: Request) {
     customer: customerId,
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/coach/subscription?success=1`,
-    cancel_url: `${origin}/coach/subscription?canceled=1`,
-    metadata: { userId: auth.session.user.id, tier: PLAN_TO_TIER[tier] },
+    success_url: `${origin}/coach/billing?success=1`,
+    cancel_url: `${origin}/coach/billing?canceled=1`,
+    metadata: { userId: auth.session.user.id, tier: PLAN_TO_TIER[tier], cycle },
   });
 
   return NextResponse.json({ url: session.url });

@@ -3,10 +3,14 @@ import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
 import { SubscriptionTier } from "@prisma/client";
 
-const PRICE_TO_TIER: Record<string, SubscriptionTier> = {
-  [process.env.STRIPE_PRO_PRICE_ID!]: "TIER_1",
-  [process.env.STRIPE_ELITE_PRICE_ID!]: "TIER_2",
-};
+const PRICE_TO_TIER = Object.fromEntries(
+  [
+    [process.env.STRIPE_PRO_PRICE_ID, "TIER_1"],
+    [process.env.STRIPE_PRO_YEARLY_PRICE_ID, "TIER_1"],
+    [process.env.STRIPE_ELITE_PRICE_ID, "TIER_2"],
+    [process.env.STRIPE_ELITE_YEARLY_PRICE_ID, "TIER_2"],
+  ].filter((entry): entry is [string, SubscriptionTier] => Boolean(entry[0]))
+) as Record<string, SubscriptionTier>;
 
 export async function POST(request: Request) {
   const stripe = getStripe();

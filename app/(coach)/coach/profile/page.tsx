@@ -5,6 +5,7 @@ import {
   Award,
   Briefcase,
   ChevronRight,
+  CreditCard,
   ExternalLink,
   Link2,
   Loader2,
@@ -22,8 +23,8 @@ import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useNotificationContext } from "@/contexts/NotificationContext";
+import { InviteLinkBox } from "@/components/coach/BillingSubscriptionPage";
 import { PageHero } from "@/components/shared/PageHero";
-import { InviteLinkBox } from "../subscription/page";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -808,6 +809,13 @@ export default function CoachProfilePage() {
                   label: "Antrenmanlar",
                   sub: "Template oluştur ve ata",
                   color: "#2563EB",
+                },
+                {
+                  href: "/coach/subscription",
+                  icon: CreditCard,
+                  label: "Faturalandırma",
+                  sub: "Plan ve ödeme yönet",
+                  color: "#F97316",
                 },
               ].map(({ href, icon: Icon, label, sub, color }) => (
                 <a

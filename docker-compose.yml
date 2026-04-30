@@ -41,7 +41,7 @@ services:
 
   ws_server:
     build: .
-    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma --skip-generate && npm run start:ws"]
+    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
     ports:
       - "3001:3001"
     restart: always

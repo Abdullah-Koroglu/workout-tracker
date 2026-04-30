@@ -16,6 +16,7 @@
     "lint": "eslint .",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
+    "db:migrate:sqlite-to-postgres": "python3 prisma/sqlite_to_postgres.py",
     "db:studio": "prisma studio",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

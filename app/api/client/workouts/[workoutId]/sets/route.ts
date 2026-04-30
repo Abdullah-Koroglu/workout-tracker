@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
 import { saveSetSchema } from "@/validations/workout";
 
@@ -13,7 +14,13 @@ export async function POST(
 
   const { workoutId } = await params;
 
-  const workout = await prisma.workout.findUnique({ where: { id: workoutId } });
+  const workout = await prisma.workout.findUnique({
+    where: { id: workoutId },
+    include: {
+      template: { select: { coachId: true } },
+      client: { select: { name: true } },
+    },
+  });
   if (!workout || workout.clientId !== auth.session.user.id) {
     return NextResponse.json({ error: "Workout not found" }, { status: 404 });
   }
@@ -87,6 +94,34 @@ export async function POST(
           actualRestSeconds: parsed.data.actualRestSeconds ?? null,
         }
       });
+
+  if (parsed.data.completed) {
+    const exercise = await prisma.exercise.findUnique({
+      where: { id: parsed.data.exerciseId },
+      select: { name: true },
+    });
+
+    const completedSetCount = await prisma.workoutSet.count({
+      where: { workoutId, completed: true },
+    });
+
+    const clientName = workout.client.name ?? "Danışanın";
+    const exerciseName = exercise?.name ?? "Egzersiz";
+    const body = isPR
+      ? `${clientName} ${exerciseName} set ${parsed.data.setNumber} tamamladı ve yeni PR yaptı.`
+      : `${clientName} ${exerciseName} set ${parsed.data.setNumber} tamamladı. Toplam ${completedSetCount} set bitti.`;
+
+    const notif = await prisma.notification.create({
+      data: {
+        userId: workout.template.coachId,
+        title: isPR ? "Canlı ilerleme: PR" : "Canlı ilerleme",
+        body,
+        type: isPR ? "LIVE_SET_PR" : "LIVE_SET_PROGRESS",
+      },
+    });
+
+    void emitNotificationViaWs(workout.template.coachId, notifPayload(notif));
+  }
 
   return NextResponse.json(
     {

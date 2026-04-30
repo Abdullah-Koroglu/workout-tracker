@@ -1,3 +1,13 @@
+1. Otomatik "Check-in" ve Form İstemcisi (kilo ve vucut olculeri bilgileri alinabilir)
+4. Devrimsel Beslenme Sistemi (Visio-Behavioral Loop)
+coach tarafindan beslenme listesi ve bigilerinin verilmesi
+3. AI Copilot: Haftalık Analiz Raporu
+
+
+
+
+
+
 Client tarafında gerçek beslenme takibi (kalori, makro, öğün logları) yok. Bu yüzden Nutrition kartı görsel olarak aynı, içerik placeholder mantığında.
 Client tarafında düzenli kilo trendi için ayrı bir body-metrics geçmiş modeli yok. Sadece workout setlerinden türetilen sınırlı veri var.
 Coach tarafında gerçek “Appointments” modülü (takvim etkinliği, platform/Zoom linki, toplantı türü) için ayrı tablo/akış yok.

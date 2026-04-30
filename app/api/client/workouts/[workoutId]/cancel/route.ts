@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { requireAuth } from "@/lib/api-auth";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
+import { sendPushNotification } from "@/lib/push-notifications";
 
 export async function POST(
   request: Request,
@@ -12,7 +15,10 @@ export async function POST(
   const { workoutId } = await params;
 
   const workout = await prisma.workout.findUnique({
-    where: { id: workoutId }
+    where: { id: workoutId },
+    include: {
+      template: { select: { name: true, coachId: true } },
+    },
   });
 
   if (!workout) {
@@ -30,12 +36,47 @@ export async function POST(
     );
   }
 
-  await prisma.workout.delete({
-    where: { id: workoutId }
+  const updated = await prisma.workout.update({
+    where: { id: workoutId },
+    data: {
+      status: "ABANDONED",
+      finishedAt: new Date(),
+    },
   });
+
+  const clientName = auth.session.user.name ?? "Danışanın";
+  const coachId = workout.template.coachId;
+  const notif = await prisma.notification.create({
+    data: {
+      userId: coachId,
+      title: "Antrenman yarıda bırakıldı",
+      body: `${clientName} "${workout.template.name}" antrenmanını yarıda bıraktı.`,
+      type: "WORKOUT_ABANDONED",
+    },
+  });
+  void emitNotificationViaWs(coachId, notifPayload(notif));
+
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId },
+    select: { pushSubscription: true },
+  });
+
+  const pushResult = await sendPushNotification(coach?.pushSubscription, {
+    title: notif.title,
+    body: notif.body,
+    url: "/coach/dashboard",
+  });
+
+  if (pushResult.expired) {
+    await prisma.user.update({
+      where: { id: coachId },
+      data: { pushSubscription: Prisma.DbNull },
+    });
+  }
 
   return NextResponse.json({
     success: true,
-    deletedWorkoutId: workoutId
+    abandonedWorkoutId: workoutId,
+    workout: updated,
   });
 }

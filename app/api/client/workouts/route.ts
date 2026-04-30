@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { getCurrentDayStart } from "@/lib/current-date";
+import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
+import { sendPushNotification } from "@/lib/push-notifications";
 import { startWorkoutSchema } from "@/validations/workout";
 
 export async function POST(request: Request) {
@@ -168,6 +171,36 @@ export async function POST(request: Request) {
     },
     include: { sets: true }
   });
+
+  const coachId = assignment.template.coachId;
+  const clientName = auth.session.user.name ?? "Danışanın";
+  const notif = await prisma.notification.create({
+    data: {
+      userId: coachId,
+      title: "Canlı antrenman başladı",
+      body: `${clientName} "${assignment.template.name}" antrenmanını başlattı.`,
+      type: "WORKOUT_STARTED",
+    },
+  });
+  void emitNotificationViaWs(coachId, notifPayload(notif));
+
+  const coach = await prisma.user.findUnique({
+    where: { id: coachId },
+    select: { pushSubscription: true },
+  });
+
+  const pushResult = await sendPushNotification(coach?.pushSubscription, {
+    title: notif.title,
+    body: notif.body,
+    url: "/coach/dashboard",
+  });
+
+  if (pushResult.expired) {
+    await prisma.user.update({
+      where: { id: coachId },
+      data: { pushSubscription: Prisma.DbNull },
+    });
+  }
 
   return NextResponse.json(
     {

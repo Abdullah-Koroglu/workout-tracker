@@ -5,6 +5,7 @@ import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
 import { QuotaWidget } from "@/components/coach/QuotaWidget";
 import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
 import { CheckInManager } from "@/components/coach/CheckInManager";
+import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -52,6 +53,7 @@ export default async function CoachDashboardPage() {
     weeklyActive,
     recentWorkouts,
     activeWorkouts,
+    restSamples,
     pendingRequests,
     completedThisWeek,
     workoutsToday,
@@ -81,10 +83,43 @@ export default async function CoachDashboardPage() {
       },
       include: {
         client: { select: { id: true, name: true } },
-        template: { select: { name: true } },
+        template: {
+          select: {
+            name: true,
+            exercises: {
+              select: { targetSets: true },
+            },
+          },
+        },
+        sets: {
+          where: { completed: true },
+          select: { id: true },
+        },
       },
       orderBy: { startedAt: "desc" },
       take: 20,
+    }),
+    prisma.workoutSet.findMany({
+      where: {
+        completed: true,
+        actualRestSeconds: { not: null },
+        workout: {
+          status: "COMPLETED",
+          startedAt: { gte: sevenDaysAgo },
+          client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+        },
+      },
+      select: {
+        actualRestSeconds: true,
+        exerciseId: true,
+        workout: {
+          select: {
+            templateId: true,
+            client: { select: { id: true, name: true } },
+          },
+        },
+      },
+      take: 800,
     }),
     prisma.coachClientRelation.findMany({
       where: { coachId, status: "PENDING" },
@@ -172,10 +207,86 @@ export default async function CoachDashboardPage() {
           workoutId: workout.id,
           templateName: workout.template.name,
           startedAt: workout.startedAt,
+          completedSets: workout.sets.length,
+          targetSets: workout.template.exercises.reduce((sum, item) => sum + (item.targetSets ?? 1), 0),
         },
       ])
     ).values()
   );
+
+  const templateExerciseKeys = Array.from(
+    new Set(restSamples.map((item) => `${item.workout.templateId}:${item.exerciseId}`))
+  );
+
+  const templateExerciseLookups = templateExerciseKeys.length
+    ? await prisma.workoutTemplateExercise.findMany({
+        where: {
+          OR: templateExerciseKeys.map((key) => {
+            const [templateId, exerciseId] = key.split(":");
+            return { templateId, exerciseId };
+          }),
+        },
+        select: {
+          templateId: true,
+          exerciseId: true,
+          prescribedRestSeconds: true,
+        },
+      })
+    : [];
+
+  const prescribedByTemplateExercise = new Map(
+    templateExerciseLookups.map((item) => [`${item.templateId}:${item.exerciseId}`, item.prescribedRestSeconds ?? 90])
+  );
+
+  const restByClient = new Map<string, {
+    clientId: string;
+    clientName: string;
+    totalActual: number;
+    totalPrescribed: number;
+    count: number;
+    violations: number;
+  }>();
+
+  for (const sample of restSamples) {
+    const clientId = sample.workout.client.id;
+    const key = `${sample.workout.templateId}:${sample.exerciseId}`;
+    const prescribed = prescribedByTemplateExercise.get(key) ?? 90;
+    const actual = sample.actualRestSeconds ?? 0;
+
+    if (!restByClient.has(clientId)) {
+      restByClient.set(clientId, {
+        clientId,
+        clientName: sample.workout.client.name,
+        totalActual: 0,
+        totalPrescribed: 0,
+        count: 0,
+        violations: 0,
+      });
+    }
+
+    const bucket = restByClient.get(clientId)!;
+    bucket.totalActual += actual;
+    bucket.totalPrescribed += prescribed;
+    bucket.count += 1;
+    if (actual > prescribed * 1.5) {
+      bucket.violations += 1;
+    }
+  }
+
+  const restViolations = Array.from(restByClient.values())
+    .map((item) => {
+      const avgActual = Math.round(item.totalActual / Math.max(1, item.count));
+      const avgPrescribed = Math.round(item.totalPrescribed / Math.max(1, item.count));
+      return {
+        ...item,
+        avgActual,
+        avgPrescribed,
+        overBy: Math.max(0, avgActual - avgPrescribed),
+      };
+    })
+    .filter((item) => item.count >= 3 && item.overBy >= 30)
+    .sort((a, b) => b.overBy - a.overBy)
+    .slice(0, 4);
 
   return (
     <div className="min-h-screen">
@@ -271,11 +382,51 @@ export default async function CoachDashboardPage() {
                   <p className="mt-1 text-[10px] font-semibold text-red-500">
                     {formatTimeAgo(story.startedAt)}
                   </p>
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-slate-100">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-orange-400 to-red-500"
+                      style={{ width: `${Math.min(100, Math.round((story.completedSets / Math.max(1, story.targetSets)) * 100))}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-[9px] font-bold text-slate-400">
+                    {story.completedSets}/{story.targetSets} set
+                  </p>
                 </Link>
               ))}
             </div>
           </div>
         )}
+
+        {/* Rest Violation Report */}
+        {restViolations.length > 0 && (
+          <div
+            className="rounded-[18px] bg-white p-4 shadow-sm"
+            style={{ border: "1px solid rgba(0,0,0,0.06)", borderLeft: "4px solid #F97316" }}
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-[15px] font-bold text-slate-800">Dinlenme Süresi İhlal Raporu</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Son 7 gün</span>
+            </div>
+
+            <div className="space-y-2">
+              {restViolations.map((item) => (
+                <div key={item.clientId} className="rounded-xl bg-orange-50 px-3 py-2.5">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="truncate text-[13px] font-black text-slate-800">{item.clientName}</p>
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black text-orange-600">
+                      +{item.overBy} sn
+                    </span>
+                  </div>
+                  <p className="mt-1 text-[11px] text-slate-500">
+                    Ortalama dinlenme {item.avgActual} sn, hedef {item.avgPrescribed} sn. İhlal seti: {item.violations}/{item.count}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <NudgeAssistantCard />
 
         {/* Quota Widget */}
         <QuotaWidget tier={subscriptionTier} currentClientCount={totalClients} />

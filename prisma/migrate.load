@@ -1,0 +1,8 @@
+LOAD DATABASE
+    FROM sqlite:///data/dev.db
+    INTO postgresql://fitcoach:fitcoach@postgres:5432/fitcoach
+
+ WITH data only, truncate, reset sequences, quote identifiers
+
+ EXCLUDING TABLE NAMES LIKE '_prisma_migrations'
+;

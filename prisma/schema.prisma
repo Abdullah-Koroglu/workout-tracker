@@ -8,29 +8,32 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  name      String
-  role      Role
+  id               String   @id @default(cuid())
+  email            String   @unique
+  password         String
+  name             String
+  role             Role
   pushSubscription Json?
-  createdAt DateTime @default(now())
+  createdAt        DateTime @default(now())
 
-  coachRelations  CoachClientRelation[] @relation("Coach")
-  clientRelations CoachClientRelation[] @relation("Client")
-  templates       WorkoutTemplate[]
-  assignments     TemplateAssignment[]  @relation("AssignedTo")
-  workouts        Workout[]
-  comments        Comment[]
-  sentMessages      Message[]      @relation("MessageSender")
-  receivedMessages  Message[]      @relation("MessageReceiver")
-  notifications     Notification[] @relation("NotificationUser")
+  coachRelations   CoachClientRelation[] @relation("Coach")
+  clientRelations  CoachClientRelation[] @relation("Client")
+  templates        WorkoutTemplate[]
+  assignments      TemplateAssignment[]  @relation("AssignedTo")
+  workouts         Workout[]
+  comments         Comment[]
+  sentMessages     Message[]             @relation("MessageSender")
+  receivedMessages Message[]             @relation("MessageReceiver")
+  notifications    Notification[]        @relation("NotificationUser")
 
-  clientProfile   ClientProfile?
-  coachProfile    CoachProfile?
+  clientProfile ClientProfile?
+  coachProfile  CoachProfile?
 
   sentCheckIns     CheckIn[] @relation("CheckInCoach")
   receivedCheckIns CheckIn[] @relation("CheckInClient")
+
+  nutritionPlan     NutritionPlan?
+  nutritionMealLogs NutritionMealLog[]
 }
 
 model ClientProfile {
@@ -46,14 +49,14 @@ model ClientProfile {
 }
 
 model CoachProfile {
-  id              String           @id @default(cuid())
-  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String           @unique
+  id              String   @id @default(cuid())
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String   @unique
   bio             String?
   specialties     Json?
   experienceYears Int?
   socialMediaUrl  String?
-  updatedAt       DateTime         @updatedAt
+  updatedAt       DateTime @updatedAt
 
   subscriptionTier   SubscriptionTier @default(FREE)
   subscriptionStatus String?
@@ -70,9 +73,9 @@ model CoachPackage {
   title       String
   description String?
   price       Float?
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 enum Role {
@@ -142,9 +145,9 @@ model WorkoutTemplateExercise {
   exerciseId String
   order      Int
 
-  targetSets  Int?
-  targetReps  Int?
-  targetRir   Int?
+  targetSets Int?
+  targetReps Int?
+  targetRir  Int?
 
   prescribedRestSeconds Int? @default(90)
 
@@ -153,27 +156,27 @@ model WorkoutTemplateExercise {
 }
 
 model TemplateAssignment {
-  id         String          @id @default(cuid())
-  template   WorkoutTemplate @relation(fields: [templateId], references: [id])
-  templateId String
-  client     User            @relation("AssignedTo", fields: [clientId], references: [id])
-  clientId   String
-  assignedBy String
+  id           String          @id @default(cuid())
+  template     WorkoutTemplate @relation(fields: [templateId], references: [id])
+  templateId   String
+  client       User            @relation("AssignedTo", fields: [clientId], references: [id])
+  clientId     String
+  assignedBy   String
   scheduledFor DateTime        @default(now())
-  isOneTime   Boolean         @default(true)
-  createdAt  DateTime        @default(now())
+  isOneTime    Boolean         @default(true)
+  createdAt    DateTime        @default(now())
 
   workouts Workout[]
 }
 
 model Workout {
-  id           String             @id @default(cuid())
-  client       User               @relation(fields: [clientId], references: [id])
-  clientId     String
-  template     WorkoutTemplate    @relation(fields: [templateId], references: [id])
-  templateId   String
-  assignment   TemplateAssignment @relation(fields: [assignmentId], references: [id])
-  assignmentId String
+  id             String             @id @default(cuid())
+  client         User               @relation(fields: [clientId], references: [id])
+  clientId       String
+  template       WorkoutTemplate    @relation(fields: [templateId], references: [id])
+  templateId     String
+  assignment     TemplateAssignment @relation(fields: [assignmentId], references: [id])
+  assignmentId   String
   startedAt      DateTime           @default(now())
   finishedAt     DateTime?
   status         WorkoutStatus      @default(IN_PROGRESS)
@@ -245,15 +248,15 @@ model Notification {
 }
 
 model CheckIn {
-  id        String    @id @default(cuid())
-  coach     User      @relation("CheckInCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  coach     User     @relation("CheckInCoach", fields: [coachId], references: [id], onDelete: Cascade)
   coachId   String
-  client    User      @relation("CheckInClient", fields: [clientId], references: [id], onDelete: Cascade)
+  client    User     @relation("CheckInClient", fields: [clientId], references: [id], onDelete: Cascade)
   clientId  String
   message   String?
-  createdAt DateTime  @default(now())
+  createdAt DateTime @default(now())
 
-  response  CheckInResponse?
+  response CheckInResponse?
 
   @@index([clientId, createdAt])
   @@index([coachId, createdAt])
@@ -268,4 +271,46 @@ model CheckInResponse {
   motivationScore Int
   notes           String?
   createdAt       DateTime @default(now())
+}
+
+enum AdherenceTag {
+  GREEN
+  YELLOW
+  RED
+}
+
+model NutritionPlan {
+  id       String @id @default(cuid())
+  clientId String @unique
+  coachId  String
+
+  targetCalories Int?
+  targetProtein  Int?
+  targetCarbs    Int?
+  targetFats     Int?
+
+  dietDocumentUrl String?
+  instructions    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client User @relation(fields: [clientId], references: [id], onDelete: Cascade)
+}
+
+model NutritionMealLog {
+  id       String @id @default(cuid())
+  clientId String
+
+  photoUrl     String?
+  adherenceTag AdherenceTag
+  clientNote   String?
+
+  aiSummary String?
+
+  loggedAt DateTime @default(now())
+
+  client User @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([clientId, loggedAt])
 }

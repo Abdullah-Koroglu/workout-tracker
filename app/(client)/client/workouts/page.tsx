@@ -100,7 +100,7 @@ export default async function ClientWorkoutsPage() {
           <section key={month} className="space-y-3">
             {/* Month heading */}
             <div className="flex items-center gap-3">
-              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 capitalize">
+              <h2 className="text-[11px] font-black capitalize tracking-widest text-slate-400">
                 {month}
               </h2>
               <span

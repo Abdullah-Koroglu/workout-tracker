@@ -16,6 +16,8 @@ import type { TimelineItem } from "@/lib/coach-timeline";
 import { WorkoutHistoryPanel } from "@/components/coach/WorkoutHistoryPanel";
 import { AssignmentList } from "@/components/coach/AssignmentList";
 import { AssignTemplateModal } from "@/components/coach/AssignTemplateModal";
+import { NutritionPlanManager } from "@/components/coach/NutritionPlanManager";
+import { MealLogFeed } from "@/components/coach/MealLogFeed";
 import { PaginationControls } from "@/components/shared/PaginationControls";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -423,124 +425,68 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
 }
 
 // ─── TAB 3: Body & Nutrition ──────────────────────────────────────────────────
-function BodyTab({ weightKg, goal, fitnessLevel }: { weightKg: number | null; goal: string | null; fitnessLevel: string | null }) {
-  const MACROS = [
-    { label: "Kalori", current: 2420, target: 2800, unit: "kcal", color: "#FB923C" },
-    { label: "Protein", current: 162, target: 180, unit: "g", color: "#22C55E" },
-    { label: "Karbonhidrat", current: 280, target: 340, unit: "g", color: "#F59E0B" },
-    { label: "Yağ", current: 72, target: 90, unit: "g", color: "#8B5CF6" },
-  ];
+function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal: string | null; fitnessLevel: string | null }) {
   const BODY_METRICS_HISTORY = [
     { date: "24 Nis", weight: 82.4, fat: 16.2, waist: 84 },
     { date: "17 Nis", weight: 83.1, fat: 16.8, waist: 85 },
     { date: "10 Nis", weight: 83.8, fat: 17.2, waist: 86 },
     { date: "03 Nis", weight: 84.2, fat: 17.6, waist: 86 },
   ];
-  const proteinTarget = weightKg ? Math.round(weightKg * 2) : 170;
-  const hydrationTarget = weightKg ? Math.round(weightKg * 35) / 1000 : 2.8;
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {/* Macros */}
-        <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[13px] font-black text-slate-800">Günlük Makrolar</p>
-            <span className="text-[10px] text-slate-400">30 Nisan 2026</span>
-          </div>
-          <div className="flex flex-col gap-3.5">
-            {MACROS.map((m) => {
-              const pct = Math.round((m.current / m.target) * 100);
-              return (
-                <div key={m.label}>
-                  <div className="mb-1.5 flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-700">{m.label}</span>
-                    <span className="text-xs font-bold" style={{ color: m.color }}>
-                      {m.current}
-                      <span className="text-slate-400 font-normal">/{m.target} {m.unit}</span>
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100">
-                    <div className="h-full rounded-full transition-all"
-                      style={{ width: `${Math.min(100, pct)}%`, background: `linear-gradient(90deg, ${m.color}cc, ${m.color})`, boxShadow: `0 0 8px ${m.color}44` }} />
-                  </div>
-                  <div className="mt-0.5 text-right text-[10px] text-slate-400">%{pct} tamamlandı</div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Body Measurements History */}
-        <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-            <p className="text-[13px] font-black text-slate-800">Vücut Ölçümleri</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100">
-                  {["Tarih", "Kilo", "Yağ %", "Bel (cm)"].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {BODY_METRICS_HISTORY.map((row, i) => {
-                  const prev = BODY_METRICS_HISTORY[i + 1];
-                  const weightDiff = prev ? (row.weight - prev.weight).toFixed(1) : null;
-                  const fatDiff = prev ? (row.fat - prev.fat).toFixed(1) : null;
-                  return (
-                    <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
-                      <td className="px-4 py-2.5 text-xs font-semibold text-slate-600">{row.date}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-sm font-black text-slate-800">{row.weight}</span>
-                        {weightDiff && (
-                          <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(weightDiff) < 0 ? "#22C55E" : "#EF4444" }}>
-                            {parseFloat(weightDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(weightDiff))}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className="text-sm font-black text-slate-800">{row.fat}%</span>
-                        {fatDiff && (
-                          <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(fatDiff) < 0 ? "#22C55E" : "#EF4444" }}>
-                            {parseFloat(fatDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(fatDiff))}
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-2.5 text-sm font-black text-slate-800">{row.waist}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-            <div className="mt-3 rounded-xl px-4 py-2.5 mx-4 mb-3" style={{ background: "#22C55E15", border: "1px solid #22C55E26" }}>
-              <div className="text-[12px] font-bold text-green-700">📉 Aylık Özet: −1.8 kg · −1.4% yağ</div>
-              <div className="text-[10px] text-slate-400 mt-1">Hedefle uyumlu ilerleme. Devam et!</div>
-            </div>
-          </div>
-        </div>
+        <NutritionPlanManager clientId={clientId} />
+        <MealLogFeed clientId={clientId} />
       </div>
 
-      {/* Nutrition Notes */}
-      <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-black text-slate-800">Beslenme Notları</p>
-          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-400">Türetilmiş</span>
+      {/* Body Measurements History */}
+      <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
+        <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
+          <p className="text-[13px] font-black text-slate-800">Vücut Ölçümleri</p>
         </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          {[
-            { label: "Diyet Türü", value: "Yüksek Protein", icon: "🌱", color: "#22C55E" },
-            { label: "Öğün Sayısı", value: "4 / gün", icon: "🍽️", color: "#FB923C" },
-            { label: "Su Tüketimi", value: `${hydrationTarget.toFixed(1)} L`, icon: "💧", color: "#3B82F6" },
-            { label: "Takviye", value: goal ? "Kreatin, B12" : "Önerilmemiş", icon: "💊", color: "#8B5CF6" },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl px-3 py-3" style={{ background: `${item.color}12`, border: `1px solid ${item.color}26` }}>
-              <div className="mb-2 text-lg">{item.icon}</div>
-              <div className="text-[13px] font-black text-slate-800">{item.value}</div>
-              <div className="mt-0.5 text-[10px] text-slate-400">{item.label}</div>
-            </div>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-slate-100">
+                {["Tarih", "Kilo", "Yağ %", "Bel (cm)"].map((h) => (
+                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {BODY_METRICS_HISTORY.map((row, i) => {
+                const prev = BODY_METRICS_HISTORY[i + 1];
+                const weightDiff = prev ? (row.weight - prev.weight).toFixed(1) : null;
+                const fatDiff = prev ? (row.fat - prev.fat).toFixed(1) : null;
+                return (
+                  <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
+                    <td className="px-4 py-2.5 text-xs font-semibold text-slate-600">{row.date}</td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-sm font-black text-slate-800">{row.weight}</span>
+                      {weightDiff && (
+                        <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(weightDiff) < 0 ? "#22C55E" : "#EF4444" }}>
+                          {parseFloat(weightDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(weightDiff))}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className="text-sm font-black text-slate-800">{row.fat}%</span>
+                      {fatDiff && (
+                        <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(fatDiff) < 0 ? "#22C55E" : "#EF4444" }}>
+                          {parseFloat(fatDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(fatDiff))}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-2.5 text-sm font-black text-slate-800">{row.waist}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div className="mt-3 rounded-xl px-4 py-2.5 mx-4 mb-3" style={{ background: "#22C55E15", border: "1px solid #22C55E26" }}>
+            <div className="text-[12px] font-bold text-green-700">📉 Aylık Özet: −1.8 kg · −1.4% yağ</div>
+            <div className="text-[10px] text-slate-400 mt-1">Hedefle uyumlu ilerleme. Devam et!</div>
+          </div>
         </div>
       </div>
     </div>
@@ -769,7 +715,7 @@ export function ClientHub360(props: ClientHub360Props) {
         {activeTab === "performance" && (
           <PerformanceTab strengthTrend={strengthTrend} weeklyTonnage={weeklyTonnage} />
         )}
-        {activeTab === "body" && <BodyTab weightKg={weightKg} goal={goal} fitnessLevel={fitnessLevel} />}
+        {activeTab === "body" && <BodyTab clientId={clientId} weightKg={weightKg} goal={goal} fitnessLevel={fitnessLevel} />}
         {activeTab === "history" && (
           <HistoryTab
             heatmap={heatmap}

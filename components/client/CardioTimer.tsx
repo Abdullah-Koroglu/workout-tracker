@@ -150,7 +150,7 @@ export function CardioTimer({
       }
 
       const registration = await navigator.serviceWorker.ready;
-      await registration.showNotification(payload.title, {
+      const notificationOptions: NotificationOptions & { renotify?: boolean; vibrate?: number | number[] } = {
         body: payload.body,
         icon: "/manifest-icon-192.maskable.png",
         badge: "/favicon-196.png",
@@ -158,7 +158,8 @@ export function CardioTimer({
         renotify: true,
         vibrate: [120, 80, 120],
         data: { url: window.location.pathname }
-      });
+      };
+      await registration.showNotification(payload.title, notificationOptions);
     } catch {
       // Ignore notification failures to keep timer flow uninterrupted.
     }

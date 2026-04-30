@@ -191,12 +191,80 @@ def run_psql(sql: str, extra_args: list[str] | None = None) -> str:
         cwd=ROOT,
         input=sql,
         text=True,
+        encoding="utf-8",
+        errors="strict",
         capture_output=True,
         check=False,
     )
     if completed.returncode != 0:
         raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
     return completed.stdout
+
+
+def run_compose_command(command: list[str]) -> str:
+    completed = subprocess.run(
+        command,
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
+    return completed.stdout
+
+
+def missing_postgres_tables() -> list[str]:
+    escaped_names = ",".join(quote_text(table) for table in TABLE_ORDER)
+    query = (
+        "SELECT table_name FROM information_schema.tables "
+        "WHERE table_schema = 'public' "
+        f"AND table_name IN ({escaped_names});"
+    )
+    existing_output = run_psql("", ["-At", "-c", query])
+    existing = {line.strip() for line in existing_output.splitlines() if line.strip()}
+    return [table for table in TABLE_ORDER if table not in existing]
+
+
+def ensure_postgres_schema() -> None:
+    missing = missing_postgres_tables()
+    if not missing:
+        return
+
+    print("PostgreSQL schema missing tables. Generating schema SQL with Prisma...", file=sys.stderr)
+    npx_executable = "npx.cmd" if sys.platform.startswith("win") else "npx"
+    completed = subprocess.run(
+        [
+            npx_executable,
+            "prisma",
+            "migrate",
+            "diff",
+            "--from-empty",
+            "--to-schema-datamodel",
+            str(ROOT / "prisma" / "schema.prisma"),
+            "--script",
+        ],
+        cwd=ROOT,
+        text=True,
+        encoding="utf-8",
+        errors="strict",
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
+
+    schema_sql = completed.stdout.strip()
+    if not schema_sql:
+        raise RuntimeError("Prisma did not generate schema SQL output.")
+
+    run_psql(schema_sql + "\n")
+
+    still_missing = missing_postgres_tables()
+    if still_missing:
+        raise RuntimeError("Missing PostgreSQL tables after prisma db push: " + ", ".join(still_missing))
 
 
 def collect_postgres_counts() -> dict[str, int]:
@@ -227,6 +295,7 @@ def main() -> int:
         sqlite_connection.close()
 
     try:
+        ensure_postgres_schema()
         run_psql(import_sql)
         target_counts = collect_postgres_counts()
     except Exception as exc:

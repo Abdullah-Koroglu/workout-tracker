@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { calculateComplianceScore } from "@/lib/analytics/compliance";
 
 export async function GET() {
   const auth = await requireAuth("COACH");
@@ -13,30 +14,30 @@ export async function GET() {
     orderBy: { createdAt: "desc" }
   });
 
-  const accepted = relations
-    .filter((relation) => relation.status === "ACCEPTED")
-    .map((relation) => ({
-      id: relation.client.id,
-      relationId: relation.id,
-      name: relation.client.name,
-      email: relation.client.email,
-      status: relation.status
-    }));
+  const accepted = await Promise.all(
+    relations
+      .filter((r) => r.status === "ACCEPTED")
+      .map(async (r) => ({
+        id: r.client.id,
+        relationId: r.id,
+        name: r.client.name,
+        email: r.client.email,
+        status: r.status,
+        complianceScore: await calculateComplianceScore(r.client.id),
+      }))
+  );
+
   const pending = relations
-    .filter((relation) => relation.status === "PENDING")
-    .map((relation) => ({
-      id: relation.client.id,
-      relationId: relation.id,
-      name: relation.client.name,
-      email: relation.client.email,
-      status: relation.status
+    .filter((r) => r.status === "PENDING")
+    .map((r) => ({
+      id: r.client.id,
+      relationId: r.id,
+      name: r.client.name,
+      email: r.client.email,
+      status: r.status,
     }));
 
-  return NextResponse.json({
-    clients: accepted,
-    accepted,
-    pending
-  });
+  return NextResponse.json({ clients: accepted, accepted, pending });
 }
 
 export async function POST(request: Request) {

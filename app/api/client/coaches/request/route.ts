@@ -9,6 +9,7 @@ import { CoachRequestEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { sendPushNotification } from "@/lib/push-notifications";
+import { canAcceptNewClient, TIER_LIMITS } from "@/lib/config/pricing";
 
 const schema = z.object({
   coachId: z.string().min(1)
@@ -23,6 +24,22 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // Capacity check: prevent sending request to full coaches
+  const coachProfile = await prisma.coachProfile.findUnique({
+    where: { userId: parsed.data.coachId },
+    select: { subscriptionTier: true },
+  });
+  const coachTier = coachProfile?.subscriptionTier ?? "FREE";
+  const acceptedCount = await prisma.coachClientRelation.count({
+    where: { coachId: parsed.data.coachId, status: "ACCEPTED" },
+  });
+  if (!canAcceptNewClient(acceptedCount, coachTier)) {
+    return NextResponse.json(
+      { error: "Bu koç şu an yeni danışan kabul etmiyor.", code: "LIMIT_REACHED" },
+      { status: 403 }
+    );
   }
 
   const existingRelation = await prisma.coachClientRelation.findUnique({

@@ -4,52 +4,22 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
 import { CommentBox } from "@/components/coach/CommentBox";
-
-type WorkoutItem = {
-  id: string;
-  startedAt: string;
-  finishedAt: string | null;
-  durationMinutes: number | null;
-  intensityScore: number | null;
-  status: "IN_PROGRESS" | "COMPLETED" | "ABANDONED";
-  assignment: {
-    id: string;
-    scheduledFor: string;
-    createdAt: string;
-  };
-  template: { name: string; description: string | null };
-  sets: Array<{
-    id: string;
-    setNumber: number;
-    weightKg: number | null;
-    reps: number | null;
-    rir: number | null;
-    durationMinutes: number | null;
-    durationSeconds: number | null;
-    completed: boolean;
-    exercise: { name: string; type: "WEIGHT" | "CARDIO" };
-  }>;
-  comments: Array<{
-    id: string;
-    content: string;
-    createdAt: string;
-    author: { name: string };
-  }>;
-};
+import { RestAdherenceWidget } from "@/components/coach/RestAdherenceWidget";
+import type { TimelineItem } from "@/lib/coach-timeline";
 
 const statusConfig: Record<
-  WorkoutItem["status"],
+  "IN_PROGRESS" | "COMPLETED" | "ABANDONED",
   { label: string; emoji: string; bg: string; color: string; badgeBg: string }
 > = {
-  COMPLETED:   { label: "Tamamlandı",    emoji: "✅", bg: "#22C55E18", color: "#22C55E", badgeBg: "#22C55E18" },
-  ABANDONED:   { label: "Yapılmadı", emoji: "⚠️", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
-  IN_PROGRESS: { label: "Yapılmadı",  emoji: "⏳", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
+  COMPLETED:   { label: "Tamamlandı", emoji: "✅", bg: "#22C55E18", color: "#22C55E", badgeBg: "#22C55E18" },
+  ABANDONED:   { label: "Yapılmadı",  emoji: "⚠️", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
+  IN_PROGRESS: { label: "Devam ediyor", emoji: "⏳", bg: "#EF444418", color: "#EF4444", badgeBg: "#EF444418" },
 };
 
-export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
+export function WorkoutHistoryPanel({ items }: { items: TimelineItem[] }) {
   const [openWorkoutId, setOpenWorkoutId] = useState<string | null>(null);
 
-  if (workouts.length === 0) {
+  if (items.length === 0) {
     return (
       <div
         className="rounded-[18px] p-6 text-center text-sm"
@@ -66,7 +36,47 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
 
   return (
     <div className="flex flex-col gap-2.5">
-      {workouts.map((workout) => {
+      {items.map((item) => {
+        // ── Missed assignment card ────────────────────────────────────────────
+        if (item.type === "missed") {
+          return (
+            <div
+              key={`missed-${item.id}`}
+              className="rounded-[18px] overflow-hidden"
+              style={{
+                background: "#FFF1F2",
+                boxShadow: "0 2px 16px rgba(239,68,68,0.08), 0 1px 3px rgba(239,68,68,0.06)",
+                border: "1px solid #FECACA",
+              }}
+            >
+              <div className="flex items-center gap-3 p-3.5">
+                <div
+                  className="w-9 h-9 rounded-[10px] flex items-center justify-center text-lg flex-shrink-0"
+                  style={{ background: "#EF444418" }}
+                >
+                  ⚠️
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[14px] font-bold truncate" style={{ color: "#991B1B" }}>
+                    {item.templateName}
+                  </div>
+                  <div className="text-[11px] mt-0.5" style={{ color: "#B91C1C" }}>
+                    Planlanan gün geçti: {new Date(item.scheduledFor).toLocaleDateString("tr-TR")}
+                  </div>
+                </div>
+                <span
+                  className="text-[10px] font-bold rounded-full px-2.5 py-1"
+                  style={{ background: "#FEE2E2", color: "#B91C1C" }}
+                >
+                  Yapılmadı
+                </span>
+              </div>
+            </div>
+          );
+        }
+
+        // ── Workout card ──────────────────────────────────────────────────────
+        const workout = item;
         const isOpen = openWorkoutId === workout.id;
         const cfg = statusConfig[workout.status];
         const date = new Date(workout.startedAt).toLocaleDateString("tr-TR", {
@@ -221,6 +231,9 @@ export function WorkoutHistoryPanel({ workouts }: { workouts: WorkoutItem[] }) {
                     ))}
                   </div>
                 )}
+
+                {/* Rest Adherence */}
+                <RestAdherenceWidget sets={workout.sets} />
 
                 {/* Comments */}
                 {workout.comments.length > 0 && (

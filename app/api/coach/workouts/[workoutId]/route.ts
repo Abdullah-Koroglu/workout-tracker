@@ -15,7 +15,13 @@ export async function GET(
     where: { id: workoutId },
     include: {
       client: { select: { id: true, name: true, email: true } },
-      template: { select: { id: true, name: true } },
+      template: {
+        select: {
+          id: true,
+          name: true,
+          exercises: { select: { exerciseId: true, prescribedRestSeconds: true } },
+        },
+      },
       sets: { include: { exercise: true }, orderBy: { setNumber: "asc" } },
       assignment: { select: { id: true, isOneTime: true, scheduledFor: true } }
     }
@@ -38,19 +44,29 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
+  // Build exerciseId -> prescribedRestSeconds lookup from template
+  const restMap = Object.fromEntries(
+    workout.template.exercises.map((e) => [e.exerciseId, e.prescribedRestSeconds ?? null])
+  );
+
   const durationMinutes = workout.finishedAt
     ? Math.round((workout.finishedAt.getTime() - workout.startedAt.getTime()) / 60000)
     : null;
+
+  const sets = workout.sets.map((s) => ({
+    ...s,
+    prescribedRestSeconds: restMap[s.exerciseId] ?? null,
+  }));
 
   return NextResponse.json({
     id: workout.id,
     status: workout.status,
     client: workout.client,
-    template: workout.template,
+    template: { id: workout.template.id, name: workout.template.name },
     assignment: workout.assignment,
     startedAt: workout.startedAt,
     finishedAt: workout.finishedAt,
     durationMinutes,
-    sets: workout.sets
+    sets,
   });
 }

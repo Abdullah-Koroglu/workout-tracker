@@ -28,6 +28,9 @@ model User {
 
   clientProfile   ClientProfile?
   coachProfile    CoachProfile?
+
+  sentCheckIns     CheckIn[] @relation("CheckInCoach")
+  receivedCheckIns CheckIn[] @relation("CheckInClient")
 }
 
 model ClientProfile {
@@ -43,14 +46,19 @@ model ClientProfile {
 }
 
 model CoachProfile {
-  id              String   @id @default(cuid())
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId          String   @unique
+  id              String           @id @default(cuid())
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId          String           @unique
   bio             String?
   specialties     Json?
   experienceYears Int?
   socialMediaUrl  String?
-  updatedAt       DateTime @updatedAt
+  updatedAt       DateTime         @updatedAt
+
+  subscriptionTier   SubscriptionTier @default(FREE)
+  subscriptionStatus String?
+  inviteCode         String?          @unique
+  stripeCustomerId   String?          @unique
 
   packages CoachPackage[]
 }
@@ -72,6 +80,13 @@ enum Role {
   CLIENT
 }
 
+enum SubscriptionTier {
+  FREE
+  TIER_1
+  TIER_2
+  AGENCY
+}
+
 model CoachClientRelation {
   id        String         @id @default(cuid())
   coach     User           @relation("Coach", fields: [coachId], references: [id])
@@ -91,10 +106,11 @@ enum RelationStatus {
 }
 
 model Exercise {
-  id        String       @id @default(cuid())
-  name      String
-  type      ExerciseType
-  createdAt DateTime     @default(now())
+  id           String       @id @default(cuid())
+  name         String
+  type         ExerciseType
+  targetMuscle String?
+  createdAt    DateTime     @default(now())
 
   templateExercises WorkoutTemplateExercise[]
   workoutSets       WorkoutSet[]
@@ -129,6 +145,8 @@ model WorkoutTemplateExercise {
   targetSets  Int?
   targetReps  Int?
   targetRir   Int?
+
+  prescribedRestSeconds Int? @default(90)
 
   durationMinutes Int?
   protocol        Json?
@@ -183,9 +201,10 @@ model WorkoutSet {
   reps     Int?
   rir      Int?
 
-  durationMinutes Int?
-  durationSeconds Int?
-  completed       Boolean @default(false)
+  durationMinutes   Int?
+  durationSeconds   Int?
+  completed         Boolean @default(false)
+  actualRestSeconds Int?
 }
 
 model Comment {
@@ -223,4 +242,30 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId, isRead, createdAt])
+}
+
+model CheckIn {
+  id        String    @id @default(cuid())
+  coach     User      @relation("CheckInCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  coachId   String
+  client    User      @relation("CheckInClient", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId  String
+  message   String?
+  createdAt DateTime  @default(now())
+
+  response  CheckInResponse?
+
+  @@index([clientId, createdAt])
+  @@index([coachId, createdAt])
+}
+
+model CheckInResponse {
+  id              String   @id @default(cuid())
+  checkIn         CheckIn  @relation(fields: [checkInId], references: [id], onDelete: Cascade)
+  checkInId       String   @unique
+  sleepScore      Int
+  stressScore     Int
+  motivationScore Int
+  notes           String?
+  createdAt       DateTime @default(now())
 }

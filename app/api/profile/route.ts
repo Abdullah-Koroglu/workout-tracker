@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import { randomBytes } from "crypto";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
@@ -71,6 +72,7 @@ export async function PUT(request: Request) {
       where: { userId },
       create: {
         userId,
+        inviteCode: randomBytes(10).toString("hex"),
         bio: typeof bio === "string" ? bio.trim() || null : null,
         specialties: Array.isArray(specialties) ? specialties : undefined,
         experienceYears: typeof experienceYears === "number" ? experienceYears : null,

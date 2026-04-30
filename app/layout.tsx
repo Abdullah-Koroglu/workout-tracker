@@ -97,7 +97,7 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
       </head>
       <body className={[  lexend.variable, ""].join(" ")}>
-        <ThemeProvider>
+        {/* <ThemeProvider> */}
           <AppSessionProvider>
             <AuthProvider>
               <NotificationProvider>
@@ -114,7 +114,7 @@ export default function RootLayout({
               </NotificationProvider>
             </AuthProvider>
           </AppSessionProvider>
-        </ThemeProvider>
+        {/* </ThemeProvider> */}
       </body>
     </html>
   );

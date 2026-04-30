@@ -850,6 +850,649 @@ function ClientCoachesDesktop({onNav}){
   );
 }
 
+// ── 360° CLIENT HUB ──────────────────────────────────────
+// Pure SVG chart helpers — no external deps
+
+function SVGLineChart({ data, lines, width = 600, height = 240 }) {
+  const pad = { top: 16, right: 16, bottom: 28, left: 40 };
+  const W = width - pad.left - pad.right;
+  const H = height - pad.top - pad.bottom;
+
+  const allVals = lines.flatMap(l => data.map(d => d[l.key]));
+  const minV = Math.min(...allVals) * 0.96;
+  const maxV = Math.max(...allVals) * 1.02;
+
+  const xScale = i => (i / (data.length - 1)) * W;
+  const yScale = v => H - ((v - minV) / (maxV - minV)) * H;
+
+  const [hover, setHover] = React.useState(null);
+
+  function buildPath(key) {
+    return data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${xScale(i).toFixed(1)},${yScale(d[key]).toFixed(1)}`).join(' ');
+  }
+
+  function buildArea(key) {
+    const pts = data.map((d, i) => `${xScale(i).toFixed(1)},${yScale(d[key]).toFixed(1)}`).join(' L ');
+    return `M ${pts} L ${xScale(data.length - 1)},${H} L 0,${H} Z`;
+  }
+
+  // Y axis ticks
+  const yTicks = Array.from({ length: 5 }, (_, i) => minV + ((maxV - minV) * i) / 4);
+
+  return (
+    <div style={{ position: 'relative', width: '100%' }}>
+      <svg width="100%" viewBox={`0 0 ${width} ${height}`} style={{ overflow: 'visible', display: 'block' }}>
+        <defs>
+          {lines.map(l => (
+            <linearGradient key={l.key} id={`grad-${l.key}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={l.color} stopOpacity="0.18"/>
+              <stop offset="100%" stopColor={l.color} stopOpacity="0"/>
+            </linearGradient>
+          ))}
+        </defs>
+        <g transform={`translate(${pad.left},${pad.top})`}>
+          {/* Grid */}
+          {yTicks.map((v, i) => (
+            <g key={i}>
+              <line x1="0" y1={yScale(v)} x2={W} y2={yScale(v)} stroke={C.gray100} strokeWidth="1"/>
+              <text x="-8" y={yScale(v) + 4} textAnchor="end" fontSize="10" fill={C.gray400} fontFamily="Lexend">{Math.round(v)}</text>
+            </g>
+          ))}
+          {/* X labels */}
+          {data.map((d, i) => (
+            <text key={i} x={xScale(i)} y={H + 18} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Lexend">{d.week}</text>
+          ))}
+          {/* Area fills */}
+          {lines.map(l => (
+            <path key={`area-${l.key}`} d={buildArea(l.key)} fill={`url(#grad-${l.key})`}/>
+          ))}
+          {/* Lines */}
+          {lines.map(l => (
+            <path key={`line-${l.key}`} d={buildPath(l.key)} fill="none" stroke={l.color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+          ))}
+          {/* Hover dots */}
+          {hover !== null && lines.map(l => (
+            <circle key={`dot-${l.key}`} cx={xScale(hover)} cy={yScale(data[hover][l.key])} r="5" fill={l.color} stroke="#fff" strokeWidth="2" style={{ filter: `drop-shadow(0 0 4px ${l.color})` }}/>
+          ))}
+          {/* Hover tooltip */}
+          {hover !== null && (
+            <g>
+              <line x1={xScale(hover)} y1="0" x2={xScale(hover)} y2={H} stroke="rgba(0,0,0,0.08)" strokeWidth="1" strokeDasharray="4"/>
+              <rect x={Math.min(xScale(hover) + 8, W - 100)} y="0" width="100" height={lines.length * 22 + 22} rx="8" fill="#0D1B2E" opacity="0.95"/>
+              <text x={Math.min(xScale(hover) + 16, W - 92)} y="16" fontSize="10" fill="rgba(255,255,255,0.5)" fontFamily="Lexend" fontWeight="700">{data[hover].week}</text>
+              {lines.map((l, li) => (
+                <g key={li}>
+                  <circle cx={Math.min(xScale(hover) + 16, W - 92) + 4} cy={32 + li * 22} r="4" fill={l.color}/>
+                  <text x={Math.min(xScale(hover) + 16, W - 92) + 14} y={36 + li * 22} fontSize="11" fill="#fff" fontFamily="Lexend" fontWeight="700">{data[hover][l.key]} kg</text>
+                </g>
+              ))}
+            </g>
+          )}
+          {/* Invisible interaction layer */}
+          {data.map((d, i) => (
+            <rect key={i} x={xScale(i) - W / (data.length * 2)} y="0" width={W / data.length} height={H} fill="transparent"
+              onMouseEnter={() => setHover(i)} onMouseLeave={() => setHover(null)} style={{ cursor: 'crosshair' }}/>
+          ))}
+        </g>
+      </svg>
+    </div>
+  );
+}
+
+function SVGBarChart({ data, bars, width = 500, height = 180 }) {
+  const pad = { top: 12, right: 12, bottom: 28, left: 44 };
+  const W = width - pad.left - pad.right;
+  const H = height - pad.top - pad.bottom;
+  const allVals = bars.flatMap(b => data.map(d => d[b.key]));
+  const maxV = Math.max(...allVals) * 1.1 || 1;
+  const yScale = v => H - (v / maxV) * H;
+  const groupW = W / data.length;
+  const barW = (groupW * 0.7) / bars.length;
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map(t => t * maxV);
+  const [hover, setHover] = React.useState(null);
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${width} ${height}`} style={{ display: 'block' }}>
+      <g transform={`translate(${pad.left},${pad.top})`}>
+        {yTicks.map((v, i) => (
+          <g key={i}>
+            <line x1="0" y1={yScale(v)} x2={W} y2={yScale(v)} stroke={C.gray100} strokeWidth="1"/>
+            <text x="-6" y={yScale(v) + 4} textAnchor="end" fontSize="10" fill={C.gray400} fontFamily="Lexend">{Math.round(v / 1000)}k</text>
+          </g>
+        ))}
+        {data.map((d, gi) => (
+          <g key={gi}>
+            {bars.map((b, bi) => {
+              const x = gi * groupW + (groupW * 0.15) + bi * (barW + 2);
+              const bh = Math.max(0, H - yScale(d[b.key]));
+              const isHov = hover === `${gi}-${bi}`;
+              return (
+                <g key={bi}>
+                  <rect x={x} y={yScale(d[b.key])} width={barW} height={bh} rx="4" fill={isHov ? b.color : b.color + (bi === 0 ? 'ff' : '66')}
+                    onMouseEnter={() => setHover(`${gi}-${bi}`)} onMouseLeave={() => setHover(null)} style={{ cursor: 'default', transition: 'fill .15s' }}/>
+                  {isHov && <rect x={x - 4} y={yScale(d[b.key]) - 24} width={barW + 8} height={22} rx="6" fill="#0D1B2E" opacity="0.95"/>}
+                  {isHov && <text x={x + barW / 2} y={yScale(d[b.key]) - 8} textAnchor="middle" fontSize="11" fill="#fff" fontFamily="Lexend" fontWeight="700">{(d[b.key] / 1000).toFixed(1)}k</text>}
+                </g>
+              );
+            })}
+            <text x={gi * groupW + groupW / 2} y={H + 18} textAnchor="middle" fontSize="10" fill={C.gray400} fontFamily="Lexend">{d.day}</text>
+          </g>
+        ))}
+      </g>
+    </svg>
+  );
+}
+
+function ChartLegend({ items }) {
+  return (
+    <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+      {items.map(l => (
+        <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{ width: 10, height: 10, borderRadius: '50%', background: l.color }}/>
+          <span style={{ fontSize: 12, fontWeight: 600, color: C.gray600 }}>{l.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ClientHub({ onNav }) {
+  const [tab, setTab] = React.useState('overview');
+
+  const client = {
+    name: 'Ahmet Yılmaz', age: 28, weight: '82.4 kg',
+    goal: 'Hipertrofi — 85 kg', goalColor: C.primary,
+    compliance: 88, package: 'Pro Tier', daysLeft: 12,
+    avatar: 'AY',
+  };
+
+  const rm1Data = [
+    { week: 'H1', bench: 85,  squat: 110, dead: 140 },
+    { week: 'H2', bench: 87,  squat: 112, dead: 142 },
+    { week: 'H3', bench: 87,  squat: 115, dead: 145 },
+    { week: 'H4', bench: 90,  squat: 115, dead: 147 },
+    { week: 'H5', bench: 90,  squat: 120, dead: 150 },
+    { week: 'H6', bench: 92,  squat: 122, dead: 152 },
+    { week: 'H7', bench: 95,  squat: 122, dead: 155 },
+    { week: 'H8', bench: 95,  squat: 125, dead: 158 },
+    { week: 'H9', bench: 97,  squat: 127, dead: 160 },
+    { week: 'H10', bench: 100, squat: 130, dead: 162 },
+    { week: 'H11', bench: 100, squat: 132, dead: 165 },
+    { week: 'H12', bench: 102, squat: 135, dead: 167 },
+  ];
+
+  const tonnageData = [
+    { day: 'Pt', thisWeek: 4200, lastWeek: 3800 },
+    { day: 'Sa', thisWeek: 0,    lastWeek: 0 },
+    { day: 'Ça', thisWeek: 5100, lastWeek: 4400 },
+    { day: 'Pe', thisWeek: 0,    lastWeek: 0 },
+    { day: 'Cu', thisWeek: 4800, lastWeek: 4100 },
+    { day: 'Ct', thisWeek: 3200, lastWeek: 2900 },
+    { day: 'Pz', thisWeek: 0,    lastWeek: 0 },
+  ];
+
+  const bodyMetrics = [
+    { date: '24 Nis', weight: 82.4, fat: 16.2, waist: 84 },
+    { date: '17 Nis', weight: 83.1, fat: 16.8, waist: 85 },
+    { date: '10 Nis', weight: 83.8, fat: 17.2, waist: 86 },
+    { date: '03 Nis', weight: 84.2, fat: 17.6, waist: 86 },
+  ];
+
+  const macros = [
+    { label: 'Kalori', current: 2400, target: 2800, unit: 'kcal', color: C.primary },
+    { label: 'Protein', current: 162, target: 180, unit: 'g', color: C.success },
+    { label: 'Karbonhidrat', current: 280, target: 320, unit: 'g', color: C.tertiary },
+    { label: 'Yağ', current: 68, target: 80, unit: 'g', color: C.warning },
+  ];
+
+  // Heatmap — last 35 days
+  const heatmap = Array.from({ length: 35 }, (_, i) => {
+    const r = Math.random();
+    if (r < 0.15) return 'rest';
+    if (r < 0.25) return 'missed';
+    return 'done';
+  });
+
+  const heatColor = { done: C.success, missed: C.danger, rest: C.gray200 };
+
+  const formChecks = [
+    { id: 1, exercise: 'Squat — Set 3 (Ağır)', date: '25 Nis', status: 'pending', comment: '' },
+    { id: 2, exercise: 'Deadlift — Max Deneme', date: '23 Nis', status: 'pending', comment: '' },
+    { id: 3, exercise: 'Overhead Press', date: '21 Nis', status: 'reviewed', comment: 'Dirsek pozisyonu düzeltilmeli.' },
+  ];
+
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (!active || !payload?.length) return null;
+    return (
+      <div style={{ background: '#0D1B2E', border: `1px solid rgba(255,255,255,0.1)`, borderRadius: 12, padding: '10px 14px', fontFamily: 'Lexend, sans-serif' }}>
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)', marginBottom: 6, fontWeight: 700 }}>{label}</div>
+        {payload.map((p, i) => (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: p.color }} />
+            <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>{p.name}:</span>
+            <span style={{ fontSize: 13, fontWeight: 700, color: '#fff' }}>{p.value}{p.name === 'Bench' || p.name === 'Squat' || p.name === 'Deadlift' ? ' kg' : ' kg'}</span>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const TABS = [
+    { key: 'overview', label: 'Genel Bakış' },
+    { key: 'performance', label: 'Performans' },
+    { key: 'body', label: 'Vücut & Beslenme' },
+    { key: 'history', label: 'Geçmiş & Medya' },
+  ];
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: C.gray50, overflow: 'hidden', animation: 'fadeUp .2s ease', fontFamily: 'Lexend, sans-serif' }}>
+
+      {/* ── Sticky Header ── */}
+      <div style={{ background: '#fff', borderBottom: `1px solid ${C.gray100}`, flexShrink: 0, position: 'sticky', top: 0, zIndex: 50 }}>
+        <div style={{ padding: '16px 28px', display: 'flex', alignItems: 'center', gap: 16 }}>
+          {/* Back */}
+          <button onClick={() => onNav('coach-clients')} style={{ background: C.gray100, border: 'none', borderRadius: 10, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: C.gray600, flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="15,18 9,12 15,6"/></svg>
+          </button>
+
+          {/* Avatar */}
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: `linear-gradient(135deg, ${C.secondary}, ${C.secondaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 18, flexShrink: 0, boxShadow: `0 4px 12px ${C.secondary}44` }}>
+            {client.avatar}
+          </div>
+
+          {/* Info */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <h1 style={{ fontSize: 20, fontWeight: 800, color: C.gray800, margin: 0, letterSpacing: -.5 }}>{client.name}</h1>
+              <span style={{ fontSize: 13, color: C.gray400, fontWeight: 500 }}>{client.age} yaş · {client.weight}</span>
+              <span style={{ background: C.primary + '18', color: C.primary, borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700, letterSpacing: .2 }}>
+                🎯 {client.goal}
+              </span>
+              <span style={{ background: C.success + '15', color: C.success, borderRadius: 20, padding: '3px 12px', fontSize: 11, fontWeight: 700 }}>
+                ● Düşük Churn Riski
+              </span>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+            <button onClick={() => onNav('coach-messages')} style={{ background: C.primaryGrad, border: 'none', borderRadius: 10, padding: '9px 18px', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, boxShadow: `0 4px 14px ${C.primary}44` }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+              Mesaj Gönder
+            </button>
+            <button style={{ background: C.gray100, border: 'none', borderRadius: 10, padding: '9px 16px', color: C.gray600, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+              Dürt
+            </button>
+          </div>
+        </div>
+
+        {/* Tab bar */}
+        <div style={{ display: 'flex', padding: '0 28px', borderTop: `1px solid ${C.gray100}` }}>
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => setTab(t.key)}
+              style={{ background: 'none', border: 'none', padding: '12px 0', marginRight: 28, fontSize: 13, fontWeight: 700, cursor: 'pointer', color: tab === t.key ? C.primary : C.gray400, borderBottom: `2px solid ${tab === t.key ? C.primary : 'transparent'}`, transition: 'all .15s', fontFamily: 'Lexend, sans-serif', letterSpacing: -.1 }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Tab Content ── */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px 40px' }}>
+
+        {/* ══ TAB 1: OVERVIEW ══ */}
+        {tab === 'overview' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 20 }}>
+
+            {/* Compliance gauge */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: .5, alignSelf: 'flex-start' }}>Uyumluluk Skoru</div>
+              {/* SVG gauge */}
+              <div style={{ position: 'relative', width: 140, height: 140 }}>
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="56" fill="none" stroke={C.gray100} strokeWidth="12"/>
+                  <circle cx="70" cy="70" r="56" fill="none" stroke={C.primary} strokeWidth="12"
+                    strokeDasharray={`${client.compliance / 100 * 351.86} 351.86`}
+                    strokeLinecap="round" transform="rotate(-90 70 70)"
+                    style={{ filter: `drop-shadow(0 0 8px ${C.primary}88)` }}/>
+                </svg>
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                  <div style={{ fontSize: 30, fontWeight: 800, color: C.gray800, letterSpacing: -1 }}>{client.compliance}%</div>
+                  <div style={{ fontSize: 10, color: C.gray400, fontWeight: 600, textTransform: 'uppercase', letterSpacing: .5 }}>Skor</div>
+                </div>
+              </div>
+              <div style={{ background: C.success + '15', color: C.success, borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 700 }}>✓ Düşük Churn Riski</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, width: '100%' }}>
+                {[{ l: 'Son 7 Gün', v: '6/7' }, { l: 'Bu Ay', v: '22/28' }, { l: 'Gün Serisi', v: '9 gün' }, { l: 'En Uzun', v: '14 gün' }].map(m => (
+                  <div key={m.l} style={{ background: C.gray50, borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>{m.v}</div>
+                    <div style={{ fontSize: 10, color: C.gray400, marginTop: 2 }}>{m.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Package status */}
+            <div style={{ background: `linear-gradient(160deg, ${C.secondary} 0%, ${C.secondaryLight} 100%)`, borderRadius: 18, padding: 24, boxShadow: C.cardShadow, display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: .5 }}>Paket Durumu</div>
+              <div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', letterSpacing: -.5 }}>Pro Tier</div>
+                <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginTop: 3 }}>12 gün kaldı</div>
+              </div>
+              {/* Days bar */}
+              <div style={{ background: 'rgba(255,255,255,0.12)', borderRadius: 6, height: 6 }}>
+                <div style={{ width: `${(client.daysLeft / 30) * 100}%`, height: 6, borderRadius: 6, background: C.primaryGrad }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[{ l: 'Paket Başlangıç', v: '01 Nis' }, { l: 'Bitiş', v: '12 May' }, { l: 'Kalan Seans', v: '5' }, { l: 'Toplam Seans', v: '12' }].map(m => (
+                  <div key={m.l} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '8px 10px' }}>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: '#fff' }}>{m.v}</div>
+                    <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.45)', marginTop: 2 }}>{m.l}</div>
+                  </div>
+                ))}
+              </div>
+              <button style={{ background: C.primaryGrad, border: 'none', borderRadius: 10, padding: '11px 0', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer', fontFamily: 'Lexend, sans-serif', boxShadow: `0 4px 14px ${C.primary}44` }}>
+                Paketi Uzat
+              </button>
+            </div>
+
+            {/* Red flags */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: .5 }}>Uyarılar & Notlar</div>
+              {[
+                { type: 'danger', emoji: '🚨', title: 'Sağ Omuz Sorun', body: 'Rotator cuff bölgesinde rahatsızlık. Overhead hareketlerde yük azaltılacak.' },
+                { type: 'warning', emoji: '⚠️', title: 'Diyet Tercihi', body: 'Vegan beslenme. Protein kaynakları plant-based olacak şekilde planlandı.' },
+                { type: 'warning', emoji: '⚠️', title: 'Uyku Düzeni', body: 'Hafta içi ortalama 5.5 saat uyku. Recovery etkilenebilir.' },
+                { type: 'info', emoji: '📝', title: 'Koç Notu', body: 'Motivasyon yüksek, beklentileri gerçekçi. Sosyal medyada paylaşımları artırılabilir.' },
+              ].map((f, i) => (
+                <div key={i} style={{ background: f.type === 'danger' ? C.danger + '0E' : f.type === 'warning' ? C.warning + '0E' : C.tertiary + '0E', borderRadius: 14, padding: '12px 14px', border: `1px solid ${f.type === 'danger' ? C.danger + '25' : f.type === 'warning' ? C.warning + '25' : C.tertiary + '20'}`, borderLeft: `3px solid ${f.type === 'danger' ? C.danger : f.type === 'warning' ? C.warning : C.tertiary}` }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: C.gray800, marginBottom: 3 }}>{f.emoji} {f.title}</div>
+                  <div style={{ fontSize: 12, color: C.gray500, lineHeight: 1.5 }}>{f.body}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ══ TAB 2: PERFORMANCE ══ */}
+        {tab === 'performance' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            {/* 1RM Trend */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: C.gray800, letterSpacing: -.3 }}>Tahmini 1RM Trendi</div>
+                  <div style={{ fontSize: 12, color: C.gray400, marginTop: 3 }}>Son 12 hafta · kg cinsinden</div>
+                </div>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  {[{ name: 'Bench Press', color: C.primary }, { name: 'Squat', color: C.success }, { name: 'Deadlift', color: C.tertiary }].map(l => (
+                    <div key={l.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: l.color }} />
+                      <span style={{ fontSize: 12, fontWeight: 600, color: C.gray600 }}>{l.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <ChartLegend items={[{ label: 'Bench Press', color: C.primary }, { label: 'Squat', color: C.success }, { label: 'Deadlift', color: C.tertiary }]} />
+              <SVGLineChart
+                data={rm1Data}
+                lines={[
+                  { key: 'bench', color: C.primary },
+                  { key: 'squat', color: C.success },
+                  { key: 'dead',  color: C.tertiary },
+                ]}
+                height={260}
+              />
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              {/* Tonnage bar */}
+              <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>Haftalık Hacim (kg)</div>
+                    <div style={{ fontSize: 12, color: C.gray400, marginTop: 2 }}>Bu hafta vs geçen hafta</div>
+                  </div>
+                  <span style={{ background: C.success + '15', color: C.success, borderRadius: 20, padding: '4px 12px', fontSize: 12, fontWeight: 700 }}>↑ +15%</span>
+                </div>
+                <SVGBarChart
+                  data={tonnageData}
+                  bars={[
+                    { key: 'thisWeek', color: C.primary },
+                    { key: 'lastWeek', color: C.gray300 },
+                  ]}
+                  height={180}
+                />
+              </div>
+
+              {/* PR Records */}
+              <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800, marginBottom: 16 }}>Kişisel Rekorlar</div>
+                {[
+                  { name: 'Bench Press', pr: '102 kg', date: '24 Nis', trend: '+17kg', color: C.primary },
+                  { name: 'Squat', pr: '135 kg', date: '22 Nis', trend: '+25kg', color: C.success },
+                  { name: 'Deadlift', pr: '167 kg', date: '20 Nis', trend: '+27kg', color: C.tertiary },
+                  { name: 'Overhead Press', pr: '72 kg', date: '18 Nis', trend: '+12kg', color: C.warning },
+                ].map((r, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < 3 ? `1px solid ${C.gray100}` : 'none' }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: r.color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🏆</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.gray800 }}>{r.name}</div>
+                      <div style={{ fontSize: 11, color: C.gray400, marginTop: 1 }}>{r.date}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontSize: 16, fontWeight: 800, color: r.color }}>{r.pr}</div>
+                      <div style={{ fontSize: 11, color: C.success, fontWeight: 600 }}>{r.trend}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ TAB 3: BODY & NUTRITION ══ */}
+        {tab === 'body' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {/* Daily Macros */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>Günlük Makrolar</div>
+                <span style={{ fontSize: 11, color: C.gray400 }}>30 Nisan 2026</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+                {macros.map(m => (
+                  <div key={m.label}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: C.gray800 }}>{m.label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: m.color }}>{m.current}<span style={{ color: C.gray400, fontWeight: 500 }}>/{m.target} {m.unit}</span></span>
+                    </div>
+                    <div style={{ background: C.gray100, borderRadius: 6, height: 8, overflow: 'hidden' }}>
+                      <div style={{ width: `${Math.min(100, (m.current / m.target) * 100)}%`, height: 8, borderRadius: 6, background: `linear-gradient(90deg, ${m.color}cc, ${m.color})`, boxShadow: `0 0 8px ${m.color}44`, transition: 'width .5s ease' }} />
+                    </div>
+                    <div style={{ fontSize: 10, color: C.gray400, marginTop: 4, textAlign: 'right' }}>%{Math.round((m.current / m.target) * 100)} tamamlandı</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Body Metrics Table */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800, marginBottom: 16 }}>Vücut Ölçümleri</div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: C.gray50, borderRadius: 10 }}>
+                    {['Tarih', 'Kilo', 'Yağ %', 'Bel (cm)'].map(h => (
+                      <th key={h} style={{ padding: '10px 12px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: .4 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {bodyMetrics.map((row, i) => {
+                    const prev = bodyMetrics[i + 1];
+                    const weightDiff = prev ? (row.weight - prev.weight).toFixed(1) : null;
+                    const fatDiff = prev ? (row.fat - prev.fat).toFixed(1) : null;
+                    return (
+                      <tr key={i} style={{ borderBottom: `1px solid ${C.gray100}` }}>
+                        <td style={{ padding: '12px 12px', fontSize: 13, fontWeight: 600, color: C.gray600 }}>{row.date}</td>
+                        <td style={{ padding: '12px 12px' }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: C.gray800 }}>{row.weight}</span>
+                          {weightDiff && <span style={{ fontSize: 11, color: parseFloat(weightDiff) < 0 ? C.success : C.danger, marginLeft: 4, fontWeight: 600 }}>{parseFloat(weightDiff) < 0 ? '↓' : '↑'}{Math.abs(weightDiff)}</span>}
+                        </td>
+                        <td style={{ padding: '12px 12px' }}>
+                          <span style={{ fontSize: 14, fontWeight: 800, color: C.gray800 }}>{row.fat}%</span>
+                          {fatDiff && <span style={{ fontSize: 11, color: parseFloat(fatDiff) < 0 ? C.success : C.danger, marginLeft: 4, fontWeight: 600 }}>{parseFloat(fatDiff) < 0 ? '↓' : '↑'}{Math.abs(fatDiff)}</span>}
+                        </td>
+                        <td style={{ padding: '12px 12px', fontSize: 14, fontWeight: 800, color: C.gray800 }}>{row.waist}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+              <div style={{ marginTop: 16, padding: '12px 14px', background: C.success + '0D', borderRadius: 12, border: `1px solid ${C.success}20` }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: C.success }}>📉 Aylık Özet: −1.8 kg · −1.4% yağ</div>
+                <div style={{ fontSize: 11, color: C.gray400, marginTop: 2 }}>Hedefle uyumlu ilerleme. Devam et!</div>
+              </div>
+            </div>
+
+            {/* Supplement & notes */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)`, gridColumn: '1 / -1' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800, marginBottom: 14 }}>Beslenme Notları</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                {[
+                  { label: 'Diyet Türü', val: 'Vegan', icon: '🌱', color: C.success },
+                  { label: 'Öğün Sayısı', val: '4 / gün', icon: '🍽️', color: C.primary },
+                  { label: 'Su Tüketimi', val: '2.8 L', icon: '💧', color: C.tertiary },
+                  { label: 'Takviye', val: 'B12, Kreatin', icon: '💊', color: C.warning },
+                ].map(item => (
+                  <div key={item.label} style={{ background: item.color + '0D', borderRadius: 14, padding: '14px 16px', border: `1px solid ${item.color}20` }}>
+                    <div style={{ fontSize: 22, marginBottom: 8 }}>{item.icon}</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>{item.val}</div>
+                    <div style={{ fontSize: 11, color: C.gray400, marginTop: 2 }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══ TAB 4: HISTORY & MEDIA ══ */}
+        {tab === 'history' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+            {/* Form Check Inbox */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>Form Kontrolü</div>
+                <span style={{ background: C.warning + '18', color: C.warning, borderRadius: 20, padding: '3px 10px', fontSize: 11, fontWeight: 700 }}>2 bekliyor</span>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {formChecks.map(fc => (
+                  <div key={fc.id} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px', background: fc.status === 'reviewed' ? C.success + '08' : C.gray50, borderRadius: 14, border: `1px solid ${fc.status === 'reviewed' ? C.success + '20' : C.gray100}` }}>
+                    {/* Thumbnail placeholder */}
+                    <div style={{ width: 72, height: 52, borderRadius: 10, background: `linear-gradient(135deg, ${C.secondary}, ${C.secondaryLight})`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="rgba(255,255,255,0.8)"><polygon points="5,3 19,12 5,21"/></svg>
+                      {fc.status === 'reviewed' && (
+                        <div style={{ position: 'absolute', inset: 0, background: C.success + 'aa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>
+                        </div>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: C.gray800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fc.exercise}</div>
+                      <div style={{ fontSize: 11, color: C.gray400, marginTop: 2 }}>{fc.date}</div>
+                      {fc.comment && <div style={{ fontSize: 11, color: C.success, marginTop: 4 }}>✓ {fc.comment}</div>}
+                    </div>
+                    <button style={{ background: fc.status === 'reviewed' ? C.gray100 : C.primaryGrad, border: 'none', borderRadius: 8, padding: '6px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer', color: fc.status === 'reviewed' ? C.gray400 : '#fff', whiteSpace: 'nowrap', fontFamily: 'Lexend, sans-serif', boxShadow: fc.status !== 'reviewed' ? `0 3px 10px ${C.primary}44` : 'none' }}>
+                      {fc.status === 'reviewed' ? 'İncelendi' : 'İncele'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Consistency Heatmap */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800 }}>Devam Isısı — Son 35 Gün</div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5, marginBottom: 12 }}>
+                {['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'].map(d => (
+                  <div key={d} style={{ textAlign: 'center', fontSize: 10, fontWeight: 700, color: C.gray400, paddingBottom: 4 }}>{d}</div>
+                ))}
+                {heatmap.map((status, i) => (
+                  <div key={i} title={status === 'done' ? 'Tamamlandı' : status === 'missed' ? 'Kaçırıldı' : 'Dinlenme'} style={{ aspectRatio: '1', borderRadius: 5, background: heatColor[status], cursor: 'default', transition: 'transform .1s' }}
+                    onMouseEnter={e => e.target.style.transform = 'scale(1.2)'}
+                    onMouseLeave={e => e.target.style.transform = 'scale(1)'} />
+                ))}
+              </div>
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 8 }}>
+                {[{ color: C.success, label: 'Tamamlandı' }, { color: C.danger, label: 'Kaçırıldı' }, { color: C.gray200, label: 'Dinlenme' }].map(l => (
+                  <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 12, height: 12, borderRadius: 3, background: l.color }} />
+                    <span style={{ fontSize: 11, color: C.gray400, fontWeight: 600 }}>{l.label}</span>
+                  </div>
+                ))}
+              </div>
+              {/* Summary strip */}
+              <div style={{ marginTop: 16, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                {[
+                  { l: 'Tamamlandı', v: heatmap.filter(s => s === 'done').length, c: C.success },
+                  { l: 'Kaçırıldı', v: heatmap.filter(s => s === 'missed').length, c: C.danger },
+                  { l: 'Dinlenme', v: heatmap.filter(s => s === 'rest').length, c: C.gray400 },
+                ].map(m => (
+                  <div key={m.l} style={{ background: m.c + '10', borderRadius: 10, padding: '8px 10px', textAlign: 'center' }}>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: m.c }}>{m.v}</div>
+                    <div style={{ fontSize: 10, color: C.gray400, marginTop: 2 }}>{m.l}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Workout history list */}
+            <div style={{ background: '#fff', borderRadius: 18, padding: 24, boxShadow: C.cardShadow, border: `1px solid rgba(0,0,0,0.05)`, gridColumn: '1 / -1' }}>
+              <div style={{ fontSize: 15, fontWeight: 800, color: C.gray800, marginBottom: 14 }}>Antrenman Geçmişi</div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: C.gray50 }}>
+                    {['Antrenman', 'Tarih', 'Süre', 'Set', 'Toplam Hacim', 'Durum'].map(h => (
+                      <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray400, textTransform: 'uppercase', letterSpacing: .4 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { name: 'Full Body A', date: '25 Nis', dur: '62 dk', sets: 18, vol: '9,200 kg', status: 'COMPLETED' },
+                    { name: 'Upper Body Push', date: '23 Nis', dur: '48 dk', sets: 15, vol: '7,400 kg', status: 'COMPLETED' },
+                    { name: 'Lower Body', date: '21 Nis', dur: '25 dk', sets: 8, vol: '4,100 kg', status: 'ABANDONED' },
+                    { name: 'Full Body B', date: '18 Nis', dur: '70 dk', sets: 20, vol: '10,500 kg', status: 'COMPLETED' },
+                  ].map((w, i) => (
+                    <tr key={i} style={{ borderTop: `1px solid ${C.gray100}` }}
+                      onMouseEnter={e => e.currentTarget.style.background = C.gray50}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '13px 16px', fontSize: 14, fontWeight: 700, color: C.gray800 }}>{w.name}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: C.gray500 }}>{w.date}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 13, color: C.gray500 }}>{w.dur}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 14, fontWeight: 700, color: C.gray800 }}>{w.sets}</td>
+                      <td style={{ padding: '13px 16px', fontSize: 14, fontWeight: 700, color: C.primary }}>{w.vol}</td>
+                      <td style={{ padding: '13px 16px' }}>
+                        <span style={{ background: w.status === 'COMPLETED' ? C.success + '15' : C.warning + '15', color: w.status === 'COMPLETED' ? C.success : C.warning, borderRadius: 20, padding: '4px 12px', fontSize: 11, fontWeight: 700 }}>
+                          {w.status === 'COMPLETED' ? 'Tamamlandı' : 'Yarıda'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 // ── App ───────────────────────────────────────────────────
 function App(){
   const [role,setRole]=React.useState('coach');
@@ -883,7 +1526,7 @@ function App(){
       case 'coach-dashboard': return <CoachDashboard {...p}/>;
       case 'coach-templates': return <CoachTemplates {...p}/>;
       case 'coach-clients': return <CoachClients {...p}/>;
-      case 'coach-client-progress': return <CoachClients {...p}/>;
+      case 'coach-client-progress': return <ClientHub {...p}/>;
       case 'coach-messages': return <CoachMessages {...p}/>;
       case 'coach-profile': return <CoachDashboard {...p}/>;
       case 'client-dashboard': return <ClientDashboard {...p}/>;

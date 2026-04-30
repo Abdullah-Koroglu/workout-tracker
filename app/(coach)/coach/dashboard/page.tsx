@@ -2,6 +2,9 @@ import Link from "next/link";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
 import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
+import { QuotaWidget } from "@/components/coach/QuotaWidget";
+import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
+import { CheckInManager } from "@/components/coach/CheckInManager";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
@@ -37,6 +40,12 @@ export default async function CoachDashboardPage() {
   todayStart.setHours(0, 0, 0, 0);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+  const coachProfile = await prisma.coachProfile.findUnique({
+    where: { userId: coachId },
+    select: { subscriptionTier: true },
+  });
+  const subscriptionTier = coachProfile?.subscriptionTier ?? "FREE";
 
   const [
     totalClients,
@@ -183,6 +192,17 @@ export default async function CoachDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        {/* Quota Widget */}
+        <QuotaWidget tier={subscriptionTier} currentClientCount={totalClients} />
+
+        {/* Churn Alerts */}
+        <ChurnAlerts />
+
+        {/* Check-in Manager */}
+        <CheckInManager
+          clients={topClientRelations.map((r) => ({ id: r.client.id, name: r.client.name }))}
+        />
+
         {/* Pending Requests */}
         {pendingRequests.length > 0 && (
           <div

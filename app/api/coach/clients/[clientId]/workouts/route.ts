@@ -27,19 +27,30 @@ export async function GET(
   const workouts = await prisma.workout.findMany({
     where: { clientId },
     include: {
-      template: true,
+      template: {
+        include: {
+          exercises: { select: { exerciseId: true, prescribedRestSeconds: true } },
+        },
+      },
       sets: { include: { exercise: true }, orderBy: [{ exerciseId: "asc" }, { setNumber: "asc" }] },
       comments: { include: { author: true }, orderBy: { createdAt: "asc" } }
     },
     orderBy: { startedAt: "desc" }
   });
 
-  const enrichedWorkouts = workouts.map((w) => ({
-    ...w,
-    durationMinutes: w.finishedAt
-      ? Math.round((w.finishedAt.getTime() - w.startedAt.getTime()) / 60000)
-      : null
-  }));
+  const enrichedWorkouts = workouts.map((w) => {
+    const restMap = Object.fromEntries(
+      w.template.exercises.map((e) => [e.exerciseId, e.prescribedRestSeconds ?? null])
+    );
+    return {
+      ...w,
+      template: { id: w.template.id, name: w.template.name, description: w.template.description },
+      sets: w.sets.map((s) => ({ ...s, prescribedRestSeconds: restMap[s.exerciseId] ?? null })),
+      durationMinutes: w.finishedAt
+        ? Math.round((w.finishedAt.getTime() - w.startedAt.getTime()) / 60000)
+        : null,
+    };
+  });
 
   return NextResponse.json({ workouts: enrichedWorkouts });
 }

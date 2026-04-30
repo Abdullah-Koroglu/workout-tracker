@@ -3,6 +3,7 @@ import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { CheckInWidget } from "@/components/client/CheckInWidget";
 
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
   const initials = name
@@ -166,6 +167,9 @@ export default async function ClientDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        {/* Check-in Widget */}
+        <CheckInWidget />
+
         {/* Weekly Focus */}
         <div
           className="bg-white rounded-[18px] p-4 shadow-sm"

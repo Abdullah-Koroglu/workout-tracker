@@ -16,6 +16,7 @@ type SaveSetPayload = {
   durationMinutes?: number;
   durationSeconds?: number;
   completed: boolean;
+  actualRestSeconds?: number;
 };
 
 type OfflineQueueItem = {
@@ -186,7 +187,8 @@ export function useSaveSet(workoutId: string) {
   const saveWeightSet = async (
     exerciseId: string,
     setNumber: number,
-    payload: { weightKg: number; reps: number; rir: number }
+    payload: { weightKg: number; reps: number; rir: number },
+    actualRestSeconds?: number
   ): Promise<SavedSet | null> => {
     if (!workoutId) return null;
 
@@ -194,7 +196,8 @@ export function useSaveSet(workoutId: string) {
       exerciseId,
       setNumber,
       ...payload,
-      completed: true
+      completed: true,
+      ...(actualRestSeconds !== undefined ? { actualRestSeconds } : {}),
     };
 
     try {

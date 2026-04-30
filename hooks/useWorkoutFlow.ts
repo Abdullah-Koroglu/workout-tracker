@@ -35,6 +35,7 @@ export type ExerciseItem = {
   targetSets: number | null;
   targetReps: number | null;
   targetRir: number | null;
+  prescribedRestSeconds: number | null;
   suggestedWeightKg: number | null;
   suggestedReps: number | null;
   suggestedRir: number | null;

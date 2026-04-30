@@ -83,6 +83,8 @@ export function RegisterContent() {
   const searchParams = useSearchParams();
   const defaultRole  = searchParams.get("role") === "coach" ? "COACH" : "CLIENT";
 
+  const inviteCode = searchParams.get("invite") ?? undefined;
+
   const [step, setStep]         = useState<1 | 2>(1);
   const [error, setError]       = useState<string | null>(null);
   const [showPass, setShowPass] = useState(false);
@@ -109,10 +111,11 @@ export function RegisterContent() {
 
   const onSubmit = async (values: RegisterInput) => {
     setError(null);
+    const payload = inviteCode ? { ...values, inviteCode } : values;
     const res  = await fetch("/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(values),
+      body: JSON.stringify(payload),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) { setError(data.error ?? "Kayıt oluşturulamadı."); return; }

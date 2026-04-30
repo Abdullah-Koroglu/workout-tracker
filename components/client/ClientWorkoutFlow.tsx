@@ -30,6 +30,8 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [cancelling, setCancelling] = useState(false);
   const [bottomBarVisible, setBottomBarVisible] = useState(true);
   const lastScrollYRef = useRef(0);
+  // Tracks the timestamp (ms) when the last set was completed per exercise
+  const lastSetCompletedAtRef = useRef<Record<string, number>>({});
 
   // Load workout data and initialize state
   const [workoutState, workoutActions] = useWorkoutFlow(assignmentId);
@@ -161,10 +163,20 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   ) => {
     const saveKey = `${exerciseId}-${setNumber}`;
     setSavingKey(saveKey);
-    const newSet = await saveWeightSetApi(exerciseId, setNumber, payload);
+
+    // Calculate rest seconds since last completed set for this exercise
+    const lastCompletedAt = lastSetCompletedAtRef.current[exerciseId];
+    const actualRestSeconds =
+      lastCompletedAt !== undefined
+        ? Math.round((Date.now() - lastCompletedAt) / 1000)
+        : undefined;
+
+    const newSet = await saveWeightSetApi(exerciseId, setNumber, payload, actualRestSeconds);
     setSavingKey(null);
-    
+
     if (newSet) {
+      // Record completion time for this exercise (rest starts now)
+      lastSetCompletedAtRef.current[exerciseId] = Date.now();
       workoutActions.addSet(newSet);
 
       if (newSet.isPR) {

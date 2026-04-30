@@ -1,4 +1,5 @@
 import { ProgressCharts } from "@/components/coach/ProgressCharts";
+import { VolumeHeatmap } from "@/components/coach/VolumeHeatmap";
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -82,6 +83,7 @@ export default async function ClientProgressPage({
           </Link>
         </div>
       </section>
+      <VolumeHeatmap clientId={clientId} />
       <ProgressCharts clientId={clientId} exercises={exercises} />
     </div>
   );

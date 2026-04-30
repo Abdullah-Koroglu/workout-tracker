@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Check, X, ChevronRight, Search } from "lucide-react";
+import { MessageCircle, Check, X, ChevronRight, Search, Info } from "lucide-react";
 
 import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
@@ -16,61 +16,142 @@ type ClientRelationItem = {
   compliance?: number;
 };
 
-function ClientAvatar({ name, size = 44 }: { name: string; size?: number }) {
-  const initials = name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
+function complianceColor(score: number): string {
+  if (score >= 80) return "#22C55E";
+  if (score >= 50) return "#F59E0B";
+  return "#EF4444";
+}
+
+function complianceLabel(score: number): string {
+  if (score >= 80) return "İyi";
+  if (score >= 50) return "Orta";
+  return "Düşük";
+}
+
+function ComplianceBadge({ score }: { score: number }) {
+  const [tip, setTip] = useState(false);
+  const color = complianceColor(score);
+  const label = complianceLabel(score);
+
   return (
-    <div
-      className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
-      style={{
-        width: size,
-        height: size,
-        fontSize: size * 0.36,
-        background: "linear-gradient(135deg, #1A365D, #2D4A7ACC)",
-        boxShadow: "0 2px 8px #1A365D44",
-      }}
-    >
-      {initials}
+    <div className="relative flex items-center gap-1.5">
+      {/* Color ring badge */}
+      <div
+        className="flex h-7 items-center gap-1 rounded-full px-2 text-[11px] font-black text-white"
+        style={{ background: color }}
+      >
+        %{score}
+        <span className="font-normal opacity-80">· {label}</span>
+      </div>
+
+      {/* Tooltip trigger */}
+      <button
+        type="button"
+        onMouseEnter={() => setTip(true)}
+        onMouseLeave={() => setTip(false)}
+        onFocus={() => setTip(true)}
+        onBlur={() => setTip(false)}
+        className="text-slate-300 hover:text-slate-400 focus:outline-none"
+      >
+        <Info className="h-3.5 w-3.5" />
+      </button>
+
+      {tip && (
+        <div
+          className="absolute bottom-full left-0 z-20 mb-2 w-56 rounded-xl px-3 py-2.5 text-[12px] leading-relaxed text-white shadow-lg"
+          style={{ background: "#1E293B" }}
+        >
+          <p className="font-black mb-0.5">Sadakat Skoru</p>
+          <p className="text-white/70">
+            Son 30 günde tamamlanan / atanan antrenman oranı. Atlanmış
+            kardiyo setleri için ek ceza uygulanır.
+          </p>
+          <p className="mt-1 font-bold" style={{ color }}>
+            {score >= 80
+              ? "Danışan düzenli antrenman yapıyor."
+              : score >= 50
+              ? "Dikkat: Bazı antrenmanlar atlanıyor."
+              : "Risk: Danışan antrenmanları sıklıkla atıyor."}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+
+function ComplianceRing({ name, score, size = 44 }: { name: string; score?: number; size?: number }) {
+  const initials = name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+  const ringColor = score !== undefined ? complianceColor(score) : "#1A365D";
+  const circumference = 2 * Math.PI * 20;
+  const dashOffset = score !== undefined ? circumference * (1 - score / 100) : circumference;
+
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      {score !== undefined && (
+        <svg
+          className="absolute inset-0"
+          width={size}
+          height={size}
+          viewBox="0 0 48 48"
+          style={{ transform: "rotate(-90deg)" }}
+        >
+          <circle cx="24" cy="24" r="20" fill="none" stroke="#F1F5F9" strokeWidth="3.5" />
+          <circle
+            cx="24"
+            cy="24"
+            r="20"
+            fill="none"
+            stroke={ringColor}
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={dashOffset}
+            style={{ transition: "stroke-dashoffset 0.6s ease" }}
+          />
+        </svg>
+      )}
+      <div
+        className="absolute inset-[4px] flex items-center justify-center rounded-full text-white font-bold"
+        style={{
+          fontSize: (size - 8) * 0.36,
+          background: `linear-gradient(135deg, #1A365D, #2D4A7ACC)`,
+          boxShadow: "0 2px 8px #1A365D44",
+        }}
+      >
+        {initials}
+      </div>
+    </div>
+  );
+}
+
 
 function MetricCard({
   label,
   value,
   accent,
+  suffix,
 }: {
   label: string;
   value: number;
   accent: string;
+  suffix?: string;
 }) {
   return (
     <div
       className="flex-1 rounded-[18px] p-3.5"
       style={{
         background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
-        borderLeft: `3px solid ${accent}`,
         boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
         border: `1px solid rgba(0,0,0,0.06)`,
         borderLeftColor: accent,
         borderLeftWidth: 3,
       }}
     >
-      <div
-        className="text-[10px] font-bold uppercase tracking-wide"
-        style={{ color: "#94A3B8" }}
-      >
+      <div className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "#94A3B8" }}>
         {label}
       </div>
-      <div
-        className="text-[26px] font-black leading-tight mt-0.5"
-        style={{ color: accent }}
-      >
-        {value}
+      <div className="text-[26px] font-black leading-tight mt-0.5 flex items-baseline gap-0.5" style={{ color: accent }}>
+        {value}{suffix && <span className="text-[16px]">{suffix}</span>}
       </div>
     </div>
   );
@@ -133,18 +214,38 @@ export function CoachClientsManager({
     );
   };
 
-  const acceptedFiltered = filterList(accepted);
+  const acceptedFiltered = filterList(accepted).sort((a, b) => {
+    // Null (no data) last, then ascending score so lowest compliance appears first
+    if (a.compliance === undefined && b.compliance === undefined) return 0;
+    if (a.compliance === undefined) return 1;
+    if (b.compliance === undefined) return -1;
+    return a.compliance - b.compliance;
+  });
   const pendingFiltered = filterList(pending);
   const list = tab === "accepted" ? acceptedFiltered : pendingFiltered;
 
   return (
     <div className="flex flex-col gap-3.5">
       {/* Metric Cards */}
-      <div className="flex gap-2.5">
-        <MetricCard label="Toplam" value={accepted.length + pending.length} accent="#1E293B" />
-        <MetricCard label="Aktif" value={accepted.length} accent="#22C55E" />
-        <MetricCard label="Bekleyen" value={pending.length} accent="#F59E0B" />
-      </div>
+      {(() => {
+        const withScore = accepted.filter((c) => c.compliance !== undefined);
+        const avgCompliance =
+          withScore.length > 0
+            ? Math.round(withScore.reduce((s, c) => s + (c.compliance ?? 0), 0) / withScore.length)
+            : null;
+        return (
+          <div className="flex gap-2.5">
+            <MetricCard label="Toplam" value={accepted.length + pending.length} accent="#1E293B" />
+            <MetricCard label="Aktif" value={accepted.length} accent="#22C55E" />
+            <MetricCard
+              label="Ort. Sadakat"
+              value={avgCompliance ?? 0}
+              suffix="%"
+              accent={avgCompliance !== null ? complianceColor(avgCompliance) : "#94A3B8"}
+            />
+          </div>
+        );
+      })()}
 
       {/* Search */}
       <div
@@ -214,7 +315,7 @@ export function CoachClientsManager({
               }}
             >
               <div className="flex items-center gap-3">
-                <ClientAvatar name={client.name} size={44} />
+                <ComplianceRing name={client.name} score={client.compliance} size={44} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
                     {client.name}
@@ -223,26 +324,14 @@ export function CoachClientsManager({
                     {client.email}
                   </div>
                   {client.compliance !== undefined && (
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <div
-                        className="h-1 rounded-full overflow-hidden"
-                        style={{ background: "#F1F5F9", maxWidth: 80, flex: 1 }}
-                      >
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${client.compliance}%`,
-                            background: client.compliance >= 80 ? "#22C55E" : "#F59E0B",
-                          }}
-                        />
-                      </div>
-                      <span
-                        className="text-[11px] font-bold"
-                        style={{ color: client.compliance >= 80 ? "#22C55E" : "#F59E0B" }}
-                      >
-                        %{client.compliance}
-                      </span>
+                    <div className="mt-1.5" onClick={(e) => e.stopPropagation()}>
+                      <ComplianceBadge score={client.compliance} />
                     </div>
+                  )}
+                  {client.compliance === undefined && (
+                    <span className="mt-1 inline-block text-[11px] text-slate-400">
+                      Henüz antrenman yok
+                    </span>
                   )}
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">

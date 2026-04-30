@@ -70,12 +70,6 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
     return d.getTime() === today.getTime();
   });
 
-  const overdueItems = assignments.filter((a) => {
-    const d = new Date(a.scheduledFor);
-    d.setHours(0, 0, 0, 0);
-    return d.getTime() < today.getTime();
-  });
-
   const upcomingItems = assignments.filter((a) => {
     const d = new Date(a.scheduledFor);
     d.setHours(0, 0, 0, 0);
@@ -181,17 +175,6 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
 
   return (
     <div className="flex flex-col gap-4">
-      {overdueItems.length > 0 && (
-        <div>
-          <div
-            className="text-[10px] font-bold uppercase tracking-wider mb-2"
-            style={{ color: "#DC2626" }}
-          >
-            Geciken
-          </div>
-          {renderGroup(overdueItems)}
-        </div>
-      )}
       {todayItems.length > 0 && (
         <div>
           <div
@@ -212,6 +195,18 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
             Gelecek
           </div>
           {renderGroup(upcomingItems)}
+        </div>
+      )}
+      {todayItems.length === 0 && upcomingItems.length === 0 && (
+        <div
+          className="rounded-[18px] p-6 text-center text-sm"
+          style={{
+            background: "#F8FAFC",
+            border: "1.5px dashed #E2E8F0",
+            color: "#94A3B8",
+          }}
+        >
+          Bugün veya ileri tarih için bekleyen atama yok.
         </div>
       )}
     </div>

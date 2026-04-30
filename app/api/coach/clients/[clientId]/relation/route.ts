@@ -5,6 +5,8 @@ import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { sendPushNotification } from "@/lib/push-notifications";
+import { canAcceptNewClient, TIER_LIMITS } from "@/lib/config/pricing";
+import { TIER_LABELS, TIER_CLIENT_LIMITS } from "@/lib/subscription";
 
 export async function PATCH(
   request: Request,
@@ -19,6 +21,31 @@ export async function PATCH(
 
   if (!["ACCEPTED", "REJECTED"].includes(status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
+  }
+
+  if (status === "ACCEPTED") {
+    const coachProfile = await prisma.coachProfile.findUnique({
+      where: { userId: auth.session.user.id },
+      select: { subscriptionTier: true },
+    });
+
+    const tier = coachProfile?.subscriptionTier ?? "FREE";
+    const currentCount = await prisma.coachClientRelation.count({
+      where: { coachId: auth.session.user.id, status: "ACCEPTED" },
+    });
+
+    if (!canAcceptNewClient(currentCount, tier)) {
+      const limit = TIER_LIMITS[tier].maxClients;
+      return NextResponse.json(
+        {
+          error: `${TIER_LABELS[tier]} planında maksimum ${limit} danışan kabul edebilirsin. Daha fazlası için planını yükselt.`,
+          code: "LIMIT_REACHED",
+          tier,
+          limit,
+        },
+        { status: 403 }
+      );
+    }
   }
 
   const relation = await prisma.coachClientRelation.upsert({

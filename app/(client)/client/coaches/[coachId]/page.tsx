@@ -67,6 +67,12 @@ export default async function CoachVitrinPage({
   const relationStatus = coach.coachRelations[0]?.status ?? null;
   const messageHref   = `/client/messages?withUserId=${coachId}`;
   const pkgCount      = profile?.packages.length ?? 0;
+  const relationMeta =
+    relationStatus === "ACCEPTED"
+      ? { label: "Aktif Bağlantı", color: "#16A34A", bg: "rgba(34,197,94,0.12)" }
+      : relationStatus === "PENDING"
+        ? { label: "İstek Beklemede", color: "#D97706", bg: "rgba(245,158,11,0.12)" }
+        : { label: "Henüz Bağlı Değilsin", color: "#64748B", bg: "rgba(148,163,184,0.14)" };
 
   return (
     <div className="space-y-6 pb-16">
@@ -178,7 +184,7 @@ export default async function CoachVitrinPage({
               {profile!.packages.map((pkg) => (
                 <div
                   key={pkg.id}
-                  className="flex flex-col rounded-2xl bg-white overflow-hidden"
+                  className="group flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                   style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                 >
                   {/* top accent */}
@@ -202,6 +208,11 @@ export default async function CoachVitrinPage({
                           </p>
                         )}
                       </div>
+                    </div>
+
+                    <div className="mb-3 rounded-xl bg-slate-50 px-3 py-2.5">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Paket Türü</p>
+                      <p className="mt-0.5 text-xs font-bold text-slate-600">Online Koçluk</p>
                     </div>
 
                     <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
@@ -235,7 +246,7 @@ export default async function CoachVitrinPage({
         </div>
 
         {/* ── RIGHT: CTA sidebar ── */}
-        <div className="space-y-4">
+        <div className="space-y-4 self-start xl:sticky xl:top-24">
 
           {/* Request / status card */}
           <div
@@ -245,6 +256,9 @@ export default async function CoachVitrinPage({
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
               Bağlantı
             </h3>
+            <div className="rounded-xl px-3 py-2" style={{ background: relationMeta.bg }}>
+              <p className="text-[11px] font-black" style={{ color: relationMeta.color }}>{relationMeta.label}</p>
+            </div>
             <RequestCoachButton coachId={coachId} initialStatus={relationStatus} />
           </div>
 

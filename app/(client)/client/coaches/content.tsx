@@ -116,6 +116,10 @@ export default function ClientCoachesContent() {
     pending:  coaches.filter((c) => c.requestStatus === "PENDING").length,
     pool:     coaches.length,
   }), [coaches]);
+  const relationByCoachId = useMemo(
+    () => new Map(coaches.map((coach) => [coach.id, coach.requestStatus])),
+    [coaches]
+  );
 
   const myCoaches  = coaches.filter((c) => c.requestStatus === "ACCEPTED");
   const pending    = coaches.filter((c) => c.requestStatus === "PENDING");
@@ -193,119 +197,160 @@ export default function ClientCoachesContent() {
 
       {/* ── MY COACHES TAB ── */}
       {tab === "my" && (
-        <div className="space-y-6">
-          {/* Active coaches grid */}
-          {myCoaches.length > 0 && (
-            <div>
-              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">Aktif Bağlantılar</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {myCoaches.map((coach) => (
-                  <div
-                    key={coach.id}
-                    className="bg-white rounded-2xl overflow-hidden"
-                    style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-                  >
-                    {/* Top accent */}
-                    <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #22C55E, #16A34A)" }} />
-                    <div className="p-5">
-                      <div className="flex items-start gap-3 mb-4">
-                        <CoachAvatar name={coach.name} size={52} />
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <p className="font-black text-slate-800 text-base truncate">{coach.name}</p>
-                            <span
-                              className="flex-shrink-0 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-                              style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}
-                            >
-                              <BadgeCheck className="inline h-3 w-3 mr-0.5" />
-                              Aktif
-                            </span>
+        <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
+          <div className="space-y-6 xl:col-span-2">
+            {/* Active coaches grid */}
+            {myCoaches.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Aktif Bağlantılar</h2>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {myCoaches.map((coach) => (
+                    <div
+                      key={coach.id}
+                      className="overflow-hidden rounded-2xl bg-white"
+                      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                    >
+                      {/* Top accent */}
+                      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #22C55E, #16A34A)" }} />
+                      <div className="p-5">
+                        <div className="mb-4 flex items-start gap-3">
+                          <CoachAvatar name={coach.name} size={52} />
+                          <div className="min-w-0 flex-1">
+                            <div className="mb-1 flex items-center gap-2">
+                              <p className="truncate text-base font-black text-slate-800">{coach.name}</p>
+                              <span
+                                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                                style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}
+                              >
+                                <BadgeCheck className="mr-0.5 inline h-3 w-3" />
+                                Aktif
+                              </span>
+                            </div>
+                            <p className="truncate text-xs text-slate-400">{coach.email}</p>
                           </div>
-                          <p className="text-xs text-slate-400 truncate">{coach.email}</p>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Link
+                            href={`/client/messages?withUserId=${coach.id}`}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+                            style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            Mesaj
+                          </Link>
+                          <ActionMenu
+                            items={[{
+                              label: "Bağlantıyı Kaldır",
+                              danger: true,
+                              onClick: () => { void disconnectCoach(coach.id); },
+                            }]}
+                          />
                         </div>
                       </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-                      <div className="flex gap-2">
-                        <Link
-                          href={`/client/messages?withUserId=${coach.id}`}
-                          className="flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
-                          style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
+            {/* Pending requests */}
+            {pending.length > 0 && (
+              <div>
+                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Bekleyen İstekler</h2>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {pending.map((coach) => (
+                    <div
+                      key={coach.id}
+                      className="overflow-hidden rounded-2xl bg-white"
+                      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
+                      <div className="flex items-center gap-3 p-5">
+                        <CoachAvatar name={coach.name} size={44} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-black text-slate-800">{coach.name}</p>
+                          <p className="truncate text-xs text-slate-400">{coach.email}</p>
+                        </div>
+                        <span
+                          className="flex flex-shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wider"
+                          style={{ background: "rgba(245,158,11,0.12)", color: "#D97706" }}
                         >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          Mesaj
-                        </Link>
-                        <ActionMenu
-                          items={[{
-                            label: "Bağlantıyı Kaldır",
-                            danger: true,
-                            onClick: () => { void disconnectCoach(coach.id); },
-                          }]}
-                        />
+                          <Clock3 className="h-3 w-3" />
+                          Bekliyor
+                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Pending requests */}
-          {pending.length > 0 && (
-            <div>
-              <h2 className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-3">Bekleyen İstekler</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {pending.map((coach) => (
-                  <div
-                    key={coach.id}
-                    className="bg-white rounded-2xl overflow-hidden"
-                    style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-                  >
-                    <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
-                    <div className="p-5 flex items-center gap-3">
-                      <CoachAvatar name={coach.name} size={44} />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-black text-slate-800 text-sm truncate">{coach.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{coach.email}</p>
-                      </div>
-                      <span
-                        className="flex-shrink-0 flex items-center gap-1 text-[9px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full"
-                        style={{ background: "rgba(245,158,11,0.12)", color: "#D97706" }}
-                      >
-                        <Clock3 className="h-3 w-3" />
-                        Bekliyor
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {myCoaches.length === 0 && pending.length === 0 && (
-            <div
-              className="bg-white rounded-2xl p-10 text-center"
-              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-            >
+            {/* Empty state */}
+            {myCoaches.length === 0 && pending.length === 0 && (
               <div
-                className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
-                style={{ background: "rgba(249,115,22,0.08)" }}
+                className="rounded-2xl bg-white p-10 text-center"
+                style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
               >
-                <Users className="h-7 w-7 text-orange-300" />
+                <div
+                  className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
+                  style={{ background: "rgba(249,115,22,0.08)" }}
+                >
+                  <Users className="h-7 w-7 text-orange-300" />
+                </div>
+                <p className="font-bold text-slate-700">Henüz bağlı koçun yok</p>
+                <p className="mb-4 mt-1 text-sm text-slate-400">Sana uygun bir koç bulmak için "Koç Bul" sekmesine geç.</p>
+                <button
+                  type="button"
+                  onClick={() => setTab("find")}
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black text-white"
+                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
+                >
+                  <Zap className="h-4 w-4" />
+                  Koç Bul
+                </button>
               </div>
-              <p className="font-bold text-slate-700">Henüz bağlı koçun yok</p>
-              <p className="text-sm text-slate-400 mt-1 mb-4">Sana uygun bir koç bulmak için "Koç Bul" sekmesine geç.</p>
-              <button
-                type="button"
-                onClick={() => setTab("find")}
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black text-white"
-                style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
-              >
-                <Zap className="h-4 w-4" />
-                Koç Bul
-              </button>
+            )}
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-2xl bg-white p-5" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Bağlantı Özeti</h3>
+              <div className="space-y-2.5">
+                {[
+                  { label: "Aktif Koç", value: stats.accepted, color: "#16A34A", bg: "rgba(34,197,94,0.12)" },
+                  { label: "Bekleyen", value: stats.pending, color: "#D97706", bg: "rgba(245,158,11,0.12)" },
+                  { label: "Toplam", value: coaches.length, color: "#2563EB", bg: "rgba(37,99,235,0.12)" },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: item.bg }}>
+                    <span className="text-xs font-bold text-slate-600">{item.label}</span>
+                    <span className="text-base font-black" style={{ color: item.color }}>{item.value}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+
+            <div className="rounded-2xl bg-white p-5" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Hızlı İşlemler</h3>
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setTab("find")}
+                  className="flex w-full items-center justify-between rounded-xl p-3 text-left transition-colors hover:bg-slate-50"
+                >
+                  <span className="text-sm font-bold text-slate-700">Yeni Koç Keşfet</span>
+                  <span className="text-xs font-black text-orange-500">Aç</span>
+                </button>
+                <Link
+                  href="/client/messages"
+                  className="flex w-full items-center justify-between rounded-xl p-3 text-left transition-colors hover:bg-slate-50"
+                >
+                  <span className="text-sm font-bold text-slate-700">Mesajları Gör</span>
+                  <span className="text-xs font-black text-[#1A365D]">Git</span>
+                </Link>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -313,67 +358,79 @@ export default function ClientCoachesContent() {
       {tab === "find" && (
         <div className="space-y-5">
           {/* Search bar */}
-          <form
-            onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty); }}
-            className="space-y-3"
-          >
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Koç adı ile ara..."
-                  className="h-11 w-full rounded-xl border-0 bg-white pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                  style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-                />
+          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+            <form
+              onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty); }}
+              className="space-y-3 xl:col-span-2"
+            >
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Koç adı ile ara..."
+                    className="h-11 w-full rounded-xl border-0 bg-white pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                    style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-xl px-5 text-sm font-black text-white transition hover:opacity-90"
+                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
+                >
+                  Ara
+                </button>
+                {(query || specialty) && (
+                  <button
+                    type="button"
+                    onClick={() => { setQuery(""); setSpecialty(""); void loadMarket("", ""); }}
+                    className="rounded-xl border border-slate-200 px-3 text-slate-400 transition hover:bg-slate-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
               </div>
-              <button
-                type="submit"
-                className="rounded-xl px-5 text-sm font-black text-white transition hover:opacity-90"
-                style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
-              >
-                Ara
-              </button>
-              {(query || specialty) && (
-                <button
-                  type="button"
-                  onClick={() => { setQuery(""); setSpecialty(""); void loadMarket("", ""); }}
-                  className="rounded-xl border border-slate-200 px-3 text-slate-400 hover:bg-slate-50 transition"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
 
-            {/* Specialty pills */}
-            <div className="flex flex-wrap gap-2">
-              {POPULAR_SPECIALTIES.map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => {
-                    const next = specialty === s ? "" : s;
-                    setSpecialty(next);
-                    void loadMarket(query, next);
-                  }}
-                  className={[
-                    "rounded-full px-3 py-1.5 text-xs font-bold transition-all",
-                    specialty === s
-                      ? "text-white"
-                      : "bg-white text-slate-500 ring-1 ring-black/10 hover:text-orange-500",
-                  ].join(" ")}
-                  style={specialty === s ? {
-                    background: "linear-gradient(135deg, #FB923C, #EA580C)",
-                    boxShadow: "0 2px 8px rgba(249,115,22,0.3)",
-                  } : undefined}
-                >
-                  {s}
-                </button>
-              ))}
+              {/* Specialty pills */}
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_SPECIALTIES.map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => {
+                      const next = specialty === s ? "" : s;
+                      setSpecialty(next);
+                      void loadMarket(query, next);
+                    }}
+                    className={[
+                      "rounded-full px-3 py-1.5 text-xs font-bold transition-all",
+                      specialty === s
+                        ? "text-white"
+                        : "bg-white text-slate-500 ring-1 ring-black/10 hover:text-orange-500",
+                    ].join(" ")}
+                    style={specialty === s ? {
+                      background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                      boxShadow: "0 2px 8px rgba(249,115,22,0.3)",
+                    } : undefined}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </form>
+
+            <div className="rounded-2xl bg-white p-4" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Keşif Özeti</p>
+              <p className="mt-2 text-2xl font-black text-slate-800">{marketCoaches.length}</p>
+              <p className="text-xs text-slate-400">eşleşen koç</p>
+              <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5">
+                <p className="text-[11px] font-bold text-slate-600">İpucu</p>
+                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Önce uzmanlık filtresi seç, sonra isim aramasıyla daralt.</p>
+              </div>
             </div>
-          </form>
+          </div>
 
           {/* Results */}
           {marketLoading ? (
@@ -405,6 +462,10 @@ export default function ClientCoachesContent() {
                 const profile  = coach.coachProfile;
                 const specs    = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
                 const pkgCount = profile?.packages.length ?? 0;
+                const relationStatus = relationByCoachId.get(coach.id) ?? null;
+                const isPending = relationStatus === "PENDING";
+                const isConnected = relationStatus === "ACCEPTED";
+                const isRequestDisabled = loadingCoachId === coach.id || isPending || isConnected;
 
                 return (
                   <Link
@@ -434,6 +495,16 @@ export default function ClientCoachesContent() {
                             </p>
                           )}
                         </div>
+                        {isConnected && (
+                          <span className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
+                            Aktif
+                          </span>
+                        )}
+                        {isPending && (
+                          <span className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
+                            Bekliyor
+                          </span>
+                        )}
                       </div>
 
                       {/* Bio */}
@@ -475,16 +546,27 @@ export default function ClientCoachesContent() {
                       </div>
 
                       {/* Request button */}
-                      <button
-                        type="button"
-                        onClick={(e) => { e.preventDefault(); void requestCoach(coach.id); }}
-                        disabled={loadingCoachId === coach.id}
-                        className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                        style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
-                      >
-                        <UserPlus className="h-3.5 w-3.5" />
-                        {loadingCoachId === coach.id ? "Gönderiliyor..." : "İstek Gönder"}
-                      </button>
+                      {isConnected ? (
+                        <Link
+                          href={`/client/messages?withUserId=${coach.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1A365D] py-2.5 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          Mesaj Gönder
+                        </Link>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.preventDefault(); void requestCoach(coach.id); }}
+                          disabled={isRequestDisabled}
+                          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-55"
+                          style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
+                        >
+                          <UserPlus className="h-3.5 w-3.5" />
+                          {loadingCoachId === coach.id ? "Gönderiliyor..." : isPending ? "İstek Beklemede" : "İstek Gönder"}
+                        </button>
+                      )}
                     </div>
                   </Link>
                 );

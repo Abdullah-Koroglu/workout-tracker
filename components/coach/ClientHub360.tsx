@@ -617,12 +617,12 @@ function HistoryTab({
               <span className="h-3 w-3 rounded bg-slate-200" /> Dinlenme
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <div className="flex gap-0.5">
+          <div className="overflow-x-auto  p-4">
+            <div className="flex gap-0.5 ">
               {/* Day labels */}
-              <div className="mr-1 flex flex-col gap-0.5">
+              <div className="mr-1 flex flex-col gap-0.5 ">
                 {DAY_LABELS.map((d, i) => (
-                  <div key={i} className="flex h-5 w-6 items-center" style={{ fontSize: 9, color: "#94A3B8" }}>{d}</div>
+                  <div key={i} className="flex h-14 w-6 items-center" style={{ fontSize: 9, color: "#94A3B8" }}>{d}</div>
                 ))}
               </div>
               {/* Columns (each week) */}
@@ -634,10 +634,10 @@ function HistoryTab({
                       : "#E2E8F0";
                     return (
                       <div key={di} className="rounded cursor-pointer transition-all duration-150" title={`${cell.date}: ${cell.status}`}
-                        style={{ width: 24, height: 24, background: bg }}
+                        style={{ width: 54, height: 54, background: bg }}
                         onMouseEnter={(e) => {
                           (e.target as HTMLElement).style.transform = "scale(1.25)";
-                          (e.target as HTMLElement).style.boxShadow = `0 4px 12px ${bg}66`;
+                          (e.target as HTMLElement).style.boxShadow = `0 4px 12px #ffffff66`;
                         }}
                         onMouseLeave={(e) => {
                           (e.target as HTMLElement).style.transform = "scale(1)";

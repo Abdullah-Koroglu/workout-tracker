@@ -7,8 +7,6 @@ import { requireAuth } from "@/lib/api-auth";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 const AI_SYSTEM_PROMPT =
   "Sen profesyonel bir diyetisyenin yapay zeka asistanısın. Görevin, danışanın girdiği öğün notunu (clientNote) ve diyet uyum etiketini (adherenceTag: GREEN, YELLOW veya RED) analiz etmektir. Danışanın psikolojik durumunu, diyete uyumunu ve varsa diyetten kopma riskini çıkar. Koç için çok kısa (maksimum 2 cümle) klinik, profesyonel ve aksiyon alınabilir bir özet/uyarı yaz. Yanıtın doğrudan koça hitap etmeli.";
 
@@ -18,12 +16,14 @@ async function generateAiSummary(
 ): Promise<string | null> {
   if (!clientNote || clientNote.trim().length < 3) return null;
 
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
     console.error("[NutritionLog] OPENAI_API_KEY missing; skipping AI summary.");
     return null;
   }
 
   try {
+    const openai = new OpenAI({ apiKey });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       temperature: 0.4,

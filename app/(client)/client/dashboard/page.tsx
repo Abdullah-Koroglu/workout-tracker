@@ -167,6 +167,26 @@ export default async function ClientDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        <Link
+          href="/client/nutrition/log"
+          className="block rounded-[20px] p-5 text-white shadow-sm transition hover:opacity-95"
+          style={{
+            background: "linear-gradient(135deg, #F97316, #EA580C)",
+            boxShadow: "0 12px 30px rgba(234,88,12,0.32)",
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/75">Beslenme Takibi</p>
+              <h3 className="mt-1 text-[30px] font-black leading-none">📸 Öğün Kaydet</h3>
+              <p className="mt-2 text-sm font-semibold text-white/90">Kamerayı aç, etiketi seç, koçuna anında ilet.</p>
+            </div>
+            <div className="rounded-full bg-white/20 px-4 py-2 text-[12px] font-black uppercase tracking-wider">
+              Aç
+            </div>
+          </div>
+        </Link>
+
         {/* Check-in Widget */}
         <CheckInWidget />
 

@@ -59,12 +59,13 @@ export async function POST(request: Request) {
       coachTier = profile?.subscriptionTier ?? "FREE";
     }
 
+    const normalizedEmail = parsed.data.email.trim().toLowerCase();
     const hashedPassword = await bcrypt.hash(parsed.data.password, 10);
 
     const user = await prisma.user.create({
       data: {
         name: parsed.data.name,
-        email: parsed.data.email,
+        email: normalizedEmail,
         password: hashedPassword,
         role: parsed.data.role,
       },

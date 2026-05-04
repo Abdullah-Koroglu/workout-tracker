@@ -58,5 +58,21 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
 
+  pg_backup:
+    image: prodrigestivill/postgres-backup-local
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./db_backups:/backups # Yedeklerin atılacağı ve Rclone'un okuyacağı klasör
+    environment:
+      - POSTGRES_HOST=postgres
+      - POSTGRES_DB=fitcoach
+      - POSTGRES_USER=fitcoach
+      - POSTGRES_PASSWORD=fitcoach
+      - SCHEDULE=@daily # Her gece yarısı yedekler
+      - BACKUP_KEEP_DAYS=7 # Sunucuda sadece son 7 günü tutar, eskileri siler
+
 volumes:
   postgres_data:

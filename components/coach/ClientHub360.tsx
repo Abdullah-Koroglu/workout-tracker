@@ -640,7 +640,7 @@ export function ClientHub360(props: ClientHub360Props) {
   return (
     <div className="flex flex-col gap-0">
       {/* ── Sticky Header ─────────────────────────────────────────────────── */}
-      <div className="sticky -top-4 z-20 -mx-4 bg-gradient-to-br from-[#1A365D] to-[#2D4A7A] px-4 pb-3 pt-2 shadow-[0_4px_24px_rgba(26,54,93,0.3)] lg:static lg:mx-0 lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:from-transparent lg:to-transparent lg:pb-2 lg:pt-3 lg:shadow-sm">
+      <div className="sticky top-[calc(4rem+env(safe-area-inset-top))] z-20 -mx-4 bg-gradient-to-br from-[#1A365D] to-[#2D4A7A] px-4 pb-3 pt-2 shadow-[0_4px_24px_rgba(26,54,93,0.3)] lg:static lg:mx-0 lg:rounded-2xl lg:border lg:border-slate-200 lg:bg-white lg:from-transparent lg:to-transparent lg:pb-2 lg:pt-3 lg:shadow-sm">
         {/* Back + actions */}
         <div className="mb-3 flex items-center justify-between">
           <Link href="/coach/clients"

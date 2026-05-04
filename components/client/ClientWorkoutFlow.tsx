@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Bell, CheckCircle2, ChevronLeft, Dumbbell, Flame, Pencil, Plus, Settings, Sparkles, Target, Trash2, X } from "lucide-react";
+import { ArrowRight, CheckCircle2, Dumbbell, Flame, Pencil, Plus, Sparkles, Target, Trash2, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import { CardioTimer } from "@/components/client/CardioTimer";
@@ -28,8 +27,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [cancelling, setCancelling] = useState(false);
-  const [bottomBarVisible, setBottomBarVisible] = useState(true);
-  const lastScrollYRef = useRef(0);
   // Tracks the timestamp (ms) when the last set was completed per exercise
   const lastSetCompletedAtRef = useRef<Record<string, number>>({});
 
@@ -60,34 +57,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
     return () => clearInterval(interval);
   }, [workoutState.workoutId, workoutState.isLoading]);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    lastScrollYRef.current = window.scrollY;
-
-    const onScroll = () => {
-      const currentY = window.scrollY;
-      const delta = currentY - lastScrollYRef.current;
-
-      if (Math.abs(delta) < 8) {
-        return;
-      }
-
-      if (currentY < 80) {
-        setBottomBarVisible(true);
-      } else if (delta > 0) {
-        setBottomBarVisible(false);
-      } else {
-        setBottomBarVisible(true);
-      }
-
-      lastScrollYRef.current = currentY;
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   // Format elapsed time as HH:MM:SS
   const formatTime = (seconds: number): string => {
@@ -154,6 +123,15 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   }
 
   const activeExercise = exerciseManager.activeExercise;
+  const activeExerciseIndex = exerciseManager.exerciseState.findIndex(
+    (item) => item.exercise.exerciseId === activeExercise.exercise.exerciseId,
+  );
+  const nextExercise =
+    activeExerciseIndex >= 0
+      ? exerciseManager.exerciseState
+          .slice(activeExerciseIndex + 1)
+          .find((item) => !item.isCompleted) ?? null
+      : null;
 
   // Wrapper handlers for API calls with UI state management
   const handleSaveWeightSet = async (
@@ -450,6 +428,20 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                     ? "Protokolü takip et. Başlat, duraklat, durdur veya sıfırla."
                     : "Hedef tekrar ve RIR otomatik. İstersen ekstra set veya erken bitir."}
                 </p>
+                {activeExercise.isCompleted && nextExercise ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      exerciseManager.setActiveExerciseId(
+                        nextExercise.exercise.exerciseId,
+                      )
+                    }
+                    className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:opacity-90"
+                  >
+                    Sıradaki Harekete Geç
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                ) : null}
               </div>
 
               {/* Stats Grid - Mobile First */}
@@ -551,7 +543,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
       {/* Bottom bar: Completion options - Mobile Optimized */}
       <div
-        className={`fixed inset-x-3 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-40 rounded-2xl border border-border/60 bg-background/95 shadow-lg backdrop-blur transition-all duration-300 ease-out will-change-transform md:inset-x-0 md:bottom-0 md:z-20 md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none ${bottomBarVisible ? "translate-y-0 opacity-100" : "translate-y-[140%] opacity-0 pointer-events-none"} md:translate-y-0 md:opacity-100 md:pointer-events-auto`}
+        className="fixed inset-x-3 bottom-[calc(7rem+env(safe-area-inset-bottom))] z-40 rounded-2xl border border-border/60 bg-background/95 shadow-lg backdrop-blur md:inset-x-0 md:bottom-0 md:z-20 md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
       >
         <div className="mx-auto max-w-6xl flex flex-col gap-2 px-3 py-3 md:px-4 md:py-4 md:flex-row md:items-center md:justify-between">
           <div className="hidden md:block">
@@ -614,7 +606,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       {/* Intensity Score Modal */}
       {intensityModal && (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center p-4 md:items-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)" }}
         >
           <div
@@ -861,7 +853,7 @@ function WeightExerciseSection({
       )}
 
       {exercise.isCompleted && (
-        <div className="rounded-lg md:rounded-xl bg-primary/10 p-3 md:p-4 text-xs md:text-sm font-medium text-primary border border-primary/30">
+        <div className="rounded-lg md:rounded-xl bg-primary/10 p-3 md:p-4 text-xs md:text-sm font-medium text-primary border border-primary/30 mt-4">
           ✓ Bu hareket tamamlandı. 
           <p className="text-[.7rem] text-primary/50">İstersen ekstra set ekleyebilir veya sonraki harekese geçebilirsin.</p>
         </div>

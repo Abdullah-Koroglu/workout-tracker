@@ -7,20 +7,19 @@ import { requireAuth } from "@/lib/api-auth";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
 
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-  : null;
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const AI_SYSTEM_PROMPT =
-  "You are a clinical nutritionist's AI assistant analyzing a client's meal log. Your job is to extract the psychological state, dietary adherence, and potential risk factors from the client's note. Write a very brief (max 2 sentences) alert or summary for the human coach. Keep it professional, concise, and highlight if there's a risk of the client dropping the diet. Respond in Turkish.";
+  "Sen profesyonel bir diyetisyenin yapay zeka asistanısın. Görevin, danışanın girdiği öğün notunu (clientNote) ve diyet uyum etiketini (adherenceTag: GREEN, YELLOW veya RED) analiz etmektir. Danışanın psikolojik durumunu, diyete uyumunu ve varsa diyetten kopma riskini çıkar. Koç için çok kısa (maksimum 2 cümle) klinik, profesyonel ve aksiyon alınabilir bir özet/uyarı yaz. Yanıtın doğrudan koça hitap etmeli.";
 
 async function generateAiSummary(
   adherenceTag: AdherenceTag,
   clientNote: string | null
 ): Promise<string | null> {
   if (!clientNote || clientNote.trim().length < 3) return null;
-  if (!openai) {
-    console.warn("[NutritionLog] OPENAI_API_KEY missing; skipping AI summary.");
+
+  if (!process.env.OPENAI_API_KEY) {
+    console.error("[NutritionLog] OPENAI_API_KEY missing; skipping AI summary.");
     return null;
   }
 

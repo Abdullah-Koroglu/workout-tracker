@@ -8,6 +8,15 @@ import { useNotificationContext } from "@/contexts/NotificationContext";
 
 type AdherenceTag = "GREEN" | "YELLOW" | "RED";
 
+type NutritionPlan = {
+  targetCalories: number | null;
+  targetProtein: number | null;
+  targetCarbs: number | null;
+  targetFats: number | null;
+  dietDocumentUrl: string | null;
+  instructions: string | null;
+};
+
 const TAGS: Array<{
   tag: AdherenceTag;
   emoji: string;
@@ -25,11 +34,29 @@ export default function NutritionLogPage() {
   const router = useRouter();
   const { success, error, warning } = useNotificationContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [planLoading, setPlanLoading] = useState(true);
+  const [plan, setPlan] = useState<NutritionPlan | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [tag, setTag] = useState<AdherenceTag | null>(null);
   const [note, setNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadPlan = async () => {
+      setPlanLoading(true);
+      const response = await fetch("/api/client/nutrition-plan");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setPlanLoading(false);
+        return;
+      }
+      setPlan((data.plan as NutritionPlan | null) ?? null);
+      setPlanLoading(false);
+    };
+
+    void loadPlan();
+  }, []);
 
   useEffect(() => {
     if (!file) {
@@ -112,6 +139,65 @@ export default function NutritionLogPage() {
           <p className="text-xs text-slate-400">Saniyeler içinde, kalori sayma yok.</p>
         </div>
       </div>
+
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mb-2 flex items-center justify-between">
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Koç Planın</p>
+          {planLoading ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" />
+          ) : (
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+              {plan ? "Aktif" : "Plan bekleniyor"}
+            </span>
+          )}
+        </div>
+
+        {plan ? (
+          <div className="space-y-3">
+            {plan.instructions ? (
+              <p className="rounded-2xl bg-orange-50 px-3 py-2 text-xs font-semibold leading-relaxed text-slate-700">
+                {plan.instructions}
+              </p>
+            ) : (
+              <p className="text-xs text-slate-400">Koçun henüz özel talimat yazmadı.</p>
+            )}
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kalori</p>
+                <p className="text-sm font-black text-slate-800">{plan.targetCalories ?? "-"}</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Protein</p>
+                <p className="text-sm font-black text-slate-800">{plan.targetProtein ?? "-"} g</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Karbonhidrat</p>
+                <p className="text-sm font-black text-slate-800">{plan.targetCarbs ?? "-"} g</p>
+              </div>
+              <div className="rounded-xl bg-slate-50 px-3 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Yağ</p>
+                <p className="text-sm font-black text-slate-800">{plan.targetFats ?? "-"} g</p>
+              </div>
+            </div>
+
+            {plan.dietDocumentUrl ? (
+              <a
+                href={plan.dietDocumentUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex w-full items-center justify-center rounded-2xl bg-slate-800 px-4 py-3 text-xs font-black uppercase tracking-wider text-white"
+              >
+                Diyet Dokumanini Ac
+              </a>
+            ) : null}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400">
+            Koçun planını henüz paylaşmadı. Yine de öğününü gönderip davranış akışını sürdürebilirsin.
+          </p>
+        )}
+      </section>
 
       <input
         ref={fileInputRef}

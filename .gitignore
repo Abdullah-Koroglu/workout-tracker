@@ -30,4 +30,5 @@ dev.db
 .vscode/mcp.json
 
 /public/uploads/avatars
+/public/uploads/meals
 /deploy.sh

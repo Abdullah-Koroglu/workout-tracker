@@ -46,13 +46,15 @@ async function generateAiSummary(
 }
 
 const MAX_SIZE_BYTES = 8 * 1024 * 1024;
-const ALLOWED_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-]);
+const ALLOWED_EXTENSIONS = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif", "gif"]);
+
+function isAllowedImage(file: File): boolean {
+  // Accept any image/* MIME type
+  if (file.type.startsWith("image/")) return true;
+  // Fallback: check file extension when MIME is empty or unknown
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ALLOWED_EXTENSIONS.has(ext);
+}
 const ADHERENCE_TAGS = new Set(["GREEN", "YELLOW", "RED"] as const);
 type AdherenceTag = "GREEN" | "YELLOW" | "RED";
 
@@ -66,13 +68,18 @@ function sanitizeName(name: string): string {
   return name.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(-60) || "meal";
 }
 
-function extensionFromMime(mime: string): string {
+function extensionFromFile(file: File): string {
+  // Prefer extension from file name
+  const ext = file.name.split(".").pop()?.toLowerCase();
+  if (ext && ALLOWED_EXTENSIONS.has(ext)) return ext === "jpg" ? "jpg" : ext;
+  // Fall back to MIME type
+  const mime = file.type;
   if (mime === "image/jpeg") return "jpg";
   if (mime === "image/png") return "png";
   if (mime === "image/webp") return "webp";
   if (mime === "image/heic") return "heic";
   if (mime === "image/heif") return "heif";
-  return "bin";
+  return "jpg";
 }
 
 export async function GET() {
@@ -118,8 +125,8 @@ export async function POST(request: Request) {
   let photoUrl: string | null = null;
 
   if (file instanceof File && file.size > 0) {
-    if (!ALLOWED_TYPES.has(file.type)) {
-      return NextResponse.json({ error: "Sadece JPG/PNG/WEBP/HEIC yüklenebilir." }, { status: 400 });
+    if (!isAllowedImage(file)) {
+      return NextResponse.json({ error: "Sadece görsel dosyası yüklenebilir (JPG/PNG/WEBP/HEIC)." }, { status: 400 });
     }
     if (file.size > MAX_SIZE_BYTES) {
       return NextResponse.json({ error: "Dosya boyutu 8MB'den büyük olamaz." }, { status: 400 });
@@ -136,7 +143,7 @@ export async function POST(request: Request) {
     const originalName =
       file.name && file.name !== "blob"
         ? sanitizeName(file.name)
-        : `meal.${extensionFromMime(file.type)}`;
+        : `meal.${extensionFromFile(file)}`;
     const fileName = `${Date.now()}-${auth.session.user.id}-${originalName}`;
     const dest = path.join(uploadDir, fileName);
 

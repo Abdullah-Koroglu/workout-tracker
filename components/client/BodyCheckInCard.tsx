@@ -183,7 +183,6 @@ export function BodyCheckInCard() {
                         name={photo.name}
                         type="file"
                         accept="image/*"
-                        capture="environment"
                         className="w-full text-[13px] text-slate-600 file:mr-3 file:rounded-lg file:border-0 file:bg-purple-50 file:px-3 file:py-1.5 file:text-[12px] file:font-bold file:text-purple-700"
                       />
                     </div>

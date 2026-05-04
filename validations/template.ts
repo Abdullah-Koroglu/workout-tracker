@@ -33,9 +33,15 @@ export const templateExerciseSchema = z.union([
   cardioExerciseSchema
 ]);
 
+export const categorySchema = z.object({
+  name: z.string().min(1),
+  color: z.string().optional()
+});
+
 export const templateSchema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
+  categoryId: z.string().optional().nullable(),
   exercises: z.array(templateExerciseSchema).min(1)
 }).superRefine((value, ctx) => {
   value.exercises.forEach((exercise, index) => {

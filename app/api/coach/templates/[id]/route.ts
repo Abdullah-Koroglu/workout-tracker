@@ -41,6 +41,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     data: {
       name: parsed.data.name,
       description: parsed.data.description,
+      categoryId: parsed.data.categoryId ?? null,
       exercises: {
         deleteMany: {},
         create: parsed.data.exercises.map((e) => ({

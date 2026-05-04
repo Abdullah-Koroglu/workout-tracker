@@ -36,9 +36,28 @@ type TemplateExerciseFormItem = {
   protocol: CardioProtocolItem[] | null;
 };
 
+type TemplateCategory = {
+  id: string;
+  name: string;
+  color: string;
+  _count: { templates: number };
+};
+
+const CATEGORY_COLORS = [
+  { label: "Yeşil", value: "#10b981" },
+  { label: "Mavi", value: "#3b82f6" },
+  { label: "Mor", value: "#8b5cf6" },
+  { label: "Amber", value: "#f59e0b" },
+  { label: "Kırmızı", value: "#f43f5e" },
+  { label: "Cyan", value: "#06b6d4" },
+  { label: "Turuncu", value: "#f97316" },
+  { label: "Gri", value: "#64748b" }
+];
+
 type TemplateFormValues = {
   name: string;
   description?: string;
+  categoryId?: string | null;
   exercises: TemplateExerciseFormItem[];
 };
 
@@ -76,11 +95,19 @@ export function TemplateForm({
   const [jsonImportInput, setJsonImportInput] = useState("");
   const [jsonImportError, setJsonImportError] = useState("");
 
+  const [categories, setCategories] = useState<TemplateCategory[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(initialValues?.categoryId ?? null);
+  const [showNewCategory, setShowNewCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryColor, setNewCategoryColor] = useState("#10b981");
+  const [isSavingCategory, setIsSavingCategory] = useState(false);
+
   const form = useForm<TemplateFormValues>({
     resolver: zodResolver(templateSchema) as never,
     defaultValues: {
       name: initialValues?.name ?? "",
       description: initialValues?.description ?? "",
+      categoryId: initialValues?.categoryId ?? null,
       exercises: initialValues?.exercises ?? []
     }
   });
@@ -97,12 +124,43 @@ export function TemplateForm({
       setExerciseLibrary(data.exercises || []);
     };
 
+    const loadCategories = async () => {
+      const response = await fetch("/api/coach/template-categories");
+      const data = await response.json();
+      setCategories(data.categories || []);
+    };
+
     loadExercises();
+    loadCategories();
   }, []);
 
   const exerciseMap = useMemo(() => {
     return new Map(exerciseLibrary.map((exercise) => [exercise.id, exercise]));
   }, [exerciseLibrary]);
+
+  const selectCategory = (id: string | null) => {
+    setSelectedCategoryId(id);
+    form.setValue("categoryId", id, { shouldDirty: true });
+  };
+
+  const saveNewCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setIsSavingCategory(true);
+    const res = await fetch("/api/coach/template-categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, color: newCategoryColor })
+    });
+    setIsSavingCategory(false);
+    if (!res.ok) { push("Kategori oluşturulamadı."); return; }
+    const { category } = await res.json();
+    setCategories((prev) => [...prev, category]);
+    selectCategory(category.id);
+    setNewCategoryName("");
+    setNewCategoryColor("#10b981");
+    setShowNewCategory(false);
+  };
 
   const syncOrders = () => {
     const nextExercises = form.getValues("exercises");
@@ -291,6 +349,7 @@ Beklenen JSON formati:
       ...values,
       name: values.name.trim(),
       description: values.description?.trim() || "",
+      categoryId: selectedCategoryId,
       exercises: values.exercises.map((exercise, index) => {
         if (exercise.exerciseType === "WEIGHT") {
           return {
@@ -344,7 +403,92 @@ Beklenen JSON formati:
   };
 
   return (
-    <form className="space-y-3" onSubmit={form.handleSubmit(submit)}>
+    <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+      {/* Category Picker */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kategori</p>
+        <input type="hidden" {...form.register("categoryId")} />
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => selectCategory(null)}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+              selectedCategoryId === null
+                ? "border-slate-400 bg-slate-100 text-slate-700 shadow-sm"
+                : "border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600"
+            }`}
+          >
+            Kategorisiz
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => selectCategory(cat.id)}
+              className={`rounded-full border px-3 py-1 text-xs font-semibold transition-all ${
+                selectedCategoryId === cat.id
+                  ? "shadow-sm"
+                  : "opacity-60 hover:opacity-90"
+              }`}
+              style={{
+                borderColor: cat.color,
+                backgroundColor: selectedCategoryId === cat.id ? cat.color + "22" : "transparent",
+                color: cat.color
+              }}
+            >
+              {cat.name}
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => setShowNewCategory(!showNewCategory)}
+            className="rounded-full border border-dashed border-emerald-400 px-3 py-1 text-xs font-semibold text-emerald-600 hover:border-emerald-500 hover:bg-emerald-50"
+          >
+            + Yeni
+          </button>
+        </div>
+
+        {showNewCategory && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-3">
+            <input
+              type="text"
+              value={newCategoryName}
+              onChange={(e) => setNewCategoryName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void saveNewCategory(); } }}
+              placeholder="Kategori adı"
+              className="h-8 flex-1 min-w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            />
+            <div className="flex items-center gap-1">
+              {CATEGORY_COLORS.map((c) => (
+                <button
+                  key={c.value}
+                  type="button"
+                  title={c.label}
+                  onClick={() => setNewCategoryColor(c.value)}
+                  className={`h-6 w-6 rounded-full transition-transform hover:scale-110 ${newCategoryColor === c.value ? "ring-2 ring-offset-1 ring-slate-400 scale-110" : ""}`}
+                  style={{ backgroundColor: c.value }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={() => void saveNewCategory()}
+              disabled={!newCategoryName.trim() || isSavingCategory}
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+            >
+              {isSavingCategory ? "..." : "Kaydet"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowNewCategory(false)}
+              className="rounded-lg px-2 py-1.5 text-xs text-slate-500 hover:text-slate-700"
+            >
+              İptal
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="space-y-1">
         <Input placeholder="Template adı" {...form.register("name")} />
         {form.formState.errors.name && (

@@ -25,6 +25,16 @@ type AssignmentItem = {
   exercises: ExerciseItem[];
 };
 
+type AdherenceTag = "GREEN" | "YELLOW" | "RED";
+
+type NutritionMealLogItem = {
+  id: string;
+  photoUrl: string | null;
+  adherenceTag: AdherenceTag;
+  clientNote: string | null;
+  loggedAt: string;
+};
+
 function getStatus(item: AssignmentItem) {
   if (item.workoutStatuses.includes("COMPLETED")) return "COMPLETED" as const;
   if (item.workoutStatuses.includes("IN_PROGRESS")) return "IN_PROGRESS" as const;
@@ -43,13 +53,23 @@ const STATUS_CONFIG = {
   SCHEDULED:   { bg: "rgba(37,99,235,0.10)",  color: "#2563EB", label: "PLANLI",        dot: "#2563EB" },
 } as const;
 
+const MEAL_TAG_CONFIG: Record<AdherenceTag, { dot: string; bg: string; text: string; label: string }> = {
+  GREEN: { dot: "#22C55E", bg: "rgba(34,197,94,0.12)", text: "#16A34A", label: "🟢 Uyumlu" },
+  YELLOW: { dot: "#F59E0B", bg: "rgba(245,158,11,0.14)", text: "#B45309", label: "🟡 Hafif Sapma" },
+  RED: { dot: "#EF4444", bg: "rgba(239,68,68,0.14)", text: "#DC2626", label: "🔴 Plan Dışı" },
+};
+
 export function ClientAssignmentsCalendar({ assignments }: { assignments: AssignmentItem[] }) {
   const now = new Date();
 
   const [monthCursor, setMonthCursor] = useState({ year: now.getFullYear(), month: now.getMonth() });
   const [selectedDayKey, setSelectedDayKey] = useState<string>(dayKey(now));
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<string | null>(null);
+  const [selectedMealLogId, setSelectedMealLogId] = useState<string | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
+  const [mealModalVisible, setMealModalVisible] = useState(false);
+  const [mealLogs, setMealLogs] = useState<NutritionMealLogItem[]>([]);
+  const [mealLogsLoading, setMealLogsLoading] = useState(false);
 
   useEffect(() => {
     if (selectedAssignmentId) {
@@ -58,9 +78,51 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
     }
   }, [selectedAssignmentId]);
 
+  useEffect(() => {
+    if (selectedMealLogId) {
+      const raf = requestAnimationFrame(() => setMealModalVisible(true));
+      return () => cancelAnimationFrame(raf);
+    }
+  }, [selectedMealLogId]);
+
+  useEffect(() => {
+    const monthStart = new Date(monthCursor.year, monthCursor.month, 1);
+    const fetchFirstWeekday = (monthStart.getDay() + 6) % 7;
+    const start = new Date(monthCursor.year, monthCursor.month, 1 - fetchFirstWeekday);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 34);
+    end.setHours(23, 59, 59, 999);
+
+    const loadMealLogs = async () => {
+      setMealLogsLoading(true);
+      const params = new URLSearchParams({
+        startDate: start.toISOString(),
+        endDate: end.toISOString(),
+      });
+
+      const response = await fetch(`/api/client/nutrition-logs?${params.toString()}`);
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMealLogs([]);
+        setMealLogsLoading(false);
+        return;
+      }
+
+      setMealLogs((data.logs ?? []) as NutritionMealLogItem[]);
+      setMealLogsLoading(false);
+    };
+
+    void loadMealLogs();
+  }, [monthCursor]);
+
   function closeModal() {
     setModalVisible(false);
     setTimeout(() => setSelectedAssignmentId(null), 320);
+  }
+
+  function closeMealModal() {
+    setMealModalVisible(false);
+    setTimeout(() => setSelectedMealLogId(null), 320);
   }
 
   const monthDate = useMemo(() => new Date(monthCursor.year, monthCursor.month, 1), [monthCursor]);
@@ -84,6 +146,23 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
     return m;
   }, [assignments]);
 
+  const mealLogsByDay = useMemo(() => {
+    const map = new Map<string, NutritionMealLogItem[]>();
+    for (const log of mealLogs) {
+      const key = dayKey(new Date(log.loggedAt));
+      const arr = map.get(key) || [];
+      arr.push(log);
+      map.set(key, arr);
+    }
+
+    for (const [key, value] of map.entries()) {
+      value.sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+      map.set(key, value);
+    }
+
+    return map;
+  }, [mealLogs]);
+
   const calendarCells = useMemo(() => Array.from({ length: 35 }, (_, i) => {
     const d = new Date(gridStart);
     d.setDate(gridStart.getDate() + i);
@@ -94,11 +173,12 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
       key,
       inMonth: d.getMonth() === monthDate.getMonth(),
       items,
+      mealLogs: mealLogsByDay.get(key) || [],
       hasAny: items.length > 0,
       hasInProgress: items.some((item) => getStatus(item) === "IN_PROGRESS"),
       hasCompleted: items.some((item) => getStatus(item) === "COMPLETED"),
     };
-  }), [gridStart, byDay, monthDate]);
+  }), [gridStart, byDay, mealLogsByDay, monthDate]);
 
   const todayKey = dayKey(now);
 
@@ -111,8 +191,12 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
   );
 
   const selectedDayAssignments = byDay.get(selectedDayKey) || [];
+  const selectedDayMealLogs = mealLogsByDay.get(selectedDayKey) || [];
   const selectedAssignment = selectedAssignmentId
     ? (assignments.find((a) => a.id === selectedAssignmentId) ?? null)
+    : null;
+  const selectedMealLog = selectedMealLogId
+    ? (mealLogs.find((log) => log.id === selectedMealLogId) ?? null)
     : null;
 
   function prevMonth() {
@@ -212,46 +296,74 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 : "#94A3B8";
 
               return (
-                <button
-                  type="button"
-                  key={cell.key}
-                  className={`
-                    relative h-10 w-full rounded-xl flex flex-col items-center justify-center gap-0.5
-                    transition-all duration-150 font-bold text-sm
-                    ${isToday
-                      ? "text-white shadow-lg"
-                      : isSelected
-                        ? "bg-slate-800 text-white shadow-md"
-                        : cell.inMonth
-                          ? "bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer"
-                          : "text-slate-200 cursor-default"
-                    }
-                  `}
-                  style={isToday ? {
-                    background: "linear-gradient(135deg, #FB923C, #EA580C)",
-                    boxShadow: "0 4px 14px rgba(249,115,22,0.4)",
-                  } : undefined}
-                  onClick={() => cell.inMonth && setSelectedDayKey(cell.key)}
-                >
-                  <span className="leading-none text-xs">{String(cell.date.getDate()).padStart(2, "0")}</span>
-                  {cell.hasAny && (
-                    <div
-                      className="w-1 h-1 rounded-full"
-                      style={{ background: isToday || isSelected ? "rgba(255,255,255,0.8)" : dotColor }}
-                    />
-                  )}
-                  {cell.items.length > 1 && (
-                    <span
-                      className="absolute top-0.5 right-0.5 text-[7px] font-black w-3 h-3 rounded-full flex items-center justify-center"
-                      style={{
-                        background: isToday || isSelected ? "rgba(255,255,255,0.25)" : "rgba(249,115,22,0.15)",
-                        color:      isToday || isSelected ? "#fff" : "#EA580C",
-                      }}
-                    >
-                      {cell.items.length}
-                    </span>
-                  )}
-                </button>
+                <div key={cell.key} className="relative h-10 w-full">
+                  <button
+                    type="button"
+                    className={`
+                      relative h-10 w-full rounded-xl flex flex-col items-center justify-center gap-0.5
+                      transition-all duration-150 font-bold text-sm
+                      ${isToday
+                        ? "text-white shadow-lg"
+                        : isSelected
+                          ? "bg-slate-800 text-white shadow-md"
+                          : cell.inMonth
+                            ? "bg-slate-50 text-slate-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer"
+                            : "text-slate-200 cursor-default"
+                      }
+                    `}
+                    style={isToday ? {
+                      background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                      boxShadow: "0 4px 14px rgba(249,115,22,0.4)",
+                    } : undefined}
+                    onClick={() => cell.inMonth && setSelectedDayKey(cell.key)}
+                  >
+                    <span className="leading-none text-xs">{String(cell.date.getDate()).padStart(2, "0")}</span>
+                    {cell.hasAny && (
+                      <div
+                        className="w-1 h-1 rounded-full"
+                        style={{ background: isToday || isSelected ? "rgba(255,255,255,0.8)" : dotColor }}
+                      />
+                    )}
+                    {cell.items.length > 1 && (
+                      <span
+                        className="absolute top-0.5 right-0.5 text-[7px] font-black w-3 h-3 rounded-full flex items-center justify-center"
+                        style={{
+                          background: isToday || isSelected ? "rgba(255,255,255,0.25)" : "rgba(249,115,22,0.15)",
+                          color:      isToday || isSelected ? "#fff" : "#EA580C",
+                        }}
+                      >
+                        {cell.items.length}
+                      </span>
+                    )}
+                  </button>
+
+                  {cell.mealLogs.length > 0 ? (
+                    <div className="absolute -bottom-1 left-1/2 z-10 flex -translate-x-1/2 items-center gap-0.5 rounded-full bg-white/95 px-1 py-0.5 shadow-sm">
+                      {cell.mealLogs.slice(0, 2).map((mealLog) => {
+                        const tagCfg = MEAL_TAG_CONFIG[mealLog.adherenceTag];
+                        return (
+                          <button
+                            key={mealLog.id}
+                            type="button"
+                            aria-label="Öğün detayını aç"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setSelectedMealLogId(mealLog.id);
+                              setSelectedDayKey(cell.key);
+                            }}
+                            className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white text-[8px] leading-none"
+                            style={{ background: tagCfg.dot, color: "white" }}
+                          >
+                            📷
+                          </button>
+                        );
+                      })}
+                      {cell.mealLogs.length > 2 ? (
+                        <span className="text-[8px] font-black text-slate-500">+{cell.mealLogs.length - 2}</span>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
               );
             })}
           </div>
@@ -268,6 +380,10 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                 {label}
               </div>
             ))}
+            <div className="ml-auto flex items-center gap-1.5 text-[10px] font-semibold text-slate-400">
+              <span className="text-[11px]">📷</span>
+              Öğün Logu
+            </div>
           </div>
         </div>
 
@@ -402,6 +518,39 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
               <p className="text-xs text-slate-400 mt-1">Takvimden başka bir gün seçebilirsin</p>
             </div>
           )}
+
+          <div className="mt-4">
+            <div className="mb-2 flex items-center justify-between">
+              <h4 className="text-sm font-black text-slate-700">Beslenme Geçmişi</h4>
+              {mealLogsLoading ? <span className="text-[11px] text-slate-400">Yükleniyor...</span> : null}
+            </div>
+            {selectedDayMealLogs.length === 0 ? (
+              <div className="rounded-2xl border border-slate-100 bg-white p-3 text-xs text-slate-400">
+                Bu gün için öğün logu yok.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {selectedDayMealLogs.map((log) => {
+                  const tagCfg = MEAL_TAG_CONFIG[log.adherenceTag];
+                  return (
+                    <button
+                      key={log.id}
+                      type="button"
+                      onClick={() => setSelectedMealLogId(log.id)}
+                      className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-bold"
+                      style={{ background: tagCfg.bg, color: tagCfg.text }}
+                    >
+                      <span>📷</span>
+                      {tagCfg.label}
+                      <span className="text-[10px] opacity-80">
+                        {new Date(log.loggedAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -686,6 +835,90 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                   <span className="font-bold text-sm text-green-600">✓ Bu seans tamamlandı</span>
                 </Link>
               )}
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {selectedMealLog ? (
+        <div
+          className="fixed inset-0 z-[61] flex items-end md:items-center justify-center !mt-0"
+          onClick={closeMealModal}
+        >
+          <div
+            className={`absolute inset-0 transition-[opacity,backdrop-filter] duration-300 ease-out ${
+              mealModalVisible ? "opacity-100 backdrop-blur-sm" : "opacity-0 backdrop-blur-none"
+            }`}
+            style={{ background: "rgba(15,23,42,0.65)" }}
+          />
+
+          <div
+            className={`relative w-full max-w-lg md:mx-6 bg-white rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col max-h-[92dvh] overflow-hidden transition-all duration-300 ease-out ${
+              mealModalVisible
+                ? "translate-y-0 opacity-100 md:scale-100"
+                : "translate-y-full opacity-0 md:translate-y-4 md:scale-95"
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 pt-5 pb-4 border-b border-slate-100">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Öğün Detayı</p>
+                  <p className="mt-1 text-sm font-bold text-slate-700">
+                    {new Date(selectedMealLog.loggedAt).toLocaleDateString("tr-TR", {
+                      weekday: "long",
+                      day: "numeric",
+                      month: "long",
+                    })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 transition-colors text-slate-500"
+                  onClick={closeMealModal}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto p-6 space-y-4">
+              <div className="rounded-2xl overflow-hidden bg-slate-100">
+                {selectedMealLog.photoUrl ? (
+                  <img
+                    src={selectedMealLog.photoUrl}
+                    alt="Öğün fotoğrafı"
+                    className="h-auto w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-52 items-center justify-center text-5xl">🍽️</div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span
+                  className="inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-black"
+                  style={{
+                    background: MEAL_TAG_CONFIG[selectedMealLog.adherenceTag].bg,
+                    color: MEAL_TAG_CONFIG[selectedMealLog.adherenceTag].text,
+                  }}
+                >
+                  {MEAL_TAG_CONFIG[selectedMealLog.adherenceTag].label}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {new Date(selectedMealLog.loggedAt).toLocaleTimeString("tr-TR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+
+              <div className="rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Notun</p>
+                <p className="text-sm text-slate-700">
+                  {selectedMealLog.clientNote?.trim() || "Bu öğün için not eklenmemiş."}
+                </p>
+              </div>
             </div>
           </div>
         </div>

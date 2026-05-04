@@ -16,10 +16,11 @@ model User {
   pushSubscription Json?
   createdAt        DateTime @default(now())
 
-  coachRelations   CoachClientRelation[] @relation("Coach")
-  clientRelations  CoachClientRelation[] @relation("Client")
-  templates        WorkoutTemplate[]
-  assignments      TemplateAssignment[]  @relation("AssignedTo")
+  coachRelations      CoachClientRelation[] @relation("Coach")
+  clientRelations     CoachClientRelation[] @relation("Client")
+  templates           WorkoutTemplate[]
+  templateCategories  TemplateCategory[]
+  assignments         TemplateAssignment[]  @relation("AssignedTo")
   workouts         Workout[]
   comments         Comment[]
   sentMessages     Message[]             @relation("MessageSender")
@@ -124,6 +125,17 @@ enum ExerciseType {
   CARDIO
 }
 
+model TemplateCategory {
+  id        String   @id @default(cuid())
+  coach     User     @relation(fields: [coachId], references: [id])
+  coachId   String
+  name      String
+  color     String   @default("#10b981")
+  createdAt DateTime @default(now())
+
+  templates WorkoutTemplate[]
+}
+
 model WorkoutTemplate {
   id          String   @id @default(cuid())
   coach       User     @relation(fields: [coachId], references: [id])
@@ -131,6 +143,9 @@ model WorkoutTemplate {
   name        String
   description String?
   createdAt   DateTime @default(now())
+
+  category   TemplateCategory? @relation(fields: [categoryId], references: [id])
+  categoryId String?
 
   exercises   WorkoutTemplateExercise[]
   assignments TemplateAssignment[]

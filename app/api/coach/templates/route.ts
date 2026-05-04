@@ -16,7 +16,10 @@ export async function GET() {
 
   const templates = await prisma.workoutTemplate.findMany({
     where: { coachId: auth.session.user.id },
-    include: { exercises: { include: { exercise: true }, orderBy: { order: "asc" } } },
+    include: {
+      exercises: { include: { exercise: true }, orderBy: { order: "asc" } },
+      category: true
+    },
     orderBy: { createdAt: "desc" }
   });
 
@@ -39,6 +42,7 @@ export async function POST(request: Request) {
       coachId: auth.session.user.id,
       name: parsed.data.name,
       description: parsed.data.description,
+      categoryId: parsed.data.categoryId ?? null,
       exercises: {
         create: parsed.data.exercises.map((e) => ({
           exerciseId: e.exerciseId,

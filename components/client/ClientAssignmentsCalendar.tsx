@@ -71,6 +71,12 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
   const [mealLogs, setMealLogs] = useState<NutritionMealLogItem[]>([]);
   const [mealLogsLoading, setMealLogsLoading] = useState(false);
 
+    const monthDate = useMemo(
+      () => new Date(monthCursor.year, monthCursor.month, 1),
+      [monthCursor],
+    );
+  const firstWeekday = (monthDate.getDay() + 6) % 7;
+
   useEffect(() => {
     if (selectedAssignmentId) {
       const raf = requestAnimationFrame(() => setModalVisible(true));
@@ -86,9 +92,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
   }, [selectedMealLogId]);
 
   useEffect(() => {
-    const monthStart = new Date(monthCursor.year, monthCursor.month, 1);
-    const fetchFirstWeekday = (monthStart.getDay() + 6) % 7;
-    const start = new Date(monthCursor.year, monthCursor.month, 1 - fetchFirstWeekday);
+    const start = new Date(monthCursor.year, monthCursor.month, 1 - firstWeekday);
     const end = new Date(start);
     end.setDate(start.getDate() + 34);
     end.setHours(23, 59, 59, 999);
@@ -113,7 +117,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
     };
 
     void loadMealLogs();
-  }, [monthCursor]);
+  }, [monthCursor, firstWeekday]);
 
   function closeModal() {
     setModalVisible(false);
@@ -124,9 +128,6 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
     setMealModalVisible(false);
     setTimeout(() => setSelectedMealLogId(null), 320);
   }
-
-  const monthDate = useMemo(() => new Date(monthCursor.year, monthCursor.month, 1), [monthCursor]);
-  const firstWeekday = (monthDate.getDay() + 6) % 7;
 
   const gridStart = useMemo(() => {
     const d = new Date(monthDate);
@@ -351,7 +352,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                               setSelectedMealLogId(mealLog.id);
                               setSelectedDayKey(cell.key);
                             }}
-                            className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white text-[8px] leading-none"
+                            className="flex h-3.5 w-3.5 items-center justify-center rounded-full border border-white text-[11px] leading-none"
                             style={{ background: tagCfg.dot, color: "white" }}
                           >
                             📷
@@ -446,7 +447,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
                             <Dumbbell className="w-20 h-20" />
                           </div>
 
-                          <div className="relative z-10 flex items-center gap-4">
+                          <div className="relative z-0 flex items-center gap-4">
                             {/* Icon */}
                             <div
                               className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -575,7 +576,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
               className="absolute top-0 right-0 w-48 h-48 -mr-24 -mt-24 rounded-full pointer-events-none"
               style={{ background: "radial-gradient(circle, rgba(249,115,22,0.2) 0%, transparent 70%)" }}
             />
-            <div className="relative z-10 p-5 flex gap-5 items-center">
+            <div className="relative z-0 p-5 flex gap-5 items-center">
               <div
                 className="w-16 h-16 rounded-2xl flex items-center justify-center flex-shrink-0"
                 style={{ background: "rgba(249,115,22,0.15)", border: "1px solid rgba(249,115,22,0.2)" }}
@@ -626,8 +627,8 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
               className="absolute top-0 right-0 w-40 h-40 -mr-20 -mt-20 rounded-full pointer-events-none"
               style={{ background: "radial-gradient(circle, rgba(249,115,22,0.25) 0%, transparent 70%)" }}
             />
-            <h3 className="text-sm font-black tracking-widest text-white uppercase relative z-10">Haftalık Yük</h3>
-            <div className="space-y-3 relative z-10">
+            <h3 className="text-sm font-black tracking-widest text-white uppercase relative z-0">Haftalık Yük</h3>
+            <div className="space-y-3 relative z-0">
               <div className="flex justify-between items-end">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Bu Hafta</span>
                 <span className="text-2xl font-black text-orange-400">
@@ -689,7 +690,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
          ══════════════════════════════════════════════════════ */}
       {selectedAssignment ? (
         <div
-          className="fixed inset-0 z-[60] flex items-end md:items-center justify-center !mt-0"
+          className="fixed inset-0 z-20 flex items-end md:items-center justify-center !mt-0"
           onClick={closeModal}
         >
           <div
@@ -842,7 +843,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
 
       {selectedMealLog ? (
         <div
-          className="fixed inset-0 z-[61] flex items-end md:items-center justify-center !mt-0"
+          className="fixed inset-0 z-20 flex items-end md:items-center justify-center !mt-0"
           onClick={closeMealModal}
         >
           <div

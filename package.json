@@ -58,6 +58,8 @@
     "react-hook-form": "^7.54.2",
     "recharts": "^2.15.2",
     "tailwind-merge": "^2.6.0",
+    "openai": "^4.98.0",
+    "stripe": "^17.7.0",
     "web-push": "^3.6.7",
     "ws": "^8.20.0",
     "zod": "^3.24.2"

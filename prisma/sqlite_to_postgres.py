@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import os
 import sqlite3
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -169,20 +171,86 @@ def build_import_sql(connection: sqlite3.Connection) -> str:
 
 
 def run_psql(sql: str, extra_args: list[str] | None = None) -> str:
-    command = [
-        "docker",
-        "compose",
-        "exec",
-        "-T",
-        "postgres",
-        "psql",
-        "-v",
-        "ON_ERROR_STOP=1",
-        "-U",
-        "fitcoach",
-        "-d",
-        "fitcoach",
-    ]
+    mode = os.getenv("SQLITE_PG_RUN_MODE", "auto").strip().lower()
+    command: list[str]
+
+    if mode in {"auto", "direct"}:
+        database_url = os.getenv("DATABASE_URL", "").strip()
+        if database_url:
+            parsed = urlparse(database_url)
+            query = parse_qs(parsed.query)
+            dbname = (parsed.path or "/fitcoach").lstrip("/") or "fitcoach"
+            host = parsed.hostname or "postgres"
+            port = str(parsed.port or 5432)
+            user = parsed.username or "fitcoach"
+            password = parsed.password or "fitcoach"
+            schema = query.get("schema", [""])[0]
+        else:
+            dbname = os.getenv("PGDATABASE", "fitcoach")
+            host = os.getenv("PGHOST", "postgres")
+            port = os.getenv("PGPORT", "5432")
+            user = os.getenv("PGUSER", "fitcoach")
+            password = os.getenv("PGPASSWORD", "fitcoach")
+            schema = os.getenv("PGSCHEMA", "")
+
+        direct_command = [
+            "psql",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-h",
+            host,
+            "-p",
+            port,
+            "-U",
+            user,
+            "-d",
+            dbname,
+        ]
+
+        if schema:
+            direct_command.extend(["-v", f"search_path={schema}"])
+
+        if mode == "direct":
+            command = direct_command
+        else:
+            docker_path = subprocess.run(
+                ["sh", "-lc", "command -v docker >/dev/null 2>&1"],
+                cwd=ROOT,
+                check=False,
+            )
+            command = (
+                [
+                    "docker",
+                    "compose",
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "psql",
+                    "-v",
+                    "ON_ERROR_STOP=1",
+                    "-U",
+                    "fitcoach",
+                    "-d",
+                    "fitcoach",
+                ]
+                if docker_path.returncode == 0
+                else direct_command
+            )
+    else:
+        command = [
+            "docker",
+            "compose",
+            "exec",
+            "-T",
+            "postgres",
+            "psql",
+            "-v",
+            "ON_ERROR_STOP=1",
+            "-U",
+            "fitcoach",
+            "-d",
+            "fitcoach",
+        ]
     if extra_args:
         command.extend(extra_args)
 
@@ -191,80 +259,13 @@ def run_psql(sql: str, extra_args: list[str] | None = None) -> str:
         cwd=ROOT,
         input=sql,
         text=True,
-        encoding="utf-8",
-        errors="strict",
         capture_output=True,
         check=False,
+        env={**os.environ, "PGPASSWORD": password} if "password" in locals() else os.environ,
     )
     if completed.returncode != 0:
         raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
     return completed.stdout
-
-
-def run_compose_command(command: list[str]) -> str:
-    completed = subprocess.run(
-        command,
-        cwd=ROOT,
-        text=True,
-        encoding="utf-8",
-        errors="strict",
-        capture_output=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
-    return completed.stdout
-
-
-def missing_postgres_tables() -> list[str]:
-    escaped_names = ",".join(quote_text(table) for table in TABLE_ORDER)
-    query = (
-        "SELECT table_name FROM information_schema.tables "
-        "WHERE table_schema = 'public' "
-        f"AND table_name IN ({escaped_names});"
-    )
-    existing_output = run_psql("", ["-At", "-c", query])
-    existing = {line.strip() for line in existing_output.splitlines() if line.strip()}
-    return [table for table in TABLE_ORDER if table not in existing]
-
-
-def ensure_postgres_schema() -> None:
-    missing = missing_postgres_tables()
-    if not missing:
-        return
-
-    print("PostgreSQL schema missing tables. Generating schema SQL with Prisma...", file=sys.stderr)
-    npx_executable = "npx.cmd" if sys.platform.startswith("win") else "npx"
-    completed = subprocess.run(
-        [
-            npx_executable,
-            "prisma",
-            "migrate",
-            "diff",
-            "--from-empty",
-            "--to-schema-datamodel",
-            str(ROOT / "prisma" / "schema.prisma"),
-            "--script",
-        ],
-        cwd=ROOT,
-        text=True,
-        encoding="utf-8",
-        errors="strict",
-        capture_output=True,
-        check=False,
-    )
-    if completed.returncode != 0:
-        raise RuntimeError(completed.stderr.strip() or completed.stdout.strip())
-
-    schema_sql = completed.stdout.strip()
-    if not schema_sql:
-        raise RuntimeError("Prisma did not generate schema SQL output.")
-
-    run_psql(schema_sql + "\n")
-
-    still_missing = missing_postgres_tables()
-    if still_missing:
-        raise RuntimeError("Missing PostgreSQL tables after prisma db push: " + ", ".join(still_missing))
 
 
 def collect_postgres_counts() -> dict[str, int]:
@@ -295,7 +296,6 @@ def main() -> int:
         sqlite_connection.close()
 
     try:
-        ensure_postgres_schema()
         run_psql(import_sql)
         target_counts = collect_postgres_counts()
     except Exception as exc:

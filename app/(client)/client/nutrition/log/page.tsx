@@ -204,7 +204,6 @@ export default function NutritionLogPage() {
         id="photo-upload"
         type="file"
         accept="image/*"
-        capture="environment"
         className="hidden"
         onChange={handleFileChange}
       />

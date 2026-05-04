@@ -4,6 +4,7 @@ import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckInWidget } from "@/components/client/CheckInWidget";
+import { BodyCheckInCard } from "@/components/client/BodyCheckInCard";
 
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
   const initials = name
@@ -186,6 +187,9 @@ export default async function ClientDashboardPage() {
             </div>
           </div>
         </Link>
+
+        {/* Body Check-in Card — shown only when coach has set a tracking requirement */}
+        <BodyCheckInCard />
 
         {/* Check-in Widget */}
         <CheckInWidget />

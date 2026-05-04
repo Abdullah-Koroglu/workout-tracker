@@ -35,6 +35,9 @@ model User {
 
   nutritionPlan     NutritionPlan?
   nutritionMealLogs NutritionMealLog[]
+
+  bodyTrackingPrefs BodyTrackingPreference?
+  bodyMetricLogs    BodyMetricLog[]
 }
 
 model ClientProfile {
@@ -328,4 +331,50 @@ model NutritionMealLog {
   client User @relation(fields: [clientId], references: [id], onDelete: Cascade)
 
   @@index([clientId, loggedAt])
+}
+
+enum TrackingFrequency {
+  OFF
+  DAILY
+  EVERY_2_DAYS
+  EVERY_3_DAYS
+  TWICE_A_WEEK
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+}
+
+model BodyTrackingPreference {
+  id                   String            @id @default(cuid())
+  clientId             String            @unique
+  client               User              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  weightFreq           TrackingFrequency @default(OFF)
+  measurementFreq      TrackingFrequency @default(OFF)
+  photoFreq            TrackingFrequency @default(OFF)
+  activeMeasurements   String            @default("[]")
+  updatedAt            DateTime          @updatedAt
+}
+
+model BodyMetricLog {
+  id            String   @id @default(cuid())
+  clientId      String
+  client        User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  date          DateTime
+
+  weight        Float?
+
+  shoulder      Float?
+  chest         Float?
+  waist         Float?
+  hips          Float?
+  arm           Float?
+  leg           Float?
+
+  frontPhotoUrl String?
+  sidePhotoUrl  String?
+  backPhotoUrl  String?
+
+  createdAt     DateTime @default(now())
+
+  @@unique([clientId, date])
 }

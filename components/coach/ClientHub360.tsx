@@ -18,6 +18,7 @@ import { AssignmentList } from "@/components/coach/AssignmentList";
 import { AssignTemplateModal } from "@/components/coach/AssignTemplateModal";
 import { NutritionPlanManager } from "@/components/coach/NutritionPlanManager";
 import { MealLogFeed } from "@/components/coach/MealLogFeed";
+import { BodyTrackingSettings } from "@/components/coach/BodyTrackingSettings";
 import { PaginationControls } from "@/components/shared/PaginationControls";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -438,6 +439,7 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
         <NutritionPlanManager clientId={clientId} />
         <MealLogFeed clientId={clientId} />
       </div>
+      <BodyTrackingSettings clientId={clientId} />
 
       {/* Body Measurements History */}
       <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>

@@ -31,4 +31,5 @@ dev.db
 
 /public/uploads/avatars
 /public/uploads/meals
+/public/uploads/checkins
 /deploy.sh

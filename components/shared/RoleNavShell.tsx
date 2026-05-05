@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { signOut } from "next-auth/react";
 import {
-  Bell,
   ClipboardList,
   Compass,
   CreditCard,
@@ -12,7 +10,7 @@ import {
   History,
   LayoutDashboard,
   MessageCircle,
-  Search,
+  StretchHorizontal,
   User,
   Users,
 } from "lucide-react";
@@ -41,6 +39,7 @@ const coachItems: NavItem[] = [
   { href: "/coach/clients", label: "Client Roster", icon: Users },
   { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
   { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
+  { href: "/coach/mobility", label: "Mobility Library", icon: StretchHorizontal },
   { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/coach/billing", label: "Faturalandırma", icon: CreditCard },
   { href: "/coach/profile", label: "Profil", icon: User },
@@ -58,6 +57,7 @@ const coachMobileItems: NavItem[] = [
   { href: "/coach/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
   { href: "/coach/clients", label: "Client Roster", icon: Users },
+  { href: "/coach/mobility", label: "Mobility", icon: StretchHorizontal },
   { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/coach/profile", label: "Profil", icon: User },
 ];

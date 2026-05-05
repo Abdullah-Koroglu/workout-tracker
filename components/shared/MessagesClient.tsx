@@ -182,6 +182,7 @@ export function MessagesClient({
 }) {
   const { error, success } = useNotificationContext();
   const [threads, setThreads] = useState<Thread[]>([]);
+  const [threadSearchQuery, setThreadSearchQuery] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string>("");
   const [messages, setMessages] = useState<MessageItem[]>([]);
   const [draft, setDraft] = useState("");
@@ -210,6 +211,17 @@ export function MessagesClient({
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
     [selectedUserId, threads]
   );
+
+  const filteredThreads = useMemo(() => {
+    const query = threadSearchQuery.trim().toLowerCase();
+    if (!query) return threads;
+
+    return threads.filter((thread) =>
+      thread.user.name.toLowerCase().includes(query)
+      || thread.user.email.toLowerCase().includes(query)
+      || (thread.lastMessage?.content ?? "").toLowerCase().includes(query)
+    );
+  }, [threadSearchQuery, threads]);
 
   const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
 
@@ -700,6 +712,8 @@ export function MessagesClient({
               <Search className="h-4 w-4 shrink-0 text-outline" />
               <input
                 placeholder="Kişi ara..."
+                value={threadSearchQuery}
+                onChange={(event) => setThreadSearchQuery(event.target.value)}
                 className="w-full border-none bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
               />
             </div>
@@ -720,8 +734,13 @@ export function MessagesClient({
                   Yenile
                 </button>
               </div>
+            ) : filteredThreads.length === 0 ? (
+              <div className="flex flex-col items-center justify-center gap-2 p-8 text-center text-muted-foreground">
+                <Search className="h-8 w-8 text-muted-foreground/30" />
+                <p className="text-sm">Arama ile eşleşen konuşma bulunamadı.</p>
+              </div>
             ) : (
-              threads.map((thread) => {
+              filteredThreads.map((thread) => {
                 const isActive = activeThread?.user.id === thread.user.id;
                 return (
                   <button

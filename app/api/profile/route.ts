@@ -147,6 +147,8 @@ export async function PUT(request: Request) {
       where: { userId },
       create: {
         userId,
+          age: data.age ?? null,
+          gender: data.gender ?? null,
         birthDate: toNullableDate(data.birthDate),
         heightCm: data.heightCm ?? null,
         weightKg: data.weightKg ?? null,
@@ -154,6 +156,8 @@ export async function PUT(request: Request) {
         fitnessLevel: data.fitnessLevel ?? null,
       },
       update: {
+          age: data.age ?? null,
+          gender: data.gender ?? null,
         birthDate: toNullableDate(data.birthDate),
         heightCm: data.heightCm ?? null,
         weightKg: data.weightKg ?? null,

@@ -29,6 +29,20 @@ function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: numb
   );
 }
 
+type DailyMobilityRoutine = {
+  id: string;
+  name: string;
+  description: string | null;
+  movements: Array<{
+    id: string;
+    durationSeconds: number;
+    movement: {
+      name: string;
+      videoUrl: string | null;
+    };
+  }>;
+};
+
 export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
@@ -87,6 +101,36 @@ export default async function ClientDashboardPage() {
       where: { workout: { clientId }, author: { role: "COACH" } },
     }),
   ]);
+
+  const primaryCoachRelation = await prisma.coachClientRelation.findFirst({
+    where: { clientId, status: "ACCEPTED" },
+    orderBy: { createdAt: "asc" },
+    select: { coachId: true },
+  });
+
+  const dailyMobilityRoutines: DailyMobilityRoutine[] = primaryCoachRelation
+    ? await prisma.mobilityRoutine.findMany({
+        where: { coachId: primaryCoachRelation.coachId },
+        orderBy: { createdAt: "asc" },
+        take: 3,
+        include: {
+          movements: {
+            orderBy: { order: "asc" },
+            take: 5,
+            select: {
+              id: true,
+              durationSeconds: true,
+              movement: {
+                select: {
+                  name: true,
+                  videoUrl: true,
+                },
+              },
+            },
+          },
+        },
+      })
+    : [];
 
   const todaysAssignments = assignments.filter(
     (a) => toDayKey(new Date(a.scheduledFor)) === todayKey,
@@ -193,6 +237,43 @@ export default async function ClientDashboardPage() {
 
         {/* Check-in Widget */}
         <CheckInWidget />
+
+        {/* Daily Mobility */}
+        <div
+          className="rounded-[18px] bg-white p-4 shadow-sm"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-[15px] font-bold text-slate-800">Daily Mobility</h3>
+            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              Bağımsız Modül
+            </span>
+          </div>
+
+          {dailyMobilityRoutines.length === 0 ? (
+            <p className="text-[13px] text-slate-500">Koçun henüz günlük mobilite rutini paylaşmamış.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {dailyMobilityRoutines.map((routine: DailyMobilityRoutine) => (
+                <div key={routine.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-sm font-bold text-slate-800">{routine.name}</p>
+                  {routine.description ? (
+                    <p className="mt-0.5 text-xs text-slate-500">{routine.description}</p>
+                  ) : null}
+
+                  <div className="mt-2 space-y-1.5">
+                    {routine.movements.map((item: DailyMobilityRoutine["movements"][number]) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-700">{item.movement.name}</span>
+                        <span className="font-semibold text-slate-500">{item.durationSeconds} sn</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Weekly Focus */}
         <div

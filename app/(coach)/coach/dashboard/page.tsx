@@ -9,12 +9,12 @@ import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-const RECENT_WORKOUT_LIMIT = 5;
+const RECENT_WORKOUT_LIMIT = 10;
 const ACTIVE_WORKOUT_LIMIT = 10;
-const REST_SAMPLE_LIMIT = 120;
-const PENDING_REQUEST_LIMIT = 4;
-const UPCOMING_APPOINTMENT_LIMIT = 3;
-const TOP_CLIENT_LIMIT = 4;
+const REST_SAMPLE_LIMIT = 10;
+const PENDING_REQUEST_LIMIT = 10;
+const UPCOMING_APPOINTMENT_LIMIT = 10;
+const TOP_CLIENT_LIMIT = 10;
 const TOP_CLIENT_WORKOUT_LIMIT = 10;
 
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {

@@ -20,6 +20,8 @@ model User {
   clientRelations     CoachClientRelation[] @relation("Client")
   templates           WorkoutTemplate[]
   templateCategories  TemplateCategory[]
+  mobilityMovements   MobilityMovement[]
+  mobilityRoutines    MobilityRoutine[]
   assignments         TemplateAssignment[]  @relation("AssignedTo")
   workouts         Workout[]
   comments         Comment[]
@@ -44,12 +46,21 @@ model ClientProfile {
   id           String    @id @default(cuid())
   user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId       String    @unique
+  age          Int?
+  gender       Gender?
   birthDate    DateTime?
   heightCm     Float?
   weightKg     Float?
   goal         String?
   fitnessLevel String?
   updatedAt    DateTime  @updatedAt
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
 }
 
 model CoachProfile {
@@ -185,6 +196,48 @@ model TemplateAssignment {
   createdAt    DateTime        @default(now())
 
   workouts Workout[]
+}
+
+model MobilityMovement {
+  id          String   @id @default(cuid())
+  coach       User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId     String
+  name        String
+  videoUrl    String?
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  routineMovements MobilityRoutineMovement[]
+
+  @@index([coachId, createdAt])
+}
+
+model MobilityRoutine {
+  id          String   @id @default(cuid())
+  coach       User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId     String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  movements MobilityRoutineMovement[]
+
+  @@index([coachId, createdAt])
+}
+
+model MobilityRoutineMovement {
+  id              String           @id @default(cuid())
+  routine         MobilityRoutine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  routineId       String
+  movement        MobilityMovement @relation(fields: [movementId], references: [id], onDelete: Cascade)
+  movementId      String
+  order           Int
+  durationSeconds Int
+
+  @@unique([routineId, order])
+  @@index([movementId])
 }
 
 model Workout {

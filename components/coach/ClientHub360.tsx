@@ -433,9 +433,16 @@ type BodyLogEntry = {
   frontPhotoUrl: string | null; sidePhotoUrl: string | null; backPhotoUrl: string | null;
 };
 
+const PHOTO_SLOTS = [
+  { key: "frontPhotoUrl" as const, label: "Ön" },
+  { key: "sidePhotoUrl" as const, label: "Yan" },
+  { key: "backPhotoUrl" as const, label: "Arka" },
+];
+
 function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal: string | null; fitnessLevel: string | null }) {
   const [logs, setLogs] = useState<BodyLogEntry[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
+  const [modalAngle, setModalAngle] = useState<number | null>(null); // null = closed
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -446,6 +453,18 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
       .finally(() => setLoadingLogs(false));
   }, [clientId]);
 
+  // Close modal on Escape
+  useEffect(() => {
+    if (modalAngle === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModalAngle(null);
+      if (e.key === "ArrowLeft") setModalAngle((p) => p !== null ? (p + 2) % 3 : null);
+      if (e.key === "ArrowRight") setModalAngle((p) => p !== null ? (p + 1) % 3 : null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [modalAngle]);
+
   const weightLogs = [...logs].reverse().filter((l) => l.weight !== null);
   const weightChartData = weightLogs.map((l) => ({
     date: new Date(l.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }),
@@ -454,6 +473,8 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
 
   const newestLog = logs[0] ?? null;
   const oldestLog = logs[logs.length - 1] ?? null;
+  const hasAnyPhoto = newestLog && (newestLog.frontPhotoUrl || newestLog.sidePhotoUrl || newestLog.backPhotoUrl
+    || oldestLog?.frontPhotoUrl || oldestLog?.sidePhotoUrl || oldestLog?.backPhotoUrl);
 
   const firstWeight = weightLogs[0]?.weight ?? null;
   const lastWeight = weightLogs[weightLogs.length - 1]?.weight ?? null;
@@ -479,10 +500,8 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
               <p className="text-[10px] text-slate-400">{logs.length} kayıt · kg</p>
             </div>
             {weightDelta !== null && (
-              <span
-                className="rounded-full px-2.5 py-1 text-[11px] font-black text-white"
-                style={{ background: weightDelta <= 0 ? "#22C55E" : "#EF4444" }}
-              >
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-black text-white"
+                style={{ background: weightDelta <= 0 ? "#22C55E" : "#EF4444" }}>
                 {weightDelta > 0 ? "+" : ""}{weightDelta} kg
               </span>
             )}
@@ -499,36 +518,192 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
         </div>
       ) : null}
 
-      {/* ── Before / After ─────────────────────────────────────────────────── */}
-      {newestLog && oldestLog && newestLog.id !== oldestLog.id &&
-        (newestLog.frontPhotoUrl || oldestLog.frontPhotoUrl) && (
+      {/* ── Before / After — 3-angle thumbnail grid ────────────────────────── */}
+      {!loadingLogs && newestLog && oldestLog && newestLog.id !== oldestLog.id && hasAnyPhoto && (
         <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-          <p className="mb-1 text-[13px] font-black text-slate-800">Before / After — Ön Fotoğraf</p>
-          <p className="mb-3 text-[10px] text-slate-400">
-            {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-            {" → "}
-            {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "ÖNCE", url: oldestLog.frontPhotoUrl },
-              { label: "SONRA", url: newestLog.frontPhotoUrl },
-            ].map(({ label, url }) => (
-              <div
-                key={label}
-                className="relative overflow-hidden rounded-xl"
-                style={{ aspectRatio: "3/4", border: label === "SONRA" ? "2px solid #7C3AED" : "2px solid #E2E8F0" }}
-              >
-                {url ? (
-                  <img src={url} alt={label} className="h-full w-full object-cover" />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-slate-50 text-2xl">📷</div>
-                )}
-                <span className="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-black text-white">
-                  {label}
-                </span>
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-[13px] font-black text-slate-800">Before / After</p>
+              <p className="text-[10px] text-slate-400">
+                {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                {" → "}
+                {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                {" · Büyütmek için tıkla"}
+              </p>
+            </div>
+            <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-600">
+              3 açı
+            </span>
+          </div>
+
+          {/* Thumbnail grid: 3 columns, each showing before+after stacked */}
+          <div className="grid grid-cols-3 gap-2">
+            {PHOTO_SLOTS.map((slot, idx) => {
+              const beforeUrl = oldestLog[slot.key];
+              const afterUrl = newestLog[slot.key];
+              const hasPhoto = beforeUrl || afterUrl;
+              return (
+                <button
+                  key={slot.key}
+                  type="button"
+                  onClick={() => setModalAngle(idx)}
+                  className="group flex flex-col gap-1 focus:outline-none"
+                >
+                  <p className="text-center text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-purple-600 transition-colors">
+                    {slot.label}
+                  </p>
+                  {/* Before thumb */}
+                  <div
+                    className="relative overflow-hidden rounded-xl ring-1 ring-slate-200 group-hover:ring-purple-300 transition-all"
+                    style={{ aspectRatio: "3/4" }}
+                  >
+                    {beforeUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={beforeUrl} alt={`before-${slot.label}`} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-50 text-[18px]">📷</div>
+                    )}
+                    <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-black text-white">ÖNCE</span>
+                  </div>
+                  {/* After thumb */}
+                  <div
+                    className="relative overflow-hidden rounded-xl ring-2 ring-purple-200 group-hover:ring-purple-500 transition-all"
+                    style={{ aspectRatio: "3/4" }}
+                  >
+                    {afterUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={afterUrl} alt={`after-${slot.label}`} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-purple-50 text-[18px]">📷</div>
+                    )}
+                    <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-black text-white">SONRA</span>
+                  </div>
+                  {/* Zoom hint */}
+                  {hasPhoto && (
+                    <p className="text-center text-[9px] text-slate-300 group-hover:text-purple-400 transition-colors">
+                      🔍 Büyüt
+                    </p>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ── Photo Modal ─────────────────────────────────────────────────────── */}
+      {modalAngle !== null && newestLog && oldestLog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.85)" }}
+          onClick={() => setModalAngle(null)}
+        >
+          <div
+            className="relative w-full max-w-lg rounded-2xl bg-[#0F0F0F] p-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-[15px] font-black text-white">
+                  {PHOTO_SLOTS[modalAngle].label} Fotoğraf
+                </p>
+                <p className="text-[11px] text-white/50">
+                  {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                  {" → "}
+                  {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                </p>
               </div>
-            ))}
+              <button
+                type="button"
+                onClick={() => setModalAngle(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-colors text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Before / After full size */}
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "ÖNCE", url: oldestLog[PHOTO_SLOTS[modalAngle].key], date: oldestLog.date },
+                { label: "SONRA", url: newestLog[PHOTO_SLOTS[modalAngle].key], date: newestLog.date },
+              ].map(({ label, url, date }) => (
+                <div key={label} className="flex flex-col gap-1.5">
+                  <div
+                    className="relative overflow-hidden rounded-xl"
+                    style={{
+                      aspectRatio: "3/4",
+                      border: label === "SONRA" ? "2px solid #7C3AED" : "2px solid #374151",
+                    }}
+                  >
+                    {url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={url} alt={label} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-zinc-900 text-2xl">
+                        <span>📷</span>
+                        <span className="text-[11px] text-white/30">Fotoğraf yok</span>
+                      </div>
+                    )}
+                    <span
+                      className="absolute bottom-2 left-2 rounded-lg px-2 py-0.5 text-[10px] font-black text-white"
+                      style={{ background: label === "SONRA" ? "#7C3AED" : "#374151" }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                  <p className="text-center text-[10px] text-white/40">
+                    {new Date(date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination — prev / dots / next */}
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setModalAngle((modalAngle + 2) % 3)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-lg"
+              >
+                ←
+              </button>
+
+              <div className="flex items-center gap-2">
+                {PHOTO_SLOTS.map((slot, idx) => (
+                  <button
+                    key={slot.key}
+                    type="button"
+                    onClick={() => setModalAngle(idx)}
+                    className="flex flex-col items-center gap-1 transition-all"
+                  >
+                    <div
+                      className="rounded-full transition-all"
+                      style={{
+                        width: idx === modalAngle ? 24 : 8,
+                        height: 8,
+                        background: idx === modalAngle ? "#7C3AED" : "rgba(255,255,255,0.25)",
+                      }}
+                    />
+                    <span
+                      className="text-[9px] font-black transition-colors"
+                      style={{ color: idx === modalAngle ? "#A78BFA" : "rgba(255,255,255,0.3)" }}
+                    >
+                      {slot.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setModalAngle((modalAngle + 1) % 3)}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-lg"
+              >
+                →
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -553,7 +728,7 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
             <table className="w-full">
               <thead>
                 <tr className="border-b border-slate-100 bg-slate-50">
-                  {["Tarih", "Kilo", "Bel", "Kalça", "Kol", "Foto"].map((h) => (
+                  {["Tarih", "Kilo", "Omuz", "Göğüs", "Bel", "Kalça", "Kol", "Bacak", "Foto"].map((h) => (
                     <th key={h} className="px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -580,11 +755,16 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
                           </span>
                         ) : <span className="text-slate-300 text-[12px]">—</span>}
                       </td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.shoulder ?? <span className="text-slate-300">—</span>}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.chest ?? <span className="text-slate-300">—</span>}</td>
                       <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.waist ?? <span className="text-slate-300">—</span>}</td>
                       <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.hips ?? <span className="text-slate-300">—</span>}</td>
                       <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.arm ?? <span className="text-slate-300">—</span>}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.leg ?? <span className="text-slate-300">—</span>}</td>
                       <td className="px-4 py-2.5 text-[14px]">
-                        {row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl ? "📸" : "—"}
+                        {row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl
+                          ? <button type="button" onClick={() => setModalAngle(0)} className="text-purple-500 hover:text-purple-700">📸</button>
+                          : "—"}
                       </td>
                     </tr>
                   );

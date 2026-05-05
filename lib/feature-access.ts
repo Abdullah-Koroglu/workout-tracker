@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { SubscriptionTier } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { resolveCoachSubscription } from "@/lib/payment-service";
 import { TIER_CONFIG, type Feature } from "@/lib/tier-limits";
 
 export type AccessResult =
@@ -8,11 +9,8 @@ export type AccessResult =
   | { allowed: false; tier: SubscriptionTier; reason: string };
 
 export async function getCoachTier(coachId: string): Promise<SubscriptionTier> {
-  const profile = await prisma.coachProfile.findUnique({
-    where: { userId: coachId },
-    select: { subscriptionTier: true },
-  });
-  return profile?.subscriptionTier ?? "FREE";
+  const resolved = await resolveCoachSubscription(coachId);
+  return resolved.tier;
 }
 
 export async function checkFeatureAccess(coachId: string, feature: Feature): Promise<AccessResult> {

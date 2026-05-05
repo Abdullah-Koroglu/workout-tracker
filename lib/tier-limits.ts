@@ -1,5 +1,7 @@
 import type { SubscriptionTier } from "@prisma/client";
 
+import { BILLING_PLANS } from "@/lib/billing-config";
+
 export type Feature = "analytics" | "bodyTracking" | "templates" | "clients";
 
 export type TierConfig = {
@@ -13,35 +15,35 @@ export type TierConfig = {
 
 export const TIER_CONFIG: Record<SubscriptionTier, TierConfig> = {
   FREE: {
-    maxClients: 3,
-    maxTemplates: 8,
+    maxClients: BILLING_PLANS.FREE.maxClients ?? 9999,
+    maxTemplates: BILLING_PLANS.FREE.maxTemplates ?? Infinity,
     analytics: true,
     bodyTracking: true,
-    label: "Starter",
+    label: BILLING_PLANS.FREE.label,
     color: "#64748B",
   },
   TIER_1: {
-    maxClients: 15,
-    maxTemplates: 20,
+    maxClients: BILLING_PLANS.TIER_1.maxClients ?? 9999,
+    maxTemplates: BILLING_PLANS.TIER_1.maxTemplates ?? Infinity,
     analytics: true,
     bodyTracking: true,
-    label: "Pro",
+    label: BILLING_PLANS.TIER_1.label,
     color: "#3B82F6",
   },
   TIER_2: {
-    maxClients: 50,
-    maxTemplates: Infinity,
+    maxClients: BILLING_PLANS.TIER_2.maxClients ?? 9999,
+    maxTemplates: BILLING_PLANS.TIER_2.maxTemplates ?? Infinity,
     analytics: true,
     bodyTracking: true,
-    label: "Elite",
+    label: BILLING_PLANS.TIER_2.label,
     color: "#F59E0B",
   },
   AGENCY: {
-    maxClients: 9999,
-    maxTemplates: Infinity,
+    maxClients: BILLING_PLANS.AGENCY.maxClients ?? 9999,
+    maxTemplates: BILLING_PLANS.AGENCY.maxTemplates ?? Infinity,
     analytics: true,
     bodyTracking: true,
-    label: "Agency",
+    label: BILLING_PLANS.AGENCY.label,
     color: "#8B5CF6",
   },
 };

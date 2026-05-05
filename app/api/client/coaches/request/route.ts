@@ -4,12 +4,13 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/api-auth";
+import { resolveCoachSubscription } from "@/lib/payment-service";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { CoachRequestEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { sendPushNotification } from "@/lib/push-notifications";
-import { canAcceptNewClient, TIER_LIMITS } from "@/lib/config/pricing";
+import { canAcceptNewClient } from "@/lib/config/pricing";
 
 const schema = z.object({
   coachId: z.string().min(1)
@@ -27,11 +28,7 @@ export async function POST(request: Request) {
   }
 
   // Capacity check: prevent sending request to full coaches
-  const coachProfile = await prisma.coachProfile.findUnique({
-    where: { userId: parsed.data.coachId },
-    select: { subscriptionTier: true },
-  });
-  const coachTier = coachProfile?.subscriptionTier ?? "FREE";
+  const coachTier = (await resolveCoachSubscription(parsed.data.coachId)).tier;
   const acceptedCount = await prisma.coachClientRelation.count({
     where: { coachId: parsed.data.coachId, status: "ACCEPTED" },
   });

@@ -43,6 +43,7 @@ type BillingCycle = "monthly" | "yearly";
 type BillingInfo = {
   tier: SubscriptionTier;
   label: string;
+  paymentProvider: "STRIPE" | "IYZICO";
   maxClients: number | null;
   currentClientCount: number;
   remainingClients: number | null;
@@ -73,6 +74,14 @@ type BillingInfo = {
     expYear: number;
   } | null;
   portalAvailable: boolean;
+  plans: Array<{
+    tier: SubscriptionTier;
+    label: string;
+    maxClients: number | null;
+    price: { monthly: number; yearly: number | null };
+    features: string[];
+    popular?: boolean;
+  }>;
 };
 
 function formatMoney(amount: number, currency = "TRY") {
@@ -143,12 +152,10 @@ function BillingSubscriptionPageInner() {
     const ordered: SubscriptionTier[] = ["FREE", "TIER_1", "TIER_2", "AGENCY"];
     const tierOrder = Object.fromEntries(ordered.map((tier, index) => [tier, index])) as Record<SubscriptionTier, number>;
 
+    const plansByTier = Object.fromEntries(info.plans.map((plan) => [plan.tier, plan])) as Record<SubscriptionTier, BillingInfo["plans"][number]>;
+
     return ordered.map((tier) => {
-      const priceMonthly =
-        tier === "FREE" ? 0 : tier === "TIER_1" ? 2500 : tier === "TIER_2" ? 7900 : 19900;
-      const priceYearly =
-        tier === "FREE" ? 0 : tier === "TIER_1" ? 2300 : tier === "TIER_2" ? 6300 : null;
-      const maxClients = tier === "FREE" ? 3 : tier === "TIER_1" ? 15 : tier === "TIER_2" ? 50 : null;
+      const planConfig = plansByTier[tier];
       const isCurrent = info.tier === tier;
       const isDowngrade = tierOrder[tier] < tierOrder[info.tier];
       const cycleSupported = billingCycle === "monthly" || info.supportedBillingCycles.includes("yearly");
@@ -156,16 +163,16 @@ function BillingSubscriptionPageInner() {
 
       return {
         tier,
-        label: tier === "FREE" ? "Starter" : tier === "TIER_1" ? "Pro" : tier === "TIER_2" ? "Elite" : "Agency",
-        price: billingCycle === "yearly" ? priceYearly ?? priceMonthly : priceMonthly,
-        priceMonthly,
-        priceYearly,
-        maxClients,
+        label: planConfig.label,
+        price: billingCycle === "yearly" ? planConfig.price.yearly ?? planConfig.price.monthly : planConfig.price.monthly,
+        priceMonthly: planConfig.price.monthly,
+        priceYearly: planConfig.price.yearly,
+        maxClients: planConfig.maxClients,
         isCurrent,
         isDowngrade,
         isUpgradeable,
-        popular: tier === "TIER_2",
-        features: PLAN_FEATURES[tier],
+        popular: Boolean(planConfig.popular),
+        features: planConfig.features.length > 0 ? planConfig.features : PLAN_FEATURES[tier],
         icon: PLAN_ICONS[tier],
         color: PLAN_COLORS[tier],
       };
@@ -368,7 +375,6 @@ function BillingSubscriptionPageInner() {
 
       <section className="mt-6 grid gap-5 lg:grid-cols-4">
         {plans.map((plan) => {
-          const Icon = plan.icon;
           const buttonLabel = plan.isCurrent
             ? "Mevcut Plan"
             : plan.isDowngrade
@@ -632,8 +638,10 @@ function BillingSubscriptionPageInner() {
               {info.paymentMethod
                 ? `Son kullanma: ${String(info.paymentMethod.expMonth).padStart(2, "0")}/${info.paymentMethod.expYear}`
                 : info.portalAvailable
-                  ? "Stripe portalinden kart ekleyebilirsin."
-                  : "Odeme yontemi yonetimi icin once Stripe musteri kaydi olusmali."}
+                  ? info.paymentProvider === "STRIPE"
+                    ? "Stripe portalinden kart ekleyebilirsin."
+                    : "Iyzico odemeleri için iç faturalama sayfasına yönlendirilirsin."
+                  : "Ödeme yöntemi yönetimi için sağlayıcı kurulumu gerekli."}
             </div>
           </div>
         </div>

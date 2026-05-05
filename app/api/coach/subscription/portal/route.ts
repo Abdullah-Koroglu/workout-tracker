@@ -1,28 +1,21 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
-import { prisma } from "@/lib/prisma";
-import { getStripe } from "@/lib/stripe";
+import { getPortalUrl } from "@/lib/payment-service";
 
 export async function POST(request: Request) {
-  const auth = await requireAuth("COACH");
-  if (auth.error) return auth.error;
+  try {
+    const auth = await requireAuth("COACH");
+    if (auth.error) return auth.error;
 
-  const profile = await prisma.coachProfile.findUnique({
-    where: { userId: auth.session.user.id },
-    select: { stripeCustomerId: true },
-  });
+    const portal = await getPortalUrl({
+      userId: auth.session.user.id,
+      origin: request.headers.get("origin") ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000",
+    });
 
-  if (!profile?.stripeCustomerId) {
-    return NextResponse.json({ error: "Stripe musteri kaydi bulunamadi." }, { status: 400 });
+    return NextResponse.json({ url: portal.url, provider: portal.provider, internal: portal.internal });
+  } catch (error) {
+    console.error("[api/coach/subscription/portal] Failed to open billing portal", error);
+    return NextResponse.json({ error: "Faturalama portalı açılamadı." }, { status: 400 });
   }
-
-  const stripe = getStripe();
-  const origin = request.headers.get("origin") ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-  const session = await stripe.billingPortal.sessions.create({
-    customer: profile.stripeCustomerId,
-    return_url: `${origin}/coach/billing`,
-  });
-
-  return NextResponse.json({ url: session.url });
 }

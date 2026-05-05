@@ -1,16 +1,8 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/stripe";
 import { prisma } from "@/lib/prisma";
+import { getTierFromStripePriceId } from "@/lib/billing-config";
 import { SubscriptionTier } from "@prisma/client";
-
-const PRICE_TO_TIER = Object.fromEntries(
-  [
-    [process.env.STRIPE_PRO_PRICE_ID, "TIER_1"],
-    [process.env.STRIPE_PRO_YEARLY_PRICE_ID, "TIER_1"],
-    [process.env.STRIPE_ELITE_PRICE_ID, "TIER_2"],
-    [process.env.STRIPE_ELITE_YEARLY_PRICE_ID, "TIER_2"],
-  ].filter((entry): entry is [string, SubscriptionTier] => Boolean(entry[0]))
-) as Record<string, SubscriptionTier>;
 
 export async function POST(request: Request) {
   const stripe = getStripe();
@@ -37,8 +29,8 @@ export async function POST(request: Request) {
     if (userId && tier && subscriptionId) {
       await prisma.coachProfile.upsert({
         where: { userId },
-        update: { subscriptionTier: tier },
-        create: { userId, subscriptionTier: tier },
+        update: { subscriptionTier: tier, subscriptionStatus: "ACTIVE" },
+        create: { userId, subscriptionTier: tier, subscriptionStatus: "ACTIVE" },
       });
     }
   }
@@ -46,12 +38,12 @@ export async function POST(request: Request) {
   if (event.type === "customer.subscription.updated") {
     const sub = event.data.object;
     const priceId = sub.items.data[0]?.price.id;
-    const tier = priceId ? PRICE_TO_TIER[priceId] : undefined;
+    const tier = priceId ? getTierFromStripePriceId(priceId) : undefined;
 
     if (tier && typeof sub.customer === "string") {
       await prisma.coachProfile.updateMany({
         where: { stripeCustomerId: sub.customer },
-        data: { subscriptionTier: tier },
+        data: { subscriptionTier: tier, subscriptionStatus: sub.status.toUpperCase() },
       });
     }
   }
@@ -61,7 +53,7 @@ export async function POST(request: Request) {
     if (typeof sub.customer === "string") {
       await prisma.coachProfile.updateMany({
         where: { stripeCustomerId: sub.customer },
-        data: { subscriptionTier: "FREE" },
+        data: { subscriptionTier: "FREE", subscriptionStatus: "CANCELED" },
       });
     }
   }

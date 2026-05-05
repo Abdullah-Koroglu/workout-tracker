@@ -6,7 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { sendPushNotification } from "@/lib/push-notifications";
 import { canAcceptNewClient, TIER_LIMITS } from "@/lib/config/pricing";
-import { TIER_LABELS, TIER_CLIENT_LIMITS } from "@/lib/subscription";
+import { resolveCoachSubscription } from "@/lib/payment-service";
+import { TIER_LABELS } from "@/lib/subscription";
 
 export async function PATCH(
   request: Request,
@@ -24,12 +25,7 @@ export async function PATCH(
   }
 
   if (status === "ACCEPTED") {
-    const coachProfile = await prisma.coachProfile.findUnique({
-      where: { userId: auth.session.user.id },
-      select: { subscriptionTier: true },
-    });
-
-    const tier = coachProfile?.subscriptionTier ?? "FREE";
+    const tier = (await resolveCoachSubscription(auth.session.user.id)).tier;
     const currentCount = await prisma.coachClientRelation.count({
       where: { coachId: auth.session.user.id, status: "ACCEPTED" },
     });

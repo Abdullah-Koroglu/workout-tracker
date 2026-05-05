@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ClipboardList, ChevronDown, ChevronUp, Loader2, Send, X } from "lucide-react";
 
 type Client = { id: string; name: string };
@@ -19,7 +19,6 @@ type CheckInWithResponse = {
   } | null;
 };
 
-const SCORE_LABELS = ["", "Çok Kötü", "Kötü", "Orta", "İyi", "Çok İyi"];
 const scoreColor = (s: number) =>
   s <= 2 ? "#EF4444" : s === 3 ? "#F59E0B" : "#22C55E";
 
@@ -48,21 +47,26 @@ export function CheckInManager({ clients }: Props) {
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "pending" | "answered">("all");
 
-  const fetchCheckIns = () => {
+  const fetchCheckIns = useCallback(() => {
     setLoading(true);
-    fetch("/api/coach/checkins")
+    fetch(`/api/coach/checkins?status=${filter}`)
       .then((r) => r.json())
       .then((d) => setCheckIns(d.checkIns ?? []))
       .finally(() => setLoading(false));
-  };
+  }, [filter]);
 
-  useEffect(() => { if (open) fetchCheckIns(); }, [open]);
+  useEffect(() => { if (open) fetchCheckIns(); }, [fetchCheckIns, open]);
 
   const toggle = (id: string) =>
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
       return next;
     });
 
@@ -116,6 +120,22 @@ export function CheckInManager({ clients }: Props) {
         <div className="border-t border-slate-100 px-4 pb-4">
           {/* Send button */}
           <div className="mt-4 flex justify-end">
+            <div className="mr-auto flex gap-1 rounded-xl bg-slate-100 p-1">
+              {[
+                { key: "all", label: "Tümü" },
+                { key: "pending", label: "Bekleyen" },
+                { key: "answered", label: "Yanıtlanan" },
+              ].map((item) => (
+                <button
+                  key={item.key}
+                  onClick={() => setFilter(item.key as typeof filter)}
+                  className="rounded-lg px-3 py-1.5 text-[11px] font-black transition"
+                  style={filter === item.key ? { background: "#1A365D", color: "#fff" } : { color: "#64748B" }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
             <button
               onClick={() => setSendOpen(true)}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-white transition hover:opacity-90"

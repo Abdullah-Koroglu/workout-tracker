@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
 import { isPrismaUniqueError } from "@/lib/auth";
+import { resolveCoachSubscription } from "@/lib/payment-service";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/validations/user";
 import { canAcceptNewClient } from "@/lib/config/pricing";
@@ -39,24 +40,20 @@ export async function POST(request: Request) {
     if (inviteCode) {
       const coachProfile = await prisma.coachProfile.findUnique({
         where: { inviteCode },
-        select: { userId: true, subscriptionTier: true },
+        select: { userId: true },
       });
       if (!coachProfile) {
         return NextResponse.json({ error: "Geçersiz davet kodu." }, { status: 400 });
       }
       resolvedCoachId = coachProfile.userId;
-      coachTier = coachProfile.subscriptionTier;
+      coachTier = (await resolveCoachSubscription(coachProfile.userId)).tier;
     } else if (coachId) {
       const coach = await prisma.user.findUnique({ where: { id: coachId, role: "COACH" } });
       if (!coach) {
         return NextResponse.json({ error: "Geçersiz davet linki." }, { status: 400 });
       }
-      const profile = await prisma.coachProfile.findUnique({
-        where: { userId: coachId },
-        select: { subscriptionTier: true },
-      });
       resolvedCoachId = coachId;
-      coachTier = profile?.subscriptionTier ?? "FREE";
+      coachTier = (await resolveCoachSubscription(coachId)).tier;
     }
 
     const normalizedEmail = parsed.data.email.trim().toLowerCase();

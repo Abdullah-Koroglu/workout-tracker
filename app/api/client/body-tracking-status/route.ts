@@ -59,7 +59,7 @@ export async function GET() {
   const today = todayMidnightUTC();
   const monStart = weekStart(today);
 
-  const [prefs, todayLog, lastLog, weekLogs] = await Promise.all([
+  const [prefs, todayLog, lastLog, weekLogs, totalLogs] = await Promise.all([
     prisma.bodyTrackingPreference.findUnique({ where: { clientId } }),
     prisma.bodyMetricLog.findUnique({ where: { clientId_date: { clientId, date: today } } }),
     prisma.bodyMetricLog.findFirst({
@@ -70,6 +70,7 @@ export async function GET() {
     prisma.bodyMetricLog.count({
       where: { clientId, date: { gte: monStart, lt: today } },
     }),
+    prisma.bodyMetricLog.count({ where: { clientId } }),
   ]);
 
   if (!prefs) {
@@ -80,6 +81,7 @@ export async function GET() {
       requiresMeasurements: false,
       requiresPhotos: false,
       activeMeasurements: [],
+      totalLogs: 0,
     });
   }
 
@@ -106,5 +108,6 @@ export async function GET() {
     requiresMeasurements,
     requiresPhotos,
     activeMeasurements,
+    totalLogs,
   });
 }

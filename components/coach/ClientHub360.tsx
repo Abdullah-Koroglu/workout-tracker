@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -426,13 +426,40 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
 }
 
 // ─── TAB 3: Body & Nutrition ──────────────────────────────────────────────────
+type BodyLogEntry = {
+  id: string; date: string; weight: number | null;
+  shoulder: number | null; chest: number | null; waist: number | null;
+  hips: number | null; arm: number | null; leg: number | null;
+  frontPhotoUrl: string | null; sidePhotoUrl: string | null; backPhotoUrl: string | null;
+};
+
 function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal: string | null; fitnessLevel: string | null }) {
-  const BODY_METRICS_HISTORY = [
-    { date: "24 Nis", weight: 82.4, fat: 16.2, waist: 84 },
-    { date: "17 Nis", weight: 83.1, fat: 16.8, waist: 85 },
-    { date: "10 Nis", weight: 83.8, fat: 17.2, waist: 86 },
-    { date: "03 Nis", weight: 84.2, fat: 17.6, waist: 86 },
-  ];
+  const [logs, setLogs] = useState<BodyLogEntry[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(true);
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    fetch(`/api/coach/clients/${clientId}/body-logs`)
+      .then((r) => r.json())
+      .then((data) => setLogs(data.logs ?? []))
+      .catch(() => setLogs([]))
+      .finally(() => setLoadingLogs(false));
+  }, [clientId]);
+
+  const weightLogs = [...logs].reverse().filter((l) => l.weight !== null);
+  const weightChartData = weightLogs.map((l) => ({
+    date: new Date(l.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" }),
+    kg: l.weight,
+  }));
+
+  const newestLog = logs[0] ?? null;
+  const oldestLog = logs[logs.length - 1] ?? null;
+
+  const firstWeight = weightLogs[0]?.weight ?? null;
+  const lastWeight = weightLogs[weightLogs.length - 1]?.weight ?? null;
+  const weightDelta = firstWeight !== null && lastWeight !== null
+    ? +(lastWeight - firstWeight).toFixed(1) : null;
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
@@ -441,55 +468,131 @@ function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal
       </div>
       <BodyTrackingSettings clientId={clientId} />
 
-      {/* Body Measurements History */}
+      {/* ── Kilo Trendi ────────────────────────────────────────────────────── */}
+      {loadingLogs ? (
+        <div className="h-32 animate-pulse rounded-2xl bg-slate-100" />
+      ) : weightChartData.length >= 2 ? (
+        <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
+          <div className="mb-3 flex items-center justify-between">
+            <div>
+              <p className="text-[13px] font-black text-slate-800">Kilo Trendi</p>
+              <p className="text-[10px] text-slate-400">{logs.length} kayıt · kg</p>
+            </div>
+            {weightDelta !== null && (
+              <span
+                className="rounded-full px-2.5 py-1 text-[11px] font-black text-white"
+                style={{ background: weightDelta <= 0 ? "#22C55E" : "#EF4444" }}
+              >
+                {weightDelta > 0 ? "+" : ""}{weightDelta} kg
+              </span>
+            )}
+          </div>
+          <ResponsiveContainer width="100%" height={160}>
+            <LineChart data={weightChartData} margin={{ top: 4, right: 4, left: -20, bottom: 4 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+              <XAxis dataKey="date" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+              <Tooltip content={<CustomTooltip />} />
+              <Line dataKey="kg" name="Kilo" stroke="#7C3AED" strokeWidth={2.5} dot={{ r: 3, fill: "#7C3AED" }} activeDot={{ r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      ) : null}
+
+      {/* ── Before / After ─────────────────────────────────────────────────── */}
+      {newestLog && oldestLog && newestLog.id !== oldestLog.id &&
+        (newestLog.frontPhotoUrl || oldestLog.frontPhotoUrl) && (
+        <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
+          <p className="mb-1 text-[13px] font-black text-slate-800">Before / After — Ön Fotoğraf</p>
+          <p className="mb-3 text-[10px] text-slate-400">
+            {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+            {" → "}
+            {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: "ÖNCE", url: oldestLog.frontPhotoUrl },
+              { label: "SONRA", url: newestLog.frontPhotoUrl },
+            ].map(({ label, url }) => (
+              <div
+                key={label}
+                className="relative overflow-hidden rounded-xl"
+                style={{ aspectRatio: "3/4", border: label === "SONRA" ? "2px solid #7C3AED" : "2px solid #E2E8F0" }}
+              >
+                {url ? (
+                  <img src={url} alt={label} className="h-full w-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-slate-50 text-2xl">📷</div>
+                )}
+                <span className="absolute bottom-1.5 left-1.5 rounded bg-black/50 px-1.5 py-0.5 text-[9px] font-black text-white">
+                  {label}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── Body Metrics Log Table ──────────────────────────────────────────── */}
       <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
           <p className="text-[13px] font-black text-slate-800">Vücut Ölçümleri</p>
+          <span className="text-[11px] text-slate-400">{logs.length} kayıt</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100">
-                {["Tarih", "Kilo", "Yağ %", "Bel (cm)"].map((h) => (
-                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-bold uppercase tracking-wider text-slate-400">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {BODY_METRICS_HISTORY.map((row, i) => {
-                const prev = BODY_METRICS_HISTORY[i + 1];
-                const weightDiff = prev ? (row.weight - prev.weight).toFixed(1) : null;
-                const fatDiff = prev ? (row.fat - prev.fat).toFixed(1) : null;
-                return (
-                  <tr key={i} className="border-b border-slate-50 hover:bg-slate-50">
-                    <td className="px-4 py-2.5 text-xs font-semibold text-slate-600">{row.date}</td>
-                    <td className="px-4 py-2.5">
-                      <span className="text-sm font-black text-slate-800">{row.weight}</span>
-                      {weightDiff && (
-                        <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(weightDiff) < 0 ? "#22C55E" : "#EF4444" }}>
-                          {parseFloat(weightDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(weightDiff))}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5">
-                      <span className="text-sm font-black text-slate-800">{row.fat}%</span>
-                      {fatDiff && (
-                        <span className="text-[10px] font-bold ml-1.5" style={{ color: parseFloat(fatDiff) < 0 ? "#22C55E" : "#EF4444" }}>
-                          {parseFloat(fatDiff) < 0 ? "↓" : "↑"}{Math.abs(parseFloat(fatDiff))}
-                        </span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-sm font-black text-slate-800">{row.waist}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-          <div className="mt-3 rounded-xl px-4 py-2.5 mx-4 mb-3" style={{ background: "#22C55E15", border: "1px solid #22C55E26" }}>
-            <div className="text-[12px] font-bold text-green-700">📉 Aylık Özet: −1.8 kg · −1.4% yağ</div>
-            <div className="text-[10px] text-slate-400 mt-1">Hedefle uyumlu ilerleme. Devam et!</div>
+        {loadingLogs ? (
+          <div className="p-4 space-y-2">
+            {[1, 2, 3].map((i) => <div key={i} className="h-8 animate-pulse rounded-lg bg-slate-100" />)}
           </div>
-        </div>
+        ) : logs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-2 py-10">
+            <span className="text-3xl">📏</span>
+            <p className="text-[13px] text-slate-400">Henüz ölçüm girilmemiş.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50">
+                  {["Tarih", "Kilo", "Bel", "Kalça", "Kol", "Foto"].map((h) => (
+                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {logs.slice(0, 15).map((row, i) => {
+                  const prev = logs[i + 1];
+                  const wDiff = prev?.weight != null && row.weight != null
+                    ? +(row.weight - prev.weight).toFixed(1) : null;
+                  return (
+                    <tr key={row.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                      <td className="px-4 py-2.5 text-[12px] font-semibold text-slate-600 whitespace-nowrap">
+                        {new Date(row.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
+                      </td>
+                      <td className="px-4 py-2.5 whitespace-nowrap">
+                        {row.weight != null ? (
+                          <span className="flex items-center gap-1">
+                            <span className="text-[13px] font-black text-slate-800">{row.weight}</span>
+                            {wDiff !== null && wDiff !== 0 && (
+                              <span className="text-[10px] font-bold" style={{ color: wDiff < 0 ? "#22C55E" : "#EF4444" }}>
+                                {wDiff < 0 ? "↓" : "↑"}{Math.abs(wDiff)}
+                              </span>
+                            )}
+                          </span>
+                        ) : <span className="text-slate-300 text-[12px]">—</span>}
+                      </td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.waist ?? <span className="text-slate-300">—</span>}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.hips ?? <span className="text-slate-300">—</span>}</td>
+                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.arm ?? <span className="text-slate-300">—</span>}</td>
+                      <td className="px-4 py-2.5 text-[14px]">
+                        {row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl ? "📸" : "—"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
   );

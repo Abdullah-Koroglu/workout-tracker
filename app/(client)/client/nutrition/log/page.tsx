@@ -116,6 +116,8 @@ export default function NutritionLogPage() {
     setSubmitting(false);
 
     if (!response.ok) {
+      console.log(data.error);
+      
       error(typeof data.error === "string" ? data.error : "Öğün kaydedilemedi.");
       return;
     }

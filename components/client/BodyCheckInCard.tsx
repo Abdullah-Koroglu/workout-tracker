@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
 const MEASUREMENT_LABELS: Record<string, string> = {
   shoulder: "Omuz (cm)",
@@ -18,6 +19,7 @@ type Status = {
   requiresMeasurements: boolean;
   requiresPhotos: boolean;
   activeMeasurements: string[];
+  totalLogs: number;
 };
 
 export function BodyCheckInCard() {
@@ -36,8 +38,8 @@ export function BodyCheckInCard() {
       .catch(() => null);
   }, []);
 
-  if (!status || !status.required) return null;
-  if (done) return null;
+  if (!status) return null;
+  if (!status.required && status.totalLogs === 0) return null;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -68,8 +70,8 @@ export function BodyCheckInCard() {
 
   return (
     <>
-      {/* Card (collapsed) */}
-      {!open && (
+      {/* Card (collapsed) — only shown when action required today */}
+      {status.required && !done && !open && (
         <button
           type="button"
           onClick={() => setOpen(true)}
@@ -104,8 +106,8 @@ export function BodyCheckInCard() {
         </button>
       )}
 
-      {/* Inline form (expanded) */}
-      {open && (
+      {/* Inline form (expanded) — only when action required */}
+      {status.required && !done && open && (
         <div
           className="rounded-[20px] bg-white p-5 shadow-sm"
           style={{ border: "1px solid rgba(0,0,0,0.06)", borderTop: "4px solid #7C3AED" }}
@@ -207,6 +209,23 @@ export function BodyCheckInCard() {
             </button>
           </form>
         </div>
+      )}
+      {/* History link — shown when previous logs exist */}
+      {status.totalLogs > 0 && (
+        <Link
+          href="/client/body-progress"
+          className="flex items-center justify-between rounded-[18px] bg-white px-4 py-3 shadow-sm"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="text-[18px]">📊</span>
+            <div>
+              <p className="text-[13px] font-black text-slate-800">Dönüşüm Radarım</p>
+              <p className="text-[11px] text-slate-400">{status.totalLogs} kayıt · kilo, ölçüm, fotoğraf</p>
+            </div>
+          </div>
+          <span className="text-[12px] font-semibold text-purple-600">Gör →</span>
+        </Link>
       )}
     </>
   );

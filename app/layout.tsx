@@ -101,9 +101,10 @@ export default function RootLayout({
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         {/* iOS PWA – metadata API bu tag'leri inject etmiyor, explicit yazılması şart */}
         <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Fit Coach" />
         <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#0F172A" />
 
         <link rel="apple-touch-icon" href="/apple-icon-180.png" />
         <link rel="icon" type="image/png" sizes="196x196" href="/favicon-196.png" />

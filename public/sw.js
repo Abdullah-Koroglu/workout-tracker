@@ -1,6 +1,6 @@
-const STATIC_CACHE = "fitcoach-static-v5";
-const PAGE_CACHE = "fitcoach-pages-v5";
-const API_CACHE = "fitcoach-api-v5";
+const STATIC_CACHE = "fitcoach-static-v6";
+const PAGE_CACHE = "fitcoach-pages-v6";
+const API_CACHE = "fitcoach-api-v6";
 const CACHE_ALLOWLIST = [STATIC_CACHE, PAGE_CACHE, API_CACHE];
 
 const PRECACHE_URLS = [
@@ -50,6 +50,27 @@ async function cacheFirstStatic(request) {
   }
 
   return networkResponse;
+}
+
+async function networkFirstStatic(request) {
+  try {
+    const networkResponse = await fetch(request);
+    if (networkResponse && networkResponse.status === 200) {
+      const cache = await caches.open(STATIC_CACHE);
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch {
+    const cached = await caches.match(request);
+    if (cached) {
+      return cached;
+    }
+
+    return new Response("Offline", {
+      status: 503,
+      headers: { "Content-Type": "text/plain" }
+    });
+  }
 }
 
 async function networkFirstPage(request) {
@@ -146,8 +167,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  const isStaticAsset = ["style", "script", "image", "font", "manifest", "worker"].includes(event.request.destination);
-  if (isStaticAsset) {
+  const staticDestination = event.request.destination;
+  if (["script", "style", "worker"].includes(staticDestination)) {
+    event.respondWith(networkFirstStatic(event.request));
+    return;
+  }
+
+  if (["image", "font", "manifest"].includes(staticDestination)) {
     event.respondWith(cacheFirstStatic(event.request));
   }
 });

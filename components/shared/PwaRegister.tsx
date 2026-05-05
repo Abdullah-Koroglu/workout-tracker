@@ -4,11 +4,32 @@ import { useEffect } from "react";
 
 export function PwaRegister() {
   useEffect(() => {
-    if (process.env.NODE_ENV === "test") {
+    if (!("serviceWorker" in navigator)) {
       return;
     }
 
-    if (!("serviceWorker" in navigator)) {
+    if (process.env.NODE_ENV !== "production") {
+      // Service workers in dev can cache stale Next.js chunks and cause white screens.
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister().catch((error) => {
+            console.error("Service worker unregister failed:", error);
+          });
+        });
+      });
+
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          keys
+            .filter((key) => key.startsWith("fitcoach-"))
+            .forEach((key) => {
+              caches.delete(key).catch((error) => {
+                console.error("Cache cleanup failed:", error);
+              });
+            });
+        });
+      }
+
       return;
     }
 

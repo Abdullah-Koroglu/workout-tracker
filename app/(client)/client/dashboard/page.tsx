@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CheckCircle2, ChevronRight, XCircle } from "lucide-react";
+import { Prisma } from "@prisma/client";
 
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -42,6 +43,14 @@ type DailyMobilityRoutine = {
     };
   }>;
 };
+
+function isMissingMobilityRoutineTableError(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2021" &&
+    error.meta?.modelName === "MobilityRoutine"
+  );
+}
 
 export default async function ClientDashboardPage() {
   const session = await auth();
@@ -108,8 +117,10 @@ export default async function ClientDashboardPage() {
     select: { coachId: true },
   });
 
-  const dailyMobilityRoutines: DailyMobilityRoutine[] = primaryCoachRelation
-    ? await prisma.mobilityRoutine.findMany({
+  let dailyMobilityRoutines: DailyMobilityRoutine[] = [];
+  if (primaryCoachRelation) {
+    try {
+      dailyMobilityRoutines = await prisma.mobilityRoutine.findMany({
         where: { coachId: primaryCoachRelation.coachId },
         orderBy: { createdAt: "asc" },
         take: 3,
@@ -129,8 +140,14 @@ export default async function ClientDashboardPage() {
             },
           },
         },
-      })
-    : [];
+      });
+    } catch (error) {
+      if (!isMissingMobilityRoutineTableError(error)) {
+        throw error;
+      }
+      dailyMobilityRoutines = [];
+    }
+  }
 
   const todaysAssignments = assignments.filter(
     (a) => toDayKey(new Date(a.scheduledFor)) === todayKey,

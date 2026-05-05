@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { resolveCoachSubscription } from "@/lib/payment-service";
 import { TIER_CONFIG } from "@/lib/tier-limits";
 
 export async function GET() {
@@ -9,16 +10,13 @@ export async function GET() {
 
   const coachId = auth.session.user.id;
 
-  const [profile, templateCount, clientCount] = await Promise.all([
-    prisma.coachProfile.findUnique({
-      where: { userId: coachId },
-      select: { subscriptionTier: true },
-    }),
+  const [resolved, templateCount, clientCount] = await Promise.all([
+    resolveCoachSubscription(coachId),
     prisma.workoutTemplate.count({ where: { coachId } }),
     prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
   ]);
 
-  const tier = profile?.subscriptionTier ?? "FREE";
+  const tier = resolved.tier;
   const cfg = TIER_CONFIG[tier];
 
   return NextResponse.json({

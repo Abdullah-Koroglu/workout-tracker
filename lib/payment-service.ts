@@ -48,6 +48,13 @@ export type ResolvedSubscription = {
   stripeCustomerId: string | null;
 };
 
+function getLocalTierFallback(profile: CoachBillingProfile): SubscriptionTier {
+  // Keep paid local tier when remote provider data is temporarily unavailable.
+  return profile.subscriptionTier === "FREE"
+    ? "FREE"
+    : profile.subscriptionTier;
+}
+
 function getOrigin(origin?: string | null) {
   return origin ?? process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 }
@@ -187,14 +194,15 @@ function iyzicoRetrieveCheckoutForm(client: Iyzipay, checkoutFormToken: string) 
 export async function resolveCoachSubscription(userId: string): Promise<ResolvedSubscription> {
   const provider = getPaymentProvider();
   const profile = await getCoachBillingProfile(userId);
+  const localTierFallback = getLocalTierFallback(profile);
 
   if (provider === "STRIPE") {
     if (!profile.stripeCustomerId) {
       return {
         provider,
-        tier: isActiveSubscriptionStatus(profile.subscriptionStatus) ? profile.subscriptionTier : "FREE",
+        tier: localTierFallback,
         status: profile.subscriptionStatus,
-        active: isActiveSubscriptionStatus(profile.subscriptionStatus),
+        active: localTierFallback !== "FREE" || isActiveSubscriptionStatus(profile.subscriptionStatus),
         stripeCustomerId: null,
       };
     }
@@ -204,9 +212,9 @@ export async function resolveCoachSubscription(userId: string): Promise<Resolved
       if (!activeSubscription) {
         return {
           provider,
-          tier: "FREE",
+          tier: localTierFallback,
           status: profile.subscriptionStatus,
-          active: false,
+          active: localTierFallback !== "FREE",
           stripeCustomerId: profile.stripeCustomerId,
         };
       }
@@ -223,9 +231,9 @@ export async function resolveCoachSubscription(userId: string): Promise<Resolved
       console.error("[payment-service] Failed to resolve Stripe subscription", error);
       return {
         provider,
-        tier: isActiveSubscriptionStatus(profile.subscriptionStatus) ? profile.subscriptionTier : "FREE",
+        tier: localTierFallback,
         status: profile.subscriptionStatus,
-        active: isActiveSubscriptionStatus(profile.subscriptionStatus),
+        active: localTierFallback !== "FREE" || isActiveSubscriptionStatus(profile.subscriptionStatus),
         stripeCustomerId: profile.stripeCustomerId,
       };
     }

@@ -19,6 +19,8 @@ import { AssignTemplateModal } from "@/components/coach/AssignTemplateModal";
 import { NutritionPlanManager } from "@/components/coach/NutritionPlanManager";
 import { MealLogFeed } from "@/components/coach/MealLogFeed";
 import { BodyTrackingSettings } from "@/components/coach/BodyTrackingSettings";
+import { FeatureGate } from "@/components/shared/FeatureGate";
+import { TIER_CONFIG } from "@/lib/tier-limits";
 import { PaginationControls } from "@/components/shared/PaginationControls";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -971,14 +973,20 @@ export function ClientHub360(props: ClientHub360Props) {
 
         {/* Tab bar */}
         <div className="flex gap-1 rounded-xl bg-white/10 p-1 lg:gap-5 lg:rounded-none lg:bg-transparent lg:p-0">
-          {TABS.map(({ key, label }) => (
-            <button key={key} onClick={() => setActiveTab(key)}
-              className={`flex-1 rounded-lg py-1.5 text-[11px] font-black transition-all lg:flex-none lg:rounded-none lg:px-0 lg:py-2 lg:text-xs ${activeTab === key
-                ? "bg-white text-[#1A365D] lg:border-b-2 lg:border-orange-500 lg:bg-transparent lg:text-orange-500"
-                : "bg-transparent text-white/60 lg:border-b-2 lg:border-transparent lg:text-slate-400 lg:hover:text-slate-600"}`}>
-              {label}
-            </button>
-          ))}
+          {TABS.map(({ key, label }) => {
+            const isLocked =
+              (key === "performance" && !TIER_CONFIG[subscriptionTier as keyof typeof TIER_CONFIG]?.analytics) ||
+              (key === "body" && !TIER_CONFIG[subscriptionTier as keyof typeof TIER_CONFIG]?.bodyTracking);
+            return (
+              <button key={key} onClick={() => setActiveTab(key)}
+                className={`flex-1 items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-black transition-all lg:flex-none lg:rounded-none lg:px-0 lg:py-2 lg:text-xs ${activeTab === key
+                  ? "bg-white text-[#1A365D] lg:border-b-2 lg:border-orange-500 lg:bg-transparent lg:text-orange-500"
+                  : "bg-transparent text-white/60 lg:border-b-2 lg:border-transparent lg:text-slate-400 lg:hover:text-slate-600"}`}>
+                {label}
+                {isLocked && <span className="ml-0.5 text-[9px]">🔒</span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -998,9 +1006,15 @@ export function ClientHub360(props: ClientHub360Props) {
           />
         )}
         {activeTab === "performance" && (
-          <PerformanceTab strengthTrend={strengthTrend} weeklyTonnage={weeklyTonnage} />
+          <FeatureGate feature="analytics" tier={subscriptionTier as import("@prisma/client").SubscriptionTier}>
+            <PerformanceTab strengthTrend={strengthTrend} weeklyTonnage={weeklyTonnage} />
+          </FeatureGate>
         )}
-        {activeTab === "body" && <BodyTab clientId={clientId} weightKg={weightKg} goal={goal} fitnessLevel={fitnessLevel} />}
+        {activeTab === "body" && (
+          <FeatureGate feature="bodyTracking" tier={subscriptionTier as import("@prisma/client").SubscriptionTier}>
+            <BodyTab clientId={clientId} weightKg={weightKg} goal={goal} fitnessLevel={fitnessLevel} />
+          </FeatureGate>
+        )}
         {activeTab === "history" && (
           <HistoryTab
             heatmap={heatmap}

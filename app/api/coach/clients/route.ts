@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { calculateComplianceScore } from "@/lib/analytics/compliance";
+import { checkFeatureAccess, tierAccessDenied } from "@/lib/feature-access";
 
 export async function GET() {
   const auth = await requireAuth("COACH");
@@ -43,6 +44,9 @@ export async function GET() {
 export async function POST(request: Request) {
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
+
+  const access = await checkFeatureAccess(auth.session.user.id, "clients");
+  if (!access.allowed) return tierAccessDenied(access.reason, access.tier);
 
   const body = await request.json();
   const clientId = String(body.clientId || "");

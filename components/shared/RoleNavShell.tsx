@@ -21,6 +21,14 @@ import Image from "next/image";
 import { NotificationBell } from "./NotificationBell";
 
 type Role = "COACH" | "CLIENT";
+type SubscriptionTier = "FREE" | "TIER_1" | "TIER_2" | "AGENCY";
+
+const TIER_BADGE: Record<SubscriptionTier, { label: string; color: string }> = {
+  FREE:   { label: "Starter", color: "#64748B" },
+  TIER_1: { label: "Pro",     color: "#3B82F6" },
+  TIER_2: { label: "Elite",   color: "#F59E0B" },
+  AGENCY: { label: "Agency",  color: "#8B5CF6" },
+};
 
 type NavItem = {
   href: string;
@@ -69,10 +77,12 @@ function isActive(pathname: string, href: string) {
 export function RoleNavShell({
   role,
   userName,
+  tier,
   children,
 }: {
   role: Role;
   userName?: string | null;
+  tier?: SubscriptionTier | null;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -80,7 +90,7 @@ export function RoleNavShell({
   const items = role === "COACH" ? coachItems : clientItems;
   const mobileItems = role === "COACH" ? coachMobileItems : clientMobileItems;
 
-  const roleLabel = role === "COACH" ? "Elite Coach" : "Client";
+  const roleLabel = role === "COACH" ? "Coach" : "Client";
   const roleBrand = role === "COACH" ? "Fit Coach Pro" : "Fit Coach";
   const desktopActiveClass = role === "COACH"
     ? "bg-orange-600 text-white"
@@ -125,11 +135,30 @@ export function RoleNavShell({
             <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-orange-500 bg-slate-700 text-xs font-bold text-white">
               {(userName || "U").slice(0, 1).toUpperCase()}
             </div>
-            <div className="overflow-hidden">
+            <div className="min-w-0 flex-1 overflow-hidden">
               <p className="truncate text-xs font-bold text-white">{userName ?? "Kullanıcı"}</p>
-              <p className="truncate text-[10px] text-slate-400">{roleLabel}</p>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <p className="truncate text-[10px] text-slate-400">{roleLabel}</p>
+                {role === "COACH" && tier && (
+                  <span
+                    className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-black text-white"
+                    style={{ background: TIER_BADGE[tier].color }}
+                  >
+                    {TIER_BADGE[tier].label}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+          {role === "COACH" && tier === "FREE" && (
+            <Link
+              href="/coach/billing"
+              className="mx-2 mt-2 flex items-center justify-center gap-1.5 rounded-lg py-2 text-[11px] font-black transition-colors hover:opacity-90"
+              style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)", color: "#fff" }}
+            >
+              ⚡ Pro'ya Geç
+            </Link>
+          )}
         </div>
       </aside>
 

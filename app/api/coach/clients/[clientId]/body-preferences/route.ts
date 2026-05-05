@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import type { TrackingFrequency } from "@prisma/client";
+import { checkFeatureAccess, tierAccessDenied } from "@/lib/feature-access";
 
 const VALID_FREQUENCIES: TrackingFrequency[] = [
   "OFF", "DAILY", "EVERY_2_DAYS", "EVERY_3_DAYS",
@@ -24,6 +25,9 @@ export async function GET(
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
 
+  const access = await checkFeatureAccess(auth.session.user.id, "bodyTracking");
+  if (!access.allowed) return tierAccessDenied(access.reason, access.tier);
+
   const { clientId } = await context.params;
   if (!(await ensureCoachOwnsClient(auth.session.user.id, clientId))) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
@@ -39,6 +43,9 @@ export async function PUT(
 ) {
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
+
+  const access = await checkFeatureAccess(auth.session.user.id, "bodyTracking");
+  if (!access.allowed) return tierAccessDenied(access.reason, access.tier);
 
   const { clientId } = await context.params;
   if (!(await ensureCoachOwnsClient(auth.session.user.id, clientId))) {

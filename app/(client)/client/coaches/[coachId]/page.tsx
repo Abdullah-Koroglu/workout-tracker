@@ -88,7 +88,7 @@ export default async function CoachVitrinPage({
 
       {/* ── Hero banner ── */}
       <PageHero
-        eyebrow="Elite Coach"
+        // eyebrow="Elite Coach"
         title={coach.name}
         subtitle={profile?.experienceYears != null ? `${profile.experienceYears} yıl tecrübe` : undefined}
         variant="navy"

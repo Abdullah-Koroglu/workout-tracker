@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { checkFeatureAccess, tierAccessDenied } from "@/lib/feature-access";
 
 async function ensureCoachOwnsClient(coachId: string, clientId: string) {
   const relation = await prisma.coachClientRelation.findFirst({
@@ -16,6 +17,9 @@ export async function GET(
 ) {
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
+
+  const access = await checkFeatureAccess(auth.session.user.id, "bodyTracking");
+  if (!access.allowed) return tierAccessDenied(access.reason, access.tier);
 
   const { clientId } = await context.params;
 

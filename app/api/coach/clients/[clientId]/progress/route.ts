@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { checkFeatureAccess, tierAccessDenied } from "@/lib/feature-access";
 
 export async function GET(
   request: Request,
@@ -9,6 +10,9 @@ export async function GET(
 ) {
   const auth = await requireAuth("COACH");
   if (auth.error) return auth.error;
+
+  const access = await checkFeatureAccess(auth.session.user.id, "analytics");
+  if (!access.allowed) return tierAccessDenied(access.reason, access.tier);
 
   const { clientId } = await params;
   const { searchParams } = new URL(request.url);

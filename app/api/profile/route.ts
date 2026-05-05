@@ -4,7 +4,9 @@ import path from "path";
 import { randomBytes } from "crypto";
 
 import { requireAuth } from "@/lib/api-auth";
+import { isPrismaUniqueError } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { clientProfileSchema, coachProfileSchema } from "@/validations/profile";
 
 async function getCoachAvatarUrl(userId: string): Promise<string | null> {
   const dir = path.join(process.cwd(), "public", "uploads", "avatars");
@@ -19,94 +21,155 @@ async function getCoachAvatarUrl(userId: string): Promise<string | null> {
   }
 }
 
+function normalizeName(name?: string) {
+  return name?.trim() || undefined;
+}
+
+function normalizeEmail(email?: string) {
+  return email?.trim().toLowerCase() || undefined;
+}
+
+function toNullableDate(value?: string | null) {
+  return value ? new Date(value) : null;
+}
+
 export async function GET() {
-  const auth = await requireAuth();
-  if ('error' in auth) return auth.error;
+  try {
+    const auth = await requireAuth();
+    if ("error" in auth) return auth.error;
 
-  const userId = auth.session.user.id;
-  const role = auth.session.user.role;
+    const userId = auth.session.user.id;
+    const role = auth.session.user.role;
 
-  if (role === "COACH") {
-    const [user, profile, avatarUrl] = await Promise.all([
-      prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-      prisma.coachProfile.findUnique({
-        where: { userId },
-        include: { packages: { where: { isActive: true }, orderBy: { createdAt: "asc" } } },
+    if (role === "COACH") {
+      const [user, profile, avatarUrl] = await Promise.all([
+        prisma.user.findUnique({
+          where: { id: userId },
+          select: { name: true, email: true },
+        }),
+        prisma.coachProfile.findUnique({
+          where: { userId },
+          include: { packages: { where: { isActive: true }, orderBy: { createdAt: "asc" } } },
+        }),
+        getCoachAvatarUrl(userId),
+      ]);
+
+      return NextResponse.json({
+        profile: { ...profile, name: user?.name, email: user?.email, avatarUrl },
+      });
+    }
+
+    const [user, profile] = await Promise.all([
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true },
       }),
-      getCoachAvatarUrl(userId),
+      prisma.clientProfile.findUnique({ where: { userId } }),
     ]);
-    return NextResponse.json({ profile: { ...profile, name: user?.name, avatarUrl } });
-  }
 
-  const [user, profile] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId }, select: { name: true } }),
-    prisma.clientProfile.findUnique({ where: { userId } }),
-  ]);
-  return NextResponse.json({ profile: { ...profile, name: user?.name } });
+    return NextResponse.json({ profile: { ...profile, name: user?.name, email: user?.email } });
+  } catch (error) {
+    console.error("[api/profile] Failed to load profile", error);
+    return NextResponse.json({ error: "Profil yüklenemedi." }, { status: 500 });
+  }
 }
 
 export async function PUT(request: Request) {
-  const auth = await requireAuth();
-  if ('error' in auth) return auth.error;
+  try {
+    const auth = await requireAuth();
+    if ("error" in auth) return auth.error;
 
-  const userId = auth.session.user.id;
-  const role = auth.session.user.role;
-  const body = await request.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
-  }
+    const userId = auth.session.user.id;
+    const role = auth.session.user.role;
+    const body = await request.json().catch(() => null);
 
-  const { name } = body as Record<string, unknown>;
+    if (!body || typeof body !== "object") {
+      return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
+    }
 
-  // Update User.name if provided
-  if (typeof name === "string" && name.trim()) {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { name: name.trim() },
-    });
-  }
+    if (role === "COACH") {
+      const parsed = coachProfileSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+      }
 
-  if (role === "COACH") {
-    const { bio, specialties, experienceYears, socialMediaUrl } = body as Record<string, unknown>;
-    const profile = await prisma.coachProfile.upsert({
+      const data = parsed.data;
+
+      if (data.name || data.email) {
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            ...(data.name ? { name: normalizeName(data.name) } : {}),
+            ...(data.email ? { email: normalizeEmail(data.email) } : {}),
+          },
+        });
+      }
+
+      const profile = await prisma.coachProfile.upsert({
+        where: { userId },
+        create: {
+          userId,
+          inviteCode: randomBytes(10).toString("hex"),
+          bio: data.bio ?? null,
+          specialties: data.specialties ?? undefined,
+          experienceYears: data.experienceYears ?? null,
+          socialMediaUrl: data.socialMediaUrl ?? null,
+        },
+        update: {
+          bio: data.bio ?? null,
+          specialties: data.specialties ?? undefined,
+          experienceYears: data.experienceYears ?? null,
+          socialMediaUrl: data.socialMediaUrl ?? null,
+        },
+      });
+
+      return NextResponse.json({ profile });
+    }
+
+    const parsed = clientProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const data = parsed.data;
+
+    if (data.name || data.email) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          ...(data.name ? { name: normalizeName(data.name) } : {}),
+          ...(data.email ? { email: normalizeEmail(data.email) } : {}),
+        },
+      });
+    }
+
+    const profile = await prisma.clientProfile.upsert({
       where: { userId },
       create: {
         userId,
-        inviteCode: randomBytes(10).toString("hex"),
-        bio: typeof bio === "string" ? bio.trim() || null : null,
-        specialties: Array.isArray(specialties) ? specialties : undefined,
-        experienceYears: typeof experienceYears === "number" ? experienceYears : null,
-        socialMediaUrl: typeof socialMediaUrl === "string" ? socialMediaUrl.trim() || null : null,
+        birthDate: toNullableDate(data.birthDate),
+        heightCm: data.heightCm ?? null,
+        weightKg: data.weightKg ?? null,
+        goal: data.goal ?? null,
+        fitnessLevel: data.fitnessLevel ?? null,
       },
       update: {
-        bio: typeof bio === "string" ? bio.trim() || null : null,
-        specialties: Array.isArray(specialties) ? specialties : undefined,
-        experienceYears: typeof experienceYears === "number" ? experienceYears : null,
-        socialMediaUrl: typeof socialMediaUrl === "string" ? socialMediaUrl.trim() || null : null,
+        birthDate: toNullableDate(data.birthDate),
+        heightCm: data.heightCm ?? null,
+        weightKg: data.weightKg ?? null,
+        goal: data.goal ?? null,
+        fitnessLevel: data.fitnessLevel ?? null,
       },
     });
-    return NextResponse.json({ profile });
-  }
 
-  // CLIENT
-  const { birthDate, heightCm, weightKg, goal, fitnessLevel } = body as Record<string, unknown>;
-  const profile = await prisma.clientProfile.upsert({
-    where: { userId },
-    create: {
-      userId,
-      birthDate: typeof birthDate === "string" && birthDate ? new Date(birthDate) : null,
-      heightCm: typeof heightCm === "number" ? heightCm : null,
-      weightKg: typeof weightKg === "number" ? weightKg : null,
-      goal: typeof goal === "string" ? goal || null : null,
-      fitnessLevel: typeof fitnessLevel === "string" ? fitnessLevel || null : null,
-    },
-    update: {
-      birthDate: typeof birthDate === "string" && birthDate ? new Date(birthDate) : null,
-      heightCm: typeof heightCm === "number" ? heightCm : null,
-      weightKg: typeof weightKg === "number" ? weightKg : null,
-      goal: typeof goal === "string" ? goal || null : null,
-      fitnessLevel: typeof fitnessLevel === "string" ? fitnessLevel || null : null,
-    },
-  });
-  return NextResponse.json({ profile });
+    return NextResponse.json({ profile });
+  } catch (error) {
+    console.error("[api/profile] Failed to update profile", error);
+
+    if (isPrismaUniqueError(error)) {
+      return NextResponse.json({ error: "Bu e-posta zaten kayıtlı." }, { status: 409 });
+    }
+
+    return NextResponse.json({ error: "Profil güncellenemedi." }, { status: 500 });
+  }
 }

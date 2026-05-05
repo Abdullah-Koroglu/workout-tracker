@@ -231,7 +231,7 @@ export default function CoachProfilePage() {
     <div className="space-y-6 pb-16">
       {/* ── Hero banner ── */}
       <PageHero
-        eyebrow="Elite Coach"
+        // eyebrow="Elite Coach"
         title={name}
         subtitle={
           experienceYears

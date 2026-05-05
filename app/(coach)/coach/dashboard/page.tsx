@@ -9,6 +9,14 @@ import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+const RECENT_WORKOUT_LIMIT = 5;
+const ACTIVE_WORKOUT_LIMIT = 10;
+const REST_SAMPLE_LIMIT = 120;
+const PENDING_REQUEST_LIMIT = 4;
+const UPCOMING_APPOINTMENT_LIMIT = 3;
+const TOP_CLIENT_LIMIT = 4;
+const TOP_CLIENT_WORKOUT_LIMIT = 10;
+
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
   const initials = name
     .split(" ")
@@ -42,13 +50,8 @@ export default async function CoachDashboardPage() {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const coachProfile = await prisma.coachProfile.findUnique({
-    where: { userId: coachId },
-    select: { subscriptionTier: true },
-  });
-  const subscriptionTier = coachProfile?.subscriptionTier ?? "FREE";
-
-  const [
+  const {
+    subscriptionTier,
     totalClients,
     weeklyActive,
     recentWorkouts,
@@ -60,113 +63,192 @@ export default async function CoachDashboardPage() {
     monthlyNewClients,
     upcomingAppointments,
     topClientRelations,
-  ] = await Promise.all([
-    prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
-    prisma.workout.count({
-      where: {
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: sevenDaysAgo },
-      },
-    }),
-    prisma.workout.findMany({
-      where: {
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-      },
-      include: { client: true, template: true },
-      orderBy: { startedAt: "desc" },
-      take: 5,
-    }),
-    prisma.workout.findMany({
-      where: {
-        status: "IN_PROGRESS",
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-      },
-      include: {
-        client: { select: { id: true, name: true } },
-        template: {
-          select: {
-            name: true,
-            exercises: {
-              select: { targetSets: true },
-            },
+    templateExerciseLookups,
+  } = await (async () => {
+    try {
+      const coachProfile = await prisma.coachProfile.findUnique({
+        where: { userId: coachId },
+        select: { subscriptionTier: true },
+      });
+
+      const [
+        totalClients,
+        weeklyActive,
+        recentWorkouts,
+        activeWorkouts,
+        restSamples,
+        pendingRequests,
+        completedThisWeek,
+        workoutsToday,
+        monthlyNewClients,
+        upcomingAppointments,
+        topClientRelations,
+      ] = await Promise.all([
+        prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
+        prisma.workout.count({
+          where: {
+            client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+            startedAt: { gte: sevenDaysAgo },
           },
-        },
-        sets: {
-          where: { completed: true },
-          select: { id: true },
-        },
-      },
-      orderBy: { startedAt: "desc" },
-      take: 20,
-    }),
-    prisma.workoutSet.findMany({
-      where: {
-        completed: true,
-        actualRestSeconds: { not: null },
-        workout: {
-          status: "COMPLETED",
-          startedAt: { gte: sevenDaysAgo },
-          client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        },
-      },
-      select: {
-        actualRestSeconds: true,
-        exerciseId: true,
-        workout: {
-          select: {
-            templateId: true,
-            client: { select: { id: true, name: true } },
+        }),
+        prisma.workout.findMany({
+          where: {
+            client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
           },
-        },
-      },
-      take: 800,
-    }),
-    prisma.coachClientRelation.findMany({
-      where: { coachId, status: "PENDING" },
-      include: { client: true },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
-    prisma.workout.count({
-      where: {
-        status: "COMPLETED",
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: sevenDaysAgo },
-      },
-    }),
-    prisma.workout.count({
-      where: {
-        client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
-        startedAt: { gte: todayStart },
-      },
-    }),
-    prisma.coachClientRelation.count({
-      where: { coachId, status: "ACCEPTED", createdAt: { gte: thirtyDaysAgo } },
-    }),
-    prisma.templateAssignment.findMany({
-      where: { template: { coachId }, scheduledFor: { gte: todayStart } },
-      include: { client: true },
-      orderBy: { scheduledFor: "asc" },
-      take: 3,
-    }),
-    prisma.coachClientRelation.findMany({
-      where: { coachId, status: "ACCEPTED" },
-      include: {
-        client: {
           select: {
             id: true,
-            name: true,
-            workouts: {
-              where: { startedAt: { gte: thirtyDaysAgo } },
-              select: { status: true, startedAt: true },
+            status: true,
+            startedAt: true,
+            client: { select: { id: true, name: true } },
+            template: { select: { name: true } },
+          },
+          orderBy: { startedAt: "desc" },
+          take: RECENT_WORKOUT_LIMIT,
+        }),
+        prisma.workout.findMany({
+          where: {
+            status: "IN_PROGRESS",
+            client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+          },
+          select: {
+            id: true,
+            startedAt: true,
+            client: { select: { id: true, name: true } },
+            template: {
+              select: {
+                name: true,
+                exercises: {
+                  select: { targetSets: true },
+                },
+              },
+            },
+            sets: {
+              where: { completed: true },
+              select: { id: true },
             },
           },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: 4,
-    }),
-  ]);
+          orderBy: { startedAt: "desc" },
+          take: ACTIVE_WORKOUT_LIMIT,
+        }),
+        prisma.workoutSet.findMany({
+          where: {
+            completed: true,
+            actualRestSeconds: { not: null },
+            workout: {
+              status: "COMPLETED",
+              startedAt: { gte: sevenDaysAgo },
+              client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+            },
+          },
+          select: {
+            actualRestSeconds: true,
+            exerciseId: true,
+            workout: {
+              select: {
+                templateId: true,
+                client: { select: { id: true, name: true } },
+              },
+            },
+          },
+          orderBy: [{ workout: { startedAt: "desc" } }, { setNumber: "desc" }],
+          take: REST_SAMPLE_LIMIT,
+        }),
+        prisma.coachClientRelation.findMany({
+          where: { coachId, status: "PENDING" },
+          select: {
+            id: true,
+            client: { select: { id: true, name: true, email: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: PENDING_REQUEST_LIMIT,
+        }),
+        prisma.workout.count({
+          where: {
+            status: "COMPLETED",
+            client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+            startedAt: { gte: sevenDaysAgo },
+          },
+        }),
+        prisma.workout.count({
+          where: {
+            client: { clientRelations: { some: { coachId, status: "ACCEPTED" } } },
+            startedAt: { gte: todayStart },
+          },
+        }),
+        prisma.coachClientRelation.count({
+          where: { coachId, status: "ACCEPTED", createdAt: { gte: thirtyDaysAgo } },
+        }),
+        prisma.templateAssignment.findMany({
+          where: { template: { coachId }, scheduledFor: { gte: todayStart } },
+          select: {
+            id: true,
+            scheduledFor: true,
+            client: { select: { id: true, name: true } },
+          },
+          orderBy: { scheduledFor: "asc" },
+          take: UPCOMING_APPOINTMENT_LIMIT,
+        }),
+        prisma.coachClientRelation.findMany({
+          where: { coachId, status: "ACCEPTED" },
+          select: {
+            client: {
+              select: {
+                id: true,
+                name: true,
+                workouts: {
+                  where: { startedAt: { gte: thirtyDaysAgo } },
+                  select: { status: true, startedAt: true },
+                  orderBy: { startedAt: "desc" },
+                  take: TOP_CLIENT_WORKOUT_LIMIT,
+                },
+              },
+            },
+          },
+          orderBy: { createdAt: "desc" },
+          take: TOP_CLIENT_LIMIT,
+        }),
+      ]);
+
+      const templateExerciseKeys = Array.from(
+        new Set(restSamples.map((item) => `${item.workout.templateId}:${item.exerciseId}`))
+      );
+
+      const templateExerciseLookups = templateExerciseKeys.length
+        ? await prisma.workoutTemplateExercise.findMany({
+            where: {
+              OR: templateExerciseKeys.map((key) => {
+                const [templateId, exerciseId] = key.split(":");
+                return { templateId, exerciseId };}
+              ),
+            },
+            select: {
+              templateId: true,
+              exerciseId: true,
+              prescribedRestSeconds: true,
+            },
+          })
+        : [];
+
+      return {
+        subscriptionTier: coachProfile?.subscriptionTier ?? "FREE",
+        totalClients,
+        weeklyActive,
+        recentWorkouts,
+        activeWorkouts,
+        restSamples,
+        pendingRequests,
+        completedThisWeek,
+        workoutsToday,
+        monthlyNewClients,
+        upcomingAppointments,
+        topClientRelations,
+        templateExerciseLookups,
+      };
+    } catch (error) {
+      console.error("[coach/dashboard] Failed to load dashboard data", error);
+      throw error;
+    }
+  })();
 
   const completionRate =
     weeklyActive > 0 ? Math.round((completedThisWeek / weeklyActive) * 100) : 0;
@@ -213,26 +295,6 @@ export default async function CoachDashboardPage() {
       ])
     ).values()
   );
-
-  const templateExerciseKeys = Array.from(
-    new Set(restSamples.map((item) => `${item.workout.templateId}:${item.exerciseId}`))
-  );
-
-  const templateExerciseLookups = templateExerciseKeys.length
-    ? await prisma.workoutTemplateExercise.findMany({
-        where: {
-          OR: templateExerciseKeys.map((key) => {
-            const [templateId, exerciseId] = key.split(":");
-            return { templateId, exerciseId };
-          }),
-        },
-        select: {
-          templateId: true,
-          exerciseId: true,
-          prescribedRestSeconds: true,
-        },
-      })
-    : [];
 
   const prescribedByTemplateExercise = new Map(
     templateExerciseLookups.map((item) => [`${item.templateId}:${item.exerciseId}`, item.prescribedRestSeconds ?? 90])

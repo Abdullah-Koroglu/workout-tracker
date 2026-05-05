@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
-import OpenAI from "openai";
 
 import { requireAuth } from "@/lib/api-auth";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
@@ -23,6 +22,7 @@ async function generateAiSummary(
   }
 
   try {
+    const { default: OpenAI } = await import("openai");
     const openai = new OpenAI({ apiKey });
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -104,7 +104,13 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "multipart/form-data bekleniyor." }, { status: 400 });
   }
 
-  const formData = await request.formData().catch(() => null);
+  let formData: FormData | null = null;
+  try {
+    formData = await request.formData();
+  } catch (err) {
+    console.error("[NutritionLog] formData parse failed", err);
+    return NextResponse.json({ error: "Form verisi okunamadı." }, { status: 400 });
+  }
   if (!formData) {
     return NextResponse.json({ error: "Form verisi okunamadı." }, { status: 400 });
   }

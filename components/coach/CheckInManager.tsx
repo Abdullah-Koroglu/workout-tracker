@@ -115,7 +115,7 @@ export function CheckInManager({ clients }: Props) {
       {open && (
         <div className="border-t border-slate-100 px-4 pb-4">
           {/* Send button */}
-          <div className="mt-3 flex justify-end">
+          <div className="mt-4 flex justify-end">
             <button
               onClick={() => setSendOpen(true)}
               className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-black text-white transition hover:opacity-90"
@@ -180,58 +180,8 @@ export function CheckInManager({ clients }: Props) {
 
       {/* Send modal */}
       {sendOpen && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center">
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-              <h2 className="font-black text-slate-800">Check-in Gönder</h2>
-              <button onClick={() => setSendOpen(false)}><X className="h-5 w-5 text-slate-400" /></button>
-            </div>
+        <div className="fixed inset-0 z-50 flex  justify-center bg-black/40 p-4 items-center">
 
-            <div className="px-5 pt-4">
-              <p className="mb-2 text-xs font-black uppercase tracking-wider text-slate-400">Danışan Seç</p>
-              <div className="flex max-h-32 flex-wrap gap-1.5 overflow-y-auto">
-                {clients.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => toggle(c.id)}
-                    className="rounded-full px-3 py-1 text-xs font-bold transition"
-                    style={selectedIds.has(c.id) ? { background: "#1A365D", color: "#fff" } : { background: "#F1F5F9", color: "#64748B" }}
-                  >
-                    {c.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="px-5 pt-3">
-              <p className="mb-1.5 text-xs font-black uppercase tracking-wider text-slate-400">Ek Mesaj (opsiyonel)</p>
-              <textarea
-                rows={3}
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Bu haftanın check-in'i..."
-                className="w-full resize-none rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-700 ring-1 ring-black/8 focus:outline-none focus:ring-2 focus:ring-blue-400"
-              />
-            </div>
-
-            {result && (
-              <p className={`mx-5 mt-2 text-sm font-bold ${result.startsWith("✓") ? "text-green-600" : "text-red-500"}`}>
-                {result}
-              </p>
-            )}
-
-            <div className="flex gap-2 px-5 py-4">
-              <button onClick={() => setSendOpen(false)} className="flex-1 rounded-xl bg-slate-100 py-2.5 text-sm font-black text-slate-600">İptal</button>
-              <button
-                onClick={sendCheckIn}
-                disabled={sending || selectedIds.size === 0}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-black text-white disabled:opacity-50"
-                style={{ background: "#1A365D" }}
-              >
-                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : `Gönder (${selectedIds.size})`}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

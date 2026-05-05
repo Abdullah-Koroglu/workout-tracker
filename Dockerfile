@@ -29,7 +29,8 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/server.js ./server.js
 
 # Ensure upload directories exist
-RUN mkdir -p /app/public/uploads/avatars && chmod 755 /app/public/uploads
+RUN mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/body-photos && \
+    chmod -R 755 /app/public/uploads
 
 EXPOSE 3000
 ENV PORT 3000

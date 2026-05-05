@@ -137,23 +137,23 @@ export function RoleNavShell({
         "min-h-screen ",
         isMessagesRoute ? "pb-0" : "pb-24 md:pb-8 px-4"
       ].join(" ")}>
-        <header className="fixed left-0 right-0 z-30 flex h-16 items-center justify-between bg-white/80 px-6 backdrop-blur-md md:left-64">
+        <header className="fixed left-0 right-0 z-30 flex h-16 items-center justify-between bg-slate-900 px-6 backdrop-blur-md md:left-64 shadow-lg shadow-slate-900/10 text-slate-100">
           <div>
             {/* <h1 className="text-xl font-bold tracking-tight text-slate-900">{currentLabel}</h1> */}
             <GlobalBreadcrumb />
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative hidden sm:block">
+            {/* <div className="relative hidden sm:block">
               <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <input
                 className="w-64 rounded-sm border-none bg-slate-100 py-1.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-500/20"
                 placeholder="Search..."
                 type="text"
               />
-            </div>
+            </div> */}
             <button
               type="button"
-              className="text-slate-500 transition-colors duration-200 hover:text-orange-500"
+              className="text-slate-100 transition-colors duration-200 hover:text-orange-500"
             >
               <NotificationBell />
             </button>

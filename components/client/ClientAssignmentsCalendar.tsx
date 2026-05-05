@@ -856,7 +856,7 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
           <div
             className={`relative w-full max-w-lg md:mx-6 bg-white rounded-t-3xl md:rounded-3xl shadow-2xl flex flex-col max-h-[92dvh] overflow-hidden transition-all duration-300 ease-out ${
               mealModalVisible
-                ? "translate-y-0 opacity-100 md:scale-100"
+                ? "-translate-y-16 opacity-100 md:scale-100"
                 : "translate-y-full opacity-0 md:translate-y-4 md:scale-95"
             }`}
             onClick={(e) => e.stopPropagation()}

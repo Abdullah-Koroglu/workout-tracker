@@ -221,6 +221,12 @@ self.addEventListener("notificationclick", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data;
+
+  if (data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
+
   if (!data || data.type !== "CARDIO_BLOCK_TRANSITION") {
     return;
   }

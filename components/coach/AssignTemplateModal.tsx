@@ -22,6 +22,11 @@ type TemplateItem = {
   name: string;
   description: string | null;
   exercises: ExerciseInTemplate[];
+  category: {
+    id: string;
+    name: string;
+    color: string;
+  } | null;
 };
 
 export function AssignTemplateModal({ clientId }: { clientId: string }) {
@@ -34,6 +39,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
   const [submittingId, setSubmittingId] = useState<string | null>(null);
   const [scheduledFor, setScheduledFor] = useState(() => new Date().toISOString().slice(0, 10));
   const [query, setQuery] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const backdropRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +70,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
   const handleOpen = () => {
     setOpen(true);
     setQuery("");
+    setSelectedCategoryId("all");
     setExpandedId(null);
   };
 
@@ -96,10 +103,25 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
     router.refresh();
   };
 
-  const filtered = templates.filter((t) =>
-    t.name.toLowerCase().includes(query.toLowerCase()) ||
-    (t.description ?? "").toLowerCase().includes(query.toLowerCase())
-  );
+  const categories = Array.from(
+    new Map(
+      templates
+        .filter((template) => template.category)
+        .map((template) => [template.category!.id, template.category!]),
+    ).values(),
+  ).sort((a, b) => a.name.localeCompare(b.name, "tr"));
+
+  const filtered = templates.filter((t) => {
+    const queryMatches = t.name.toLowerCase().includes(query.toLowerCase())
+      || (t.description ?? "").toLowerCase().includes(query.toLowerCase());
+
+    if (!queryMatches) return false;
+
+    if (selectedCategoryId === "all") return true;
+    if (selectedCategoryId === "uncategorized") return !t.category;
+
+    return t.category?.id === selectedCategoryId;
+  });
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -164,6 +186,46 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                   onChange={(e) => setQuery(e.target.value)}
                   className="h-9 w-full rounded-lg border-0 bg-muted/60 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 />
+              </div>
+
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId("all")}
+                  className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                    selectedCategoryId === "all"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Tümü
+                </button>
+                {categories.map((category) => (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => setSelectedCategoryId(category.id)}
+                    className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                      selectedCategoryId === category.id
+                        ? "text-white"
+                        : "bg-muted text-muted-foreground hover:text-foreground"
+                    }`}
+                    style={selectedCategoryId === category.id ? { background: category.color } : undefined}
+                  >
+                    {category.name}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCategoryId("uncategorized")}
+                  className={`rounded-full px-3 py-1 text-[11px] font-semibold transition ${
+                    selectedCategoryId === "uncategorized"
+                      ? "bg-slate-700 text-white"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Kategorisiz
+                </button>
               </div>
             </div>
 
@@ -270,7 +332,9 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
             {/* Footer */}
             <div className="border-t px-5 py-3">
               <p className="text-xs text-muted-foreground text-center">
-                {filtered.length} template listeleniyor{query ? ` · "${query}" araması` : ""}
+                {filtered.length} template listeleniyor
+                {query ? ` · "${query}" araması` : ""}
+                {selectedCategoryId !== "all" ? " · kategori filtresi aktif" : ""}
               </p>
             </div>
           </div>

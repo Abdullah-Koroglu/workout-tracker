@@ -63,11 +63,11 @@ export function BroadcastModal({ clients }: Props) {
         style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
       >
         <Megaphone className="h-4 w-4" />
-        Duyuru Yap
+        Duyuru
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 md:items-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-lg rounded-2xl bg-white shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">

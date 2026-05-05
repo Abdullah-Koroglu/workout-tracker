@@ -42,6 +42,62 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const APP_VERSION = '1.0.1';
+                const STORAGE_KEY = 'app_version';
+
+                try {
+                  const storedVersion = localStorage.getItem(STORAGE_KEY);
+
+                  // Adım 1: Versiyon kontrolü ve cache clear
+                  if (storedVersion !== APP_VERSION) {
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(registration => registration.unregister());
+                      });
+                    }
+                    localStorage.setItem(STORAGE_KEY, APP_VERSION);
+                    // İndexedDB ve tüm cacheları temizle
+                    if ('caches' in window) {
+                      caches.keys().then(cacheNames => {
+                        cacheNames.forEach(cacheName => caches.delete(cacheName));
+                      });
+                    }
+                    window.location.reload(true);
+                  }
+                } catch (e) {
+                  console.error('Version check error:', e);
+                }
+
+                // Adım 2: Chunk loading hatalarını yakala
+                window.addEventListener('error', function(event) {
+                  const isChunkLoadError = event.message && (
+                    event.message.includes('Loading chunk') ||
+                    event.message.includes('Unexpected token') ||
+                    event.message.includes('Failed to fetch')
+                  );
+
+                  if (isChunkLoadError) {
+                    if ('serviceWorker' in navigator) {
+                      navigator.serviceWorker.getRegistrations().then(registrations => {
+                        registrations.forEach(registration => registration.unregister());
+                      });
+                    }
+                    if ('caches' in window) {
+                      caches.keys().then(cacheNames => {
+                        cacheNames.forEach(cacheName => caches.delete(cacheName));
+                      });
+                    }
+                    window.location.reload(true);
+                  }
+                });
+              })();
+            `,
+          }}
+        />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         {/* iOS PWA – metadata API bu tag'leri inject etmiyor, explicit yazılması şart */}
         <meta name="apple-mobile-web-app-capable" content="yes" />

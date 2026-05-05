@@ -68,6 +68,15 @@ export function PwaRegister() {
 
     navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
 
+    const onSwMessage = (event: MessageEvent) => {
+      if (event.data?.type !== "SW_ACTIVATED") return;
+      if (sessionStorage.getItem("fitcoach-sw-reloaded") === "1") return;
+      sessionStorage.setItem("fitcoach-sw-reloaded", "1");
+      location.reload();
+    };
+
+    navigator.serviceWorker.addEventListener("message", onSwMessage);
+
     (async () => {
       try {
         const healed = await forceUpgradeIfLegacyCacheFound();
@@ -93,6 +102,7 @@ export function PwaRegister() {
 
     return () => {
       navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+      navigator.serviceWorker.removeEventListener("message", onSwMessage);
     };
   }, []);
 

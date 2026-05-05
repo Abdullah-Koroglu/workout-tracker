@@ -4,7 +4,6 @@ const API_CACHE = "fitcoach-api-v6";
 const CACHE_ALLOWLIST = [STATIC_CACHE, PAGE_CACHE, API_CACHE];
 
 const PRECACHE_URLS = [
-  "/",
   "/offline.html",
   "/manifest.webmanifest",
   "/manifest-icon-192.maskable.png",
@@ -34,6 +33,11 @@ self.addEventListener("activate", (event) => {
         )
       )
       .then(() => self.clients.claim())
+      .then(() =>
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) =>
+          clients.forEach((client) => client.postMessage({ type: "SW_ACTIVATED" }))
+        )
+      )
   );
 });
 

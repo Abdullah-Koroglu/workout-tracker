@@ -5,6 +5,7 @@ import path from "path";
 import { requireAuth } from "@/lib/api-auth";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
+import { uploadUrlExists } from "@/lib/upload-files";
 
 const AI_SYSTEM_PROMPT =
   "Sen profesyonel bir diyetisyenin yapay zeka asistanısın. Görevin, danışanın girdiği öğün notunu (clientNote) ve diyet uyum etiketini (adherenceTag: GREEN, YELLOW veya RED) analiz etmektir. Danışanın psikolojik durumunu, diyete uyumunu ve varsa diyetten kopma riskini çıkar. Koç için çok kısa (maksimum 2 cümle) klinik, profesyonel ve aksiyon alınabilir bir özet/uyarı yaz. Yanıtın doğrudan koça hitap etmeli.";
@@ -92,7 +93,14 @@ export async function GET() {
     take: 30,
   });
 
-  return NextResponse.json({ logs });
+  const safeLogs = await Promise.all(
+    logs.map(async (log) => ({
+      ...log,
+      photoUrl: (await uploadUrlExists(log.photoUrl)) ? log.photoUrl : null,
+    }))
+  );
+
+  return NextResponse.json({ logs: safeLogs });
 }
 
 export async function POST(request: Request) {

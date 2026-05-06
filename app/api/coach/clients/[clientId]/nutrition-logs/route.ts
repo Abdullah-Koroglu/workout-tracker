@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { uploadUrlExists } from "@/lib/upload-files";
 
 export async function GET(
   _request: Request,
@@ -26,5 +27,12 @@ export async function GET(
     take: 30,
   });
 
-  return NextResponse.json({ logs });
+  const safeLogs = await Promise.all(
+    logs.map(async (log) => ({
+      ...log,
+      photoUrl: (await uploadUrlExists(log.photoUrl)) ? log.photoUrl : null,
+    }))
+  );
+
+  return NextResponse.json({ logs: safeLogs });
 }

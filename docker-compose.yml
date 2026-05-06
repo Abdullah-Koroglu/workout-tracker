@@ -26,7 +26,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./public:/app/public
+      - uploads_data:/app/public/uploads
     environment:
       - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach?schema=public
       - AUTH_TRUST_HOST=true
@@ -39,7 +39,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/body-photos && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npm run start"]
 
   ws_server:
     build: .
@@ -51,7 +51,7 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./public:/app/public
+      - uploads_data:/app/public/uploads
     environment:
       - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach?schema=public
       - AUTH_SECRET=${NEXTAUTH_SECRET}
@@ -78,3 +78,4 @@ services:
 
 volumes:
   postgres_data:
+  uploads_data:

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { uploadUrlExists } from "@/lib/upload-files";
 
 function parseDateParam(value: string | null): Date | null {
   if (!value) return null;
@@ -29,5 +30,12 @@ export async function GET(request: Request) {
     orderBy: { loggedAt: "desc" },
   });
 
-  return NextResponse.json({ logs });
+  const safeLogs = await Promise.all(
+    logs.map(async (log) => ({
+      ...log,
+      photoUrl: (await uploadUrlExists(log.photoUrl)) ? log.photoUrl : null,
+    }))
+  );
+
+  return NextResponse.json({ logs: safeLogs });
 }

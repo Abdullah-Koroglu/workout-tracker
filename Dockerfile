@@ -29,7 +29,7 @@ COPY --from=builder /app/next.config.ts ./next.config.ts
 COPY --from=builder /app/server.js ./server.js
 
 # Ensure upload directories exist
-RUN mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/body-photos && \
+RUN mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins && \
     chmod -R 755 /app/public/uploads
 
 EXPOSE 3000

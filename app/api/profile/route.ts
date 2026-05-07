@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
+import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { isPrismaUniqueError } from "@/lib/auth";
@@ -99,7 +100,7 @@ export async function PUT(request: Request) {
           bio: data.bio ?? null,
           slogan: data.slogan ?? null,
           accentColor: data.accentColor ?? "#F97316",
-          transformationPhotos: data.transformationPhotos ?? null,
+          transformationPhotos: data.transformationPhotos ?? Prisma.DbNull,
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,
@@ -108,7 +109,7 @@ export async function PUT(request: Request) {
           bio: data.bio ?? null,
           slogan: data.slogan ?? null,
           accentColor: data.accentColor ?? "#F97316",
-          transformationPhotos: data.transformationPhotos ?? null,
+          transformationPhotos: data.transformationPhotos ?? Prisma.DbNull,
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,

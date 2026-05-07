@@ -37,6 +37,9 @@ type CoachPackage = {
 
 type CoachProfileData = {
   bio: string | null;
+  slogan: string | null;
+  accentColor: string | null;
+  transformationPhotos: Array<{ beforeUrl: string; afterUrl: string; title?: string }> | null;
   specialties: string[] | null;
   experienceYears: number | null;
   socialMediaUrl: string | null;
@@ -83,6 +86,9 @@ export default function CoachProfilePage() {
 
   // Profile form
   const [bio,              setBio]              = useState("");
+  const [slogan,           setSlogan]           = useState("");
+  const [accentColor,      setAccentColor]      = useState("#F97316");
+  const [transformationPhotos, setTransformationPhotos] = useState<Array<{ beforeUrl: string; afterUrl: string; title?: string }>>([]);
   const [specialties,      setSpecialties]      = useState<string[]>([]);
   const [specialtyInput,   setSpecialtyInput]   = useState("");
   const [experienceYears,  setExperienceYears]  = useState("");
@@ -106,6 +112,9 @@ export default function CoachProfilePage() {
       if (data.profile) {
         const p = data.profile as CoachProfileData;
         setBio(p.bio ?? "");
+        setSlogan(p.slogan ?? "");
+        setAccentColor(p.accentColor ?? "#F97316");
+        setTransformationPhotos(Array.isArray(p.transformationPhotos) ? p.transformationPhotos : []);
         setSpecialties(Array.isArray(p.specialties) ? p.specialties : []);
         setExperienceYears(p.experienceYears != null ? String(p.experienceYears) : "");
         setSocialMediaUrl(p.socialMediaUrl ?? "");
@@ -126,6 +135,9 @@ export default function CoachProfilePage() {
       body: JSON.stringify({
         name:            name.trim() || undefined,
         bio:             bio             || null,
+        slogan:          slogan          || null,
+        accentColor:     accentColor     || "#F97316",
+        transformationPhotos,
         specialties:     specialties.length > 0 ? specialties : null,
         experienceYears: experienceYears ? Number(experienceYears) : null,
         socialMediaUrl:  socialMediaUrl  || null,
@@ -234,11 +246,12 @@ export default function CoachProfilePage() {
         // eyebrow="Elite Coach"
         title={name}
         subtitle={
-          experienceYears
+          slogan ||
+          (experienceYears
             ? `${experienceYears} yıl deneyim${packages.length > 0 ? ` · ${packages.length} aktif paket` : ""}`
-            : "Profil & Vitrin"
+            : "Profil & Vitrin")
         }
-        variant="navy"
+        variant="light"
         avatar={{
           initials: getInitials(name),
           variant: "navy",
@@ -314,8 +327,22 @@ export default function CoachProfilePage() {
               </p>
             </div>
 
+            <div className="mb-5 space-y-1.5">
+              <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                <Sparkles className="h-3.5 w-3.5" />
+                Slogan
+              </label>
+              <input
+                type="text"
+                value={slogan}
+                onChange={(e) => setSlogan(e.target.value)}
+                placeholder="Örn. Bilimsel, sürdürülebilir ve ölçülebilir dönüşüm"
+                className={inputCls}
+              />
+            </div>
+
             {/* Experience + Social grid */}
-            <div className="mb-5 grid gap-4 sm:grid-cols-2">
+            <div className="mb-5 grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <Star className="h-3.5 w-3.5" />
@@ -343,6 +370,25 @@ export default function CoachProfilePage() {
                   placeholder="https://instagram.com/..."
                   className={inputCls}
                 />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Vurgu Rengi
+                </label>
+                <div className="flex h-11 items-center gap-2 rounded-xl bg-slate-50 px-3">
+                  <input
+                    type="color"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="h-7 w-7 rounded border-0 bg-transparent p-0"
+                  />
+                  <input
+                    type="text"
+                    value={accentColor}
+                    onChange={(e) => setAccentColor(e.target.value)}
+                    className="w-full bg-transparent text-sm font-medium text-slate-700 focus:outline-none"
+                  />
+                </div>
               </div>
             </div>
 
@@ -642,6 +688,84 @@ export default function CoachProfilePage() {
               </p>
             </div>
           </div>
+
+          <div
+            className="rounded-2xl bg-white p-6"
+            style={{
+              boxShadow:
+                "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
+            }}
+          >
+            <div className="mb-5 flex items-center gap-2">
+              <div
+                className="flex h-8 w-8 items-center justify-center rounded-xl"
+                style={{ background: "rgba(249,115,22,0.1)" }}
+              >
+                <Sparkles className="h-4 w-4 text-orange-500" />
+              </div>
+              <h2 className="text-base font-black text-slate-800">Dönüşüm Galerisi</h2>
+            </div>
+
+            <div className="space-y-3">
+              {transformationPhotos.map((item, idx) => (
+                <div key={`${item.beforeUrl}-${item.afterUrl}-${idx}`} className="rounded-xl border border-slate-200 p-3">
+                  <div className="mb-2 grid gap-2 sm:grid-cols-3">
+                    <input
+                      type="text"
+                      value={item.title ?? ""}
+                      onChange={(e) => {
+                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, title: e.target.value } : photo));
+                      }}
+                      placeholder="Başlık (opsiyonel)"
+                      className={inputCls}
+                    />
+                    <input
+                      type="url"
+                      value={item.beforeUrl}
+                      onChange={(e) => {
+                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, beforeUrl: e.target.value } : photo));
+                      }}
+                      placeholder="Önce görsel URL"
+                      className={inputCls}
+                    />
+                    <input
+                      type="url"
+                      value={item.afterUrl}
+                      onChange={(e) => {
+                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, afterUrl: e.target.value } : photo));
+                      }}
+                      placeholder="Sonra görsel URL"
+                      className={inputCls}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTransformationPhotos((prev) => prev.filter((_, photoIdx) => photoIdx !== idx));
+                    }}
+                    className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600"
+                  >
+                    Kaldır
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setTransformationPhotos((prev) => [...prev, { beforeUrl: "", afterUrl: "", title: "" }]);
+              }}
+              className="mt-3 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black text-white"
+              style={{
+                background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                boxShadow: "0 4px 10px rgba(249,115,22,0.3)",
+              }}
+            >
+              <Plus className="h-4 w-4" />
+              Dönüşüm Ekle
+            </button>
+          </div>
         </div>
 
         {/* ── RIGHT: quick links + account ── */}
@@ -710,10 +834,12 @@ export default function CoachProfilePage() {
             {(() => {
               const checks = [
                 { label: "Bio", done: bio.trim().length > 0 },
+                { label: "Slogan", done: slogan.trim().length > 0 },
                 { label: "Uzmanlık", done: specialties.length > 0 },
                 { label: "Deneyim", done: experienceYears.length > 0 },
                 { label: "Sosyal Medya", done: socialMediaUrl.length > 0 },
                 { label: "Paket", done: packages.length > 0 },
+                { label: "Dönüşüm", done: transformationPhotos.length > 0 },
               ];
               const score = checks.filter((c) => c.done).length;
               const pct = Math.round((score / checks.length) * 100);

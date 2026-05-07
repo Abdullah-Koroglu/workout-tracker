@@ -135,6 +135,7 @@ export default function ClientProfilePage() {
         eyebrow="Danışan"
         title={name}
         subtitle={GOALS.find((g) => g.value === goal)?.label ?? "Hedef belirlenmedi"}
+        variant="light"
         avatar={{ initials: getInitials(name), variant: "orange" }}
         statBoxes={[
           { label: "Boy",  value: heightCm ? `${heightCm} cm` : "—", icon: Ruler },

@@ -26,14 +26,19 @@ type Coach = {
   id: string;
   name: string;
   email: string;
+  avatarUrl?: string | null;
   requestStatus: "PENDING" | "ACCEPTED" | "REJECTED" | null;
 };
 
 type MarketplaceCoach = {
   id: string;
   name: string;
+  avatarUrl?: string | null;
   coachProfile: {
     bio: string | null;
+    slogan: string | null;
+    accentColor: string | null;
+    transformationPhotos: Array<{ beforeUrl: string; afterUrl: string; title?: string }> | null;
     specialties: string[] | null;
     experienceYears: number | null;
     packages: { id: string }[];
@@ -54,7 +59,7 @@ const POPULAR_SPECIALTIES = [
 ];
 
 /* ─── Avatar ──────────────────────────────────────────── */
-function CoachAvatar({ name, size = 48 }: { name: string; size?: number }) {
+function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: string | null; size?: number }) {
   return (
     <div
       className="flex items-center justify-center rounded-full font-black text-white flex-shrink-0"
@@ -66,7 +71,11 @@ function CoachAvatar({ name, size = 48 }: { name: string; size?: number }) {
         boxShadow: "0 2px 8px rgba(26,54,93,0.3)",
       }}
     >
-      {getInitials(name)}
+      {imageUrl ? (
+        <img src={imageUrl} alt={name} className="h-full w-full rounded-full object-cover" />
+      ) : (
+        getInitials(name)
+      )}
     </div>
   );
 }
@@ -165,6 +174,7 @@ export default function ClientCoachesContent() {
         eyebrow="Koç Ağı"
         title="Koçlarım"
         subtitle="Koç bul, bağlantı yönet ve iletişim kur."
+        variant="light"
         stats={[
           { label: "Aktif Koç",      value: stats.accepted, color: "#22C55E", bg: "rgba(34,197,94,0.15)" },
           { label: "Bekleyen İstek", value: stats.pending,  color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
@@ -214,7 +224,7 @@ export default function ClientCoachesContent() {
                       <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #22C55E, #16A34A)" }} />
                       <div className="p-5">
                         <div className="mb-4 flex items-start gap-3">
-                          <CoachAvatar name={coach.name} size={52} />
+                          <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={52} />
                           <div className="min-w-0 flex-1">
                             <div className="mb-1 flex items-center gap-2">
                               <p className="truncate text-base font-black text-slate-800">{coach.name}</p>
@@ -232,7 +242,7 @@ export default function ClientCoachesContent() {
 
                         <div className="flex gap-2">
                           <Link
-                            href={`/client/messages?withUserId=${coach.id}`}
+                            href={`/chat/${coach.id}`}
                             className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
                             style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
                           >
@@ -342,7 +352,7 @@ export default function ClientCoachesContent() {
                   <span className="text-xs font-black text-orange-500">Aç</span>
                 </button>
                 <Link
-                  href="/client/messages"
+                  href="/messages"
                   className="flex w-full items-center justify-between rounded-xl p-3 text-left transition-colors hover:bg-slate-50"
                 >
                   <span className="text-sm font-bold text-slate-700">Mesajları Gör</span>
@@ -483,7 +493,7 @@ export default function ClientCoachesContent() {
                     <div className="p-5 flex flex-col flex-1">
                       {/* Avatar + name */}
                       <div className="flex items-start gap-3 mb-3">
-                        <CoachAvatar name={coach.name} size={52} />
+                        <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={52} />
                         <div className="flex-1 min-w-0">
                           <p className="font-black text-slate-800 text-base leading-tight truncate group-hover:text-orange-600 transition-colors">
                             {coach.name}
@@ -506,6 +516,10 @@ export default function ClientCoachesContent() {
                           </span>
                         )}
                       </div>
+
+                      {profile?.slogan && (
+                        <p className="mb-2 text-[11px] font-semibold text-orange-600">{profile.slogan}</p>
+                      )}
 
                       {/* Bio */}
                       {profile?.bio && (
@@ -548,7 +562,7 @@ export default function ClientCoachesContent() {
                       {/* Request button */}
                       {isConnected ? (
                         <Link
-                          href={`/client/messages?withUserId=${coach.id}`}
+                          href={`/chat/${coach.id}`}
                           onClick={(e) => e.stopPropagation()}
                           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1A365D] py-2.5 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
                         >

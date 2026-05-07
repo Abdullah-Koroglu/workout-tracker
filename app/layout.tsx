@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F172A",
+  themeColor: "#F8FAFC",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -104,7 +104,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Fit Coach" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#0F172A" />
+        <meta name="theme-color" content="#F8FAFC" />
 
         <link rel="apple-touch-icon" href="/apple-icon-180.png" />
         <link rel="icon" type="image/png" sizes="196x196" href="/favicon-196.png" />

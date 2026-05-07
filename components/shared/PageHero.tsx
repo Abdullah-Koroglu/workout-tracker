@@ -36,7 +36,7 @@ export type PageHeroProps = {
   eyebrow?: string;
   title: string;
   subtitle?: string;
-  variant?: "dark" | "navy";
+  variant?: "dark" | "navy" | "light";
   glowColor?: HeroGlowColor;
   stats?: HeroStatPill[];
   statBoxes?: HeroStatBox[];
@@ -46,9 +46,10 @@ export type PageHeroProps = {
 };
 
 /* ── Gradient backgrounds ───────────────────────────────────────── */
-const BG: Record<"dark" | "navy", string> = {
+const BG: Record<"dark" | "navy" | "light", string> = {
   dark: "linear-gradient(160deg, #1E293B 0%, #0F172A 55%, #1A2A42 100%)",
   navy: "linear-gradient(160deg, #1A365D 0%, #2D4A7A 50%, #1A2D4A 100%)",
+  light: "linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%)",
 };
 
 const AVATAR_STYLE: Record<"orange" | "navy", React.CSSProperties> = {
@@ -70,40 +71,45 @@ function GlassBox({
   sub,
   icon: Icon,
   accentColor,
+  light = false,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   icon?: LucideIcon;
   accentColor?: string;
+  light?: boolean;
 }) {
   return (
     <div
       className="flex flex-1 flex-col rounded-[14px] px-2.5 py-3 text-center"
-      style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.08)" }}
+      style={{
+        background: light ? "#FFFFFF" : "rgba(255,255,255,0.1)",
+        border: light ? "1px solid rgba(15,23,42,0.08)" : "1px solid rgba(255,255,255,0.08)",
+      }}
     >
       {Icon && (
         <Icon
           className="mx-auto mb-1.5 h-3.5 w-3.5"
-          style={{ color: accentColor ?? "rgba(255,255,255,0.55)" }}
+          style={{ color: accentColor ?? (light ? "#94A3B8" : "rgba(255,255,255,0.55)") }}
         />
       )}
       <span
         className="block text-[20px] font-extrabold leading-none tracking-tight"
-        style={{ color: accentColor ?? "#fff" }}
+        style={{ color: accentColor ?? (light ? "#0F172A" : "#fff") }}
       >
         {value}
       </span>
       <span
         className="mt-1 block text-[10px] font-semibold leading-tight"
-        style={{ color: "rgba(255,255,255,0.55)" }}
+        style={{ color: light ? "#64748B" : "rgba(255,255,255,0.55)" }}
       >
         {label}
       </span>
       {sub && (
         <span
           className="mt-0.5 block text-[9px]"
-          style={{ color: "rgba(255,255,255,0.3)" }}
+          style={{ color: light ? "#94A3B8" : "rgba(255,255,255,0.3)" }}
         >
           {sub}
         </span>
@@ -125,6 +131,7 @@ export function PageHero({
   children,
 }: PageHeroProps) {
   const hasBottomRow = (stats && stats.length > 0) || (statBoxes && statBoxes.length > 0);
+  const isLight = variant === "light";
 
   return (
     <div
@@ -134,11 +141,11 @@ export function PageHero({
       {/* ── Decorative circles (design-language style) ── */}
       <div
         className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full sm:-right-10 sm:-top-10 sm:h-48 sm:w-48"
-        style={{ background: "rgba(255,255,255,0.06)" }}
+        style={{ background: isLight ? "rgba(249,115,22,0.08)" : "rgba(255,255,255,0.06)" }}
       />
       <div
         className="pointer-events-none absolute -bottom-10 -left-8 h-32 w-32 rounded-full"
-        style={{ background: "rgba(255,255,255,0.04)" }}
+        style={{ background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }}
       />
       {/* Small accent dot near top-left */}
       <div
@@ -193,7 +200,7 @@ export function PageHero({
               {eyebrow && (
                 <span
                   className="mb-1 block text-[10px] font-black uppercase tracking-[0.22em]"
-                  style={{ color: "rgba(255,255,255,0.6)" }}
+                  style={{ color: isLight ? "#94A3B8" : "rgba(255,255,255,0.6)" }}
                 >
                   {eyebrow}
                 </span>
@@ -202,7 +209,7 @@ export function PageHero({
               {/* Title */}
               <h1
                 className="text-xl font-black leading-tight tracking-tight text-white sm:text-2xl md:text-[26px]"
-                style={{ letterSpacing: "-0.3px" }}
+                style={{ letterSpacing: "-0.3px", color: isLight ? "#0F172A" : "#FFFFFF" }}
               >
                 {title}
               </h1>
@@ -211,7 +218,7 @@ export function PageHero({
               {subtitle && (
                 <p
                   className="mt-1 text-sm leading-relaxed"
-                  style={{ color: "rgba(255,255,255,0.55)" }}
+                  style={{ color: isLight ? "#475569" : "rgba(255,255,255,0.55)" }}
                 >
                   {subtitle}
                 </p>
@@ -226,7 +233,7 @@ export function PageHero({
           {statBoxes && statBoxes.length > 0 && (
             <div className="flex gap-2 sm:flex-shrink-0 sm:gap-2.5">
               {statBoxes.map(({ label, value, icon }) => (
-                <GlassBox key={label} label={label} value={value} icon={icon} />
+                <GlassBox key={label} label={label} value={value} icon={icon} light={isLight} />
               ))}
             </div>
           )}
@@ -242,6 +249,7 @@ export function PageHero({
                 value={value}
                 icon={icon}
                 accentColor={color}
+                light={isLight}
               />
             ))}
           </div>

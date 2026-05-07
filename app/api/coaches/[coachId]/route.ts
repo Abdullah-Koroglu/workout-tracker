@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/coaches/[coachId]
@@ -22,6 +23,9 @@ export async function GET(
       coachProfile: {
         select: {
           bio: true,
+          slogan: true,
+          accentColor: true,
+          transformationPhotos: true,
           specialties: true,
           experienceYears: true,
           socialMediaUrl: true,
@@ -38,5 +42,7 @@ export async function GET(
     return NextResponse.json({ error: "Koç bulunamadı." }, { status: 404 });
   }
 
-  return NextResponse.json({ coach });
+  const avatarUrl = await getCoachAvatarUrl(coach.id);
+
+  return NextResponse.json({ coach: { ...coach, avatarUrl } });
 }

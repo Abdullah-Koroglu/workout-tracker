@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { attachCoachAvatars } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
 
 export async function GET(request: Request) {
@@ -34,12 +35,14 @@ export async function GET(request: Request) {
     take: 50
   });
 
-  return NextResponse.json({
-    coaches: coaches.map((coach) => ({
-      id: coach.id,
-      name: coach.name,
-      email: coach.email,
-      requestStatus: coach.coachRelations[0]?.status ?? null
-    }))
-  });
+  const payload = coaches.map((coach) => ({
+    id: coach.id,
+    name: coach.name,
+    email: coach.email,
+    requestStatus: coach.coachRelations[0]?.status ?? null
+  }));
+
+  const coachesWithAvatar = await attachCoachAvatars(payload);
+
+  return NextResponse.json({ coaches: coachesWithAvatar });
 }

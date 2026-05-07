@@ -11,8 +11,10 @@ import {
   Users,
 } from "lucide-react";
 
+import { TransformCarousel, type TransformationPhoto } from "@/components/shared/TransformCarousel";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { PageHero } from "@/components/shared/PageHero";
 import { RequestCoachButton } from "./RequestCoachButton";
 
@@ -23,6 +25,20 @@ function getInitials(name: string) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+}
+
+function hexToRgba(hex: string, alpha: number) {
+  const normalized = hex.replace("#", "");
+  const expanded = normalized.length === 3
+    ? normalized.split("").map((value) => `${value}${value}`).join("")
+    : normalized;
+
+  const intValue = Number.parseInt(expanded, 16);
+  const r = (intValue >> 16) & 255;
+  const g = (intValue >> 8) & 255;
+  const b = intValue & 255;
+
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 export default async function CoachVitrinPage({
@@ -43,6 +59,9 @@ export default async function CoachVitrinPage({
       coachProfile: {
         select: {
           bio: true,
+          slogan: true,
+          accentColor: true,
+          transformationPhotos: true,
           specialties: true,
           experienceYears: true,
           socialMediaUrl: true,
@@ -62,10 +81,16 @@ export default async function CoachVitrinPage({
 
   if (!coach) return notFound();
 
+  const avatarUrl = await getCoachAvatarUrl(coach.id);
+
   const profile       = coach.coachProfile;
+  const accentColor   = profile?.accentColor || "#F97316";
   const specialties   = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
+  const transformationPhotos = Array.isArray(profile?.transformationPhotos)
+    ? (profile?.transformationPhotos as TransformationPhoto[])
+    : [];
   const relationStatus = coach.coachRelations[0]?.status ?? null;
-  const messageHref   = `/client/messages?withUserId=${coachId}`;
+  const messageHref   = `/chat/${coachId}`;
   const pkgCount      = profile?.packages.length ?? 0;
   const relationMeta =
     relationStatus === "ACCEPTED"
@@ -90,9 +115,9 @@ export default async function CoachVitrinPage({
       <PageHero
         // eyebrow="Elite Coach"
         title={coach.name}
-        subtitle={profile?.experienceYears != null ? `${profile.experienceYears} yıl tecrübe` : undefined}
-        variant="navy"
-        avatar={{ initials: getInitials(coach.name), variant: "navy" }}
+        subtitle={profile?.slogan ?? (profile?.experienceYears != null ? `${profile.experienceYears} yıl tecrübe` : undefined)}
+        variant="light"
+        avatar={{ initials: getInitials(coach.name), variant: "navy", imageUrl: avatarUrl }}
         statBoxes={[
           { label: "Deneyim",  value: profile?.experienceYears ? `${profile.experienceYears} yıl` : "—", icon: Star },
           { label: "Uzmanlık", value: `${specialties.length}`, icon: Award },
@@ -122,7 +147,11 @@ export default async function CoachVitrinPage({
               <span
                 key={s}
                 className="rounded-full px-3 py-1 text-xs font-bold"
-                style={{ background: "rgba(249,115,22,0.15)", color: "#FB923C", border: "1px solid rgba(249,115,22,0.2)" }}
+                style={{
+                  background: hexToRgba(accentColor, 0.12),
+                  color: accentColor,
+                  border: `1px solid ${hexToRgba(accentColor, 0.24)}`,
+                }}
               >
                 {s}
               </span>
@@ -136,6 +165,10 @@ export default async function CoachVitrinPage({
 
         {/* ── LEFT: Packages ── */}
         <div className="xl:col-span-2 space-y-4">
+          {transformationPhotos.length > 0 && (
+            <TransformCarousel items={transformationPhotos} />
+          )}
+
           <div className="flex items-center gap-2">
             <div
               className="flex h-8 w-8 items-center justify-center rounded-xl"

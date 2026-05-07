@@ -67,6 +67,41 @@ const nullableIsoDateString = z.preprocess(
     .optional(),
 );
 
+const nullableHexColor = z.preprocess(
+  (value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    if (typeof value !== "string") return value;
+
+    const trimmed = value.trim();
+    return trimmed.length > 0 ? trimmed : null;
+  },
+  z
+    .string()
+    .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, "Geçerli bir HEX renk kodu girin.")
+    .nullable()
+    .optional(),
+);
+
+const nullableTransformationPhotos = z.preprocess(
+  (value) => {
+    if (value === undefined) return undefined;
+    if (value === null) return null;
+    return value;
+  },
+  z
+    .array(
+      z.object({
+        beforeUrl: z.string().trim().url().max(1000),
+        afterUrl: z.string().trim().url().max(1000),
+        title: z.string().trim().max(120).optional(),
+      }),
+    )
+    .max(24)
+    .nullable()
+    .optional(),
+);
+
 export const baseProfileSchema = z.object({
   name: safeText("Ad soyad", 2, 100).optional(),
   email: z
@@ -87,6 +122,9 @@ export const baseProfileSchema = z.object({
 
 export const coachProfileSchema = baseProfileSchema.extend({
   bio: nullableTrimmedString(2000),
+  slogan: nullableTrimmedString(140),
+  accentColor: nullableHexColor,
+  transformationPhotos: nullableTransformationPhotos,
   specialties: z
     .array(z.string().trim().min(1).max(80))
     .max(20)

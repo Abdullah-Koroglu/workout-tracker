@@ -44,10 +44,8 @@
 }
 
 body {
-  /* @apply bg-background text-foreground antialiased; */
-  @apply bg-[#F8FAFC]
-  /* background-image: radial-gradient(circle at 10% 5%, rgba(249, 115, 22, 0.08), transparent 35%),
-    radial-gradient(circle at 100% 10%, rgba(0, 83, 219, 0.08), transparent 30%); */
+  @apply bg-[#F8FAFC] text-[#0F172A] antialiased;
+  font-family: var(--font-lexend), sans-serif;
 }
 
 ::selection {

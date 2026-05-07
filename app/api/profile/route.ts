@@ -1,25 +1,11 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 import { randomBytes } from "crypto";
 
 import { requireAuth } from "@/lib/api-auth";
 import { isPrismaUniqueError } from "@/lib/auth";
+import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
 import { clientProfileSchema, coachProfileSchema } from "@/validations/profile";
-
-async function getCoachAvatarUrl(userId: string): Promise<string | null> {
-  const dir = path.join(process.cwd(), "public", "uploads", "avatars");
-
-  try {
-    const entries = await fs.readdir(dir);
-    const fileName = entries.find((name) => name.startsWith(`${userId}.`));
-    if (!fileName) return null;
-    return `/uploads/avatars/${fileName}`;
-  } catch {
-    return null;
-  }
-}
 
 function normalizeName(name?: string) {
   return name?.trim() || undefined;
@@ -111,12 +97,18 @@ export async function PUT(request: Request) {
           userId,
           inviteCode: randomBytes(10).toString("hex"),
           bio: data.bio ?? null,
+          slogan: data.slogan ?? null,
+          accentColor: data.accentColor ?? "#F97316",
+          transformationPhotos: data.transformationPhotos ?? null,
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,
         },
         update: {
           bio: data.bio ?? null,
+          slogan: data.slogan ?? null,
+          accentColor: data.accentColor ?? "#F97316",
+          transformationPhotos: data.transformationPhotos ?? null,
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,

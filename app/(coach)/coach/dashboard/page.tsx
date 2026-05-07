@@ -7,6 +7,7 @@ import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
 import { CheckInManager } from "@/components/coach/CheckInManager";
 import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
 import { auth } from "@/lib/auth";
+import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
 
 const RECENT_WORKOUT_LIMIT = 10;
@@ -17,7 +18,7 @@ const UPCOMING_APPOINTMENT_LIMIT = 10;
 const TOP_CLIENT_LIMIT = 10;
 const TOP_CLIENT_WORKOUT_LIMIT = 10;
 
-function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
+function Avatar({ name, imageUrl, size = 40, bg = "#1A365D" }: { name: string; imageUrl?: string | null; size?: number; bg?: string }) {
   const initials = name
     .split(" ")
     .map((n) => n[0])
@@ -26,7 +27,7 @@ function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: numb
     .slice(0, 2);
   return (
     <div
-      className="flex items-center justify-center rounded-full text-white font-bold shrink-0"
+      className="flex items-center justify-center overflow-hidden rounded-full text-white font-bold shrink-0"
       style={{
         width: size,
         height: size,
@@ -35,7 +36,11 @@ function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: numb
         boxShadow: `0 2px 8px ${bg}44`,
       }}
     >
-      {initials}
+      {imageUrl ? (
+        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+      ) : (
+        initials
+      )}
     </div>
   );
 }
@@ -44,6 +49,7 @@ export default async function CoachDashboardPage() {
   const session = await auth();
   const coachId = session?.user.id || "";
   const userName = session?.user.name || "Koç";
+  const coachAvatarUrl = coachId ? await getCoachAvatarUrl(coachId) : null;
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
@@ -357,13 +363,14 @@ export default async function CoachDashboardPage() {
         className="-mx-4 px-5 pt-5 pb-6 -mt-4"
         style={{ background: "linear-gradient(160deg, #1A365D, #2D4A7A)" }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="text-white/60 text-[13px] m-0">Koç Paneli</p>
-            <h2 className="text-white text-[20px] font-black m-0 leading-tight tracking-tight">
+            <p className="m-0 text-[13px] text-white/60">Koç Paneli</p>
+            <h2 className="m-0 text-[20px] font-black leading-tight tracking-tight text-white">
               {userName}
             </h2>
           </div>
+          <Avatar name={userName} imageUrl={coachAvatarUrl} size={44} bg="#F97316" />
         </div>
 
         <div className="grid grid-cols-3 gap-2.5">

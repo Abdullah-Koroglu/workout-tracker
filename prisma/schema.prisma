@@ -68,6 +68,9 @@ model CoachProfile {
   user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId          String   @unique
   bio             String?
+  slogan          String?
+  accentColor     String?  @default("#F97316")
+  transformationPhotos Json?
   specialties     Json?
   experienceYears Int?
   socialMediaUrl  String?

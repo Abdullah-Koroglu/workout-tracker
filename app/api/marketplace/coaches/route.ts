@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
+import { attachCoachAvatars } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/marketplace/coaches?q=&specialty=
@@ -24,6 +25,9 @@ export async function GET(request: Request) {
       coachProfile: {
         select: {
           bio: true,
+          slogan: true,
+          accentColor: true,
+          transformationPhotos: true,
           specialties: true,
           experienceYears: true,
           packages: {
@@ -47,5 +51,7 @@ export async function GET(request: Request) {
     );
   });
 
-  return NextResponse.json({ coaches: filtered });
+  const coachesWithAvatar = await attachCoachAvatars(filtered);
+
+  return NextResponse.json({ coaches: coachesWithAvatar });
 }

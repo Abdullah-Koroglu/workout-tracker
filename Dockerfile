@@ -12,6 +12,8 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Guard against stale local build artifacts leaking into container context.
+RUN rm -rf .next && rm -f tsconfig.tsbuildinfo
 RUN npx prisma generate
 RUN npm run build
 

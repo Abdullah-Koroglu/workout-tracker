@@ -17,6 +17,7 @@ services:
       retries: 20
 
   nextjs_app:
+    image: fitcoach:latest
     build: .
     ports:
       - "3000:3000"
@@ -42,7 +43,7 @@ services:
     entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npm run start"]
 
   ws_server:
-    build: .
+    image: fitcoach:latest
     command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
     ports:
       - "3001:3001"

@@ -20,6 +20,7 @@ import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { ActionMenu } from "@/components/ui/action-menu";
 import { PageHero } from "@/components/shared/PageHero";
+import { CoachFilterPanel, type CoachFilters } from "@/components/client/CoachFilterPanel";
 
 /* ─── Types ──────────────────────────────────────────── */
 type Coach = {
@@ -94,6 +95,13 @@ export default function ClientCoachesContent() {
   const [marketLoading, setMarketLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [filters, setFilters] = useState<CoachFilters>({
+    minPrice: null,
+    maxPrice: null,
+    minExp: null,
+    hasPackages: false,
+    city: "",
+  });
 
   /* load my coaches */
   const loadCoaches = useCallback(async (q = "") => {
@@ -106,16 +114,24 @@ export default function ClientCoachesContent() {
   useEffect(() => { void loadCoaches(); }, [loadCoaches]);
 
   /* load marketplace */
-  const loadMarket = useCallback(async (q = "", spec = "") => {
+  const loadMarket = useCallback(async (q = "", spec = "", filterArgs?: CoachFilters) => {
     setMarketLoading(true);
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (spec) params.set("specialty", spec);
+
+    const activeFilters = filterArgs || filters;
+    if (activeFilters.minPrice !== null) params.set("minPrice", String(activeFilters.minPrice));
+    if (activeFilters.maxPrice !== null) params.set("maxPrice", String(activeFilters.maxPrice));
+    if (activeFilters.minExp !== null) params.set("minExp", String(activeFilters.minExp));
+    if (activeFilters.hasPackages) params.set("hasPackages", "true");
+    if (activeFilters.city.trim()) params.set("city", activeFilters.city);
+
     const res = await fetch(`/api/marketplace/coaches?${params.toString()}`);
     const data = await res.json() as { coaches: MarketplaceCoach[] };
     setMarketCoaches(data.coaches ?? []);
     setMarketLoading(false);
-  }, []);
+  }, [filters]);
 
   useEffect(() => { if (tab === "find") void loadMarket(); }, [tab, loadMarket]);
 
@@ -367,10 +383,20 @@ export default function ClientCoachesContent() {
       {/* ── FIND COACHES TAB ── */}
       {tab === "find" && (
         <div className="space-y-5">
+          {/* Filter Panel */}
+          <CoachFilterPanel
+            filters={filters}
+            onFiltersChange={(newFilters) => {
+              setFilters(newFilters);
+              void loadMarket(query, specialty, newFilters);
+            }}
+            isLoading={marketLoading}
+          />
+
           {/* Search bar */}
           <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
             <form
-              onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty); }}
+              onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty, filters); }}
               className="space-y-3 xl:col-span-2"
             >
               <div className="flex gap-2">
@@ -395,7 +421,13 @@ export default function ClientCoachesContent() {
                 {(query || specialty) && (
                   <button
                     type="button"
-                    onClick={() => { setQuery(""); setSpecialty(""); void loadMarket("", ""); }}
+                    onClick={() => {
+                      setQuery("");
+                      setSpecialty("");
+                      const emptyFilters: CoachFilters = { minPrice: null, maxPrice: null, minExp: null, hasPackages: false, city: "" };
+                      setFilters(emptyFilters);
+                      void loadMarket("", "", emptyFilters);
+                    }}
                     className="rounded-xl border border-slate-200 px-3 text-slate-400 transition hover:bg-slate-50"
                   >
                     <X className="h-4 w-4" />
@@ -463,7 +495,13 @@ export default function ClientCoachesContent() {
               {(query || specialty) && (
                 <button
                   type="button"
-                  onClick={() => { setQuery(""); setSpecialty(""); void loadMarket("", ""); }}
+                  onClick={() => {
+                    setQuery("");
+                    setSpecialty("");
+                    const emptyFilters: CoachFilters = { minPrice: null, maxPrice: null, minExp: null, hasPackages: false, city: "" };
+                    setFilters(emptyFilters);
+                    void loadMarket("", "", emptyFilters);
+                  }}
                   className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
                 >
                   Filtreleri temizle

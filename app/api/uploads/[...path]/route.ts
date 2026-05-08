@@ -30,7 +30,7 @@ export async function GET(
   }
 
   const topFolder = parts[0];
-  if (!["avatars", "meals", "checkins"].includes(topFolder)) {
+  if (!["avatars", "meals", "checkins", "transformations"].includes(topFolder)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 

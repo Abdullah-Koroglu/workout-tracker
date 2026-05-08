@@ -104,6 +104,7 @@ export async function PUT(request: Request) {
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,
+          city: data.city ?? null,
         },
         update: {
           bio: data.bio ?? null,
@@ -113,6 +114,7 @@ export async function PUT(request: Request) {
           specialties: data.specialties ?? undefined,
           experienceYears: data.experienceYears ?? null,
           socialMediaUrl: data.socialMediaUrl ?? null,
+          city: data.city ?? null,
         },
       });
 

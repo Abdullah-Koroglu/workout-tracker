@@ -25,6 +25,7 @@ import { useRouter } from "next/navigation";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { InviteLinkBox } from "@/components/coach/BillingSubscriptionPage";
 import { PageHero } from "@/components/shared/PageHero";
+import { TransformationPhotosManager, type TransformationPhoto } from "@/components/coach/TransformationPhotosManager";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -39,10 +40,11 @@ type CoachProfileData = {
   bio: string | null;
   slogan: string | null;
   accentColor: string | null;
-  transformationPhotos: Array<{ beforeUrl: string; afterUrl: string; title?: string }> | null;
+  transformationPhotos: TransformationPhoto[] | null;
   specialties: string[] | null;
   experienceYears: number | null;
   socialMediaUrl: string | null;
+  city: string | null;
   packages: CoachPackage[];
   name?: string;
   avatarUrl?: string | null;
@@ -88,11 +90,12 @@ export default function CoachProfilePage() {
   const [bio,              setBio]              = useState("");
   const [slogan,           setSlogan]           = useState("");
   const [accentColor,      setAccentColor]      = useState("#F97316");
-  const [transformationPhotos, setTransformationPhotos] = useState<Array<{ beforeUrl: string; afterUrl: string; title?: string }>>([]);
+  const [transformationPhotos, setTransformationPhotos] = useState<TransformationPhoto[]>([]);
   const [specialties,      setSpecialties]      = useState<string[]>([]);
   const [specialtyInput,   setSpecialtyInput]   = useState("");
   const [experienceYears,  setExperienceYears]  = useState("");
   const [socialMediaUrl,   setSocialMediaUrl]   = useState("");
+  const [city,             setCity]             = useState("");
 
   // Packages
   const [packages,    setPackages]    = useState<CoachPackage[]>([]);
@@ -118,6 +121,7 @@ export default function CoachProfilePage() {
         setSpecialties(Array.isArray(p.specialties) ? p.specialties : []);
         setExperienceYears(p.experienceYears != null ? String(p.experienceYears) : "");
         setSocialMediaUrl(p.socialMediaUrl ?? "");
+        setCity(p.city ?? "");
         setPackages(p.packages ?? []);
         if (p.name) setName(p.name);
         setAvatarUrl(p.avatarUrl ?? null);
@@ -141,6 +145,7 @@ export default function CoachProfilePage() {
         specialties:     specialties.length > 0 ? specialties : null,
         experienceYears: experienceYears ? Number(experienceYears) : null,
         socialMediaUrl:  socialMediaUrl  || null,
+        city:            city            || null,
       }),
     });
     setSaving(false);
@@ -342,7 +347,7 @@ export default function CoachProfilePage() {
             </div>
 
             {/* Experience + Social grid */}
-            <div className="mb-5 grid gap-4 sm:grid-cols-3">
+            <div className="mb-5 grid gap-4 sm:grid-cols-4">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <Star className="h-3.5 w-3.5" />
@@ -368,6 +373,19 @@ export default function CoachProfilePage() {
                   value={socialMediaUrl}
                   onChange={(e) => setSocialMediaUrl(e.target.value)}
                   placeholder="https://instagram.com/..."
+                  className={inputCls}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Şehir
+                </label>
+                <input
+                  type="text"
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                  placeholder="İstanbul"
+                  maxLength={100}
                   className={inputCls}
                 />
               </div>
@@ -689,83 +707,11 @@ export default function CoachProfilePage() {
             </div>
           </div>
 
-          <div
-            className="rounded-2xl bg-white p-6"
-            style={{
-              boxShadow:
-                "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
-            }}
-          >
-            <div className="mb-5 flex items-center gap-2">
-              <div
-                className="flex h-8 w-8 items-center justify-center rounded-xl"
-                style={{ background: "rgba(249,115,22,0.1)" }}
-              >
-                <Sparkles className="h-4 w-4 text-orange-500" />
-              </div>
-              <h2 className="text-base font-black text-slate-800">Dönüşüm Galerisi</h2>
-            </div>
-
-            <div className="space-y-3">
-              {transformationPhotos.map((item, idx) => (
-                <div key={`${item.beforeUrl}-${item.afterUrl}-${idx}`} className="rounded-xl border border-slate-200 p-3">
-                  <div className="mb-2 grid gap-2 sm:grid-cols-3">
-                    <input
-                      type="text"
-                      value={item.title ?? ""}
-                      onChange={(e) => {
-                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, title: e.target.value } : photo));
-                      }}
-                      placeholder="Başlık (opsiyonel)"
-                      className={inputCls}
-                    />
-                    <input
-                      type="url"
-                      value={item.beforeUrl}
-                      onChange={(e) => {
-                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, beforeUrl: e.target.value } : photo));
-                      }}
-                      placeholder="Önce görsel URL"
-                      className={inputCls}
-                    />
-                    <input
-                      type="url"
-                      value={item.afterUrl}
-                      onChange={(e) => {
-                        setTransformationPhotos((prev) => prev.map((photo, photoIdx) => photoIdx === idx ? { ...photo, afterUrl: e.target.value } : photo));
-                      }}
-                      placeholder="Sonra görsel URL"
-                      className={inputCls}
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTransformationPhotos((prev) => prev.filter((_, photoIdx) => photoIdx !== idx));
-                    }}
-                    className="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-bold text-red-600"
-                  >
-                    Kaldır
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setTransformationPhotos((prev) => [...prev, { beforeUrl: "", afterUrl: "", title: "" }]);
-              }}
-              className="mt-3 inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-black text-white"
-              style={{
-                background: "linear-gradient(135deg, #FB923C, #EA580C)",
-                boxShadow: "0 4px 10px rgba(249,115,22,0.3)",
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Dönüşüm Ekle
-            </button>
-          </div>
+          <TransformationPhotosManager
+            photos={transformationPhotos}
+            onPhotosChange={setTransformationPhotos}
+            isLoading={saving}
+          />
         </div>
 
         {/* ── RIGHT: quick links + account ── */}
@@ -837,6 +783,7 @@ export default function CoachProfilePage() {
                 { label: "Slogan", done: slogan.trim().length > 0 },
                 { label: "Uzmanlık", done: specialties.length > 0 },
                 { label: "Deneyim", done: experienceYears.length > 0 },
+                { label: "Şehir", done: city.trim().length > 0 },
                 { label: "Sosyal Medya", done: socialMediaUrl.length > 0 },
                 { label: "Paket", done: packages.length > 0 },
                 { label: "Dönüşüm", done: transformationPhotos.length > 0 },

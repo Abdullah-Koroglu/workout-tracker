@@ -92,9 +92,10 @@ const nullableTransformationPhotos = z.preprocess(
   z
     .array(
       z.object({
+        id: z.string().min(1),
         beforeUrl: z.string().trim().url().max(1000),
         afterUrl: z.string().trim().url().max(1000),
-        title: z.string().trim().max(120).optional(),
+        title: z.string().trim().max(120).nullable().optional(),
       }),
     )
     .max(24)
@@ -142,6 +143,7 @@ export const coachProfileSchema = baseProfileSchema.extend({
     },
     z.string().url().max(500).nullable().optional(),
   ),
+  city: nullableTrimmedString(100),
 });
 
 export const clientProfileSchema = baseProfileSchema.extend({

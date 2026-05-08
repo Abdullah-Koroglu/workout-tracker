@@ -74,6 +74,7 @@ model CoachProfile {
   specialties     Json?
   experienceYears Int?
   socialMediaUrl  String?
+  city            String?
   updatedAt       DateTime @updatedAt
 
   subscriptionTier   SubscriptionTier @default(FREE)

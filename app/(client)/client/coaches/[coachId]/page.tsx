@@ -105,10 +105,10 @@ export default async function CoachVitrinPage({
       {/* ── Back link ── */}
       <Link
         href="/client/coaches"
-        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 transition-colors hover:text-slate-700"
+        className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition-colors hover:text-slate-700"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        Koç Bul
+        ← Koç Bul
       </Link>
 
       {/* ── Hero banner ── */}
@@ -126,7 +126,7 @@ export default async function CoachVitrinPage({
       >
         {/* Bio */}
         {profile?.bio && (
-          <p className="text-sm leading-relaxed text-slate-300 max-w-2xl">{profile.bio}</p>
+          <p className="text-sm leading-relaxed text-slate-600 max-w-2xl">{profile.bio}</p>
         )}
         {/* Social link */}
         {profile?.socialMediaUrl && (
@@ -134,7 +134,7 @@ export default async function CoachVitrinPage({
             href={profile.socialMediaUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors"
+            className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
           >
             <ExternalLink className="h-3 w-3" />
             Sosyal Medya
@@ -189,17 +189,17 @@ export default async function CoachVitrinPage({
 
           {pkgCount === 0 ? (
             <div
-              className="rounded-2xl bg-white p-8 text-center"
+              className="rounded-2xl bg-gradient-to-br from-white to-slate-50 p-8 text-center border border-slate-100"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div
                 className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                style={{ background: "rgba(249,115,22,0.08)" }}
+                style={{ background: "rgba(249,115,22,0.12)" }}
               >
-                <Briefcase className="h-7 w-7 text-orange-200" />
+                <Briefcase className="h-7 w-7" style={{ color: "#F97316" }} />
               </div>
-              <p className="font-bold text-slate-600">Henüz paket bilgisi yok</p>
-              <p className="mt-1 text-sm text-slate-400">Fiyat ve detaylar için mesaj gönderebilirsiniz.</p>
+              <p className="font-bold text-slate-700">Henüz paket bilgisi yok</p>
+              <p className="mt-1 text-sm text-slate-500">Fiyat ve detaylar için mesaj gönderebilirsiniz.</p>
               <Link
                 href={messageHref}
                 className="mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black text-white transition-opacity hover:opacity-90"
@@ -217,13 +217,13 @@ export default async function CoachVitrinPage({
               {profile!.packages.map((pkg) => (
                 <div
                   key={pkg.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                  className="group flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
                   style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                 >
                   {/* top accent */}
                   <div
-                    className="h-1 w-full"
-                    style={{ background: "linear-gradient(90deg, #FB923C, #EA580C)" }}
+                    className="h-1.5 w-full"
+                    style={{ background: `linear-gradient(90deg, ${accentColor}CC, ${accentColor})` }}
                   />
                   <div className="flex flex-1 flex-col p-5">
                     <div className="mb-3 flex items-start gap-3">
@@ -283,11 +283,11 @@ export default async function CoachVitrinPage({
 
           {/* Request / status card */}
           <div
-            className="rounded-2xl bg-white p-5 space-y-4"
+            className="rounded-2xl bg-white p-5 space-y-4 border border-slate-100"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Bağlantı
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+              Bağlantı Durumu
             </h3>
             <div className="rounded-xl px-3 py-2" style={{ background: relationMeta.bg }}>
               <p className="text-[11px] font-black" style={{ color: relationMeta.color }}>{relationMeta.label}</p>
@@ -297,18 +297,18 @@ export default async function CoachVitrinPage({
 
           {/* Message card */}
           <div
-            className="rounded-2xl bg-white p-5 space-y-4"
+            className="rounded-2xl bg-gradient-to-br from-slate-50 to-white p-5 space-y-4 border border-slate-100"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
-            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+            <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
               İletişim
             </h3>
             <Link
               href={messageHref}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-black uppercase tracking-wider text-white transition-all hover:shadow-lg"
               style={{
-                background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
-                boxShadow: "0 4px 14px rgba(26,54,93,0.35)",
+                background: "linear-gradient(135deg, #FB923C, #EA580C)",
+                boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
               }}
             >
               <MessageCircle className="h-4 w-4" />
@@ -319,12 +319,12 @@ export default async function CoachVitrinPage({
           {/* Specialties recap */}
           {specialties.length > 0 && (
             <div
-              className="rounded-2xl bg-white p-5 space-y-3"
+              className="rounded-2xl bg-white p-5 space-y-3 border border-slate-100"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-center gap-2">
                 <Tag className="h-4 w-4 text-slate-400" />
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-400">
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
                   Uzmanlık Alanları
                 </h3>
               </div>
@@ -334,8 +334,9 @@ export default async function CoachVitrinPage({
                     key={s}
                     className="rounded-full px-3 py-1.5 text-xs font-bold"
                     style={{
-                      background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
-                      color: "#fff",
+                      background: `${accentColor}18`,
+                      color: accentColor,
+                      border: `1px solid ${accentColor}33`,
                     }}
                   >
                     {s}
@@ -348,7 +349,7 @@ export default async function CoachVitrinPage({
           {/* Back to list */}
           <Link
             href="/client/coaches"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-slate-500 transition-colors hover:text-slate-700"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl py-3.5 text-sm font-bold text-slate-600 transition-all hover:bg-slate-100 hover:text-slate-800"
             style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
           >
             <Users className="h-4 w-4" />

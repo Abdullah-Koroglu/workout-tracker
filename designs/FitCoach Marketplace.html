@@ -1,0 +1,1349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitCoach — Marketplace</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Lexend', sans-serif; background: #0B0F1A; min-height: 100vh; display: flex; align-items: stretch; }
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #2D3A52; border-radius: 4px; }
+  input, textarea, select, button { font-family: 'Lexend', sans-serif; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+  @keyframes slideIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+</style>
+</head>
+<body>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ── Design Tokens ──────────────────────────────────────────
+const C = {
+  primary: '#F97316',
+  primaryLight: '#FED7AA',
+  primaryDark: '#C2410C',
+  primaryGrad: 'linear-gradient(135deg,#FB923C,#EA580C)',
+  secondary: '#1A365D',
+  secondaryLight: '#2D4A7A',
+  tertiary: '#2563EB',
+  tertiaryLight: '#DBEAFE',
+  neutral: '#F8FAFC',
+  white: '#FFFFFF',
+  gray50: '#F9FAFB',
+  gray100: '#F1F5F9',
+  gray200: '#E2E8F0',
+  gray300: '#CBD5E1',
+  gray400: '#94A3B8',
+  gray500: '#64748B',
+  gray600: '#475569',
+  gray800: '#1E293B',
+  gray900: '#0F172A',
+  success: '#22C55E',
+  danger: '#EF4444',
+  warning: '#F59E0B',
+  cardShadow: '0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+  sidebarBg: '#0F1929',
+  teal: '#14B8A6',
+  purple: '#8B5CF6',
+  pink: '#EC4899',
+};
+
+// ── Mock Data ──────────────────────────────────────────────
+const COACHES = [
+  {
+    id: 1, name: 'Berk Öztürk', title: 'Güç & Hacim Uzmanı',
+    specialties: ['Güç Antrenmanı', 'Hacim Kazanma', 'Powerlifting'],
+    exp: 7, rating: 4.9, reviews: 134, successRate: 94,
+    clients: 48, price: 1200, city: 'İstanbul',
+    bio: 'ISSA sertifikalı kişisel antrenör. 7 yılda 48 atletle çalıştım; ortalama müşterim 4 ayda %18 güç artışı yaşıyor.',
+    tagline: '"Güçlü bir vücut, güçlü bir zihin doğurur."',
+    packages: [
+      { name: 'Başlangıç', price: 1200, period: 'ay', features: ['Kişisel program', 'Haftalık check-in', 'Mesajlaşma desteği'] },
+      { name: 'Pro', price: 2200, period: 'ay', features: ['Günlük program', 'Beslenme planı', 'Öncelikli mesajlaşma', 'Video analiz'], popular: true },
+      { name: 'Elite', price: 3800, period: 'ay', features: ['7/24 destek', 'Özel program', 'Haftalık video görüşme', 'Kan testi analizi'] },
+    ],
+    transformations: [
+      { before: 'Ağustos 2025 — 95kg', after: 'Ocak 2026 — 110kg', stat: '+15kg kas', duration: '5 ay', name: 'Ahmet K.' },
+      { before: 'Mart 2025 — 72kg', after: 'Eylül 2025 — 88kg', stat: '+16kg kas', duration: '6 ay', name: 'Tolga M.' },
+      { before: 'Ocak 2026 — 80kg', after: 'Nisan 2026 — 91kg', stat: '+11kg kas', duration: '3 ay', name: 'Emre Ş.' },
+    ],
+    accentColor: C.primary,
+  },
+  {
+    id: 2, name: 'Ayşe Kılıç', title: 'Kilo Verme & Beslenme',
+    specialties: ['Kilo Verme', 'Kadın Fitnesi', 'Beslenme'],
+    exp: 5, rating: 4.8, reviews: 98, successRate: 91,
+    clients: 62, price: 1400, city: 'Ankara',
+    bio: 'Beslenme bilimi mezunu ve ACE sertifikalı personal trainer. Kadınlara yönelik sürdürülebilir kilo yönetimi konusunda uzmanım.',
+    tagline: '"Diyet değil, yaşam tarzı değişikliği."',
+    packages: [
+      { name: 'Temel', price: 1400, period: 'ay', features: ['Antrenman programı', 'Temel beslenme rehberi', 'Haftalık ilerleme takibi'] },
+      { name: 'Yoğun', price: 2600, period: 'ay', features: ['Kişisel beslenme planı', 'Günlük program', 'Video form kontrolü', 'Anlık mesaj desteği'], popular: true },
+      { name: 'Premium', price: 4200, period: 'ay', features: ['Yemek planı & tarifler', '7/24 mesajlaşma', 'Aylık görüntülü görüşme', 'Psikolojik destek süreci'] },
+    ],
+    transformations: [
+      { before: 'Şubat 2025 — 78kg', after: 'Ağustos 2025 — 61kg', stat: '-17kg', duration: '6 ay', name: 'Selin Y.' },
+      { before: 'Mayıs 2025 — 84kg', after: 'Kasım 2025 — 69kg', stat: '-15kg', duration: '6 ay', name: 'Gizem T.' },
+      { before: 'Ekim 2025 — 92kg', after: 'Mart 2026 — 74kg', stat: '-18kg', duration: '5 ay', name: 'Canan B.' },
+    ],
+    accentColor: C.teal,
+  },
+  {
+    id: 3, name: 'Murat Can', title: 'Olimpik Kaldırma & Performans',
+    specialties: ['Powerlifting', 'Sporcu Performansı', 'Güç Antrenmanı'],
+    exp: 10, rating: 5.0, reviews: 212, successRate: 97,
+    clients: 28, price: 2800, city: 'İzmir',
+    bio: 'Türkiye Olimpik Kaldırma Şampiyonu. 10 yıllık koçluk kariyerimde milli sporcu yetiştirdim.',
+    tagline: '"Limitlerin ötesine geç."',
+    packages: [
+      { name: 'Temel', price: 2800, period: 'ay', features: ['Teknik program', 'Haftalık video analiz', 'Mesaj desteği'] },
+      { name: 'Şampiyon', price: 4800, period: 'ay', features: ['Kişisel periodizasyon', 'Günlük koçluk', 'Video görüşme', 'Yarışma hazırlığı'], popular: true },
+    ],
+    transformations: [
+      { before: 'Ocak 2025 — 120kg squat', after: 'Temmuz 2025 — 175kg squat', stat: '+55kg squat', duration: '6 ay', name: 'Barış K.' },
+      { before: 'Mart 2025 — 95kg deadlift', after: 'Eylül 2025 — 160kg deadlift', stat: '+65kg deadlift', duration: '6 ay', name: 'Enes A.' },
+    ],
+    accentColor: C.purple,
+  },
+  {
+    id: 4, name: 'Elif Yıldız', title: 'Kardio & Fonksiyonel Antrenman',
+    specialties: ['Kilo Verme', 'Kardiyovasküler', 'Fonksiyonel'],
+    exp: 4, rating: 4.7, reviews: 56, successRate: 88,
+    clients: 35, price: 950, city: 'İstanbul',
+    bio: 'Crossfit Level 2 ve NASM sertifikalı. Fonksiyonel hareketlerle günlük yaşamı kolaylaştıran antrenman programları.',
+    tagline: '"Her hareketin bir amacı var."',
+    packages: [
+      { name: 'Başlangıç', price: 950, period: 'ay', features: ['3 günlük program', 'Haftalık check-in', 'Temel beslenme tavsiyeleri'] },
+      { name: 'Aktif', price: 1800, period: 'ay', features: ['5 günlük program', 'Beslenme planı', 'Video analiz desteği'], popular: true },
+    ],
+    transformations: [
+      { before: 'Kasım 2025 — 70kg', after: 'Mart 2026 — 58kg', stat: '-12kg', duration: '4 ay', name: 'Merve Ö.' },
+    ],
+    accentColor: C.pink,
+  },
+  {
+    id: 5, name: 'Serkan Demir', title: 'Vücut Geliştirme & Estetik',
+    specialties: ['Hacim Kazanma', 'Vücut Geliştirme', 'Beslenme'],
+    exp: 8, rating: 4.8, reviews: 175, successRate: 93,
+    clients: 55, price: 1600, city: 'Bursa',
+    bio: 'IFBB Pro Card sahibi. Sahne hazırlığı ve estetik vücut geliştirme konusunda ülkedeki en deneyimli antrenörlerden biriyim.',
+    tagline: '"Estetik güç, disiplinle gelir."',
+    packages: [
+      { name: 'Hacim', price: 1600, period: 'ay', features: ['Hacim programı', 'Besin takibi', 'Haftalık ölçüm'] },
+      { name: 'Cut', price: 2400, period: 'ay', features: ['Yağ yakım programı', 'Makro hesaplama', 'Haftalık check-in', 'Fotoğraf analizi'], popular: true },
+      { name: 'Sahne Hazırlık', price: 5500, period: 'ay', features: ['Yarışma diyeti', 'Pose koçluğu', '7/24 destek', 'Takviye rehberi'] },
+    ],
+    transformations: [
+      { before: 'Ocak 2026 — %22 yağ', after: 'Nisan 2026 — %12 yağ', stat: '-%10 yağ', duration: '3 ay', name: 'Kenan T.' },
+      { before: 'Temmuz 2025 — 78kg', after: 'Ocak 2026 — 93kg', stat: '+15kg kas', duration: '6 ay', name: 'Onur S.' },
+    ],
+    accentColor: '#F59E0B',
+  },
+  {
+    id: 6, name: 'Zeynep Arslan', title: 'Pilates & Postür Düzeltme',
+    specialties: ['Pilates', 'Postür', 'Rehabilitasyon'],
+    exp: 6, rating: 4.9, reviews: 89, successRate: 96,
+    clients: 40, price: 1100, city: 'İstanbul',
+    bio: 'STOTT Pilates Matwork & Reformer sertifikalı. Ofis çalışanları ve rehabilitasyon sonrası postür bozukluklarını düzeltme konusunda uzman.',
+    tagline: '"Doğru duruş, doğru yaşam."',
+    packages: [
+      { name: 'Temel', price: 1100, period: 'ay', features: ['Haftalık program', 'Postür analizi', 'Egzersiz videoları'] },
+      { name: 'Düzeltme', price: 2000, period: 'ay', features: ['Kişisel postür planı', 'Günlük egzersizler', 'Video form kontrolü'], popular: true },
+    ],
+    transformations: [
+      { before: 'Eylül 2025 — Kronik sırt ağrısı', after: 'Şubat 2026 — Ağrısız yaşam', stat: 'Ağrı gitti', duration: '5 ay', name: 'Nilüfer K.' },
+    ],
+    accentColor: C.teal,
+  },
+];
+
+const FILTER_TAGS = ['Tümü', 'Kilo Verme', 'Hacim Kazanma', 'Powerlifting', 'Kadın Fitnesi', 'Sporcu Performansı', 'Pilates', 'Beslenme', 'Kardiyovasküler'];
+const SORT_OPTIONS = ['En Yüksek Puan', 'En Yüksek Başarı', 'En Düşük Fiyat', 'En Yüksek Fiyat', 'En Fazla Müşteri'];
+const CITIES = ['Tüm Şehirler', 'İstanbul', 'Ankara', 'İzmir', 'Bursa'];
+
+// ── SVG Icons ──────────────────────────────────────────────
+const Icon = {
+  star: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>,
+  check: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20,6 9,17 4,12"/></svg>,
+  users: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>,
+  location: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+  trophy: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9H4.5a2.5 2.5 0 010-5H6"/><path d="M18 9h1.5a2.5 2.5 0 000-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0012 0V2z"/></svg>,
+  search: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>,
+  filter: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>,
+  arrow: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></svg>,
+  arrowLeft: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12,19 5,12 12,5"/></svg>,
+  chevronLeft: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15,18 9,12 15,6"/></svg>,
+  chevronRight: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9,18 15,12 9,6"/></svg>,
+  message: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>,
+  edit: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>,
+  image: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21,15 16,10 5,21"/></svg>,
+  package: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="16.5" y1="9.4" x2="7.5" y2="4.21"/><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27,6.96 12,12.01 20.73,6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>,
+  activity: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>,
+  upload: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16,16 12,12 8,16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>,
+  medal: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="15" r="5"/><path d="M8.56 2.9A7 7 0 0119.16 7l2.17 3.76a1 1 0 01-.5 1.4L15.5 14M7.06 7L2.67 12.16a1 1 0 00.12 1.41L7 17"/></svg>,
+  grid: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>,
+  list: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>,
+  x: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+  plus: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+  save: <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17,21 17,13 7,13 7,21"/><polyline points="7,3 7,8 15,8"/></svg>,
+  trend: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="23,6 13.5,15.5 8.5,10.5 1,18"/><polyline points="17,6 23,6 23,12"/></svg>,
+  weight: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="5" r="3"/><path d="M6.5 8a2 2 0 00-1.905 1.46L2.1 18.5A2 2 0 004 21h16a2 2 0 001.925-2.54L19.4 9.5A2 2 0 0017.48 8z"/></svg>,
+  bolt: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10 13,2"/></svg>,
+};
+
+// ── Sidebar Nav ────────────────────────────────────────────
+const NAV_ITEMS = [
+  { id: 'marketplace', label: 'Keşfet', icon: Icon.grid },
+  { id: 'landing', label: 'Coach Profili', icon: Icon.trophy },
+  { id: 'admin', label: 'Koç Paneli', icon: Icon.activity },
+];
+
+function Sidebar({ view, setView }) {
+  return (
+    <div style={{
+      width: 220, background: C.sidebarBg, display: 'flex', flexDirection: 'column',
+      padding: '24px 0', borderRight: '1px solid rgba(255,255,255,0.06)', flexShrink: 0,
+    }}>
+      {/* Logo */}
+      <div style={{ padding: '0 20px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 34, height: 34, borderRadius: 10,
+            background: C.primaryGrad, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 4px 12px ${C.primary}44`, flexShrink: 0,
+          }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2L4.5 7.5v9L12 22l7.5-5.5v-9L12 2z"/></svg>
+          </div>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 700, fontSize: 15, letterSpacing: -.4 }}>FitCoach</div>
+            <div style={{ color: C.gray500, fontSize: 10, fontWeight: 500 }}>MARKETPLACE</div>
+          </div>
+        </div>
+      </div>
+      {/* Nav */}
+      <nav style={{ flex: 1, padding: '0 12px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {NAV_ITEMS.map(item => {
+          const active = view === item.id;
+          return (
+            <button key={item.id} onClick={() => setView(item.id)} style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px',
+              borderRadius: 10, border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%',
+              background: active ? `${C.primary}22` : 'transparent',
+              color: active ? C.primary : C.gray400,
+              fontWeight: active ? 600 : 400, fontSize: 14, transition: 'all .15s',
+            }}>
+              <span style={{ opacity: active ? 1 : 0.6 }}>{item.icon}</span>
+              {item.label}
+              {active && <div style={{ marginLeft: 'auto', width: 4, height: 4, borderRadius: '50%', background: C.primary }} />}
+            </button>
+          );
+        })}
+      </nav>
+      {/* Bottom user */}
+      <div style={{ padding: '16px 20px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%', background: C.primaryGrad,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 13, flexShrink: 0,
+          }}>S</div>
+          <div>
+            <div style={{ color: '#fff', fontWeight: 600, fontSize: 13 }}>Selim Yıldırım</div>
+            <div style={{ color: C.gray500, fontSize: 11 }}>Üye</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Stat Badge ─────────────────────────────────────────────
+function StatBadge({ icon, value, label, color }) {
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+      background: `${color}12`, border: `1px solid ${color}22`,
+      borderRadius: 10, padding: '8px 12px', minWidth: 72,
+    }}>
+      <span style={{ color, display: 'flex' }}>{icon}</span>
+      <span style={{ color, fontWeight: 800, fontSize: 15, lineHeight: 1 }}>{value}</span>
+      <span style={{ color: C.gray500, fontSize: 10, fontWeight: 500 }}>{label}</span>
+    </div>
+  );
+}
+
+// ── Coach Card (Marketplace) ───────────────────────────────
+function CoachCard({ coach, onView, layout = 'grid' }) {
+  const [hovered, setHovered] = useState(false);
+  const accent = coach.accentColor;
+
+  if (layout === 'list') {
+    return (
+      <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+        style={{
+          background: '#fff', borderRadius: 16, padding: '18px 24px',
+          border: `1px solid ${hovered ? accent + '44' : 'rgba(0,0,0,0.055)'}`,
+          boxShadow: hovered ? `0 8px 32px ${accent}1A` : C.cardShadow,
+          transition: 'all .2s', display: 'flex', alignItems: 'center', gap: 20,
+          animation: 'fadeUp .35s ease forwards',
+        }}>
+        {/* Avatar */}
+        <div style={{
+          width: 60, height: 60, borderRadius: '50%', flexShrink: 0,
+          background: `linear-gradient(135deg, ${accent}, ${accent}99)`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#fff', fontWeight: 800, fontSize: 22,
+          boxShadow: `0 4px 12px ${accent}44`,
+        }}>
+          {coach.name.split(' ').map(n => n[0]).join('')}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: C.gray900 }}>{coach.name}</span>
+            <span style={{ color: C.gray400, fontSize: 12 }}>·</span>
+            <span style={{ color: C.gray500, fontSize: 12 }}>{coach.title}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {coach.specialties.map(s => (
+              <span key={s} style={{
+                background: `${accent}14`, color: accent, borderRadius: 20, padding: '2px 8px', fontSize: 10, fontWeight: 600,
+              }}>{s}</span>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <StatBadge icon={Icon.star} value={coach.rating} label="Puan" color="#F59E0B" />
+          <StatBadge icon={Icon.trophy} value={`%${coach.successRate}`} label="Başarı" color={C.success} />
+          <StatBadge icon={Icon.users} value={coach.clients} label="Müşteri" color={C.tertiary} />
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontWeight: 800, fontSize: 18, color: C.gray900 }}>{coach.price.toLocaleString('tr')} ₺</div>
+          <div style={{ color: C.gray400, fontSize: 11 }}>/ay'dan</div>
+          <button onClick={() => onView(coach)} style={{
+            marginTop: 8, background: C.primaryGrad, color: '#fff', border: 'none',
+            borderRadius: 8, padding: '7px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            boxShadow: `0 4px 12px ${C.primary}33`,
+          }}>Profili Gör</button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
+      style={{
+        background: '#fff', borderRadius: 20, overflow: 'hidden',
+        border: `1.5px solid ${hovered ? accent + '55' : 'rgba(0,0,0,0.055)'}`,
+        boxShadow: hovered ? `0 12px 40px ${accent}22, 0 4px 16px rgba(0,0,0,0.08)` : C.cardShadow,
+        transition: 'all .2s ease', cursor: 'pointer',
+        animation: 'fadeUp .35s ease forwards',
+        display: 'flex', flexDirection: 'column',
+      }}>
+      {/* Card Header */}
+      <div style={{
+        background: `linear-gradient(145deg, ${accent}22, ${accent}08)`,
+        borderBottom: `1px solid ${accent}18`,
+        padding: '24px 20px 20px',
+        position: 'relative',
+      }}>
+        {/* Top accent bar */}
+        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: `linear-gradient(90deg,${accent},${accent}88)`, borderRadius: '20px 20px 0 0' }} />
+
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+          {/* Avatar */}
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            background: `linear-gradient(135deg,${accent},${accent}99)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 800, fontSize: 20, flexShrink: 0,
+            boxShadow: `0 4px 14px ${accent}44`,
+          }}>
+            {coach.name.split(' ').map(n => n[0]).join('')}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontWeight: 700, fontSize: 16, color: C.gray900, letterSpacing: -.3 }}>{coach.name}</div>
+            <div style={{ color: C.gray500, fontSize: 12, marginTop: 1 }}>{coach.title}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 5 }}>
+              <span style={{ color: C.gray400, display: 'flex' }}>{Icon.location}</span>
+              <span style={{ color: C.gray400, fontSize: 11 }}>{coach.city}</span>
+              <span style={{ color: C.gray300, margin: '0 2px' }}>·</span>
+              <span style={{ color: C.gray400, fontSize: 11 }}>{coach.exp} yıl deneyim</span>
+            </div>
+          </div>
+          {/* Rating pill */}
+          <div style={{
+            background: '#FFF9EE', border: '1px solid #FDE68A',
+            borderRadius: 20, padding: '5px 10px',
+            display: 'flex', alignItems: 'center', gap: 4,
+          }}>
+            <span style={{ color: '#F59E0B', display: 'flex' }}>{Icon.star}</span>
+            <span style={{ fontWeight: 700, fontSize: 13, color: '#92400E' }}>{coach.rating}</span>
+          </div>
+        </div>
+
+        {/* Specialties */}
+        <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+          {coach.specialties.map(s => (
+            <span key={s} style={{
+              background: `${accent}18`, color: accent,
+              borderRadius: 20, padding: '3px 10px', fontSize: 10, fontWeight: 600,
+            }}>{s}</span>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div style={{ display: 'flex', borderBottom: '1px solid rgba(0,0,0,0.06)', padding: '14px 20px', gap: 8 }}>
+        <StatBadge icon={Icon.trophy} value={`%${coach.successRate}`} label="Başarı" color={C.success} />
+        <StatBadge icon={Icon.users} value={coach.clients} label="Müşteri" color={C.tertiary} />
+        <StatBadge icon={Icon.medal} value={coach.reviews} label="Yorum" color={C.primary} />
+      </div>
+
+      {/* Bio */}
+      <div style={{ padding: '14px 20px 16px', flex: 1 }}>
+        <p style={{ color: C.gray500, fontSize: 12, lineHeight: 1.6, textWrap: 'pretty' }}>{coach.bio}</p>
+      </div>
+
+      {/* Price + CTA */}
+      <div style={{
+        padding: '14px 20px', borderTop: '1px solid rgba(0,0,0,0.06)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div>
+          <span style={{ fontWeight: 800, fontSize: 20, color: C.gray900, letterSpacing: -.5 }}>{coach.price.toLocaleString('tr')} ₺</span>
+          <span style={{ color: C.gray400, fontSize: 11 }}> /ay'dan</span>
+        </div>
+        <button onClick={() => onView(coach)} style={{
+          background: C.primaryGrad, color: '#fff', border: 'none',
+          borderRadius: 10, padding: '9px 18px', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+          boxShadow: `0 4px 14px ${C.primary}33`, display: 'flex', alignItems: 'center', gap: 6,
+          transition: 'transform .15s',
+        }}>
+          Profili Gör <span>{Icon.arrow}</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Marketplace Page ───────────────────────────────────────
+function MarketplacePage({ onViewCoach }) {
+  const [activeFilter, setActiveFilter] = useState('Tümü');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState('En Yüksek Puan');
+  const [city, setCity] = useState('Tüm Şehirler');
+  const [layout, setLayout] = useState('grid');
+
+  const filtered = COACHES
+    .filter(c => {
+      const matchFilter = activeFilter === 'Tümü' || c.specialties.includes(activeFilter);
+      const matchSearch = !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.specialties.some(s => s.toLowerCase().includes(search.toLowerCase()));
+      const matchCity = city === 'Tüm Şehirler' || c.city === city;
+      return matchFilter && matchSearch && matchCity;
+    })
+    .sort((a, b) => {
+      if (sort === 'En Yüksek Puan') return b.rating - a.rating;
+      if (sort === 'En Yüksek Başarı') return b.successRate - a.successRate;
+      if (sort === 'En Düşük Fiyat') return a.price - b.price;
+      if (sort === 'En Yüksek Fiyat') return b.price - a.price;
+      if (sort === 'En Fazla Müşteri') return b.clients - a.clients;
+      return 0;
+    });
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      {/* Top header */}
+      <div style={{
+        padding: '24px 32px 20px', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        background: C.sidebarBg,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <h1 style={{ color: '#fff', fontWeight: 800, fontSize: 24, letterSpacing: -.6 }}>Koç Keşfet</h1>
+            <p style={{ color: C.gray500, fontSize: 13, marginTop: 2 }}>{filtered.length} koç bulundu · Hedefine uygun uzmanı bul</p>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* Layout toggle */}
+            {['grid', 'list'].map(l => (
+              <button key={l} onClick={() => setLayout(l)} style={{
+                width: 36, height: 36, borderRadius: 8, border: 'none', cursor: 'pointer',
+                background: layout === l ? `${C.primary}22` : 'rgba(255,255,255,0.06)',
+                color: layout === l ? C.primary : C.gray400, display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {l === 'grid' ? Icon.grid : Icon.list}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Search + filters row */}
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Search */}
+          <div style={{ position: 'relative', flex: 1, minWidth: 200 }}>
+            <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: C.gray400, display: 'flex' }}>{Icon.search}</span>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Koç adı veya uzmanlık ara..."
+              style={{
+                width: '100%', padding: '10px 12px 10px 38px', borderRadius: 10,
+                background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)',
+                color: '#fff', fontSize: 13, outline: 'none',
+              }} />
+          </div>
+          {/* City */}
+          <select value={city} onChange={e => setCity(e.target.value)} style={{
+            padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)', color: C.gray300, fontSize: 13, outline: 'none',
+          }}>
+            {CITIES.map(c => <option key={c} value={c} style={{ background: '#1a2236' }}>{c}</option>)}
+          </select>
+          {/* Sort */}
+          <select value={sort} onChange={e => setSort(e.target.value)} style={{
+            padding: '10px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(255,255,255,0.1)', color: C.gray300, fontSize: 13, outline: 'none',
+          }}>
+            {SORT_OPTIONS.map(o => <option key={o} value={o} style={{ background: '#1a2236' }}>{o}</option>)}
+          </select>
+        </div>
+
+        {/* Filter tags */}
+        <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+          {FILTER_TAGS.map(tag => {
+            const active = activeFilter === tag;
+            return (
+              <button key={tag} onClick={() => setActiveFilter(tag)} style={{
+                padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600,
+                background: active ? C.primaryGrad : 'rgba(255,255,255,0.07)',
+                color: active ? '#fff' : C.gray400,
+                boxShadow: active ? `0 4px 12px ${C.primary}33` : 'none',
+                transition: 'all .15s',
+              }}>{tag}</button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Cards grid */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
+        <div style={{
+          display: layout === 'grid' ? 'grid' : 'flex',
+          gridTemplateColumns: layout === 'grid' ? 'repeat(auto-fill, minmax(300px,1fr))' : undefined,
+          flexDirection: layout === 'list' ? 'column' : undefined,
+          gap: 20,
+        }}>
+          {filtered.map((coach, i) => (
+            <div key={coach.id} style={{ animationDelay: `${i * 0.04}s` }}>
+              <CoachCard coach={coach} onView={onViewCoach} layout={layout} />
+            </div>
+          ))}
+          {filtered.length === 0 && (
+            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px 20px', color: C.gray500 }}>
+              <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: C.gray400 }}>Sonuç bulunamadı</div>
+              <div style={{ fontSize: 13, marginTop: 4 }}>Arama terimini veya filtreleri değiştirin</div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Before/After Carousel ──────────────────────────────────
+function TransformCarousel({ items, accent }) {
+  const [idx, setIdx] = useState(0);
+  const prev = () => setIdx(i => (i - 1 + items.length) % items.length);
+  const next = () => setIdx(i => (i + 1) % items.length);
+  const item = items[idx];
+
+  return (
+    <div style={{ position: 'relative' }}>
+      <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+        {/* Before */}
+        <div style={{ flex: 1, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+          <div style={{
+            height: 260, background: `repeating-linear-gradient(45deg, #1a2236, #1a2236 10px, #1e2840 10px, #1e2840 20px)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: C.gray600, fontSize: 11, fontWeight: 500, marginBottom: 6 }}>FOTOĞRAF YERİ</div>
+              <div style={{ color: C.gray700, fontSize: 10 }}>before · {item.name}</div>
+            </div>
+          </div>
+          <div style={{
+            position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.6)',
+            color: '#fff', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+          }}>ÖNCE</div>
+          <div style={{
+            position: 'absolute', bottom: 12, left: 12, right: 12,
+            background: 'rgba(0,0,0,0.7)', color: '#fff',
+            padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+          }}>{item.before}</div>
+        </div>
+
+        {/* After */}
+        <div style={{ flex: 1, borderRadius: 16, overflow: 'hidden', position: 'relative' }}>
+          <div style={{
+            height: 260, background: `repeating-linear-gradient(135deg, #0f2017, #0f2017 10px, #132618 10px, #132618 20px)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: C.gray600, fontSize: 11, fontWeight: 500, marginBottom: 6 }}>FOTOĞRAF YERİ</div>
+              <div style={{ color: C.gray700, fontSize: 10 }}>after · {item.name}</div>
+            </div>
+          </div>
+          <div style={{
+            position: 'absolute', top: 12, left: 12,
+            background: `linear-gradient(135deg,${accent},${accent}cc)`,
+            color: '#fff', padding: '4px 10px', borderRadius: 6, fontSize: 11, fontWeight: 600,
+          }}>SONRA</div>
+          <div style={{
+            position: 'absolute', bottom: 12, left: 12, right: 12,
+            background: 'rgba(0,0,0,0.7)', color: '#fff',
+            padding: '6px 12px', borderRadius: 8, fontSize: 11, fontWeight: 500,
+          }}>{item.after}</div>
+          {/* Stat pill */}
+          <div style={{
+            position: 'absolute', top: 12, right: 12,
+            background: `${accent}EE`, color: '#fff',
+            padding: '5px 12px', borderRadius: 20, fontSize: 13, fontWeight: 800,
+          }}>{item.stat}</div>
+        </div>
+      </div>
+
+      {/* Caption */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 14 }}>
+        <div style={{ color: C.gray500, fontSize: 12 }}>
+          <span style={{ fontWeight: 600, color: C.gray700 }}>{item.name}</span> · {item.duration}
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <button onClick={prev} style={{
+            width: 32, height: 32, borderRadius: '50%', border: `1.5px solid ${accent}44`,
+            background: `${accent}14`, color: accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>{Icon.chevronLeft}</button>
+          <span style={{ color: C.gray400, fontSize: 12 }}>{idx + 1}/{items.length}</span>
+          <button onClick={next} style={{
+            width: 32, height: 32, borderRadius: '50%', border: `1.5px solid ${accent}44`,
+            background: `${accent}14`, color: accent, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>{Icon.chevronRight}</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Coach Landing Page ─────────────────────────────────────
+function CoachLandingPage({ coach, onBack }) {
+  const [contactOpen, setContactOpen] = useState(false);
+  const accent = coach.accentColor;
+
+  return (
+    <div style={{ flex: 1, overflowY: 'auto', background: '#F8FAFC' }}>
+      {/* Hero */}
+      <div style={{
+        background: `linear-gradient(160deg, #0B0F1A 0%, ${C.secondary} 60%, ${accent}22 100%)`,
+        padding: '32px 48px 40px', position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Decorative blobs */}
+        <div style={{ position: 'absolute', top: -60, right: -60, width: 300, height: 300, borderRadius: '50%', background: `${accent}14`, filter: 'blur(40px)' }} />
+        <div style={{ position: 'absolute', bottom: -40, left: 100, width: 200, height: 200, borderRadius: '50%', background: `${C.primary}0A`, filter: 'blur(30px)' }} />
+
+        {/* Back button */}
+        <button onClick={onBack} style={{
+          display: 'flex', alignItems: 'center', gap: 6, background: 'rgba(255,255,255,0.1)',
+          color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: 8, padding: '7px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', marginBottom: 28,
+        }}>
+          {Icon.arrowLeft} Keşfet'e Dön
+        </button>
+
+        <div style={{ display: 'flex', gap: 40, alignItems: 'flex-end', position: 'relative' }}>
+          {/* Big avatar */}
+          <div style={{
+            width: 120, height: 120, borderRadius: 24, flexShrink: 0,
+            background: `linear-gradient(135deg,${accent},${accent}88)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#fff', fontWeight: 800, fontSize: 42,
+            boxShadow: `0 8px 32px ${accent}55`,
+            border: '3px solid rgba(255,255,255,0.15)',
+          }}>
+            {coach.name.split(' ').map(n => n[0]).join('')}
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              background: `${accent}22`, border: `1px solid ${accent}44`,
+              borderRadius: 20, padding: '4px 12px', marginBottom: 10,
+            }}>
+              <span style={{ color: accent, display: 'flex' }}>{Icon.star}</span>
+              <span style={{ color: accent, fontSize: 12, fontWeight: 700 }}>{coach.rating} · {coach.reviews} yorum</span>
+            </div>
+            <h1 style={{ color: '#fff', fontWeight: 800, fontSize: 36, letterSpacing: -1, marginBottom: 4 }}>{coach.name}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 16, marginBottom: 12 }}>{coach.title} · {coach.city} · {coach.exp} yıl deneyim</p>
+            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: 15, fontStyle: 'italic' }}>{coach.tagline}</p>
+          </div>
+          {/* CTA */}
+          <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <button onClick={() => setContactOpen(true)} style={{
+              background: C.primaryGrad, color: '#fff', border: 'none', borderRadius: 12,
+              padding: '14px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer',
+              boxShadow: `0 6px 20px ${C.primary}44`, display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              {Icon.message} Hemen İletişime Geç
+            </button>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div style={{ color: '#fff', fontWeight: 800, fontSize: 18 }}>{coach.clients}</div>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>Aktif Müşteri</div>
+              </div>
+              <div style={{ flex: 1, background: 'rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 12px', textAlign: 'center' }}>
+                <div style={{ color: accent, fontWeight: 800, fontSize: 18 }}>%{coach.successRate}</div>
+                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10 }}>Başarı Oranı</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div style={{ padding: '36px 48px', maxWidth: 1100, margin: '0 auto' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 32 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            {/* About */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 28, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <h2 style={{ fontWeight: 700, fontSize: 18, color: C.gray900, marginBottom: 12, letterSpacing: -.3 }}>Hakkında</h2>
+              <p style={{ color: C.gray500, lineHeight: 1.7, fontSize: 14, textWrap: 'pretty' }}>{coach.bio}</p>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16, flexWrap: 'wrap' }}>
+                {coach.specialties.map(s => (
+                  <span key={s} style={{
+                    background: `${accent}14`, color: accent,
+                    borderRadius: 20, padding: '5px 14px', fontSize: 12, fontWeight: 600,
+                  }}>{s}</span>
+                ))}
+              </div>
+            </div>
+
+            {/* Transformations */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 28, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                <h2 style={{ fontWeight: 700, fontSize: 18, color: C.gray900, letterSpacing: -.3 }}>Dönüşüm Galerisi</h2>
+                <span style={{
+                  background: `${accent}14`, color: accent, borderRadius: 20,
+                  padding: '4px 12px', fontSize: 11, fontWeight: 700,
+                }}>{coach.transformations.length} Dönüşüm</span>
+              </div>
+              <TransformCarousel items={coach.transformations} accent={accent} />
+            </div>
+          </div>
+
+          {/* Packages sidebar */}
+          <div>
+            <h2 style={{ fontWeight: 700, fontSize: 18, color: C.gray900, marginBottom: 16, letterSpacing: -.3 }}>Hizmet Paketleri</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {coach.packages.map((pkg) => (
+                <div key={pkg.name} style={{
+                  background: '#fff', borderRadius: 18,
+                  border: `2px solid ${pkg.popular ? accent : 'rgba(0,0,0,0.08)'}`,
+                  boxShadow: pkg.popular ? `0 8px 28px ${accent}22` : C.cardShadow,
+                  overflow: 'hidden', position: 'relative',
+                }}>
+                  {pkg.popular && (
+                    <div style={{
+                      background: `linear-gradient(90deg,${accent},${accent}cc)`,
+                      color: '#fff', textAlign: 'center',
+                      fontSize: 10, fontWeight: 700, padding: '5px 0', letterSpacing: .5,
+                    }}>⭐ EN POPÜLER</div>
+                  )}
+                  <div style={{ padding: '18px 20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ fontWeight: 700, fontSize: 16, color: C.gray900 }}>{pkg.name}</span>
+                      <div>
+                        <span style={{ fontWeight: 800, fontSize: 22, color: pkg.popular ? accent : C.gray900 }}>
+                          {pkg.price.toLocaleString('tr')} ₺
+                        </span>
+                        <span style={{ color: C.gray400, fontSize: 12 }}>/{pkg.period}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 12, marginBottom: 16 }}>
+                      {pkg.features.map(f => (
+                        <div key={f} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{
+                            width: 18, height: 18, borderRadius: '50%', background: `${accent}18`,
+                            color: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                          }}>{Icon.check}</span>
+                          <span style={{ color: C.gray600, fontSize: 13 }}>{f}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setContactOpen(true)} style={{
+                      width: '100%', padding: '11px', borderRadius: 10, border: 'none', cursor: 'pointer',
+                      background: pkg.popular ? `linear-gradient(135deg,${accent},${accent}cc)` : 'rgba(0,0,0,0.05)',
+                      color: pkg.popular ? '#fff' : C.gray600,
+                      fontWeight: 700, fontSize: 13,
+                      boxShadow: pkg.popular ? `0 4px 14px ${accent}33` : 'none',
+                    }}>
+                      {pkg.popular ? 'Hemen Başla →' : 'Paketi Seç'}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Contact Modal */}
+      {contactOpen && (
+        <div onClick={() => setContactOpen(false)} style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
+        }}>
+          <div onClick={e => e.stopPropagation()} style={{
+            background: '#fff', borderRadius: 24, padding: 32, width: 420,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.2)', animation: 'fadeUp .25s ease',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ fontWeight: 700, fontSize: 20, color: C.gray900 }}>İletişim Talebi</h3>
+              <button onClick={() => setContactOpen(false)} style={{
+                background: C.gray100, border: 'none', borderRadius: 8,
+                width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.gray500,
+              }}>{Icon.x}</button>
+            </div>
+            <p style={{ color: C.gray500, fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
+              <strong style={{ color: C.gray800 }}>{coach.name}</strong>'e bir mesaj gönder. Koç en kısa sürede sana dönüş yapacak.
+            </p>
+            <textarea placeholder="Hedefin ve beklentin nedir?" style={{
+              width: '100%', height: 100, borderRadius: 10, border: `1.5px solid ${C.gray200}`,
+              padding: '12px 14px', fontSize: 13, fontFamily: 'Lexend, sans-serif', resize: 'none', outline: 'none', color: C.gray700,
+            }} />
+            <button style={{
+              marginTop: 14, width: '100%', padding: '13px', borderRadius: 12, border: 'none',
+              background: C.primaryGrad, color: '#fff', fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              boxShadow: `0 4px 16px ${C.primary}44`,
+            }}>Mesaj Gönder</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Admin Panel ────────────────────────────────────────────
+const ADMIN_COACH = COACHES[0];
+
+const ADMIN_STUDENTS = [
+  { id: 1, name: 'Selin Arslan', goal: 'Hacim Kazanma', status: 'active', completion: 85, lastChange: '+1.2kg', lastDate: '2 gün önce', workouts: 24, pkg: 'Pro', since: 'Ocak 2026' },
+  { id: 2, name: 'Ahmet Yılmaz', goal: 'Güç Artırma', status: 'active', completion: 72, lastChange: '+3.1kg', lastDate: '1 gün önce', workouts: 18, pkg: 'Pro', since: 'Şubat 2026' },
+  { id: 3, name: 'Fatma Demir', goal: 'Kilo Verme', status: 'active', completion: 91, lastChange: '-2.4kg', lastDate: 'Bugün', workouts: 31, pkg: 'Elite', since: 'Aralık 2025' },
+  { id: 4, name: 'Mehmet Kaya', goal: 'Genel Sağlık', status: 'pending', completion: 0, lastChange: '—', lastDate: '—', workouts: 0, pkg: 'Başlangıç', since: 'Bekliyor' },
+  { id: 5, name: 'Zeynep Şahin', goal: 'Kilo Verme', status: 'pending', completion: 0, lastChange: '—', lastDate: '—', workouts: 0, pkg: 'Başlangıç', since: 'Bekliyor' },
+  { id: 6, name: 'Burak Öztürk', goal: 'Güç Antrenmanı', status: 'active', completion: 67, lastChange: '+0.8kg', lastDate: '3 gün önce', workouts: 12, pkg: 'Pro', since: 'Mart 2026' },
+];
+
+function AdminPanel() {
+  const [activeTab, setActiveTab] = useState('overview');
+  const [editingSection, setEditingSection] = useState(null);
+  const [heroText, setHeroText] = useState(ADMIN_COACH.tagline);
+  const [pkgPrices, setPkgPrices] = useState(ADMIN_COACH.packages.map(p => p.price));
+  const [saved, setSaved] = useState(false);
+  const accent = ADMIN_COACH.accentColor;
+
+  const handleSave = () => {
+    setSaved(true);
+    setEditingSection(null);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const activeStudents = ADMIN_STUDENTS.filter(s => s.status === 'active');
+  const pendingStudents = ADMIN_STUDENTS.filter(s => s.status === 'pending');
+  const avgCompletion = Math.round(activeStudents.reduce((a, b) => a + b.completion, 0) / activeStudents.length);
+
+  const TABS = [
+    { id: 'overview', label: 'Genel Bakış' },
+    { id: 'profile', label: 'Profil Düzenle' },
+    { id: 'students', label: `Öğrenciler (${ADMIN_STUDENTS.length})` },
+  ];
+
+  return (
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden', background: '#F8FAFC' }}>
+      {/* Admin header */}
+      <div style={{
+        background: C.sidebarBg, padding: '20px 32px',
+        borderBottom: '1px solid rgba(255,255,255,0.06)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, background: `linear-gradient(135deg,${accent},${accent}88)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#fff', fontWeight: 800, fontSize: 16, boxShadow: `0 4px 12px ${accent}44`,
+            }}>
+              {ADMIN_COACH.name.split(' ').map(n => n[0]).join('')}
+            </div>
+            <div>
+              <h1 style={{ color: '#fff', fontWeight: 700, fontSize: 18, letterSpacing: -.4 }}>{ADMIN_COACH.name}</h1>
+              <p style={{ color: C.gray500, fontSize: 12 }}>Koç Yönetim Paneli</p>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {saved && (
+              <div style={{
+                background: `${C.success}22`, border: `1px solid ${C.success}44`,
+                color: C.success, borderRadius: 8, padding: '8px 14px', fontSize: 12, fontWeight: 600,
+                display: 'flex', alignItems: 'center', gap: 6, animation: 'fadeUp .2s ease',
+              }}>
+                {Icon.check} Kaydedildi
+              </div>
+            )}
+            <button style={{
+              display: 'flex', alignItems: 'center', gap: 6, background: C.primaryGrad,
+              color: '#fff', border: 'none', borderRadius: 8, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            }}>
+              {Icon.upload} Yayınla
+            </button>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: 4, marginTop: 18 }}>
+          {TABS.map(tab => (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)} style={{
+              padding: '8px 16px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 600,
+              background: activeTab === tab.id ? `${accent}22` : 'transparent',
+              color: activeTab === tab.id ? accent : C.gray500,
+              transition: 'all .15s',
+            }}>{tab.label}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Tab content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '28px 32px' }}>
+
+        {/* ── Overview Tab ── */}
+        {activeTab === 'overview' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeUp .3s ease' }}>
+            {/* KPI row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+              {[
+                { label: 'Aktif Öğrenci', value: activeStudents.length, icon: Icon.users, color: C.tertiary },
+                { label: 'Ort. Tamamlama', value: `%${avgCompletion}`, icon: Icon.activity, color: C.success },
+                { label: 'Bu Ay Gelir', value: '14.200 ₺', icon: Icon.trend, color: accent },
+                { label: 'Bekleyen Talep', value: pendingStudents.length, icon: Icon.bolt, color: C.warning },
+              ].map(kpi => (
+                <div key={kpi.label} style={{
+                  background: '#fff', borderRadius: 16, padding: '20px 22px',
+                  boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                    <span style={{ color: C.gray400, fontSize: 12, fontWeight: 500 }}>{kpi.label}</span>
+                    <span style={{ color: kpi.color, display: 'flex' }}>{kpi.icon}</span>
+                  </div>
+                  <div style={{ fontWeight: 800, fontSize: 26, color: C.gray900, letterSpacing: -.5 }}>{kpi.value}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Recent activity */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 24, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <h3 style={{ fontWeight: 700, fontSize: 16, color: C.gray900, marginBottom: 16 }}>Son Aktiviteler</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { student: 'Selin Arslan', action: 'Full Body A antrenmanını tamamladı', time: '2 saat önce', ok: true },
+                  { student: 'Fatma Demir', action: 'Upper Body Push antrenmanını tamamladı', time: '4 saat önce', ok: true },
+                  { student: 'Ahmet Yılmaz', action: 'Lower Body antrenmanını yarıda bıraktı', time: '1 gün önce', ok: false },
+                  { student: 'Mehmet Kaya', action: 'Onay bekliyor — program henüz başlamadı', time: '2 gün önce', ok: null },
+                ].map((a, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < 3 ? '1px solid rgba(0,0,0,0.05)' : 'none' }}>
+                    <div style={{
+                      width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                      background: a.ok === true ? C.success : a.ok === false ? C.danger : C.warning,
+                    }} />
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontWeight: 600, color: C.gray800, fontSize: 13 }}>{a.student}</span>
+                      <span style={{ color: C.gray500, fontSize: 13 }}> — {a.action}</span>
+                    </div>
+                    <span style={{ color: C.gray400, fontSize: 11 }}>{a.time}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Profile Edit Tab ── */}
+        {activeTab === 'profile' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, animation: 'fadeUp .3s ease' }}>
+            {/* Hero edit */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 24, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15, color: C.gray900 }}>Hero Bölümü</h3>
+                <button onClick={() => setEditingSection(editingSection === 'hero' ? null : 'hero')} style={{
+                  display: 'flex', alignItems: 'center', gap: 5, background: `${accent}14`,
+                  color: accent, border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  {Icon.edit} {editingSection === 'hero' ? 'İptal' : 'Düzenle'}
+                </button>
+              </div>
+
+              {/* Hero image placeholder */}
+              <div style={{
+                height: 140, borderRadius: 12, marginBottom: 14,
+                background: 'repeating-linear-gradient(45deg, #f1f5f9, #f1f5f9 10px, #e2e8f0 10px, #e2e8f0 20px)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', border: `2px dashed ${C.gray200}`,
+                cursor: 'pointer', position: 'relative', overflow: 'hidden',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: C.gray400, display: 'flex', justifyContent: 'center', marginBottom: 6 }}>{Icon.image}</div>
+                  <span style={{ color: C.gray400, fontSize: 12 }}>Hero görseli yükle</span>
+                </div>
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  background: 'rgba(0,0,0,0.4)', padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <span style={{ color: '#fff', fontSize: 10 }}>hero-banner.jpg</span>
+                  <button style={{ background: C.primaryGrad, color: '#fff', border: 'none', borderRadius: 4, padding: '3px 8px', fontSize: 10, cursor: 'pointer' }}>Değiştir</button>
+                </div>
+              </div>
+
+              <label style={{ color: C.gray600, fontSize: 12, fontWeight: 600, display: 'block', marginBottom: 6 }}>Slogan</label>
+              {editingSection === 'hero' ? (
+                <div>
+                  <input value={heroText} onChange={e => setHeroText(e.target.value)} style={{
+                    width: '100%', border: `1.5px solid ${accent}55`, borderRadius: 8,
+                    padding: '10px 12px', fontSize: 13, color: C.gray700, outline: 'none',
+                    background: `${accent}06`,
+                  }} />
+                  <button onClick={handleSave} style={{
+                    marginTop: 10, background: C.primaryGrad, color: '#fff', border: 'none',
+                    borderRadius: 8, padding: '9px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    {Icon.save} Kaydet
+                  </button>
+                </div>
+              ) : (
+                <p style={{ color: C.gray500, fontSize: 13, fontStyle: 'italic', padding: '10px 12px', background: C.gray50, borderRadius: 8 }}>{heroText}</p>
+              )}
+            </div>
+
+            {/* Package prices edit */}
+            <div style={{ background: '#fff', borderRadius: 20, padding: 24, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15, color: C.gray900 }}>Paket Fiyatları</h3>
+                <button onClick={() => setEditingSection(editingSection === 'packages' ? null : 'packages')} style={{
+                  display: 'flex', alignItems: 'center', gap: 5, background: `${accent}14`,
+                  color: accent, border: 'none', borderRadius: 6, padding: '6px 10px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  {Icon.edit} {editingSection === 'packages' ? 'İptal' : 'Düzenle'}
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {ADMIN_COACH.packages.map((pkg, i) => (
+                  <div key={pkg.name} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 14px', background: C.gray50, borderRadius: 10,
+                    border: pkg.popular ? `1.5px solid ${accent}44` : '1.5px solid transparent',
+                  }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: C.gray800 }}>{pkg.name}</div>
+                      {pkg.popular && <span style={{ fontSize: 10, color: accent, fontWeight: 700 }}>En Popüler</span>}
+                    </div>
+                    {editingSection === 'packages' ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <input
+                          type="number"
+                          value={pkgPrices[i]}
+                          onChange={e => {
+                            const next = [...pkgPrices];
+                            next[i] = Number(e.target.value);
+                            setPkgPrices(next);
+                          }}
+                          style={{
+                            width: 90, border: `1.5px solid ${accent}55`, borderRadius: 6,
+                            padding: '6px 8px', fontSize: 13, fontWeight: 700, color: C.gray900, outline: 'none', textAlign: 'right',
+                          }}
+                        />
+                        <span style={{ color: C.gray400, fontSize: 12 }}>₺/ay</span>
+                      </div>
+                    ) : (
+                      <div style={{ fontWeight: 800, fontSize: 16, color: C.gray900 }}>
+                        {pkgPrices[i].toLocaleString('tr')} ₺<span style={{ color: C.gray400, fontSize: 11, fontWeight: 400 }}>/ay</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {editingSection === 'packages' && (
+                  <button onClick={handleSave} style={{
+                    background: C.primaryGrad, color: '#fff', border: 'none',
+                    borderRadius: 8, padding: '10px 16px', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    {Icon.save} Değişiklikleri Kaydet
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Transformation photos edit */}
+            <div style={{ gridColumn: '1 / -1', background: '#fff', borderRadius: 20, padding: 24, boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15, color: C.gray900 }}>Dönüşüm Fotoğrafları</h3>
+                <button style={{
+                  display: 'flex', alignItems: 'center', gap: 5, background: C.primaryGrad,
+                  color: '#fff', border: 'none', borderRadius: 6, padding: '7px 12px', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                }}>
+                  {Icon.plus} Dönüşüm Ekle
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                {ADMIN_COACH.transformations.map((t, i) => (
+                  <div key={i} style={{ border: `1.5px solid ${C.gray200}`, borderRadius: 12, overflow: 'hidden' }}>
+                    <div style={{
+                      display: 'grid', gridTemplateColumns: '1fr 1fr', height: 100,
+                    }}>
+                      {['Önce', 'Sonra'].map(label => (
+                        <div key={label} style={{
+                          background: label === 'Önce'
+                            ? 'repeating-linear-gradient(45deg,#f1f5f9,#f1f5f9 6px,#e2e8f0 6px,#e2e8f0 12px)'
+                            : 'repeating-linear-gradient(45deg,#f0fdf4,#f0fdf4 6px,#dcfce7 6px,#dcfce7 12px)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative',
+                        }}>
+                          <span style={{ color: C.gray400, fontSize: 9, fontWeight: 600 }}>{label.toUpperCase()}</span>
+                          <div style={{
+                            position: 'absolute', top: 4, left: 4,
+                            background: label === 'Sonra' ? accent : 'rgba(0,0,0,0.4)',
+                            color: '#fff', fontSize: 8, padding: '1px 5px', borderRadius: 3, fontWeight: 700,
+                          }}>{label}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ padding: '10px 12px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 12, color: C.gray800 }}>{t.name}</div>
+                        <div style={{ fontSize: 10, color: accent, fontWeight: 700 }}>{t.stat}</div>
+                      </div>
+                      <button style={{
+                        background: C.danger + '14', color: C.danger,
+                        border: 'none', borderRadius: 5, padding: '4px 8px', fontSize: 10, cursor: 'pointer', fontWeight: 600,
+                      }}>Sil</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Students Tab ── */}
+        {activeTab === 'students' && (
+          <div style={{ animation: 'fadeUp .3s ease' }}>
+            {/* Pending requests */}
+            {pendingStudents.length > 0 && (
+              <div style={{ background: '#FFFBEB', border: '1.5px solid #FDE68A', borderRadius: 16, padding: '16px 20px', marginBottom: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <span style={{ color: C.warning }}>{Icon.bolt}</span>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: '#92400E' }}>{pendingStudents.length} Bekleyen Talep</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {pendingStudents.map(s => (
+                    <div key={s.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 14px', background: '#fff', borderRadius: 10 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.warning + '22', display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.warning, fontWeight: 800, fontSize: 12 }}>
+                          {s.name[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontWeight: 600, fontSize: 13, color: C.gray800 }}>{s.name}</div>
+                          <div style={{ fontSize: 11, color: C.gray400 }}>{s.goal} · {s.pkg}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button style={{ background: `${C.success}18`, color: C.success, border: `1px solid ${C.success}33`, borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Kabul Et</button>
+                        <button style={{ background: `${C.danger}12`, color: C.danger, border: `1px solid ${C.danger}22`, borderRadius: 6, padding: '6px 12px', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Reddet</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Active students table */}
+            <div style={{ background: '#fff', borderRadius: 20, overflow: 'hidden', boxShadow: C.cardShadow, border: '1px solid rgba(0,0,0,0.055)' }}>
+              <div style={{ padding: '18px 24px', borderBottom: '1px solid rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontWeight: 700, fontSize: 15, color: C.gray900 }}>Aktif Öğrenciler ({activeStudents.length})</h3>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: C.gray50 }}>
+                    {['Öğrenci', 'Hedef', 'Paket', 'Antrenman', 'Tamamlama', 'Son Kilo', 'İşlem'].map(h => (
+                      <th key={h} style={{ padding: '11px 18px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: C.gray400, letterSpacing: .3, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {activeStudents.map((s, i) => {
+                    const compColor = s.completion >= 80 ? C.success : s.completion >= 60 ? C.warning : C.danger;
+                    return (
+                      <tr key={s.id} style={{ borderTop: '1px solid rgba(0,0,0,0.05)', background: i % 2 === 0 ? '#fff' : C.gray50 }}>
+                        <td style={{ padding: '14px 18px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{
+                              width: 32, height: 32, borderRadius: '50%',
+                              background: `linear-gradient(135deg,${accent},${accent}88)`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: '#fff', fontWeight: 700, fontSize: 12,
+                            }}>
+                              {s.name.split(' ').map(n => n[0]).join('')}
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 600, fontSize: 13, color: C.gray800 }}>{s.name}</div>
+                              <div style={{ fontSize: 10, color: C.gray400 }}>{s.since}'den beri</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <span style={{ background: `${accent}14`, color: accent, borderRadius: 20, padding: '3px 9px', fontSize: 11, fontWeight: 600 }}>{s.goal}</span>
+                        </td>
+                        <td style={{ padding: '14px 18px', color: C.gray600, fontSize: 13 }}>{s.pkg}</td>
+                        <td style={{ padding: '14px 18px', color: C.gray600, fontSize: 13 }}>
+                          <span style={{ fontWeight: 700, color: C.gray900 }}>{s.workouts}</span> antrenman
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ flex: 1, maxWidth: 80, height: 6, borderRadius: 3, background: C.gray100, overflow: 'hidden' }}>
+                              <div style={{ width: `${s.completion}%`, height: '100%', background: compColor, borderRadius: 3 }} />
+                            </div>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: compColor }}>%{s.completion}</span>
+                          </div>
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <span style={{ fontWeight: 700, fontSize: 13, color: s.lastChange.startsWith('+') ? C.success : s.lastChange.startsWith('-') ? C.danger : C.gray400 }}>
+                            {s.lastChange}
+                          </span>
+                          <div style={{ fontSize: 10, color: C.gray400 }}>{s.lastDate}</div>
+                        </td>
+                        <td style={{ padding: '14px 18px' }}>
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button style={{ background: `${C.tertiary}14`, color: C.tertiary, border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Mesaj</button>
+                            <button style={{ background: C.gray100, color: C.gray600, border: 'none', borderRadius: 6, padding: '5px 10px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Profil</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── App ────────────────────────────────────────────────────
+function App() {
+  const [view, setView] = useState('marketplace');
+  const [selectedCoach, setSelectedCoach] = useState(null);
+
+  const handleViewCoach = (coach) => {
+    setSelectedCoach(coach);
+    setView('landing');
+  };
+
+  const handleBack = () => {
+    setSelectedCoach(null);
+    setView('marketplace');
+  };
+
+  // Tweaks
+  useEffect(() => {
+    window.addEventListener('message', e => {
+      if (e.data?.type === '__activate_edit_mode') setTweaksOpen(true);
+      if (e.data?.type === '__deactivate_edit_mode') setTweaksOpen(false);
+    });
+    window.parent.postMessage({ type: '__edit_mode_available' }, '*');
+  }, []);
+  const [tweaksOpen, setTweaksOpen] = useState(false);
+
+  return (
+    <div style={{ display: 'flex', width: '100vw', height: '100vh', overflow: 'hidden', background: '#0B0F1A' }}>
+      <Sidebar view={view} setView={(v) => { setView(v); if (v !== 'landing') setSelectedCoach(null); }} />
+
+      {view === 'marketplace' && (
+        <MarketplacePage onViewCoach={handleViewCoach} />
+      )}
+      {view === 'landing' && (
+        <CoachLandingPage coach={selectedCoach || COACHES[0]} onBack={handleBack} />
+      )}
+      {view === 'admin' && (
+        <AdminPanel />
+      )}
+
+      {/* Tweaks panel */}
+      {tweaksOpen && (
+        <div style={{
+          position: 'fixed', bottom: 80, right: 20, background: '#fff', borderRadius: 16,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.15)', border: '1px solid rgba(0,0,0,0.08)',
+          padding: 20, width: 260, zIndex: 2000, animation: 'fadeUp .2s ease',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+            <span style={{ fontWeight: 700, fontSize: 14, color: C.gray900 }}>Tweaks</span>
+            <button onClick={() => {
+              setTweaksOpen(false);
+              window.parent.postMessage({ type: '__edit_mode_dismissed' }, '*');
+            }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.gray400 }}>✕</button>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.gray400, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5 }}>Görünüm</div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {['Keşfet', 'Profil', 'Panel'].map((label, i) => {
+                  const views = ['marketplace', 'landing', 'admin'];
+                  return (
+                    <button key={label} onClick={() => { setView(views[i]); if (views[i] !== 'landing') setSelectedCoach(null); }} style={{
+                      flex: 1, padding: '7px 4px', borderRadius: 8, border: `1.5px solid ${view === views[i] ? C.primary : C.gray200}`,
+                      background: view === views[i] ? `${C.primary}12` : 'transparent',
+                      color: view === views[i] ? C.primary : C.gray500, fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                    }}>{label}</button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 600, color: C.gray400, marginBottom: 6, textTransform: 'uppercase', letterSpacing: .5 }}>Koç Profili Örnek</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {COACHES.map(c => (
+                  <button key={c.id} onClick={() => { setSelectedCoach(c); setView('landing'); }} style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px',
+                    borderRadius: 8, border: `1.5px solid ${selectedCoach?.id === c.id && view === 'landing' ? c.accentColor : C.gray200}`,
+                    background: selectedCoach?.id === c.id && view === 'landing' ? `${c.accentColor}0E` : 'transparent',
+                    cursor: 'pointer', textAlign: 'left',
+                  }}>
+                    <div style={{ width: 20, height: 20, borderRadius: '50%', background: c.accentColor, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 8, fontWeight: 800 }}>
+                      {c.name.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <span style={{ fontSize: 12, color: C.gray700, fontWeight: 500 }}>{c.name}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+<div id="root"></div>
+</body>
+</html>

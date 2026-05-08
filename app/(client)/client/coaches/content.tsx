@@ -62,17 +62,17 @@ const POPULAR_SPECIALTIES = [
 function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: string | null; size?: number }) {
   return (
     <div
-      className="flex items-center justify-center rounded-full font-black text-white flex-shrink-0"
+      className="flex items-center justify-center rounded-full font-black text-white flex-shrink-0 overflow-hidden"
       style={{
         width: size,
         height: size,
         fontSize: size * 0.35,
-        background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
-        boxShadow: "0 2px 8px rgba(26,54,93,0.3)",
+        background: imageUrl ? "transparent" : "linear-gradient(135deg, #FB923C, #EA580C)",
+        boxShadow: imageUrl ? "0 2px 8px rgba(0,0,0,0.1)" : "0 2px 8px rgba(249,115,22,0.3)",
       }}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={name} className="h-full w-full rounded-full object-cover" />
+        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
       ) : (
         getInitials(name)
       )}
@@ -217,11 +217,11 @@ export default function ClientCoachesContent() {
                   {myCoaches.map((coach) => (
                     <div
                       key={coach.id}
-                      className="overflow-hidden rounded-2xl bg-white"
+                      className="overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                       style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                     >
                       {/* Top accent */}
-                      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #22C55E, #16A34A)" }} />
+                      <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #22C55E, #16A34A)" }} />
                       <div className="p-5">
                         <div className="mb-4 flex items-start gap-3">
                           <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={52} />
@@ -243,8 +243,8 @@ export default function ClientCoachesContent() {
                         <div className="flex gap-2">
                           <Link
                             href={`/chat/${coach.id}`}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
-                            style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-black uppercase tracking-wider text-white transition-all hover:shadow-md"
+                            style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
                             Mesaj
@@ -272,10 +272,10 @@ export default function ClientCoachesContent() {
                   {pending.map((coach) => (
                     <div
                       key={coach.id}
-                      className="overflow-hidden rounded-2xl bg-white"
+                      className="overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                       style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                     >
-                      <div className="h-1 w-full" style={{ background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
+                      <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, #F59E0B, #D97706)" }} />
                       <div className="flex items-center gap-3 p-5">
                         <CoachAvatar name={coach.name} size={44} />
                         <div className="min-w-0 flex-1">
@@ -299,22 +299,22 @@ export default function ClientCoachesContent() {
             {/* Empty state */}
             {myCoaches.length === 0 && pending.length === 0 && (
               <div
-                className="rounded-2xl bg-white p-10 text-center"
+                className="rounded-2xl bg-gradient-to-br from-white to-slate-50 p-10 text-center border border-slate-100"
                 style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
               >
                 <div
                   className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl"
-                  style={{ background: "rgba(249,115,22,0.08)" }}
+                  style={{ background: "rgba(249,115,22,0.12)" }}
                 >
-                  <Users className="h-7 w-7 text-orange-300" />
+                  <Users className="h-7 w-7" style={{ color: "#F97316" }} />
                 </div>
-                <p className="font-bold text-slate-700">Henüz bağlı koçun yok</p>
-                <p className="mb-4 mt-1 text-sm text-slate-400">Sana uygun bir koç bulmak için "Koç Bul" sekmesine geç.</p>
+                <p className="font-bold text-slate-800">Henüz bağlı koçun yok</p>
+                <p className="mb-4 mt-1 text-sm text-slate-600">Sana uygun bir koç bulmak için "Koç Bul" sekmesine geç.</p>
                 <button
                   type="button"
                   onClick={() => setTab("find")}
-                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black text-white"
-                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
+                  className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-black text-white transition-all hover:shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.35)" }}
                 >
                   <Zap className="h-4 w-4" />
                   Koç Bul
@@ -387,8 +387,8 @@ export default function ClientCoachesContent() {
                 </div>
                 <button
                   type="submit"
-                  className="rounded-xl px-5 text-sm font-black text-white transition hover:opacity-90"
-                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.3)" }}
+                  className="rounded-xl px-5 text-sm font-black text-white transition-all hover:shadow-lg"
+                  style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.35)" }}
                 >
                   Ara
                 </button>
@@ -449,18 +449,22 @@ export default function ClientCoachesContent() {
             </div>
           ) : marketCoaches.length === 0 ? (
             <div
-              className="bg-white rounded-2xl p-10 text-center"
+              className="bg-gradient-to-br from-white to-slate-50 rounded-2xl p-10 text-center border border-slate-100"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
-              <Users className="h-10 w-10 text-slate-200 mx-auto mb-3" />
-              <p className="text-sm font-bold text-slate-600">
+              <div className="flex justify-center mb-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: "rgba(249,115,22,0.08)" }}>
+                  <Users className="h-6 w-6" style={{ color: "#F97316" }} />
+                </div>
+              </div>
+              <p className="text-sm font-bold text-slate-700">
                 {query || specialty ? "Arama kriterlerine uygun koç bulunamadı." : "Henüz profil oluşturmuş koç bulunmuyor."}
               </p>
               {(query || specialty) && (
                 <button
                   type="button"
                   onClick={() => { setQuery(""); setSpecialty(""); void loadMarket("", ""); }}
-                  className="mt-3 text-xs text-orange-500 hover:underline"
+                  className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
                 >
                   Filtreleri temizle
                 </button>
@@ -476,18 +480,19 @@ export default function ClientCoachesContent() {
                 const isPending = relationStatus === "PENDING";
                 const isConnected = relationStatus === "ACCEPTED";
                 const isRequestDisabled = loadingCoachId === coach.id || isPending || isConnected;
+                const accentColor = profile?.accentColor || "#F97316";
 
                 return (
                   <Link
                     key={coach.id}
                     href={`/client/coaches/${coach.id}`}
-                    className="group bg-white rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:shadow-lg"
+                    className="group bg-white rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                     style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                   >
                     {/* Colored top bar */}
                     <div
                       className="h-1 w-full transition-all duration-300 group-hover:h-1.5"
-                      style={{ background: "linear-gradient(90deg, #FB923C, #EA580C)" }}
+                      style={{ background: `linear-gradient(90deg, ${accentColor}CC, ${accentColor})` }}
                     />
 
                     <div className="p-5 flex flex-col flex-1">
@@ -518,7 +523,9 @@ export default function ClientCoachesContent() {
                       </div>
 
                       {profile?.slogan && (
-                        <p className="mb-2 text-[11px] font-semibold text-orange-600">{profile.slogan}</p>
+                        <p className="mb-2 text-[11px] font-semibold italic" style={{ color: accentColor }}>
+                          {profile.slogan}
+                        </p>
                       )}
 
                       {/* Bio */}
@@ -535,7 +542,11 @@ export default function ClientCoachesContent() {
                             <span
                               key={s}
                               className="rounded-full px-2.5 py-0.5 text-[10px] font-bold"
-                              style={{ background: "rgba(249,115,22,0.08)", color: "#EA580C" }}
+                              style={{
+                                background: `${accentColor}14`,
+                                color: accentColor,
+                                border: `0.5px solid ${accentColor}33`
+                              }}
                             >
                               {s}
                             </span>

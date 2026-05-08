@@ -58,9 +58,9 @@ const AVATAR_STYLE: Record<"orange" | "navy", React.CSSProperties> = {
     boxShadow: "0 4px 14px rgba(249,115,22,0.4)",
   },
   navy: {
-    background: "linear-gradient(135deg, #2D4A7A, #1A365D)",
-    boxShadow: "0 4px 16px rgba(26,54,93,0.6)",
-    border: "2px solid rgba(249,115,22,0.35)",
+    background: "linear-gradient(135deg, #FB923C, #EA580C)",
+    boxShadow: "0 4px 16px rgba(249,115,22,0.3)",
+    border: "2px solid rgba(249,115,22,0.2)",
   },
 };
 

@@ -10,7 +10,7 @@ import {
 import {
   Bell, MessageCircle, ChevronLeft, TrendingUp, TrendingDown,
   AlertTriangle, Leaf, Dumbbell, Calendar, ClipboardList,
-  Activity, Flame, User, BarChart2, Play, CheckCircle2,
+  Activity, Flame, User, BarChart2, Play, CheckCircle2, X,
 } from "lucide-react";
 import type { TimelineItem } from "@/lib/coach-timeline";
 import { WorkoutHistoryPanel } from "@/components/coach/WorkoutHistoryPanel";
@@ -19,6 +19,7 @@ import { AssignTemplateModal } from "@/components/coach/AssignTemplateModal";
 import { NutritionPlanManager } from "@/components/coach/NutritionPlanManager";
 import { MealLogFeed } from "@/components/coach/MealLogFeed";
 import { BodyTrackingSettings } from "@/components/coach/BodyTrackingSettings";
+import { MovementVideoDetailModal } from "@/components/coach/MovementVideoDetailModal";
 import { FeatureGate } from "@/components/shared/FeatureGate";
 import { TIER_CONFIG } from "@/lib/tier-limits";
 import { PaginationControls } from "@/components/shared/PaginationControls";
@@ -131,6 +132,7 @@ const TABS = [
   { key: "performance", label: "Performans", icon: BarChart2 },
   { key: "body", label: "Vücut", icon: User },
   { key: "history", label: "Geçmiş", icon: Calendar },
+  { key: "feedback", label: "Videolar", icon: Play },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -914,6 +916,112 @@ function HistoryTab({
   );
 }
 
+// ─── TAB 5: Feedback (Movement Videos) ───────────────────────────────────────
+function FeedbackTab({ clientId }: { clientId: string }) {
+  const [videos, setVideos] = useState<Array<{
+    id: string;
+    movementName: string;
+    videoPath: string;
+    watchedByCoach: boolean;
+    createdAt: string;
+    durationSeconds: number;
+    commentCount: number;
+  }>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchVideos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const res = await fetch(`/api/coach/clients/${clientId}/movement-videos?limit=100`);
+        if (!res.ok) throw new Error("Videolar yüklenemedi.");
+        const data = await res.json();
+        setVideos(data.videos);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVideos();
+  }, [clientId]);
+
+  if (loading) return <div className="p-4 text-center text-slate-500">Videolar yükleniyor...</div>;
+  if (error) return <div className="p-4 text-center text-red-600">{error}</div>;
+
+  if (videos.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
+        <Play className="mx-auto mb-3 h-8 w-8 text-slate-300" />
+        <p className="text-sm font-semibold text-slate-600">Henüz video yok</p>
+        <p className="mt-1 text-xs text-slate-500">İstemci antrenman sırasında hareketnin videosunu çektiğinde burada görünecektir.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {videos.map((video) => (
+        <button
+          key={video.id}
+          onClick={() => setSelectedVideo(video.id)}
+          className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md"
+          style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+        >
+          <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-4">
+            {/* Thumbnail */}
+            <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden rounded-lg bg-black md:w-32">
+              <video
+                src={video.videoPath}
+                className="h-full w-full object-cover"
+                preload="metadata"
+              />
+              <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition group-hover:bg-black/30">
+                <Play className="h-6 w-6 text-white opacity-60" />
+              </div>
+              {!video.watchedByCoach && (
+                <div className="absolute top-2 right-2 h-3 w-3 rounded-full bg-orange-500" title="Yeni video" />
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                {video.movementName}
+              </p>
+              <p className="mt-1 text-xs text-slate-600">
+                {new Date(video.createdAt).toLocaleDateString("tr-TR")} • {video.durationSeconds}s
+              </p>
+              <div className="mt-2 flex items-center gap-2">
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
+                  {video.commentCount} yorum
+                </span>
+                {!video.watchedByCoach && (
+                  <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
+                    YENİ
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </button>
+      ))}
+
+      {selectedVideo && (
+        <MovementVideoDetailModal
+          videoId={selectedVideo}
+          isOpen={!!selectedVideo}
+          onClose={() => setSelectedVideo(null)}
+        />
+      )}
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function ClientHub360(props: ClientHub360Props) {
   const { clientId, name, email, age, weightKg, goal, fitnessLevel,
@@ -1023,6 +1131,9 @@ export function ClientHub360(props: ClientHub360Props) {
             totalPages={totalPages}
             clientId={clientId}
           />
+        )}
+        {activeTab === "feedback" && (
+          <FeedbackTab clientId={clientId} />
         )}
       </div>
     </div>

@@ -27,7 +27,7 @@ export async function GET(request: Request) {
     ...(hasPackages ? { coachProfile: { packages: { some: { isActive: true } } } } : {}),
   };
 
-  const coaches = await (prisma.user.findMany({
+  const coaches = await prisma.user.findMany({
     where,
     select: {
       id: true,
@@ -53,10 +53,10 @@ export async function GET(request: Request) {
     },
     orderBy: { name: "asc" },
     take: 60,
-  } as any));
+  });
 
   // Apply client-side filters for specialty, price, and city (JSON/complex filtering)
-  const filtered = (coaches as any[]).filter((coach: any) => {
+  const filtered = coaches.filter((coach) => {
     // Specialty filter
     if (specialty) {
       const specs = coach.coachProfile?.specialties;

@@ -8,6 +8,7 @@ import {
   Dumbbell,
   Flame,
   MessageSquare,
+  Play,
   Trophy,
   Weight,
   XCircle,
@@ -49,6 +50,20 @@ export default async function WorkoutDetailPage({
       client: { select: { name: true } },
       comments: {
         include: { author: true },
+        orderBy: { createdAt: "desc" },
+      },
+      movementVideos: {
+        include: {
+          comments: {
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              content: true,
+              createdAt: true,
+              coach: { select: { name: true } },
+            },
+          },
+        },
         orderBy: { createdAt: "desc" },
       },
     },
@@ -416,6 +431,91 @@ export default async function WorkoutDetailPage({
           </div>
         </div>
       </div>
+
+      {/* Feedback section — Movement Videos */}
+      {workout.movementVideos.length > 0 && (
+        <div className="mt-8">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "rgba(249,115,22,0.1)" }}>
+              <Play className="h-4 w-4 text-orange-500" />
+            </div>
+            <h2 className="text-base font-black text-slate-800">Geri Bildirim</h2>
+            <span className="rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
+              {workout.movementVideos.length} video
+            </span>
+          </div>
+
+          <div className="space-y-3">
+            {workout.movementVideos.map((video) => (
+              <div
+                key={video.id}
+                className="rounded-2xl overflow-hidden bg-white"
+                style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+              >
+                <div className="flex flex-col md:flex-row gap-4 p-4 md:p-5">
+                  {/* Video Thumbnail */}
+                  <div className="flex-shrink-0 w-full md:w-40">
+                    <div className="relative aspect-video md:aspect-square rounded-lg bg-black overflow-hidden group cursor-pointer">
+                      <video
+                        src={video.videoPath}
+                        className="w-full h-full object-cover"
+                        preload="metadata"
+                      />
+                      <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                        <Play className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Video Info and Comments */}
+                  <div className="flex-1 min-w-0">
+                    <div className="mb-3">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
+                        {video.movementName}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {new Date(video.createdAt).toLocaleDateString("tr-TR")} • {video.durationSeconds}s
+                      </p>
+                    </div>
+
+                    {/* Comments */}
+                    {video.comments.length === 0 ? (
+                      <div className="text-xs text-slate-400 italic">
+                        Henüz yorum yok. Koç görünce yorum yapacak.
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        {video.comments.map((c) => (
+                          <div
+                            key={c.id}
+                            className="rounded-lg p-3"
+                            style={{ background: "rgba(249,115,22,0.08)", borderLeft: "2px solid rgba(249,115,22,0.3)" }}
+                          >
+                            <p className="text-[10px] font-bold text-slate-700 mb-1">
+                              {c.coach.name}
+                            </p>
+                            <p className="text-xs leading-relaxed text-slate-700">
+                              {c.content}
+                            </p>
+                            <p className="mt-1 text-[10px] text-slate-500">
+                              {new Date(c.createdAt).toLocaleDateString("tr-TR", {
+                                month: "short",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Share card — full width on mobile */}
       {isCompleted && (

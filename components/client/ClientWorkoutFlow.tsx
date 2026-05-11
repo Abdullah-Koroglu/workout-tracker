@@ -2,11 +2,12 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, CheckCircle2, Dumbbell, Flame, Pencil, Plus, Sparkles, Target, Trash2, X } from "lucide-react";
+import { ArrowRight, Camera, CheckCircle2, Dumbbell, Flame, Pencil, Plus, Sparkles, Target, Trash2, X } from "lucide-react";
 import confetti from "canvas-confetti";
 
 import { CardioTimer } from "@/components/client/CardioTimer";
 import { WorkoutSetForm } from "@/components/client/WorkoutSetForm";
+import { VideoRecorderModal } from "@/components/client/VideoRecorderModal";
 import { Button } from "@/components/ui/button";
 import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
@@ -27,6 +28,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [cancelling, setCancelling] = useState(false);
+  const [isVideoModalOpen, setIsVideoModalOpen] = useState(false);
   // Tracks the timestamp (ms) when the last set was completed per exercise
   const lastSetCompletedAtRef = useRef<Record<string, number>>({});
 
@@ -415,10 +417,19 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-3 md:p-6 shadow-sm">
             <div className="space-y-3 md:space-y-4">
               <div>
-                <div className="inline-flex rounded-full bg-primary/10 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-                  {activeExercise.exercise.exercise.type === "CARDIO"
-                    ? "Cardio"
-                    : "Ağırlık"}
+                <div className="flex items-center gap-2">
+                  <div className="inline-flex rounded-full bg-primary/10 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+                    {activeExercise.exercise.exercise.type === "CARDIO"
+                      ? "Cardio"
+                      : "Ağırlık"}
+                  </div>
+                  <button
+                    onClick={() => setIsVideoModalOpen(true)}
+                    className="inline-flex items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition hover:bg-primary/20"
+                    title="Video çek"
+                  >
+                    <Camera className="h-4 w-4" />
+                  </button>
                 </div>
                 <h2 className="mt-1 md:mt-3 text-base md:text-3xl font-black tracking-tight text-foreground">
                   {activeExercise.exercise.exercise.name}
@@ -706,6 +717,18 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           </div>
         </div>
       )}
+
+      <VideoRecorderModal
+        workoutId={workoutState.workoutId}
+        movementId={activeExercise.exercise.exerciseId}
+        movementName={activeExercise.exercise.exercise.name}
+        isOpen={isVideoModalOpen}
+        onClose={() => setIsVideoModalOpen(false)}
+        onSuccess={() => {
+          setIsVideoModalOpen(false);
+          success("Video başarıyla yüklendi.");
+        }}
+      />
     </div>
   );
 }

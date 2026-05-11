@@ -40,6 +40,9 @@ model User {
 
   bodyTrackingPrefs BodyTrackingPreference?
   bodyMetricLogs    BodyMetricLog[]
+
+  recordedVideos  MovementVideo[] @relation("VideoRecorder")
+  videoComments   MovementVideoComment[]
 }
 
 model ClientProfile {
@@ -260,8 +263,9 @@ model Workout {
   status         WorkoutStatus      @default(IN_PROGRESS)
   intensityScore Int?
 
-  sets     WorkoutSet[]
-  comments Comment[]
+  sets              WorkoutSet[]
+  comments          Comment[]
+  movementVideos    MovementVideo[]
 }
 
 enum WorkoutStatus {
@@ -437,4 +441,50 @@ model BodyMetricLog {
   createdAt     DateTime @default(now())
 
   @@unique([clientId, date])
+}
+
+model MovementVideo {
+  id              String   @id @default(cuid())
+  workoutId       String
+  workout         Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+
+  clientId        String
+  client          User     @relation(name: "VideoRecorder", fields: [clientId], references: [id], onDelete: Cascade)
+
+  coachId         String   // Coach who will review (derived from client's coach)
+
+  movementId      String   // Movement name/reference
+  movementName    String   // Cached for quick display
+
+  videoPath       String   // File path: /uploads/movement-videos/{workoutId}/{clientId}-{movementId}-{timestamp}.webm
+  fileSizeBytes   Int
+  durationSeconds Int      // Actual recorded duration
+
+  watchedByCoach  Boolean  @default(false)
+  watchedAt       DateTime?
+
+  createdAt       DateTime @default(now())
+
+  comments        MovementVideoComment[]
+
+  @@index([coachId, createdAt])
+  @@index([clientId, createdAt])
+  @@index([workoutId])
+}
+
+model MovementVideoComment {
+  id              String   @id @default(cuid())
+  videoId         String
+  video           MovementVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  coachId         String
+  coach           User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  content         String   @db.Text // max 2000 chars
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([videoId, createdAt])
+  @@index([coachId, createdAt])
 }

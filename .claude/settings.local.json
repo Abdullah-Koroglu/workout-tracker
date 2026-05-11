@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma *)",
+      "Bash(cd /mnt/c/Users/abdullahkoroglu/Documents/sources/DIS/workout-tracker && npx prisma db push --skip-generate --accept-data-loss)",
+      "Read(//mnt/c/Users/abdullahkoroglu/Documents/sources/DIS/**)"
+    ]
+  }
+}

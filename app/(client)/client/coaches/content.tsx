@@ -42,7 +42,11 @@ type MarketplaceCoach = {
     transformationPhotos: Array<{ beforeUrl: string; afterUrl: string; title?: string }> | null;
     specialties: string[] | null;
     experienceYears: number | null;
-    packages: { id: string }[];
+    city: string | null;
+    rating: number | null;
+    successRate: number | null;
+    reviewCount: number | null;
+    packages: { id: string; price: number | null }[];
   } | null;
 };
 
@@ -95,6 +99,7 @@ export default function ClientCoachesContent() {
   const [marketLoading, setMarketLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [filters, setFilters] = useState<CoachFilters>({
     minPrice: null,
     maxPrice: null,
@@ -393,11 +398,11 @@ export default function ClientCoachesContent() {
             isLoading={marketLoading}
           />
 
-          {/* Search bar */}
-          <div className="grid grid-cols-1 gap-4 xl:grid-cols-3">
+          {/* Search bar + Layout toggle */}
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <form
               onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty, filters); }}
-              className="space-y-3 xl:col-span-2"
+              className="flex-1 space-y-3"
             >
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -463,13 +468,43 @@ export default function ClientCoachesContent() {
               </div>
             </form>
 
-            <div className="rounded-2xl bg-white p-4" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
-              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Keşif Özeti</p>
-              <p className="mt-2 text-2xl font-black text-slate-800">{marketCoaches.length}</p>
-              <p className="text-xs text-slate-400">eşleşen koç</p>
-              <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5">
-                <p className="text-[11px] font-bold text-slate-600">İpucu</p>
-                <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Önce uzmanlık filtresi seç, sonra isim aramasıyla daralt.</p>
+            <div className="flex flex-col gap-3 lg:w-64 flex-shrink-0">
+              {/* Layout toggle */}
+              <div className="flex gap-2 rounded-2xl bg-white p-3" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+                <button
+                  type="button"
+                  onClick={() => setLayout("grid")}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all ${
+                    layout === "grid"
+                      ? "text-white"
+                      : "bg-slate-50 text-slate-400 hover:text-slate-600"
+                  }`}
+                  style={layout === "grid" ? { background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 2px 8px rgba(249,115,22,0.3)" } : undefined}
+                >
+                  Grid
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLayout("list")}
+                  className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all ${
+                    layout === "list"
+                      ? "text-white"
+                      : "bg-slate-50 text-slate-400 hover:text-slate-600"
+                  }`}
+                  style={layout === "list" ? { background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 2px 8px rgba(249,115,22,0.3)" } : undefined}
+                >
+                  Liste
+                </button>
+              </div>
+
+              <div className="rounded-2xl bg-white p-4" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">Keşif Özeti</p>
+                <p className="mt-2 text-2xl font-black text-slate-800">{marketCoaches.length}</p>
+                <p className="text-xs text-slate-400">eşleşen koç</p>
+                <div className="mt-4 rounded-xl bg-slate-50 px-3 py-2.5">
+                  <p className="text-[11px] font-bold text-slate-600">İpucu</p>
+                  <p className="mt-1 text-[11px] leading-relaxed text-slate-400">Önce uzmanlık filtresi seç, sonra isim aramasıyla daralt.</p>
+                </div>
               </div>
             </div>
           </div>
@@ -509,16 +544,110 @@ export default function ClientCoachesContent() {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className={layout === "grid" ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4" : "space-y-3"}>
               {marketCoaches.map((coach) => {
-                const profile  = coach.coachProfile;
-                const specs    = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
-                const pkgCount = profile?.packages.length ?? 0;
+                const profile = coach.coachProfile;
+                const specs = Array.isArray(profile?.specialties) ? (profile.specialties as string[]) : [];
+                const pkgs = profile?.packages ?? [];
+                const minPrice = pkgs.length > 0 ? Math.min(...pkgs.map(p => p.price ?? Infinity)) : null;
                 const relationStatus = relationByCoachId.get(coach.id) ?? null;
                 const isPending = relationStatus === "PENDING";
                 const isConnected = relationStatus === "ACCEPTED";
                 const isRequestDisabled = loadingCoachId === coach.id || isPending || isConnected;
                 const accentColor = profile?.accentColor || "#F97316";
+
+                if (layout === "list") {
+                  return (
+                    <Link
+                      key={coach.id}
+                      href={`/client/coaches/${coach.id}`}
+                      className="group bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg"
+                      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="flex items-center gap-5 p-5">
+                        {/* Avatar */}
+                        <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={60} />
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="font-black text-slate-800 text-base leading-tight truncate">
+                              {coach.name}
+                            </p>
+                            {isConnected && (
+                              <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
+                                Aktif
+                              </span>
+                            )}
+                            {isPending && (
+                              <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
+                                Bekliyor
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
+                            {profile?.city && (
+                              <span className="flex items-center gap-1">
+                                📍 {profile.city}
+                              </span>
+                            )}
+                            {profile?.experienceYears != null && (
+                              <span className="flex items-center gap-1">
+                                ⭐ {profile.experienceYears} yıl
+                              </span>
+                            )}
+                          </div>
+                          {profile?.bio && (
+                            <p className="text-xs text-slate-500 line-clamp-1">
+                              {profile.bio}
+                            </p>
+                          )}
+                        </div>
+
+                        {/* Stats */}
+                        <div className="flex items-center gap-4 flex-shrink-0">
+                          {profile?.rating != null && (
+                            <div className="text-center">
+                              <p className="text-base font-black text-slate-800">{Number(profile.rating).toFixed(1)}</p>
+                              <p className="text-[9px] font-bold text-amber-500">⭐ Puan</p>
+                            </div>
+                          )}
+                          {profile?.successRate != null && (
+                            <div className="text-center">
+                              <p className="text-base font-black text-slate-800">{profile.successRate}%</p>
+                              <p className="text-[9px] font-bold text-green-600">Başarı</p>
+                            </div>
+                          )}
+                          {profile?.reviewCount != null && (
+                            <div className="text-center">
+                              <p className="text-base font-black text-slate-800">{profile.reviewCount}</p>
+                              <p className="text-[9px] font-bold text-blue-600">Yorum</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Price + CTA */}
+                        <div className="text-right flex-shrink-0">
+                          {minPrice && (
+                            <div>
+                              <p className="text-lg font-black text-slate-800">{Math.round(minPrice).toLocaleString('tr')} ₺</p>
+                              <p className="text-[10px] text-slate-400">/ay'dan</p>
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => { e.preventDefault(); void requestCoach(coach.id); }}
+                            disabled={isRequestDisabled}
+                            className="mt-2 px-4 py-1.5 text-xs font-black rounded-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
+                          >
+                            {isConnected ? "Mesaj" : isPending ? "Beklemede" : "İstek"}
+                          </button>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                }
 
                 return (
                   <Link
@@ -529,40 +658,46 @@ export default function ClientCoachesContent() {
                   >
                     {/* Colored top bar */}
                     <div
-                      className="h-1 w-full transition-all duration-300 group-hover:h-1.5"
+                      className="h-1.5 w-full transition-all duration-300 group-hover:h-2"
                       style={{ background: `linear-gradient(90deg, ${accentColor}CC, ${accentColor})` }}
                     />
 
                     <div className="p-5 flex flex-col flex-1">
-                      {/* Avatar + name */}
+                      {/* Avatar + name + status */}
                       <div className="flex items-start gap-3 mb-3">
                         <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={52} />
                         <div className="flex-1 min-w-0">
-                          <p className="font-black text-slate-800 text-base leading-tight truncate group-hover:text-orange-600 transition-colors">
-                            {coach.name}
-                          </p>
-                          {profile?.experienceYears != null && (
-                            <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
-                              <Star className="h-3 w-3 text-amber-400" />
-                              {profile.experienceYears} yıl tecrübe
+                          <div className="flex items-center gap-2">
+                            <p className="font-black text-slate-800 text-base leading-tight truncate group-hover:text-orange-600 transition-colors">
+                              {coach.name}
                             </p>
-                          )}
+                            {profile?.rating && (
+                              <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black bg-amber-50" style={{ color: "#F59E0B" }}>
+                                ⭐ {Number(profile.rating).toFixed(1)}
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 flex items-center gap-4 text-[11px] text-slate-500">
+                            {profile?.city && <span>📍 {profile.city}</span>}
+                            {profile?.experienceYears && <span>• {profile.experienceYears} yıl</span>}
+                          </p>
                         </div>
                         {isConnected && (
-                          <span className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
+                          <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
                             Aktif
                           </span>
                         )}
                         {isPending && (
-                          <span className="rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
+                          <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
                             Bekliyor
                           </span>
                         )}
                       </div>
 
+                      {/* Slogan */}
                       {profile?.slogan && (
                         <p className="mb-2 text-[11px] font-semibold italic" style={{ color: accentColor }}>
-                          {profile.slogan}
+                          "{profile.slogan}"
                         </p>
                       )}
 
@@ -571,6 +706,24 @@ export default function ClientCoachesContent() {
                         <p className="text-xs text-slate-500 leading-relaxed line-clamp-2 mb-3">
                           {profile.bio}
                         </p>
+                      )}
+
+                      {/* Stats Row */}
+                      {(profile?.successRate || profile?.reviewCount) && (
+                        <div className="flex gap-2 mb-3">
+                          {profile?.successRate && (
+                            <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
+                              <p className="text-[10px] font-black">{profile.successRate}%</p>
+                              <p className="text-[9px] font-bold">Başarı</p>
+                            </div>
+                          )}
+                          {profile?.reviewCount != null && (
+                            <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}>
+                              <p className="text-[10px] font-black">{profile.reviewCount}</p>
+                              <p className="text-[9px] font-bold">Yorum</p>
+                            </div>
+                          )}
+                        </div>
                       )}
 
                       {/* Specialties */}
@@ -597,12 +750,28 @@ export default function ClientCoachesContent() {
                         </div>
                       )}
 
+                      {/* Transformation preview */}
+                      {Array.isArray(profile?.transformationPhotos) && profile.transformationPhotos.length > 0 && (
+                        <div className="mb-3 flex gap-2 overflow-hidden rounded-lg">
+                          {profile.transformationPhotos.slice(0, 2).map((photo: any, idx) => (
+                            <img
+                              key={idx}
+                              src={photo.afterUrl || photo.beforeUrl}
+                              alt="Transformation"
+                              className="h-16 w-16 object-cover"
+                            />
+                          ))}
+                        </div>
+                      )}
+
                       {/* Footer */}
                       <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100">
-                        <span className="flex items-center gap-1.5 text-xs text-slate-400">
-                          <Briefcase className="h-3.5 w-3.5" />
-                          {pkgCount > 0 ? `${pkgCount} paket` : "Paket yok"}
-                        </span>
+                        <div className="text-xs text-slate-600">
+                          {minPrice && (
+                            <p className="font-black text-slate-800">{Math.round(minPrice).toLocaleString('tr')} ₺<span className="text-slate-400 font-normal"> /ay</span></p>
+                          )}
+                          {pkgs.length > 0 && <p className="text-slate-400">{pkgs.length} paket</p>}
+                        </div>
                         <span className="text-xs font-black text-orange-500 group-hover:underline">
                           Profili Gör →
                         </span>

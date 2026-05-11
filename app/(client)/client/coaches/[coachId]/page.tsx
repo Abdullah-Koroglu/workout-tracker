@@ -108,7 +108,7 @@ export default async function CoachVitrinPage({
         className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 transition-colors hover:text-slate-700"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        ← Koç Bul
+        Koç Bul
       </Link>
 
       {/* ── Hero banner ── */}

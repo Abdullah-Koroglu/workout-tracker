@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
@@ -89,6 +90,7 @@ function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: s
 export default function ClientCoachesContent() {
   const { push } = useNotificationContext();
   const { confirm } = useConfirmation();
+  const router = useRouter();
 
   const [tab, setTab] = useState<"my" | "find">("my");
   const [coaches, setCoaches] = useState<Coach[]>([]);
@@ -100,6 +102,13 @@ export default function ClientCoachesContent() {
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("");
   const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
+  function toggleCompare(id: string) {
+    setCompareIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : prev.length < 3 ? [...prev, id] : prev
+    );
+  }
   const [filters, setFilters] = useState<CoachFilters>({
     minPrice: null,
     maxPrice: null,
@@ -799,12 +808,48 @@ export default function ClientCoachesContent() {
                           {loadingCoachId === coach.id ? "Gönderiliyor..." : isPending ? "İstek Beklemede" : "İstek Gönder"}
                         </button>
                       )}
+
+                      {/* Compare toggle */}
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); toggleCompare(coach.id); }}
+                        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl py-1.5 text-[11px] font-bold transition-all"
+                        style={{
+                          background: compareIds.includes(coach.id) ? "rgba(249,115,22,0.1)" : "#F8FAFC",
+                          color: compareIds.includes(coach.id) ? "#EA580C" : "#94A3B8",
+                          border: compareIds.includes(coach.id) ? "1px solid rgba(249,115,22,0.3)" : "1px solid #E2E8F0",
+                        }}
+                      >
+                        {compareIds.includes(coach.id) ? "✓ Karşılaştırmada" : "Karşılaştır"}
+                      </button>
                     </div>
                   </Link>
                 );
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Floating compare bar */}
+      {compareIds.length >= 2 && (
+        <div
+          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-5 py-3 shadow-2xl"
+          style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)", color: "#fff" }}
+        >
+          <span className="text-sm font-black">{compareIds.length} koç seçildi</span>
+          <button
+            onClick={() => router.push(`/client/coaches/compare?ids=${compareIds.join(",")}`)}
+            className="rounded-xl bg-white px-4 py-1.5 text-xs font-black text-slate-800 transition-opacity hover:opacity-90"
+          >
+            Karşılaştır →
+          </button>
+          <button
+            onClick={() => setCompareIds([])}
+            className="rounded-lg p-1 text-white/70 hover:text-white"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
     </div>

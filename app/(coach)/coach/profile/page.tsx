@@ -26,6 +26,7 @@ import { useNotificationContext } from "@/contexts/NotificationContext";
 import { InviteLinkBox } from "@/components/coach/BillingSubscriptionPage";
 import { PageHero } from "@/components/shared/PageHero";
 import { TransformationPhotosManager, type TransformationPhoto } from "@/components/coach/TransformationPhotosManager";
+import { AvailabilityManager } from "@/components/coach/AvailabilityManager";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -34,6 +35,8 @@ type CoachPackage = {
   description: string | null;
   price: number | null;
   isActive: boolean;
+  isPopular: boolean;
+  features: string[];
 };
 
 type CoachProfileData = {
@@ -122,7 +125,13 @@ export default function CoachProfilePage() {
         setExperienceYears(p.experienceYears != null ? String(p.experienceYears) : "");
         setSocialMediaUrl(p.socialMediaUrl ?? "");
         setCity(p.city ?? "");
-        setPackages(p.packages ?? []);
+        setPackages((p.packages ?? []).map((pkg: CoachPackage & { features?: string | string[] }) => ({
+          ...pkg,
+          isPopular: pkg.isPopular ?? false,
+          features: Array.isArray(pkg.features)
+            ? pkg.features
+            : (() => { try { return JSON.parse(pkg.features as unknown as string); } catch { return []; } })(),
+        })));
         if (p.name) setName(p.name);
         setAvatarUrl(p.avatarUrl ?? null);
       }
@@ -233,6 +242,16 @@ export default function CoachProfilePage() {
     if (!res.ok) { notifyError("Paket silinemedi."); return; }
     setPackages(packages.filter((p) => p.id !== id));
     success("Paket silindi.");
+  };
+
+  const togglePopular = async (id: string, current: boolean) => {
+    const res = await fetch(`/api/coach/packages/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPopular: !current }),
+    });
+    if (!res.ok) { notifyError("Güncelleme başarısız."); return; }
+    setPackages(packages.map((p) => p.id === id ? { ...p, isPopular: !current } : p));
   };
 
   /* ── loading state ── */
@@ -577,32 +596,47 @@ export default function CoachProfilePage() {
                       <Briefcase className="h-4 w-4 text-orange-500" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-black text-sm text-slate-800">
-                        {pkg.title}
-                      </p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-black text-sm text-slate-800">
+                          {pkg.title}
+                        </p>
+                        {pkg.isPopular && (
+                          <span className="rounded-full px-2 py-0.5 text-[10px] font-black text-white" style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}>
+                            ⭐ Popüler
+                          </span>
+                        )}
+                      </div>
                       {pkg.description && (
                         <p className="mt-0.5 text-xs text-slate-400 line-clamp-2">
                           {pkg.description}
                         </p>
                       )}
-                      {pkg.price != null ? (
-                        <span
-                          className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-black"
+                      <div className="mt-2 flex items-center gap-2 flex-wrap">
+                        {pkg.price != null ? (
+                          <span
+                            className="rounded-full px-2.5 py-0.5 text-[11px] font-black"
+                            style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
+                          >
+                            {pkg.price.toLocaleString("tr-TR")} ₺
+                          </span>
+                        ) : (
+                          <span className="rounded-full px-2.5 py-0.5 text-[11px] font-bold text-slate-400" style={{ background: "#F1F5F9" }}>
+                            Fiyat belirtilmemiş
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => togglePopular(pkg.id, pkg.isPopular)}
+                          className="rounded-full px-2.5 py-0.5 text-[10px] font-bold transition-all"
                           style={{
-                            background: "rgba(34,197,94,0.1)",
-                            color: "#16A34A",
+                            background: pkg.isPopular ? "rgba(249,115,22,0.12)" : "#F1F5F9",
+                            color: pkg.isPopular ? "#EA580C" : "#94A3B8",
+                            border: pkg.isPopular ? "1px solid rgba(249,115,22,0.3)" : "1px solid #E2E8F0",
                           }}
                         >
-                          {pkg.price.toLocaleString("tr-TR")} ₺
-                        </span>
-                      ) : (
-                        <span
-                          className="mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold text-slate-400"
-                          style={{ background: "#F1F5F9" }}
-                        >
-                          Fiyat belirtilmemiş
-                        </span>
-                      )}
+                          {pkg.isPopular ? "Popüler ✓" : "Popüler yap"}
+                        </button>
+                      </div>
                     </div>
                     <button
                       type="button"
@@ -712,6 +746,8 @@ export default function CoachProfilePage() {
             onPhotosChange={setTransformationPhotos}
             isLoading={saving}
           />
+
+          <AvailabilityManager />
         </div>
 
         {/* ── RIGHT: quick links + account ── */}

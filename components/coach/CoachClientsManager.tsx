@@ -6,6 +6,7 @@ import { MessageCircle, Check, X, ChevronRight, Search, Info } from "lucide-reac
 
 import { useConfirmation } from "@/contexts/ConfirmationContext";
 import { useNotificationContext } from "@/contexts/NotificationContext";
+import { ClientNotesPanel } from "@/components/coach/ClientNotesPanel";
 
 type ClientRelationItem = {
   id: string;
@@ -333,6 +334,9 @@ export function CoachClientsManager({
                       Henüz antrenman yok
                     </span>
                   )}
+                  <div className="mt-2" onClick={(e) => e.stopPropagation()}>
+                    <ClientNotesPanel clientId={client.id} clientName={client.name} />
+                  </div>
                 </div>
                 <div className="flex items-center gap-1.5 flex-shrink-0">
                   <button

@@ -26,7 +26,7 @@ export async function PATCH(
     return NextResponse.json({ error: "Bulunamadı." }, { status: 404 });
   }
 
-  const { title, description, price, isActive } = body as Record<string, unknown>;
+  const { title, description, price, isActive, isPopular, features } = body as Record<string, unknown>;
   const pkg = await prisma.coachPackage.update({
     where: { id: packageId },
     data: {
@@ -34,6 +34,8 @@ export async function PATCH(
       ...(typeof description === "string" ? { description: description.trim() || null } : {}),
       ...(price !== undefined ? { price: typeof price === "number" && price > 0 ? price : null } : {}),
       ...(typeof isActive === "boolean" ? { isActive } : {}),
+      ...(typeof isPopular === "boolean" ? { isPopular } : {}),
+      ...(Array.isArray(features) ? { features: JSON.stringify(features) } : {}),
     },
   });
 

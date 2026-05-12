@@ -17,6 +17,9 @@ import { auth } from "@/lib/auth";
 import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { PageHero } from "@/components/shared/PageHero";
 import { RequestCoachButton } from "./RequestCoachButton";
+import { ReviewsSection } from "./ReviewsSection";
+import { SessionBookingButton } from "./SessionBookingButton";
+import { SimilarCoaches } from "./SimilarCoaches";
 
 function getInitials(name: string) {
   return name
@@ -169,6 +172,11 @@ export default async function CoachVitrinPage({
             <TransformCarousel items={transformationPhotos} />
           )}
 
+          <ReviewsSection
+            coachId={coachId}
+            isConnected={relationStatus !== null}
+          />
+
           <div className="flex items-center gap-2">
             <div
               className="flex h-8 w-8 items-center justify-center rounded-xl"
@@ -234,12 +242,35 @@ export default async function CoachVitrinPage({
                         <Briefcase className="h-4 w-4 text-orange-500" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-black text-slate-800">{pkg.title}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="font-black text-slate-800">{pkg.title}</p>
+                          {pkg.isPopular && (
+                            <span
+                              className="rounded-full px-2 py-0.5 text-[10px] font-black text-white"
+                              style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
+                            >
+                              ⭐ Popüler
+                            </span>
+                          )}
+                        </div>
                         {pkg.description && (
                           <p className="mt-1 text-xs text-slate-400 leading-relaxed line-clamp-3">
                             {pkg.description}
                           </p>
                         )}
+                        {(() => {
+                          let feats: string[] = [];
+                          try { feats = JSON.parse((pkg as { features?: string }).features ?? "[]"); } catch { /* */ }
+                          return feats.length > 0 ? (
+                            <ul className="mt-2 space-y-0.5">
+                              {feats.map((f: string) => (
+                                <li key={f} className="flex items-center gap-1.5 text-xs text-slate-600">
+                                  <span className="text-green-500 font-bold">✓</span>{f}
+                                </li>
+                              ))}
+                            </ul>
+                          ) : null;
+                        })()}
                       </div>
                     </div>
 
@@ -297,7 +328,7 @@ export default async function CoachVitrinPage({
 
           {/* Message card */}
           <div
-            className="rounded-2xl bg-gradient-to-br from-slate-50 to-white p-5 space-y-4 border border-slate-100"
+            className="rounded-2xl bg-gradient-to-br from-slate-50 to-white p-5 space-y-3 border border-slate-100"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
@@ -314,6 +345,9 @@ export default async function CoachVitrinPage({
               <MessageCircle className="h-4 w-4" />
               Mesaj Gönder
             </Link>
+            {relationStatus === "ACCEPTED" && (
+              <SessionBookingButton coachId={coachId} coachName={coach.name} />
+            )}
           </div>
 
           {/* Specialties recap */}
@@ -345,6 +379,8 @@ export default async function CoachVitrinPage({
               </div>
             </div>
           )}
+
+          <SimilarCoaches coachId={coachId} />
 
           {/* Back to list */}
           <Link

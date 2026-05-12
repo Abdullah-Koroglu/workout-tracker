@@ -43,6 +43,14 @@ model User {
 
   recordedVideos  MovementVideo[] @relation("VideoRecorder")
   videoComments   MovementVideoComment[]
+
+  reviewsGiven    Review[] @relation("ReviewAuthor")
+  reviewsReceived Review[] @relation("ReviewCoach")
+
+  coachSessions   Session[] @relation("SessionCoach")
+  clientSessions  Session[] @relation("SessionClient")
+
+  coachAvailability CoachAvailability[]
 }
 
 model ClientProfile {
@@ -99,6 +107,8 @@ model CoachPackage {
   description String?
   price       Float?
   isActive    Boolean      @default(true)
+  isPopular   Boolean      @default(false)
+  features    String       @default("[]") // JSON array of feature strings
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -123,6 +133,8 @@ model CoachClientRelation {
   clientId  String
   status    RelationStatus @default(PENDING)
   createdAt DateTime       @default(now())
+
+  notes ClientNotes?
 
   @@unique([coachId, clientId])
 }
@@ -487,4 +499,63 @@ model MovementVideoComment {
 
   @@index([videoId, createdAt])
   @@index([coachId, createdAt])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  coach     User     @relation("ReviewCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  coachId   String
+  client    User     @relation("ReviewAuthor", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId  String
+  rating    Float    // 1-5
+  title     String?
+  content   String
+  isAnon    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@unique([coachId, clientId])
+  @@index([coachId, createdAt])
+}
+
+model CoachAvailability {
+  id        String @id @default(cuid())
+  coach     User   @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId   String
+  dayOfWeek Int    // 0=Monday, 6=Sunday
+  startTime String // HH:mm
+  endTime   String // HH:mm
+
+  @@unique([coachId, dayOfWeek])
+}
+
+model Session {
+  id           String        @id @default(cuid())
+  coach        User          @relation("SessionCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  coachId      String
+  client       User          @relation("SessionClient", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId     String
+  scheduledFor DateTime
+  duration     Int           @default(60) // minutes
+  type         String        @default("consultation") // consultation, follow_up, check_in
+  status       SessionStatus @default(SCHEDULED)
+  notes        String?
+  createdAt    DateTime      @default(now())
+
+  @@index([coachId, scheduledFor])
+  @@index([clientId, scheduledFor])
+}
+
+enum SessionStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model ClientNotes {
+  id         String              @id @default(cuid())
+  relation   CoachClientRelation @relation(fields: [relationId], references: [id], onDelete: Cascade)
+  relationId String              @unique
+  notes      String              @default("")
+  tags       String              @default("[]") // JSON array of tag strings
+  updatedAt  DateTime            @updatedAt
 }

@@ -57,14 +57,14 @@ export default async function HomePage() {
           <div className="flex items-center gap-3">
             <Image
               src="/logo.png"
-              alt="FitCoach"
+              alt="Fit Coach"
               width={44}
               height={44}
               className="object-contain"
               style={{ filter: "drop-shadow(0 4px 12px rgba(249,115,22,0.5))" }}
             />
             <div>
-              <p className="text-base font-black leading-none tracking-tight text-white">FitCoach</p>
+              <p className="text-base font-black leading-none tracking-tight text-white">Fit Coach</p>
               {/* <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40">
                 Performance Platform
               </p> */}
@@ -194,7 +194,7 @@ export default async function HomePage() {
 
         {/* ── Footer ── */}
         <footer className="mt-16 flex items-center justify-between border-t border-white/10 pt-6">
-          <p className="text-[11px] text-white/30">© 2025 FitCoach</p>
+          <p className="text-[11px] text-white/30">© 2025 Fit Coach</p>
           <Link
             href="/login"
             className="text-[11px] font-bold text-white/40 transition hover:text-white/70"

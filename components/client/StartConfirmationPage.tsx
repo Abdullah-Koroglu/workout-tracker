@@ -122,7 +122,7 @@ export function StartConfirmationPage({ assignmentId, onConfirm }: { assignmentI
         <div className="rounded-2xl md:rounded-[32px] border border-border/60 bg-card p-4 md:p-6 shadow-sm">
           <div className="flex items-start justify-between gap-3 md:gap-4">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Template Adı</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Antrenman Adı</p>
               <h2 className="mt-2 text-xl md:text-2xl font-black text-foreground">{summary.templateName}</h2>
               {summary.templateDescription && (
                 <p className="mt-2 text-xs md:text-sm text-muted-foreground">{summary.templateDescription}</p>

@@ -134,8 +134,8 @@ export function RegisterContent() {
       {/* Logo + nav */}
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Image src="/logo.png" alt="FitCoach" width={32} height={32} className="object-contain" style={{ opacity: 0.9 }} />
-          <span className="text-base font-black tracking-tight text-white">FitCoach OS</span>
+          <Image src="/logo.png" alt="Fit Coach" width={32} height={32} className="object-contain" style={{ opacity: 0.9 }} />
+          <span className="text-base font-black tracking-tight text-white">Fit Coach</span>
         </div>
         {step === 2 ? (
           <button
@@ -219,8 +219,8 @@ export function RegisterContent() {
             <ChevronLeft className="h-5 w-5 text-slate-600" />
           </Link>
           <div className="mb-4 flex items-center gap-2.5">
-            <Image src="/logo.png" alt="FitCoach" width={28} height={28} className="object-contain" />
-            <span className="text-sm font-black tracking-tight text-slate-800">FitCoach</span>
+            <Image src="/logo.png" alt="Fit Coach" width={28} height={28} className="object-contain" />
+            <span className="text-sm font-black tracking-tight text-slate-800">Fit Coach</span>
           </div>
           <h1 className="text-2xl font-black tracking-tight text-slate-800">Hesap Oluştur</h1>
           <p className="mt-1 text-sm text-slate-400">Platformda nasıl yer almak istiyorsun?</p>

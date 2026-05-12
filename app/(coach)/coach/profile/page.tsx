@@ -919,7 +919,7 @@ export default function CoachProfilePage() {
                   href: "/coach/templates",
                   icon: Briefcase,
                   label: "Antrenmanlar",
-                  sub: "Template oluştur ve ata",
+                  sub: "Antrenman oluştur ve ata",
                   color: "#2563EB",
                 },
                 {

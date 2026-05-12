@@ -33,7 +33,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   });
 
   if (!existingTemplate) {
-    return NextResponse.json({ error: "Template bulunamadı." }, { status: 404 });
+    return NextResponse.json({ error: "Antrenman bulunamadı." }, { status: 404 });
   }
 
   const template = await prisma.workoutTemplate.update({
@@ -79,7 +79,7 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   });
 
   if (!template) {
-    return NextResponse.json({ error: "Template bulunamadı." }, { status: 404 });
+    return NextResponse.json({ error: "Antrenman bulunamadı." }, { status: 404 });
   }
 
   await prisma.workoutTemplate.delete({ where: { id } });

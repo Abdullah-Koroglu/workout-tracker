@@ -334,7 +334,7 @@ Beklenen JSON formati:
       });
 
       setJsonImportInput("");
-      push("Template JSON başarıyla yüklendi!");
+      push("Antrenman JSON başarıyla yüklendi!");
       setShowJsonExamples(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Geçersiz JSON formatı";
@@ -393,11 +393,11 @@ Beklenen JSON formati:
     if (!response.ok) {
       const data = await response.json().catch(() => ({}));
       const validationMessage = typeof data?.error?.formErrors?.[0] === "string" ? data.error.formErrors[0] : null;
-      push(validationMessage || data.error || "Template kaydedilemedi.");
+      push(validationMessage || data.error || "Antrenman kaydedilemedi.");
       return;
     }
 
-    push(initialValues ? "Template güncellendi." : "Template oluşturuldu.");
+    push(initialValues ? "Antrenman güncellendi." : "Antrenman oluşturuldu.");
     router.push("/coach/templates");
     router.refresh();
   };
@@ -490,7 +490,7 @@ Beklenen JSON formati:
       </div>
 
       <div className="space-y-1">
-        <Input placeholder="Template adı" {...form.register("name")} />
+        <Input placeholder="Antrenman adı" {...form.register("name")} />
         {form.formState.errors.name && (
           <p className="text-xs text-red-500">
             {form.formState.errors.name.message}
@@ -510,7 +510,7 @@ Beklenen JSON formati:
           className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
         >
           <span className="font-semibold text-sm">
-            JSON ile Hızlı Template Oluştur
+            JSON ile Hızlı Antrenman Oluştur
           </span>
           <ChevronDown
             className={`h-4 w-4 transition-transform ${showJsonExamples ? "rotate-180" : ""}`}
@@ -523,11 +523,11 @@ Beklenen JSON formati:
             <div className="space-y-3 border-b pb-6">
               <div>
                 <p className="text-sm font-semibold text-foreground mb-2">
-                  JSON Formatında Template Yükleme
+                  JSON Formatında Antrenman Yükleme
                 </p>
                 <p className="text-xs text-muted-foreground mb-3">
                   JSON yapıştırın veya aşağıdaki örneklerden birini kullanın.
-                  Template anında oluşturulacak!
+                  Antrenman anında oluşturulacak!
                 </p>
               </div>
 
@@ -535,7 +535,7 @@ Beklenen JSON formati:
                 value={jsonImportInput}
                 onChange={(e) => setJsonImportInput(e.target.value)}
                 placeholder={
-                  '{\n  "name": "Template Adı",\n  "description": "Açıklama",\n  "exercises": [...]\n}'
+                  '{\n  "name": "Antrenman Adı",\n  "description": "Açıklama",\n  "exercises": [...]\n}'
                 }
                 className="w-full h-40 rounded-md border bg-background p-3 text-xs font-mono"
               />
@@ -559,7 +559,7 @@ Beklenen JSON formati:
             {/* Examples Section */}
             <div>
               <p className="text-sm font-semibold text-foreground mb-3">
-                Örnek Template JSON Yapıları
+                Örnek Antrenman JSON Yapıları
               </p>
               <p className="text-xs text-muted-foreground mb-4">
                 "Kullan" butonuna tıklayarak herhangi bir örneği yükleme alanına
@@ -583,7 +583,7 @@ Beklenen JSON formati:
               </div>
               <p className="text-xs text-muted-foreground mb-3">
                 Bu promptu bir AI araca verip altina JSON sema + exercise
-                listesini ekleyerek tek seferde template JSON uretebilirsiniz.
+                listesini ekleyerek tek seferde antrenman JSON uretebilirsiniz.
               </p>
               <pre className="rounded-lg border bg-background p-3 text-xs overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap">
                 <code>{aiTemplatePrompt}</code>
@@ -644,7 +644,7 @@ Beklenen JSON formati:
 
       {fields.length === 0 ? (
         <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">
-          Template henüz boş. Egzersiz kütüphanesinden hareket ekleyin.
+          Antrenman henüz boş. Egzersiz kütüphanesinden hareket ekleyin.
         </div>
       ) : (
         <DragDropContext onDragEnd={handleDragEnd}>

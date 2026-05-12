@@ -76,7 +76,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
 
   const assignTemplate = async (templateId: string, templateName: string) => {
     const approved = await confirm({
-      title: "Template atamasi",
+      title: "Antrenman atamasi",
       description: `"${templateName}" şablonunu ${scheduledFor} tarihine atamak istediğinize emin misiniz?`,
       confirmText: "Ata",
       cancelText: "Vazgec"
@@ -94,11 +94,11 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {
-      push(data.error || "Template atanamadı.");
+      push(data.error || "Antrenman atanamadı.");
       return;
     }
 
-    push("Template client'a atandı.");
+    push("Antrenman client'a atandı.");
     setOpen(false);
     router.refresh();
   };
@@ -129,7 +129,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
     <>
       <Button type="button" onClick={handleOpen} className="gap-2">
         <CalendarDays className="h-4 w-4" />
-        Template Ata
+        Antrenman Ata
       </Button>
 
       {open && (
@@ -144,7 +144,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
             {/* Header */}
             <div className="flex items-center justify-between border-b px-5 py-4">
               <div>
-                <h2 className="text-base font-bold sm:text-lg">Template Seç</h2>
+                <h2 className="text-base font-bold sm:text-lg">Antrenman Seç</h2>
                 <p className="text-xs text-muted-foreground">Client için tarih bazlı atama planla</p>
               </div>
               <button
@@ -171,7 +171,6 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                   onChange={(e) => setScheduledFor(e.target.value)}
                   className="h-9 flex-1 rounded-lg border-0 bg-background px-3 py-1 text-sm ring-1 ring-black/5 focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                <span className="text-xs text-muted-foreground">Tek kullanım · Bu gün dışında başlatılamaz</span>
               </div>
             </div>
 
@@ -181,7 +180,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                 <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                 <input
                   type="text"
-                  placeholder="Template ara..."
+                  placeholder="Antrenman ara..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="h-9 w-full rounded-lg border-0 bg-muted/60 pl-8 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -241,7 +240,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <Dumbbell className="mb-3 h-10 w-10 text-muted-foreground/40" />
                   <p className="text-sm text-muted-foreground">
-                    {query ? "Arama sonucu bulunamadı" : "Atanacak template yok"}
+                    {query ? "Arama sonucu bulunamadı" : "Atanacak antrenman yok"}
                   </p>
                 </div>
               ) : (
@@ -332,7 +331,7 @@ export function AssignTemplateModal({ clientId }: { clientId: string }) {
             {/* Footer */}
             <div className="border-t px-5 py-3">
               <p className="text-xs text-muted-foreground text-center">
-                {filtered.length} template listeleniyor
+                {filtered.length} Antrenman listeleniyor
                 {query ? ` · "${query}" araması` : ""}
                 {selectedCategoryId !== "all" ? " · kategori filtresi aktif" : ""}
               </p>

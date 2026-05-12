@@ -76,8 +76,8 @@ export function WorkoutShareCard({
       const blob = await (await fetch(dataUrl)).blob();
       const file = new File([blob], "fitcoach-workout.png", { type: "image/png" });
       await navigator.share({
-        title: `FitCoach — ${title}`,
-        text: `Antrenmanı tamamladım! ${fmtVolume(totalVolumeKg)} hacim${prExerciseNames.length ? ` · ${prExerciseNames.length} PR` : ""} #FitCoach`,
+        title: `Fit Coach — ${title}`,
+        text: `Antrenmanı tamamladım! ${fmtVolume(totalVolumeKg)} hacim${prExerciseNames.length ? ` · ${prExerciseNames.length} PR` : ""} #Fit Coach`,
         files: [file],
       });
     } catch { /* cancelled */ }
@@ -191,7 +191,7 @@ export function WorkoutShareCard({
                 <img src="/logo.png" alt="" className="w-full" />
               </div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.2px" }}>FitCoach</div>
+                <div style={{ fontSize: 13, fontWeight: 800, color: "#fff", lineHeight: 1, letterSpacing: "-0.2px" }}>Fit Coach</div>
                 <div style={{ fontSize: 8, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.35)", marginTop: 2 }}>WORKOUT SUMMARY</div>
               </div>
             </div>

@@ -69,7 +69,7 @@ export function TemplateAssignBoard({
       return;
     }
 
-    success("Template atandı.");
+    success("Antrenman atandı.");
     router.refresh();
   };
 
@@ -96,7 +96,7 @@ export function TemplateAssignBoard({
     <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
       <section className="space-y-4 rounded-xl bg-card p-4 shadow-sm ring-1 ring-black/5 md:p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-black tracking-tight">Client Seç ve Ata</h2>
+          <h2 className="text-lg font-black tracking-tight">Client Seç ve Antrenman Ata</h2>
           <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-semibold text-foreground">
             {clients.length} client
           </span>
@@ -161,7 +161,7 @@ export function TemplateAssignBoard({
         </div>
 
         {assignments.length === 0 ? (
-          <div className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">Bu template için henüz atama yok.</div>
+          <div className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground">Bu Antrenman için henüz atama yok.</div>
         ) : (
           <div className="space-y-2">
             {assignments.map((a) => (

@@ -56,7 +56,7 @@ export function AssignmentList({ assignments }: { assignments: AssignmentItem[] 
           color: "#94A3B8",
         }}
       >
-        Bu danışana henüz template atanmadı.
+        Bu danışana henüz Antrenman atanmadı.
       </div>
     );
   }

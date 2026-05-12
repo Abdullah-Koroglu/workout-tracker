@@ -3,7 +3,15 @@ self.addEventListener("install", () => {
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    self.clients
+      .claim()
+      .then(() =>
+        self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+          clients.forEach((client) => client.postMessage({ type: "SW_ACTIVATED" }));
+        })
+      )
+  );
 });
 
 self.addEventListener("push", (event) => {
@@ -49,6 +57,11 @@ self.addEventListener("notificationclick", (event) => {
 
 self.addEventListener("message", (event) => {
   const data = event.data;
+
+  if (data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+    return;
+  }
 
   if (!data || data.type !== "CARDIO_BLOCK_TRANSITION") {
     return;

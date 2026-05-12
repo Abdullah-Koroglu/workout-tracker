@@ -35,7 +35,7 @@ export async function POST(request: Request) {
   if (assignmentDay.getTime() !== today.getTime()) {
     return NextResponse.json(
       {
-        error: `Bu template sadece ${assignmentDay.toLocaleDateString("tr-TR")} tarihinde yapılabilir.`
+        error: `Bu Antrenman sadece ${assignmentDay.toLocaleDateString("tr-TR")} tarihinde yapılabilir.`
       },
       { status: 400 }
     );
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        error: "Bu assignment tek kullanımlık olduğu için tekrar başlatılamaz.",
+        error: "Bu Antrenman tek kullanımlık olduğu için tekrar başlatılamaz.",
         workoutId: consumedWorkout.id
       },
       { status: 409 }

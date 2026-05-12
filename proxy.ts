@@ -27,6 +27,6 @@ export const proxy = auth((req) => {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|sw.js|uploads/|.*\\.(?:png|jpg|jpeg|webp|gif|svg|ico|css|js|map|txt|xml|woff|woff2)$).*)"
+    "/((?!_next/static|_next/image|favicon.ico|manifest.webmanifest|sw.js|uploads/|.*\\.(?:png|jpg|jpeg|webp|gif|svg|ico|css|js|map|txt|xml|woff|woff2)$).*)"
   ]
 };

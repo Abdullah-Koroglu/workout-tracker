@@ -53,7 +53,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   ]);
 
   if (!template) {
-    return NextResponse.json({ error: "Template bulunamadı." }, { status: 404 });
+    return NextResponse.json({ error: "Antrenman bulunamadı." }, { status: 404 });
   }
 
   if (!relation) {
@@ -61,7 +61,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   }
 
   if (existingAssignment) {
-    return NextResponse.json({ error: "Bu template zaten client'a atanmış." }, { status: 409 });
+    return NextResponse.json({ error: "Bu Antrenman zaten client'a atanmış." }, { status: 409 });
   }
 
   const assignment = await prisma.templateAssignment.create({
@@ -133,7 +133,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   });
 
   if (!template) {
-    return NextResponse.json({ error: "Template bulunamadı." }, { status: 404 });
+    return NextResponse.json({ error: "Antrenman bulunamadı." }, { status: 404 });
   }
 
   // Find assignment and ensure it belongs to coach template

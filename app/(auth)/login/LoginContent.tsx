@@ -69,8 +69,8 @@ export function LoginContent() {
         {/* Logo + back */}
         <div className="relative z-10 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Image src="/logo.png" alt="FitCoach" width={32} height={32} className="object-contain" style={{ opacity: 0.9 }} />
-            <span className="text-base font-black tracking-tight text-white">FitCoach OS</span>
+            <Image src="/logo.png" alt="Fit Coach" width={32} height={32} className="object-contain" style={{ opacity: 0.9 }} />
+            <span className="text-base font-black tracking-tight text-white">Fit Coach</span>
           </div>
           <Link
             href="/"
@@ -108,7 +108,7 @@ export function LoginContent() {
           style={{ background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.12)" }}
         >
           <p className="mb-3 text-sm italic leading-relaxed text-white/80">
-            "FitCoach sayesinde antrenmanlarımı düzenli takip ediyor, koçumla her an iletişimde olabiliyorum."
+            "Fit Coach sayesinde antrenmanlarımı düzenli takip ediyor, koçumla her an iletişimde olabiliyorum."
           </p>
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20 text-[11px] font-bold text-white">SA</div>

@@ -60,9 +60,9 @@ export default async function AssignTemplatePage({
           className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
-          Template listesine dön
+          Antrenman listesine dön
         </Link>
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Assign Program</p>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary">Program Ata</p>
         <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">{template.name}</h1>
         <p className="text-sm text-muted-foreground">
           {template.exercises.length} egzersiz içeren bu programı client rosterına tarih bazlı ata.

@@ -90,8 +90,8 @@ export function InviteContent({ coachId }: { coachId: string }) {
         <div className="pointer-events-none absolute -right-12 -top-12 h-56 w-56 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
 
         <div className="relative z-10 flex items-center gap-2.5">
-          <Image src="/logo.png" alt="FitCoach" width={32} height={32} className="object-contain opacity-90" />
-          <span className="text-base font-black tracking-tight text-white">FitCoach OS</span>
+          <Image src="/logo.png" alt="Fit Coach" width={32} height={32} className="object-contain opacity-90" />
+          <span className="text-base font-black tracking-tight text-white">Fit Coach</span>
         </div>
 
         <div className="relative z-10 mt-10">

@@ -26,7 +26,21 @@ export async function PATCH(
     return NextResponse.json({ error: "Bulunamadı." }, { status: 404 });
   }
 
-  const { title, description, price, isActive, isPopular, features } = body as Record<string, unknown>;
+  const {
+    title,
+    description,
+    price,
+    isActive,
+    isPopular,
+    features,
+    durationWeeks,
+    sessionsIncluded,
+    maxClients,
+    sortOrder,
+    discount,
+    originalPrice,
+    recurringInterval,
+  } = body as Record<string, unknown>;
   const pkg = await prisma.coachPackage.update({
     where: { id: packageId },
     data: {
@@ -36,6 +50,25 @@ export async function PATCH(
       ...(typeof isActive === "boolean" ? { isActive } : {}),
       ...(typeof isPopular === "boolean" ? { isPopular } : {}),
       ...(Array.isArray(features) ? { features: JSON.stringify(features) } : {}),
+      ...(durationWeeks !== undefined
+        ? { durationWeeks: typeof durationWeeks === "number" && durationWeeks > 0 ? durationWeeks : null }
+        : {}),
+      ...(sessionsIncluded !== undefined
+        ? { sessionsIncluded: typeof sessionsIncluded === "number" && sessionsIncluded > 0 ? sessionsIncluded : null }
+        : {}),
+      ...(maxClients !== undefined
+        ? { maxClients: typeof maxClients === "number" && maxClients > 0 ? maxClients : null }
+        : {}),
+      ...(typeof sortOrder === "number" ? { sortOrder } : {}),
+      ...(discount !== undefined
+        ? { discount: typeof discount === "number" && discount > 0 ? discount : null }
+        : {}),
+      ...(originalPrice !== undefined
+        ? { originalPrice: typeof originalPrice === "number" && originalPrice > 0 ? originalPrice : null }
+        : {}),
+      ...(recurringInterval !== undefined
+        ? { recurringInterval: typeof recurringInterval === "string" ? recurringInterval : null }
+        : {}),
     },
   });
 

@@ -8,13 +8,21 @@ datasource db {
 }
 
 model User {
-  id               String   @id @default(cuid())
-  email            String   @unique
+  id               String    @id @default(cuid())
+  email            String    @unique
   password         String
   name             String
   role             Role
   pushSubscription Json?
-  createdAt        DateTime @default(now())
+  createdAt        DateTime  @default(now())
+
+  phone            String?
+  timezone         String?
+  lastActiveAt     DateTime?
+  locale           String?
+  referredById     String?
+  emailVerified    DateTime?
+  twoFactorEnabled Boolean   @default(false)
 
   coachRelations      CoachClientRelation[] @relation("Coach")
   clientRelations     CoachClientRelation[] @relation("Client")
@@ -50,7 +58,23 @@ model User {
   coachSessions   Session[] @relation("SessionCoach")
   clientSessions  Session[] @relation("SessionClient")
 
-  coachAvailability CoachAvailability[]
+  coachAvailability       CoachAvailability[]
+  availabilityExceptions  AvailabilityException[]
+
+  userAchievements        UserAchievement[]
+  personalRecords         PersonalRecord[]
+  goalsAsClient           Goal[]              @relation("GoalClient")
+  goalsAsCoach            Goal[]              @relation("GoalCoach")
+
+  subscriptionsAsClient   Subscription[]      @relation("SubClient")
+  subscriptionsAsCoach    Subscription[]      @relation("SubCoach")
+
+  referralsMade           Referral[]          @relation("Referrer")
+  referralsReceived       Referral[]          @relation("Referee")
+
+  mediaAssets             MediaAsset[]
+  coachBadges             CoachBadge[]
+  messageReactions        MessageReaction[]
 }
 
 model ClientProfile {
@@ -91,6 +115,18 @@ model CoachProfile {
   reviewCount     Int?     @default(0)
   updatedAt       DateTime @updatedAt
 
+  videoIntroUrl      String?
+  languages          Json?
+  certifications     Json?
+  education          Json?
+  hourlyRate         Float?
+  responseTimeHours  Int?
+  totalClientsHelped Int?
+  beforeAfterStories Json?
+  faqs               Json?
+  isVerified         Boolean  @default(false)
+  isAcceptingClients Boolean  @default(true)
+
   subscriptionTier   SubscriptionTier @default(FREE)
   subscriptionStatus String?
   inviteCode         String?          @unique
@@ -100,17 +136,26 @@ model CoachProfile {
 }
 
 model CoachPackage {
-  id          String       @id @default(cuid())
-  profile     CoachProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
-  profileId   String
-  title       String
-  description String?
-  price       Float?
-  isActive    Boolean      @default(true)
-  isPopular   Boolean      @default(false)
-  features    String       @default("[]") // JSON array of feature strings
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id                String       @id @default(cuid())
+  profile           CoachProfile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profileId         String
+  title             String
+  description       String?
+  price             Float?
+  isActive          Boolean      @default(true)
+  isPopular         Boolean      @default(false)
+  features          String       @default("[]")
+  durationWeeks     Int?
+  sessionsIncluded  Int?
+  maxClients        Int?
+  sortOrder         Int          @default(0)
+  discount          Float?
+  originalPrice     Float?
+  recurringInterval String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  subscriptions     Subscription[]
 }
 
 enum Role {
@@ -275,9 +320,18 @@ model Workout {
   status         WorkoutStatus      @default(IN_PROGRESS)
   intensityScore Int?
 
+  notes            String?
+  energyLevel      Int?
+  moodBefore       Int?
+  moodAfter        Int?
+  location         String?
+  durationSeconds  Int?
+  totalVolumeKg    Float?
+
   sets              WorkoutSet[]
   comments          Comment[]
   movementVideos    MovementVideo[]
+  personalRecords   PersonalRecord[]
 }
 
 enum WorkoutStatus {
@@ -324,19 +378,28 @@ model Message {
   isRead     Boolean  @default(false)
   createdAt  DateTime @default(now())
 
+  reactions   MessageReaction[]
+  attachments MessageAttachment[]
+
   @@index([senderId, receiverId, createdAt])
   @@index([receiverId, isRead])
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  user      User     @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
-  userId    String
-  title     String
-  body      String
-  type      String
-  isRead    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id         String   @id @default(cuid())
+  user       User     @relation("NotificationUser", fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  title      String
+  body       String
+  type       String
+  isRead     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  actionUrl  String?
+  metadata   Json?
+  priority   String?
+  expiresAt  DateTime?
+  channel    String?
 
   @@index([userId, isRead, createdAt])
 }
@@ -446,6 +509,19 @@ model BodyMetricLog {
   arm           Float?
   leg           Float?
 
+  bodyFatPercent  Float?
+  muscleMassKg    Float?
+  bmiCached       Float?
+  sleepHours      Float?
+  restingHR       Int?
+  hrv             Int?
+  visceralFat     Int?
+  boneMassKg      Float?
+  waterPercent    Float?
+  neckMeasurement Float?
+  forearm         Float?
+  calf            Float?
+
   frontPhotoUrl String?
   sidePhotoUrl  String?
   backPhotoUrl  String?
@@ -502,16 +578,23 @@ model MovementVideoComment {
 }
 
 model Review {
-  id        String   @id @default(cuid())
-  coach     User     @relation("ReviewCoach", fields: [coachId], references: [id], onDelete: Cascade)
-  coachId   String
-  client    User     @relation("ReviewAuthor", fields: [clientId], references: [id], onDelete: Cascade)
-  clientId  String
-  rating    Float    // 1-5
-  title     String?
-  content   String
-  isAnon    Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id                String   @id @default(cuid())
+  coach             User     @relation("ReviewCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  coachId           String
+  client            User     @relation("ReviewAuthor", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId          String
+  rating            Float
+  title             String?
+  content           String
+  isAnon            Boolean  @default(false)
+  createdAt         DateTime @default(now())
+
+  helpfulCount      Int      @default(0)
+  coachReply        String?
+  coachReplyAt      DateTime?
+  verifiedPurchase  Boolean  @default(false)
+  photos            Json?
+  durationWithCoach Int?
 
   @@unique([coachId, clientId])
   @@index([coachId, createdAt])
@@ -535,11 +618,20 @@ model Session {
   client       User          @relation("SessionClient", fields: [clientId], references: [id], onDelete: Cascade)
   clientId     String
   scheduledFor DateTime
-  duration     Int           @default(60) // minutes
-  type         String        @default("consultation") // consultation, follow_up, check_in
+  duration     Int           @default(60)
+  type         String        @default("consultation")
   status       SessionStatus @default(SCHEDULED)
   notes        String?
   createdAt    DateTime      @default(now())
+
+  meetingUrl       String?
+  recordingUrl     String?
+  agenda           String?
+  summary          String?
+  clientFeedback   String?
+  rating           Int?
+  reminderSentAt   DateTime?
+  isPaid           Boolean   @default(false)
 
   @@index([coachId, scheduledFor])
   @@index([clientId, scheduledFor])
@@ -556,6 +648,203 @@ model ClientNotes {
   relation   CoachClientRelation @relation(fields: [relationId], references: [id], onDelete: Cascade)
   relationId String              @unique
   notes      String              @default("")
-  tags       String              @default("[]") // JSON array of tag strings
+  tags       String              @default("[]")
   updatedAt  DateTime            @updatedAt
+}
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  title       String
+  description String
+  iconUrl     String?
+  category    String
+  points      Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  unlocks UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId        String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  achievementId String
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@index([userId, unlockedAt])
+}
+
+model PersonalRecord {
+  id             String   @id @default(cuid())
+  client         User     @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  clientId       String
+  exerciseId     String
+  weightKg       Float
+  reps           Int
+  estimatedOneRM Float?
+  workout        Workout? @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  workoutId      String?
+  achievedAt     DateTime @default(now())
+
+  @@index([clientId, exerciseId])
+  @@index([clientId, achievedAt])
+}
+
+model Subscription {
+  id                   String        @id @default(cuid())
+  client               User          @relation("SubClient", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId             String
+  coach                User          @relation("SubCoach", fields: [coachId], references: [id], onDelete: Cascade)
+  coachId              String
+  package              CoachPackage? @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  packageId            String?
+  status               String
+  startedAt            DateTime      @default(now())
+  expiresAt            DateTime?
+  cancelAtPeriodEnd    Boolean       @default(false)
+  stripeSubscriptionId String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  payments Payment[]
+
+  @@index([clientId, status])
+  @@index([coachId, status])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+  subscriptionId String?
+  amount         Float
+  currency       String        @default("TRY")
+  status         String
+  provider       String
+  providerRef    String?
+  invoiceUrl     String?
+  createdAt      DateTime      @default(now())
+
+  @@index([subscriptionId])
+}
+
+model Goal {
+  id           String     @id @default(cuid())
+  client       User       @relation("GoalClient", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId     String
+  coach        User?      @relation("GoalCoach", fields: [coachId], references: [id], onDelete: SetNull)
+  coachId      String?
+  title        String
+  type         String
+  targetValue  Float?
+  currentValue Float?
+  unit         String?
+  targetDate   DateTime?
+  status       String     @default("active")
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  milestones Milestone[]
+
+  @@index([clientId, status])
+}
+
+model Milestone {
+  id         String    @id @default(cuid())
+  goal       Goal      @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  goalId     String
+  title      String
+  achievedAt DateTime?
+  order      Int       @default(0)
+
+  @@index([goalId, order])
+}
+
+model Referral {
+  id         String   @id @default(cuid())
+  referrer   User     @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referrerId String
+  referee    User?    @relation("Referee", fields: [refereeId], references: [id], onDelete: SetNull)
+  refereeId  String?
+  code       String   @unique
+  bonusType  String?
+  status     String   @default("pending")
+  createdAt  DateTime @default(now())
+
+  @@index([referrerId, status])
+}
+
+model AvailabilityException {
+  id        String   @id @default(cuid())
+  coach     User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId   String
+  date      DateTime
+  isClosed  Boolean  @default(true)
+  startTime String?
+  endTime   String?
+
+  @@unique([coachId, date])
+  @@index([coachId, date])
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  owner        User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId      String
+  type         String
+  url          String
+  mimeType     String
+  sizeBytes    Int
+  thumbnailUrl String?
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([ownerId, type, createdAt])
+}
+
+model CoachBadge {
+  id        String   @id @default(cuid())
+  coach     User     @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  coachId   String
+  code      String
+  awardedAt DateTime @default(now())
+
+  @@unique([coachId, code])
+}
+
+model AnalyticsSnapshot {
+  id      String   @id @default(cuid())
+  scope   String
+  scopeId String
+  date    DateTime @db.Date
+  metrics Json
+
+  @@unique([scope, scopeId, date])
+  @@index([scopeId, date])
+}
+
+model MessageReaction {
+  id        String   @id @default(cuid())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  @@unique([messageId, userId, emoji])
+}
+
+model MessageAttachment {
+  id        String   @id @default(cuid())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+  url       String
+  type      String
+  sizeBytes Int
+  createdAt DateTime @default(now())
+
+  @@index([messageId])
 }

@@ -26,7 +26,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Geçersiz istek." }, { status: 400 });
   }
 
-  const { title, description, price } = body as Record<string, unknown>;
+  const {
+    title,
+    description,
+    price,
+    durationWeeks,
+    sessionsIncluded,
+    maxClients,
+    discount,
+    originalPrice,
+    recurringInterval,
+    features,
+  } = body as Record<string, unknown>;
   if (!title || typeof title !== "string" || !title.trim()) {
     return NextResponse.json({ error: "Başlık zorunludur." }, { status: 400 });
   }
@@ -45,6 +56,13 @@ export async function POST(request: Request) {
       title: title.trim(),
       description: typeof description === "string" ? description.trim() || null : null,
       price: typeof price === "number" && price > 0 ? price : null,
+      durationWeeks: typeof durationWeeks === "number" && durationWeeks > 0 ? durationWeeks : null,
+      sessionsIncluded: typeof sessionsIncluded === "number" && sessionsIncluded > 0 ? sessionsIncluded : null,
+      maxClients: typeof maxClients === "number" && maxClients > 0 ? maxClients : null,
+      discount: typeof discount === "number" && discount > 0 ? discount : null,
+      originalPrice: typeof originalPrice === "number" && originalPrice > 0 ? originalPrice : null,
+      recurringInterval: typeof recurringInterval === "string" ? recurringInterval : null,
+      features: Array.isArray(features) ? JSON.stringify(features) : "[]",
     },
   });
 

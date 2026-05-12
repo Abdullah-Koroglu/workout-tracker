@@ -34,6 +34,12 @@ export async function GET(request: Request) {
       isAnon: r.isAnon,
       createdAt: r.createdAt,
       authorName: r.isAnon ? "Anonim" : r.client.name,
+      helpfulCount: r.helpfulCount,
+      coachReply: r.coachReply,
+      coachReplyAt: r.coachReplyAt,
+      verifiedPurchase: r.verifiedPurchase,
+      photos: r.photos ?? null,
+      durationWithCoach: r.durationWithCoach,
     })),
   });
 }
@@ -69,9 +75,24 @@ export async function POST(request: Request) {
     );
   }
 
+  const isAccepted = relation.status === "ACCEPTED";
+  const durationWithCoach = Math.max(
+    1,
+    Math.floor((Date.now() - new Date(relation.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 7)),
+  );
+
   const review = await prisma.review.upsert({
     where: { coachId_clientId: { coachId, clientId: auth.session.user.id } },
-    create: { coachId, clientId: auth.session.user.id, rating, title, content, isAnon },
+    create: {
+      coachId,
+      clientId: auth.session.user.id,
+      rating,
+      title,
+      content,
+      isAnon,
+      verifiedPurchase: isAccepted,
+      durationWithCoach,
+    },
     update: { rating, title, content, isAnon },
   });
 

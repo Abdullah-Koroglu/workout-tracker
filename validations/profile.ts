@@ -121,6 +121,18 @@ export const baseProfileSchema = z.object({
   weightKg: nullablePositiveNumber(500),
 });
 
+const nullableUrl = (max = 500) =>
+  z.preprocess(
+    (value) => {
+      if (value === undefined) return undefined;
+      if (value === null) return null;
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    },
+    z.string().url().max(max).nullable().optional(),
+  );
+
 export const coachProfileSchema = baseProfileSchema.extend({
   bio: nullableTrimmedString(2000),
   slogan: nullableTrimmedString(140),
@@ -132,18 +144,61 @@ export const coachProfileSchema = baseProfileSchema.extend({
     .nullable()
     .optional(),
   experienceYears: nullablePositiveNumber(80, true),
-  socialMediaUrl: z.preprocess(
-    (value) => {
-      if (value === undefined) return undefined;
-      if (value === null) return null;
-      if (typeof value !== "string") return value;
-
-      const trimmed = value.trim();
-      return trimmed.length > 0 ? trimmed : null;
-    },
-    z.string().url().max(500).nullable().optional(),
-  ),
+  socialMediaUrl: nullableUrl(),
   city: nullableTrimmedString(100),
+  videoIntroUrl: nullableUrl(1000),
+  languages: z.array(z.string().trim().min(1).max(40)).max(10).nullable().optional(),
+  certifications: z
+    .array(
+      z.object({
+        name: z.string().trim().min(1).max(120),
+        issuer: z.string().trim().max(120).optional(),
+        year: z.number().int().min(1950).max(2100).optional(),
+        url: z.string().url().max(1000).optional(),
+      }),
+    )
+    .max(20)
+    .nullable()
+    .optional(),
+  education: z
+    .array(
+      z.object({
+        school: z.string().trim().min(1).max(120),
+        degree: z.string().trim().max(120).optional(),
+        year: z.number().int().min(1950).max(2100).optional(),
+      }),
+    )
+    .max(10)
+    .nullable()
+    .optional(),
+  hourlyRate: nullablePositiveNumber(100000),
+  responseTimeHours: nullablePositiveNumber(168, true),
+  totalClientsHelped: nullablePositiveNumber(100000, true),
+  beforeAfterStories: z
+    .array(
+      z.object({
+        clientName: z.string().trim().max(120).optional(),
+        beforeUrl: z.string().url().max(1000),
+        afterUrl: z.string().url().max(1000),
+        description: z.string().max(500).optional(),
+        durationWeeks: z.number().int().min(0).max(520).optional(),
+      }),
+    )
+    .max(24)
+    .nullable()
+    .optional(),
+  faqs: z
+    .array(
+      z.object({
+        q: z.string().trim().min(1).max(200),
+        a: z.string().trim().min(1).max(1000),
+      }),
+    )
+    .max(20)
+    .nullable()
+    .optional(),
+  isVerified: z.boolean().optional(),
+  isAcceptingClients: z.boolean().optional(),
 });
 
 export const clientProfileSchema = baseProfileSchema.extend({

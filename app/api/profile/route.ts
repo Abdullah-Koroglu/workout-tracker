@@ -92,30 +92,35 @@ export async function PUT(request: Request) {
         });
       }
 
+      const extendedFields = {
+        bio: data.bio ?? null,
+        slogan: data.slogan ?? null,
+        accentColor: data.accentColor ?? "#F97316",
+        transformationPhotos: data.transformationPhotos ?? Prisma.DbNull,
+        specialties: data.specialties ?? undefined,
+        experienceYears: data.experienceYears ?? null,
+        socialMediaUrl: data.socialMediaUrl ?? null,
+        city: data.city ?? null,
+        videoIntroUrl: data.videoIntroUrl ?? null,
+        languages: (data.languages ?? Prisma.DbNull) as Prisma.InputJsonValue,
+        certifications: (data.certifications ?? Prisma.DbNull) as Prisma.InputJsonValue,
+        education: (data.education ?? Prisma.DbNull) as Prisma.InputJsonValue,
+        hourlyRate: data.hourlyRate ?? null,
+        responseTimeHours: data.responseTimeHours ?? null,
+        totalClientsHelped: data.totalClientsHelped ?? null,
+        beforeAfterStories: (data.beforeAfterStories ?? Prisma.DbNull) as Prisma.InputJsonValue,
+        faqs: (data.faqs ?? Prisma.DbNull) as Prisma.InputJsonValue,
+        ...(typeof data.isAcceptingClients === "boolean" ? { isAcceptingClients: data.isAcceptingClients } : {}),
+      };
+
       const profile = await prisma.coachProfile.upsert({
         where: { userId },
         create: {
           userId,
           inviteCode: randomBytes(10).toString("hex"),
-          bio: data.bio ?? null,
-          slogan: data.slogan ?? null,
-          accentColor: data.accentColor ?? "#F97316",
-          transformationPhotos: data.transformationPhotos ?? Prisma.DbNull,
-          specialties: data.specialties ?? undefined,
-          experienceYears: data.experienceYears ?? null,
-          socialMediaUrl: data.socialMediaUrl ?? null,
-          city: data.city ?? null,
+          ...extendedFields,
         },
-        update: {
-          bio: data.bio ?? null,
-          slogan: data.slogan ?? null,
-          accentColor: data.accentColor ?? "#F97316",
-          transformationPhotos: data.transformationPhotos ?? Prisma.DbNull,
-          specialties: data.specialties ?? undefined,
-          experienceYears: data.experienceYears ?? null,
-          socialMediaUrl: data.socialMediaUrl ?? null,
-          city: data.city ?? null,
-        },
+        update: extendedFields,
       });
 
       return NextResponse.json({ profile });

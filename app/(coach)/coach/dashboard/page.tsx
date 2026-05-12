@@ -6,6 +6,8 @@ import { QuotaWidget } from "@/components/coach/QuotaWidget";
 import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
 import { CheckInManager } from "@/components/coach/CheckInManager";
 import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
+import { SessionsPanel } from "@/components/shared/SessionsPanel";
+import { CoachRevenuePanel } from "@/components/coach/CoachRevenuePanel";
 import { auth } from "@/lib/auth";
 import { getCoachAvatarUrl } from "@/lib/coach-avatar";
 import { prisma } from "@/lib/prisma";
@@ -496,6 +498,12 @@ export default async function CoachDashboardPage() {
         )}
 
         <NudgeAssistantCard />
+
+        {/* Revenue panel */}
+        <CoachRevenuePanel />
+
+        {/* Sessions */}
+        <SessionsPanel role="COACH" />
 
         {/* Quota Widget */}
         <QuotaWidget tier={subscriptionTier} currentClientCount={totalClients} />

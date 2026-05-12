@@ -4,8 +4,15 @@ import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 
 const patchSchema = z.object({
-  status: z.enum(["SCHEDULED", "COMPLETED", "CANCELLED"]),
+  status: z.enum(["SCHEDULED", "COMPLETED", "CANCELLED"]).optional(),
   notes: z.string().max(500).optional(),
+  meetingUrl: z.string().url().max(1000).nullable().optional(),
+  recordingUrl: z.string().url().max(1000).nullable().optional(),
+  agenda: z.string().max(2000).nullable().optional(),
+  summary: z.string().max(2000).nullable().optional(),
+  clientFeedback: z.string().max(2000).nullable().optional(),
+  rating: z.number().int().min(1).max(5).nullable().optional(),
+  isPaid: z.boolean().optional(),
 });
 
 // PATCH /api/sessions/[id]
@@ -31,11 +38,20 @@ export async function PATCH(
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
+  const isCoach = session.coachId === userId;
+  const d = parsed.data;
   const updated = await prisma.session.update({
     where: { id },
     data: {
-      status: parsed.data.status,
-      ...(parsed.data.notes !== undefined ? { notes: parsed.data.notes } : {}),
+      ...(d.status !== undefined ? { status: d.status } : {}),
+      ...(d.notes !== undefined ? { notes: d.notes } : {}),
+      ...(isCoach && d.meetingUrl !== undefined ? { meetingUrl: d.meetingUrl } : {}),
+      ...(isCoach && d.recordingUrl !== undefined ? { recordingUrl: d.recordingUrl } : {}),
+      ...(isCoach && d.agenda !== undefined ? { agenda: d.agenda } : {}),
+      ...(isCoach && d.summary !== undefined ? { summary: d.summary } : {}),
+      ...(isCoach && d.isPaid !== undefined ? { isPaid: d.isPaid } : {}),
+      ...(!isCoach && d.clientFeedback !== undefined ? { clientFeedback: d.clientFeedback } : {}),
+      ...(!isCoach && d.rating !== undefined ? { rating: d.rating } : {}),
     },
   });
 

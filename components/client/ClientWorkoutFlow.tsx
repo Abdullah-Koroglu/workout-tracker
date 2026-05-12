@@ -24,6 +24,10 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const [finishing, setFinishing] = useState(false);
   const [intensityModal, setIntensityModal] = useState<{ mode: "COMPLETED" | "ABANDONED" } | null>(null);
   const [pendingIntensity, setPendingIntensity] = useState<number>(7);
+  const [pendingEnergy, setPendingEnergy] = useState<number>(3);
+  const [pendingMoodAfter, setPendingMoodAfter] = useState<number>(3);
+  const [pendingNotes, setPendingNotes] = useState<string>("");
+  const [pendingLocation, setPendingLocation] = useState<string>("");
   const [cardioSeconds, setCardioSeconds] = useState<Record<string, number>>({});
   const [cardioReachedEnd, setCardioReachedEnd] = useState<Record<string, boolean>>({});
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
@@ -212,7 +216,13 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
     if (!intensityModal) return;
     setIntensityModal(null);
     setFinishing(true);
-    await completeWorkout(workoutState.workoutId, intensityModal.mode, pendingIntensity);
+    await completeWorkout(workoutState.workoutId, intensityModal.mode, pendingIntensity, {
+      energyLevel: pendingEnergy,
+      moodAfter: pendingMoodAfter,
+      notes: pendingNotes || undefined,
+      location: pendingLocation || undefined,
+      durationSeconds: elapsedSeconds,
+    });
     setFinishing(false);
   };
 
@@ -675,7 +685,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
             {/* Label */}
             <p
-              className="text-center text-[12px] font-semibold mb-5"
+              className="text-center text-[12px] font-semibold mb-3"
               style={{ color: "#64748B" }}
             >
               {pendingIntensity <= 3
@@ -686,6 +696,64 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                 ? "Zor — Çok güzel iş"
                 : "Maksimum — Mükemmel!"}
             </p>
+
+            {/* Energy + Mood selectors */}
+            <div className="grid grid-cols-2 gap-2 mb-3">
+              <div className="rounded-xl bg-slate-50 p-2.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Enerji</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPendingEnergy(n)}
+                      className="flex-1 h-7 rounded-lg text-[11px] font-black"
+                      style={{
+                        background: pendingEnergy === n ? "#10B981" : "#fff",
+                        color: pendingEnergy === n ? "#fff" : "#94A3B8",
+                        border: "1px solid #E2E8F0",
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-2.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-1.5">Ruh Hali</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setPendingMoodAfter(n)}
+                      className="flex-1 h-7 rounded-lg text-[11px] font-black"
+                      style={{
+                        background: pendingMoodAfter === n ? "#A855F7" : "#fff",
+                        color: pendingMoodAfter === n ? "#fff" : "#94A3B8",
+                        border: "1px solid #E2E8F0",
+                      }}
+                    >
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <input
+              placeholder="Mekan (opsiyonel)"
+              value={pendingLocation}
+              onChange={(e) => setPendingLocation(e.target.value)}
+              className="mb-2 h-9 w-full rounded-xl bg-slate-50 px-3 text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400"
+            />
+            <textarea
+              placeholder="Notlar (opsiyonel)"
+              rows={2}
+              value={pendingNotes}
+              onChange={(e) => setPendingNotes(e.target.value)}
+              className="mb-4 w-full rounded-xl bg-slate-50 px-3 py-2 text-[12px] font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-orange-400 resize-none"
+            />
 
             <div className="flex gap-3">
               <button

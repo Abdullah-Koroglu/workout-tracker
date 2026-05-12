@@ -32,6 +32,7 @@ dev.db
 /public/uploads/avatars
 /public/uploads/meals
 /public/uploads/checkins
+/public/uploads/movement-videos
 /deploy.sh
 
 /db_backups/

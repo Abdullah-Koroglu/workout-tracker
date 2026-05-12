@@ -6,6 +6,11 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckInWidget } from "@/components/client/CheckInWidget";
 import { BodyCheckInCard } from "@/components/client/BodyCheckInCard";
+import { GoalsManager } from "@/components/shared/GoalsManager";
+import { AchievementsPanel } from "@/components/client/AchievementsPanel";
+import { PersonalRecordsPanel } from "@/components/client/PersonalRecordsPanel";
+import { SessionsPanel } from "@/components/shared/SessionsPanel";
+import { ensureAchievementsSeeded } from "@/lib/achievements";
 
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
   const initials = name
@@ -56,6 +61,9 @@ export default async function ClientDashboardPage() {
   const session = await auth();
   const clientId = session?.user.id || "";
   const userName = session?.user.name || "Kullanıcı";
+
+  // Seed built-in achievements once
+  await ensureAchievementsSeeded().catch(() => {});
 
   const toDayKey = (date: Date) =>
     `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
@@ -251,6 +259,18 @@ export default async function ClientDashboardPage() {
 
         {/* Body Check-in Card — shown only when coach has set a tracking requirement */}
         <BodyCheckInCard />
+
+        {/* Goals */}
+        <GoalsManager />
+
+        {/* Achievements */}
+        <AchievementsPanel />
+
+        {/* Personal Records */}
+        <PersonalRecordsPanel />
+
+        {/* Sessions */}
+        <SessionsPanel role="CLIENT" />
 
         {/* Check-in Widget */}
         <CheckInWidget />

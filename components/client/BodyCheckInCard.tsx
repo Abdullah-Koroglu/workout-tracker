@@ -22,12 +22,27 @@ type Status = {
   totalLogs: number;
 };
 
+const ADVANCED_FIELDS: { name: string; label: string; step: string; min: string; max: string }[] = [
+  { name: "bodyFatPercent", label: "Vücut Yağ %", step: "0.1", min: "1", max: "70" },
+  { name: "muscleMassKg", label: "Kas Kütlesi (kg)", step: "0.1", min: "10", max: "120" },
+  { name: "waterPercent", label: "Su %", step: "0.1", min: "20", max: "80" },
+  { name: "boneMassKg", label: "Kemik (kg)", step: "0.1", min: "1", max: "10" },
+  { name: "visceralFat", label: "Viseral Yağ", step: "1", min: "1", max: "60" },
+  { name: "sleepHours", label: "Uyku (sa)", step: "0.1", min: "0", max: "24" },
+  { name: "restingHR", label: "Dinlenme NB", step: "1", min: "30", max: "200" },
+  { name: "hrv", label: "HRV (ms)", step: "1", min: "0", max: "300" },
+  { name: "neckMeasurement", label: "Boyun (cm)", step: "0.1", min: "20", max: "60" },
+  { name: "forearm", label: "Önkol (cm)", step: "0.1", min: "15", max: "50" },
+  { name: "calf", label: "Baldır (cm)", step: "0.1", min: "20", max: "70" },
+];
+
 export function BodyCheckInCard() {
   const [status, setStatus] = useState<Status | null>(null);
   const [open, setOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -192,6 +207,36 @@ export function BodyCheckInCard() {
                 </div>
               </div>
             )}
+
+            {/* Advanced metrics (optional) */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowAdvanced((s) => !s)}
+                className="w-full rounded-xl bg-slate-50 px-3 py-2 text-left text-[12px] font-black text-slate-600 hover:bg-slate-100"
+              >
+                {showAdvanced ? "▾" : "▸"} Detaylı Metrikler (opsiyonel)
+              </button>
+              {showAdvanced && (
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {ADVANCED_FIELDS.map((f) => (
+                    <div key={f.name}>
+                      <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                        {f.label}
+                      </label>
+                      <input
+                        name={f.name}
+                        type="number"
+                        step={f.step}
+                        min={f.min}
+                        max={f.max}
+                        className="w-full rounded-xl border border-slate-200 px-3 py-2 text-[13px] text-slate-800 focus:border-purple-400 focus:outline-none"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {error && (
               <p className="rounded-xl bg-red-50 px-3 py-2 text-[12px] font-semibold text-red-600">

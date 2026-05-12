@@ -20,6 +20,7 @@ import { RequestCoachButton } from "./RequestCoachButton";
 import { ReviewsSection } from "./ReviewsSection";
 import { SessionBookingButton } from "./SessionBookingButton";
 import { SimilarCoaches } from "./SimilarCoaches";
+import { CoachExtendedInfo } from "@/components/shared/CoachExtendedInfo";
 
 function getInitials(name: string) {
   return name
@@ -68,9 +69,20 @@ export default async function CoachVitrinPage({
           specialties: true,
           experienceYears: true,
           socialMediaUrl: true,
+          videoIntroUrl: true,
+          languages: true,
+          certifications: true,
+          education: true,
+          hourlyRate: true,
+          responseTimeHours: true,
+          totalClientsHelped: true,
+          beforeAfterStories: true,
+          faqs: true,
+          isVerified: true,
+          isAcceptingClients: true,
           packages: {
             where: { isActive: true },
-            orderBy: { createdAt: "asc" },
+            orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
           },
         },
       },
@@ -171,6 +183,19 @@ export default async function CoachVitrinPage({
           {transformationPhotos.length > 0 && (
             <TransformCarousel items={transformationPhotos} />
           )}
+
+          <CoachExtendedInfo
+            videoIntroUrl={profile?.videoIntroUrl}
+            languages={Array.isArray(profile?.languages) ? (profile?.languages as string[]) : null}
+            certifications={Array.isArray(profile?.certifications) ? (profile?.certifications as { name: string; issuer?: string; year?: number }[]) : null}
+            education={Array.isArray(profile?.education) ? (profile?.education as { school: string; degree?: string; year?: number }[]) : null}
+            hourlyRate={profile?.hourlyRate}
+            responseTimeHours={profile?.responseTimeHours}
+            totalClientsHelped={profile?.totalClientsHelped}
+            faqs={Array.isArray(profile?.faqs) ? (profile?.faqs as { q: string; a: string }[]) : null}
+            isVerified={profile?.isVerified}
+            isAcceptingClients={profile?.isAcceptingClients}
+          />
 
           <ReviewsSection
             coachId={coachId}
@@ -274,19 +299,55 @@ export default async function CoachVitrinPage({
                       </div>
                     </div>
 
-                    <div className="mb-3 rounded-xl bg-slate-50 px-3 py-2.5">
-                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Paket Türü</p>
-                      <p className="mt-0.5 text-xs font-bold text-slate-600">Online Koçluk</p>
+                    <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
+                      {(pkg as { durationWeeks?: number | null }).durationWeeks ? (
+                        <div className="rounded-xl bg-slate-50 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Süre</p>
+                          <p className="mt-0.5 text-xs font-bold text-slate-700">{(pkg as { durationWeeks?: number | null }).durationWeeks} hafta</p>
+                        </div>
+                      ) : null}
+                      {(pkg as { sessionsIncluded?: number | null }).sessionsIncluded ? (
+                        <div className="rounded-xl bg-slate-50 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">Oturum</p>
+                          <p className="mt-0.5 text-xs font-bold text-slate-700">{(pkg as { sessionsIncluded?: number | null }).sessionsIncluded} adet</p>
+                        </div>
+                      ) : null}
+                      {(pkg as { maxClients?: number | null }).maxClients ? (
+                        <div className="rounded-xl bg-rose-50 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wider text-rose-400">Limit</p>
+                          <p className="mt-0.5 text-xs font-bold text-rose-600">Max {(pkg as { maxClients?: number | null }).maxClients} kişi</p>
+                        </div>
+                      ) : null}
+                      {(pkg as { recurringInterval?: string | null }).recurringInterval ? (
+                        <div className="rounded-xl bg-indigo-50 px-3 py-2">
+                          <p className="text-[9px] font-black uppercase tracking-wider text-indigo-400">Periyot</p>
+                          <p className="mt-0.5 text-xs font-bold text-indigo-600">
+                            {(pkg as { recurringInterval?: string | null }).recurringInterval === "monthly" ? "Aylık" : "Tek seferlik"}
+                          </p>
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
                       {pkg.price != null ? (
-                        <span
-                          className="rounded-full px-3 py-1 text-sm font-black"
-                          style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
-                        >
-                          {pkg.price.toLocaleString("tr-TR")} ₺
-                        </span>
+                        <div className="flex items-baseline gap-1.5">
+                          {(pkg as { originalPrice?: number | null }).originalPrice && (
+                            <span className="text-xs font-bold text-slate-400 line-through">
+                              {(pkg as { originalPrice?: number | null }).originalPrice!.toLocaleString("tr-TR")}₺
+                            </span>
+                          )}
+                          <span
+                            className="rounded-full px-3 py-1 text-sm font-black"
+                            style={{ background: "rgba(34,197,94,0.1)", color: "#16A34A" }}
+                          >
+                            {pkg.price.toLocaleString("tr-TR")} ₺
+                          </span>
+                          {(pkg as { discount?: number | null }).discount ? (
+                            <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[10px] font-black text-rose-600">
+                              %{(pkg as { discount?: number | null }).discount} indirim
+                            </span>
+                          ) : null}
+                        </div>
                       ) : (
                         <span className="text-xs font-semibold text-slate-400">Fiyat belirtilmemiş</span>
                       )}

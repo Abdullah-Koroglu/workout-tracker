@@ -17,7 +17,13 @@ export const saveSetSchema = z.object({
 });
 
 export const completeWorkoutSchema = z.object({
-  mode: z.enum(["COMPLETED", "ABANDONED"]).optional().default("COMPLETED")
+  mode: z.enum(["COMPLETED", "ABANDONED"]).optional().default("COMPLETED"),
+  notes: z.string().max(2000).optional(),
+  energyLevel: z.number().int().min(1).max(5).optional(),
+  moodBefore: z.number().int().min(1).max(5).optional(),
+  moodAfter: z.number().int().min(1).max(5).optional(),
+  location: z.string().max(80).optional(),
+  durationSeconds: z.number().int().min(0).optional(),
 });
 
 export const commentSchema = z.object({

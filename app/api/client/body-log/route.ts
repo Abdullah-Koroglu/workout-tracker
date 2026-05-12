@@ -70,6 +70,22 @@ export async function POST(request: Request) {
   const hips = parseFloat_(formData.get("hips"));
   const arm = parseFloat_(formData.get("arm"));
   const leg = parseFloat_(formData.get("leg"));
+  const bodyFatPercent = parseFloat_(formData.get("bodyFatPercent"));
+  const muscleMassKg = parseFloat_(formData.get("muscleMassKg"));
+  const sleepHours = parseFloat_(formData.get("sleepHours"));
+  const restingHR = parseFloat_(formData.get("restingHR"));
+  const hrv = parseFloat_(formData.get("hrv"));
+  const visceralFat = parseFloat_(formData.get("visceralFat"));
+  const boneMassKg = parseFloat_(formData.get("boneMassKg"));
+  const waterPercent = parseFloat_(formData.get("waterPercent"));
+  const neckMeasurement = parseFloat_(formData.get("neckMeasurement"));
+  const forearm = parseFloat_(formData.get("forearm"));
+  const calf = parseFloat_(formData.get("calf"));
+  const heightCmRaw = parseFloat_(formData.get("heightCm"));
+  const bmiCached =
+    weight !== undefined && heightCmRaw !== undefined && heightCmRaw > 0
+      ? Math.round((weight / Math.pow(heightCmRaw / 100, 2)) * 10) / 10
+      : undefined;
 
   const frontFile = formData.get("frontPhoto");
   const sideFile = formData.get("sidePhoto");
@@ -94,6 +110,18 @@ export async function POST(request: Request) {
         hips: hips ?? null,
         arm: arm ?? null,
         leg: leg ?? null,
+        bodyFatPercent: bodyFatPercent ?? null,
+        muscleMassKg: muscleMassKg ?? null,
+        sleepHours: sleepHours ?? null,
+        restingHR: restingHR != null ? Math.round(restingHR) : null,
+        hrv: hrv != null ? Math.round(hrv) : null,
+        visceralFat: visceralFat != null ? Math.round(visceralFat) : null,
+        boneMassKg: boneMassKg ?? null,
+        waterPercent: waterPercent ?? null,
+        neckMeasurement: neckMeasurement ?? null,
+        forearm: forearm ?? null,
+        calf: calf ?? null,
+        bmiCached: bmiCached ?? null,
         frontPhotoUrl: frontPhotoUrl ?? null,
         sidePhotoUrl: sidePhotoUrl ?? null,
         backPhotoUrl: backPhotoUrl ?? null,
@@ -106,6 +134,18 @@ export async function POST(request: Request) {
         ...(hips !== undefined && { hips }),
         ...(arm !== undefined && { arm }),
         ...(leg !== undefined && { leg }),
+        ...(bodyFatPercent !== undefined && { bodyFatPercent }),
+        ...(muscleMassKg !== undefined && { muscleMassKg }),
+        ...(sleepHours !== undefined && { sleepHours }),
+        ...(restingHR !== undefined && { restingHR: Math.round(restingHR) }),
+        ...(hrv !== undefined && { hrv: Math.round(hrv) }),
+        ...(visceralFat !== undefined && { visceralFat: Math.round(visceralFat) }),
+        ...(boneMassKg !== undefined && { boneMassKg }),
+        ...(waterPercent !== undefined && { waterPercent }),
+        ...(neckMeasurement !== undefined && { neckMeasurement }),
+        ...(forearm !== undefined && { forearm }),
+        ...(calf !== undefined && { calf }),
+        ...(bmiCached !== undefined && { bmiCached }),
         ...(frontPhotoUrl && { frontPhotoUrl }),
         ...(sidePhotoUrl && { sidePhotoUrl }),
         ...(backPhotoUrl && { backPhotoUrl }),

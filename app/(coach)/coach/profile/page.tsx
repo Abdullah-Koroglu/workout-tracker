@@ -27,6 +27,7 @@ import { InviteLinkBox } from "@/components/coach/BillingSubscriptionPage";
 import { PageHero } from "@/components/shared/PageHero";
 import { TransformationPhotosManager, type TransformationPhoto } from "@/components/coach/TransformationPhotosManager";
 import { AvailabilityManager } from "@/components/coach/AvailabilityManager";
+import { ExtendedProfileEditor } from "@/components/coach/ExtendedProfileEditor";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -748,6 +749,8 @@ export default function CoachProfilePage() {
           />
 
           <AvailabilityManager />
+
+          <ExtendedProfileEditor />
         </div>
 
         {/* ── RIGHT: quick links + account ── */}

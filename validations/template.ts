@@ -6,6 +6,13 @@ export const cardioProtocolEntrySchema = z.object({
   incline: z.number().nonnegative()
 });
 
+const groupingFieldsSchema = {
+  groupId: z.string().nullable().optional(),
+  groupType: z.enum(["SUPERSET", "DROPSET"]).nullable().optional(),
+  groupOrder: z.number().int().min(0).nullable().optional(),
+  dropCount: z.number().int().min(2).max(6).nullable().optional()
+};
+
 const weightExerciseSchema = z.object({
   exerciseType: z.literal("WEIGHT"),
   exerciseId: z.string().min(1),
@@ -14,7 +21,8 @@ const weightExerciseSchema = z.object({
   targetReps: z.number().int().positive(),
   targetRir: z.number().int().min(0).max(5),
   durationMinutes: z.null().optional().default(null),
-  protocol: z.null().optional().default(null)
+  protocol: z.null().optional().default(null),
+  ...groupingFieldsSchema
 });
 
 const cardioExerciseSchema = z.object({
@@ -25,7 +33,8 @@ const cardioExerciseSchema = z.object({
   protocol: z.array(cardioProtocolEntrySchema).min(1),
   targetSets: z.null().optional().default(null),
   targetReps: z.null().optional().default(null),
-  targetRir: z.null().optional().default(null)
+  targetRir: z.null().optional().default(null),
+  ...groupingFieldsSchema
 });
 
 export const templateExerciseSchema = z.union([
@@ -45,6 +54,14 @@ export const templateSchema = z.object({
   exercises: z.array(templateExerciseSchema).min(1)
 }).superRefine((value, ctx) => {
   value.exercises.forEach((exercise, index) => {
+    if (exercise.groupType === "DROPSET" && exercise.dropCount == null) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Dropset icin drop sayisi zorunludur.",
+        path: ["exercises", index, "dropCount"]
+      });
+    }
+
     if (exercise.exerciseType !== "CARDIO") {
       return;
     }

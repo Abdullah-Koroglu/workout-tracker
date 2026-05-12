@@ -47,6 +47,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         create: parsed.data.exercises.map((e) => ({
           exerciseId: e.exerciseId,
           order: e.order,
+          groupId: e.groupId ?? null,
+          groupType: e.groupType ?? null,
+          groupOrder: e.groupOrder ?? null,
+          dropCount: e.dropCount ?? null,
           targetSets: e.exerciseType === "WEIGHT" ? e.targetSets ?? null : null,
           targetReps: e.exerciseType === "WEIGHT" ? e.targetReps ?? null : null,
           targetRir: e.exerciseType === "WEIGHT" ? e.targetRir ?? null : null,

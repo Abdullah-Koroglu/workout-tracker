@@ -240,6 +240,10 @@ model WorkoutTemplateExercise {
   exercise   Exercise        @relation(fields: [exerciseId], references: [id])
   exerciseId String
   order      Int
+  groupId    String?
+  groupType  String?
+  groupOrder Int?
+  dropCount  Int?
 
   targetSets Int?
   targetReps Int?
@@ -347,6 +351,8 @@ model WorkoutSet {
   exercise   Exercise @relation(fields: [exerciseId], references: [id])
   exerciseId String
   setNumber  Int
+  groupInstanceId String?
+  dropIndex       Int?
 
   weightKg Float?
   reps     Int?

@@ -15,6 +15,8 @@ export type ExerciseState = {
   nextSetNumber: number;
   isCompleted: boolean;
   plannedSetCount: number;
+  dropCount: number;
+  supersetPeers: string[];
   suggestedValues: {
     weightKg: number | undefined;
     reps: number | undefined;
@@ -93,14 +95,26 @@ export function useExerciseManager(
       const exerciseSets = savedSets.filter(
         (setItem) => setItem.exerciseId === exercise.exerciseId && setItem.completed
       );
-      const completedCount = exerciseSets.length;
       const override = exerciseOverrides[exercise.exerciseId];
       const plannedSetCount = exercise.exercise.type === "WEIGHT"
         ? override?.plannedSetCount ?? Math.max(exercise.targetSets || 1, 1)
         : 1;
+      const dropCount = exercise.groupType === "DROPSET" ? Math.max(exercise.dropCount || 2, 2) : 1;
+      const completedSetNumbers = Array.from(new Set(exerciseSets.map((set) => set.setNumber))).sort((a, b) => a - b);
+      const completedCount = exercise.groupType === "DROPSET"
+        ? completedSetNumbers.filter((setNumber) => {
+            const dropsForSet = exerciseSets.filter((set) => set.setNumber === setNumber).length;
+            return dropsForSet >= dropCount;
+          }).length
+        : exerciseSets.length;
       const isCompleted = Boolean(override?.manuallyCompleted) || completedCount >= plannedSetCount;
       const nextSetNumber = completedCount + 1;
       const latestSet = exerciseSets[exerciseSets.length - 1];
+      const supersetPeers = exercise.groupType === "SUPERSET" && exercise.groupId
+        ? exercises
+            .filter((item) => item.groupId === exercise.groupId && item.exerciseId !== exercise.exerciseId)
+            .map((item) => item.exercise.name)
+        : [];
 
       return {
         exercise,
@@ -109,6 +123,8 @@ export function useExerciseManager(
         nextSetNumber,
         isCompleted,
         plannedSetCount,
+        dropCount,
+        supersetPeers,
         suggestedValues: {
           weightKg: latestSet?.weightKg ?? exercise.suggestedWeightKg ?? undefined,
           reps: exercise.suggestedReps ?? exercise.targetReps ?? undefined,

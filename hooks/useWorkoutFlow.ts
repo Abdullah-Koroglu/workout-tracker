@@ -19,6 +19,8 @@ export type SavedSet = {
   id: string;
   exerciseId: string;
   setNumber: number;
+  groupInstanceId?: string | null;
+  dropIndex?: number | null;
   weightKg: number | null;
   reps: number | null;
   rir: number | null;
@@ -32,6 +34,10 @@ export type SavedSet = {
 export type ExerciseItem = {
   id: string;
   exerciseId: string;
+  groupId: string | null;
+  groupType: "SUPERSET" | "DROPSET" | null;
+  groupOrder: number | null;
+  dropCount: number | null;
   targetSets: number | null;
   targetReps: number | null;
   targetRir: number | null;
@@ -73,7 +79,11 @@ export function useWorkoutFlow(assignmentId: string): [UseWorkoutFlowState, UseW
   const addSet = useCallback((set: SavedSet) => {
     setState((prev) => {
       const filtered = prev.savedSets.filter(
-        (s) => !(s.exerciseId === set.exerciseId && s.setNumber === set.setNumber)
+        (s) => !(
+          s.exerciseId === set.exerciseId &&
+          s.setNumber === set.setNumber &&
+          (s.dropIndex ?? null) === (set.dropIndex ?? null)
+        )
       );
       return { ...prev, savedSets: [...filtered, set] };
     });

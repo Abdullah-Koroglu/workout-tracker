@@ -10,6 +10,8 @@ type SavePayload = {
   weightKg: number;
   reps: number;
   rir: number;
+  groupInstanceId?: string;
+  dropIndex?: number;
 };
 
 /** Normalize Turkish/English decimal → JS float. "75,5" → 75.5, "75.5" → 75.5 */
@@ -21,11 +23,19 @@ export function WorkoutSetForm({
   setNumber,
   defaultValues,
   disabled,
+  title,
+  submitLabel,
+  groupInstanceId,
+  dropIndex,
   onSave
 }: {
   setNumber: number;
   defaultValues?: { weightKg?: number | null; reps?: number | null; rir?: number | null };
   disabled?: boolean;
+  title?: string;
+  submitLabel?: string;
+  groupInstanceId?: string;
+  dropIndex?: number;
   onSave: (payload: SavePayload) => Promise<void>;
 }) {
   const [weightKg, setWeightKg] = useState(defaultValues?.weightKg?.toString() || "");
@@ -59,14 +69,16 @@ export function WorkoutSetForm({
       setNumber,
       weightKg: numericWeight,
       reps: numericReps,
-      rir: numericRir
+      rir: numericRir,
+      ...(groupInstanceId ? { groupInstanceId } : {}),
+      ...(dropIndex !== undefined ? { dropIndex } : {})
     });
   };
 
   return (
     <div className="space-y-3 rounded-lg md:rounded-2xl border border-border/60 bg-card/70 p-3 md:p-4 shadow-sm">
       <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-        <p className="text-xs md:text-sm font-semibold text-foreground">Set {setNumber} Bilgisi</p>
+        <p className="text-xs md:text-sm font-semibold text-foreground">{title || `Set ${setNumber} Bilgisi`}</p>
       </div>
 
       <div className="grid gap-2 grid-cols-4">
@@ -113,7 +125,7 @@ export function WorkoutSetForm({
             disabled={disabled || !weightKg || !reps || !rir}
             className="text-xs md:text-sm py-5 md:py-6 h-12 md:h-10 font-bold"
           >
-            <span className="hidden md:inline">Kaydet</span>
+            <span className="hidden md:inline">{submitLabel || "Kaydet"}</span>
             <span className="md:hidden">✓</span>
           </Button>
         </div>

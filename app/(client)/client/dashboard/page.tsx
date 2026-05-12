@@ -241,81 +241,6 @@ export default async function ClientDashboardPage() {
         {/* Streak tracker */}
         <StreakWidget />
 
-        <Link
-          href="/client/nutrition/log"
-          className="block rounded-[20px] p-5 text-white shadow-sm transition hover:opacity-95"
-          style={{
-            background: "linear-gradient(135deg, #F97316, #EA580C)",
-            boxShadow: "0 12px 30px rgba(234,88,12,0.32)",
-          }}
-        >
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/75">Beslenme Takibi</p>
-              <h3 className="mt-1 text-[30px] font-black leading-none">📸 Öğün Kaydet</h3>
-              <p className="mt-2 text-sm font-semibold text-white/90">Kamerayı aç, etiketi seç, koçuna anında ilet.</p>
-            </div>
-            <div className="rounded-full bg-white/20 px-4 py-2 text-[12px] font-black uppercase tracking-wider">
-              Aç
-            </div>
-          </div>
-        </Link>
-
-        {/* Body Check-in Card — shown only when coach has set a tracking requirement */}
-        <BodyCheckInCard />
-
-        {/* Goals */}
-        <GoalsManager />
-
-        {/* Achievements */}
-        <AchievementsPanel />
-
-        {/* Personal Records */}
-        <PersonalRecordsPanel />
-
-        {/* Sessions */}
-        <SessionsPanel role="CLIENT" />
-
-        {/* Check-in Widget */}
-        <CheckInWidget />
-
-        {/* Daily Mobility */}
-        <div
-          className="rounded-[18px] bg-white p-4 shadow-sm"
-          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-[15px] font-bold text-slate-800">Daily Mobility</h3>
-            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
-              Bağımsız Modül
-            </span>
-          </div>
-
-          {dailyMobilityRoutines.length === 0 ? (
-            <p className="text-[13px] text-slate-500">Koçun henüz günlük mobilite rutini paylaşmamış.</p>
-          ) : (
-            <div className="space-y-2.5">
-              {dailyMobilityRoutines.map((routine: DailyMobilityRoutine) => (
-                <div key={routine.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
-                  <p className="text-sm font-bold text-slate-800">{routine.name}</p>
-                  {routine.description ? (
-                    <p className="mt-0.5 text-xs text-slate-500">{routine.description}</p>
-                  ) : null}
-
-                  <div className="mt-2 space-y-1.5">
-                    {routine.movements.map((item: DailyMobilityRoutine["movements"][number]) => (
-                      <div key={item.id} className="flex items-center justify-between text-xs">
-                        <span className="text-slate-700">{item.movement.name}</span>
-                        <span className="font-semibold text-slate-500">{item.durationSeconds} sn</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
         {/* Weekly Focus */}
         <div
           className="bg-white rounded-[18px] p-4 shadow-sm"
@@ -444,6 +369,94 @@ export default async function ClientDashboardPage() {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+
+        <Link
+          href="/client/form-analysis"
+          className="block rounded-[18px] border border-blue-200 bg-blue-50 p-4 transition hover:bg-blue-100"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-blue-600">Serbest Form Analizi</p>
+              <p className="mt-1 text-sm font-bold text-blue-900">Videonu yükle, sorunu yaz, koçuna gönder.</p>
+            </div>
+            <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-black text-white">Gönder</span>
+          </div>
+        </Link>
+
+        <Link
+          href="/client/nutrition/log"
+          className="block rounded-[20px] p-5 text-white shadow-sm transition hover:opacity-95"
+          style={{
+            background: "linear-gradient(135deg, #F97316, #EA580C)",
+            boxShadow: "0 12px 30px rgba(234,88,12,0.32)",
+          }}
+        >
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.18em] text-white/75">Beslenme Takibi</p>
+              <h3 className="mt-1 text-[30px] font-black leading-none">📸 Öğün Kaydet</h3>
+              <p className="mt-2 text-sm font-semibold text-white/90">Kamerayı aç, etiketi seç, koçuna anında ilet.</p>
+            </div>
+            <div className="rounded-full bg-white/20 px-4 py-2 text-[12px] font-black uppercase tracking-wider">
+              Aç
+            </div>
+          </div>
+        </Link>
+
+        {/* Body Check-in Card — shown only when coach has set a tracking requirement */}
+        <BodyCheckInCard />
+
+        {/* Goals */}
+        <GoalsManager />
+
+        {/* Achievements */}
+        <AchievementsPanel />
+
+        {/* Personal Records */}
+        <PersonalRecordsPanel />
+
+        {/* Sessions */}
+        <SessionsPanel role="CLIENT" />
+
+        {/* Check-in Widget */}
+        <CheckInWidget />
+
+        {/* Daily Mobility */}
+        <div
+          className="rounded-[18px] bg-white p-4 shadow-sm"
+          style={{ border: "1px solid rgba(0,0,0,0.06)" }}
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="text-[15px] font-bold text-slate-800">Daily Mobility</h3>
+            <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              Bağımsız Modül
+            </span>
+          </div>
+
+          {dailyMobilityRoutines.length === 0 ? (
+            <p className="text-[13px] text-slate-500">Koçun henüz günlük mobilite rutini paylaşmamış.</p>
+          ) : (
+            <div className="space-y-2.5">
+              {dailyMobilityRoutines.map((routine: DailyMobilityRoutine) => (
+                <div key={routine.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                  <p className="text-sm font-bold text-slate-800">{routine.name}</p>
+                  {routine.description ? (
+                    <p className="mt-0.5 text-xs text-slate-500">{routine.description}</p>
+                  ) : null}
+
+                  <div className="mt-2 space-y-1.5">
+                    {routine.movements.map((item: DailyMobilityRoutine["movements"][number]) => (
+                      <div key={item.id} className="flex items-center justify-between text-xs">
+                        <span className="text-slate-700">{item.movement.name}</span>
+                        <span className="font-semibold text-slate-500">{item.durationSeconds} sn</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
@@ -590,9 +603,10 @@ export default async function ClientDashboardPage() {
         )}
 
         {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[
             { href: "/client/calendar", label: "Takvim Planı" },
+            { href: "/client/form-analysis", label: "Form Analizi Gönder" },
             { href: "/client/workouts", label: "Antrenman Arşivi" },
             { href: "/client/coaches", label: "Koç Ağı" },
             { href: "/client/messages", label: "Mesajlar" },

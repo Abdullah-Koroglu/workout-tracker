@@ -22,6 +22,8 @@ type DataPoint = {
   muscle: string;
   currentPeriod: number;
   prevPeriod: number;
+  currentSetCount: number;
+  prevSetCount: number;
   change: number;
 };
 
@@ -60,6 +62,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
   const cur = payload.find((p: any) => p.dataKey === "currentPeriod")?.value ?? 0;
   const prev = payload.find((p: any) => p.dataKey === "prevPeriod")?.value ?? 0;
+  const point = payload[0]?.payload as DataPoint | undefined;
   const change = prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0;
   return (
     <div className="rounded-xl bg-white px-4 py-3 shadow-lg ring-1 ring-black/8" style={{ minWidth: 160 }}>
@@ -72,6 +75,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         <div className="flex items-center justify-between gap-6">
           <span className="text-xs text-slate-500">Önceki</span>
           <span className="text-xs font-bold text-slate-400">{formatKg(prev)}</span>
+        </div>
+        <div className="flex items-center justify-between gap-6">
+          <span className="text-xs text-slate-500">Set</span>
+          <span className="text-xs font-bold text-slate-800">{point?.currentSetCount ?? 0}</span>
+        </div>
+        <div className="flex items-center justify-between gap-6">
+          <span className="text-xs text-slate-500">Önceki Set</span>
+          <span className="text-xs font-bold text-slate-400">{point?.prevSetCount ?? 0}</span>
         </div>
         <div className="flex items-center justify-between gap-6 pt-1 border-t border-slate-100">
           <span className="text-xs text-slate-500">Değişim</span>
@@ -103,6 +114,8 @@ export function VolumeHeatmap({ clientId }: Props) {
 
   const totalCurrent = data.reduce((s, d) => s + d.currentPeriod, 0);
   const totalPrev = data.reduce((s, d) => s + d.prevPeriod, 0);
+  const totalCurrentSets = data.reduce((s, d) => s + d.currentSetCount, 0);
+  const totalPrevSets = data.reduce((s, d) => s + d.prevSetCount, 0);
   const overallChange = totalPrev > 0 ? Math.round(((totalCurrent - totalPrev) / totalPrev) * 100) : null;
 
   return (
@@ -151,10 +164,12 @@ export function VolumeHeatmap({ clientId }: Props) {
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Bu Dönem</p>
             <p className="text-lg font-black text-slate-800">{formatKg(totalCurrent)}</p>
+            <p className="text-xs font-semibold text-slate-500">{totalCurrentSets} set</p>
           </div>
           <div>
             <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Önceki Dönem</p>
             <p className="text-lg font-black text-slate-400">{formatKg(totalPrev)}</p>
+            <p className="text-xs font-semibold text-slate-400">{totalPrevSets} set</p>
           </div>
           {overallChange !== null && (
             <div className="ml-auto flex flex-col items-end justify-center">
@@ -250,10 +265,15 @@ export function VolumeHeatmap({ clientId }: Props) {
             {data.map((d) => (
               <div
                 key={d.muscle}
-                className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2"
+                className="rounded-xl bg-slate-50 px-3 py-2"
               >
-                <span className="text-xs font-bold text-slate-700">{d.muscle}</span>
-                <ChangeChip change={d.change} />
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-bold text-slate-700">{d.muscle}</span>
+                  <ChangeChip change={d.change} />
+                </div>
+                <p className="mt-1 text-[11px] font-semibold text-slate-500">
+                  {d.currentSetCount} set • {formatKg(d.currentPeriod)}
+                </p>
               </div>
             ))}
           </div>

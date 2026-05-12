@@ -3,6 +3,7 @@
 import { DragDropContext, Draggable, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronDown, Copy, GripVertical, Plus } from "lucide-react";
+import { nanoid } from "nanoid";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useFieldArray, useForm, useWatch } from "react-hook-form";
@@ -29,6 +30,10 @@ type TemplateExerciseFormItem = {
   exerciseId: string;
   exerciseType: "WEIGHT" | "CARDIO";
   order: number;
+  groupId: string | null;
+  groupType: "SUPERSET" | "DROPSET" | null;
+  groupOrder: number | null;
+  dropCount: number | null;
   targetSets: number | null;
   targetReps: number | null;
   targetRir: number | null;
@@ -77,6 +82,50 @@ function asNonNegativeInteger(value: unknown, fallback = 0) {
   }
 
   return Math.max(0, Math.round(numeric));
+}
+
+function normalizeGrouping(exercises: TemplateExerciseFormItem[]): TemplateExerciseFormItem[] {
+  const next = exercises.map((exercise, index) => ({
+    ...exercise,
+    order: index,
+    groupId: exercise.groupType === "DROPSET" ? exercise.groupId ?? nanoid(8) : exercise.groupId ?? null,
+    groupOrder: exercise.groupType === "SUPERSET" ? exercise.groupOrder ?? 0 : null,
+    dropCount: exercise.groupType === "DROPSET" ? exercise.dropCount ?? 3 : null
+  }));
+
+  let index = 0;
+  while (index < next.length) {
+    if (next[index].groupType !== "SUPERSET") {
+      if (next[index].groupType !== "DROPSET") {
+        next[index].groupId = null;
+      }
+      next[index].groupOrder = null;
+      index += 1;
+      continue;
+    }
+
+    const start = index;
+    while (index < next.length && next[index].groupType === "SUPERSET") {
+      index += 1;
+    }
+
+    const runLength = index - start;
+    if (runLength < 2) {
+      next[start].groupType = null;
+      next[start].groupId = null;
+      next[start].groupOrder = null;
+      continue;
+    }
+
+    const sharedGroupId = next.slice(start, index).find((item) => item.groupId)?.groupId ?? nanoid(8);
+    for (let runIndex = start; runIndex < index; runIndex += 1) {
+      next[runIndex].groupId = sharedGroupId;
+      next[runIndex].groupOrder = runIndex - start;
+      next[runIndex].dropCount = null;
+    }
+  }
+
+  return next;
 }
 
 export function TemplateForm({
@@ -138,6 +187,15 @@ export function TemplateForm({
     return new Map(exerciseLibrary.map((exercise) => [exercise.id, exercise]));
   }, [exerciseLibrary]);
 
+  const applyExercises = (updater: (current: TemplateExerciseFormItem[]) => TemplateExerciseFormItem[]) => {
+    const current = form.getValues("exercises") || [];
+    const next = normalizeGrouping(updater(current));
+    form.setValue("exercises", next, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+  };
+
   const selectCategory = (id: string | null) => {
     setSelectedCategoryId(id);
     form.setValue("categoryId", id, { shouldDirty: true });
@@ -163,12 +221,76 @@ export function TemplateForm({
   };
 
   const syncOrders = () => {
-    const nextExercises = form.getValues("exercises");
-    nextExercises.forEach((_, index) => {
-      form.setValue(`exercises.${index}.order`, index, {
-        shouldDirty: false,
-        shouldValidate: false
-      });
+    const nextExercises = normalizeGrouping(form.getValues("exercises") || []);
+    form.setValue("exercises", nextExercises, {
+      shouldDirty: true,
+      shouldValidate: true
+    });
+  };
+
+  const setGroupType = (exerciseIndex: number, groupType: "SUPERSET" | "DROPSET" | null) => {
+    applyExercises((current) => {
+      const next = [...current];
+      const currentExercise = next[exerciseIndex];
+      if (!currentExercise) return next;
+
+      if (groupType === "SUPERSET") {
+        currentExercise.groupType = "SUPERSET";
+        currentExercise.groupId = currentExercise.groupId ?? nanoid(8);
+        currentExercise.dropCount = null;
+
+        const nextExercise = next[exerciseIndex + 1];
+        if (nextExercise) {
+          nextExercise.groupType = "SUPERSET";
+          nextExercise.groupId = currentExercise.groupId;
+          nextExercise.dropCount = null;
+        }
+
+        return next;
+      }
+
+      currentExercise.groupType = groupType;
+      currentExercise.groupId = groupType === "DROPSET" ? currentExercise.groupId ?? nanoid(8) : null;
+      currentExercise.groupOrder = null;
+      currentExercise.dropCount = groupType === "DROPSET" ? currentExercise.dropCount ?? 3 : null;
+      return next;
+    });
+  };
+
+  const removeFromSuperset = (exerciseIndex: number) => {
+    applyExercises((current) => {
+      const next = [...current];
+      const currentExercise = next[exerciseIndex];
+      if (!currentExercise) return next;
+
+      const currentGroupId = currentExercise.groupId;
+      currentExercise.groupType = null;
+      currentExercise.groupId = null;
+      currentExercise.groupOrder = null;
+
+      if (currentGroupId) {
+        const leftovers = next.filter((item) => item.groupId === currentGroupId && item.groupType === "SUPERSET");
+        if (leftovers.length === 1) {
+          leftovers[0].groupType = null;
+          leftovers[0].groupId = null;
+          leftovers[0].groupOrder = null;
+        }
+      }
+
+      return next;
+    });
+  };
+
+  const setDropCount = (exerciseIndex: number, dropCount: number) => {
+    applyExercises((current) => {
+      const next = [...current];
+      const currentExercise = next[exerciseIndex];
+      if (!currentExercise) return next;
+      currentExercise.groupType = "DROPSET";
+      currentExercise.groupId = currentExercise.groupId ?? nanoid(8);
+      currentExercise.dropCount = dropCount;
+      currentExercise.groupOrder = null;
+      return next;
     });
   };
 
@@ -183,6 +305,10 @@ export function TemplateForm({
       exerciseId: selectedExercise.id,
       exerciseType: selectedExercise.type,
       order: fields.length,
+      groupId: null,
+      groupType: null,
+      groupOrder: null,
+      dropCount: null,
       targetSets: selectedExercise.type === "WEIGHT" ? 3 : null,
       targetReps: selectedExercise.type === "WEIGHT" ? 10 : null,
       targetRir: selectedExercise.type === "WEIGHT" ? 2 : null,
@@ -325,6 +451,10 @@ Beklenen JSON formati:
           exerciseId: (ex.exerciseId as string) || "",
           exerciseType: (ex.exerciseType as "WEIGHT" | "CARDIO") || "WEIGHT",
           order: index,
+          groupId: (ex.groupId as string | null) ?? null,
+          groupType: (ex.groupType as "SUPERSET" | "DROPSET" | null) ?? null,
+          groupOrder: (ex.groupOrder as number | null) ?? null,
+          dropCount: (ex.dropCount as number | null) ?? null,
           targetSets: ex.exerciseType === "WEIGHT" ? ((ex.targetSets as number) || null) : null,
           targetReps: ex.exerciseType === "WEIGHT" ? ((ex.targetReps as number) || null) : null,
           targetRir: ex.exerciseType === "WEIGHT" ? ((ex.targetRir as number) || null) : null,
@@ -355,6 +485,10 @@ Beklenen JSON formati:
           return {
             ...exercise,
             order: index,
+            groupId: exercise.groupType === "SUPERSET" || exercise.groupType === "DROPSET" ? exercise.groupId ?? null : null,
+            groupType: exercise.groupType,
+            groupOrder: exercise.groupType === "SUPERSET" ? exercise.groupOrder ?? 0 : null,
+            dropCount: exercise.groupType === "DROPSET" ? exercise.dropCount ?? 3 : null,
             targetSets: asPositiveInteger(exercise.targetSets, 3),
             targetReps: asPositiveInteger(exercise.targetReps, 10),
             targetRir: asNonNegativeInteger(exercise.targetRir, 2),
@@ -366,6 +500,10 @@ Beklenen JSON formati:
         return {
           ...exercise,
           order: index,
+          groupId: exercise.groupType === "SUPERSET" || exercise.groupType === "DROPSET" ? exercise.groupId ?? null : null,
+          groupType: exercise.groupType,
+          groupOrder: exercise.groupType === "SUPERSET" ? exercise.groupOrder ?? 0 : null,
+          dropCount: exercise.groupType === "DROPSET" ? exercise.dropCount ?? 3 : null,
           protocol: (exercise.protocol || [{ durationMinutes: 1, speed: 5, incline: 0 }]).map((row) => ({
             durationMinutes: asPositiveInteger(row.durationMinutes, 1),
             speed: Number.isFinite(Number(row.speed)) ? Number(row.speed) : 5,
@@ -660,6 +798,8 @@ Beklenen JSON formati:
                   const exerciseInfo = exerciseMap.get(
                     currentExercise?.exerciseId || "",
                   );
+                  const isSuperset = currentExercise?.groupType === "SUPERSET";
+                  const isDropset = currentExercise?.groupType === "DROPSET";
 
                   return (
                     <Draggable
@@ -671,7 +811,13 @@ Beklenen JSON formati:
                         <div
                           ref={draggableProvided.innerRef}
                           {...draggableProvided.draggableProps}
-                          className="rounded-xl border p-4"
+                          className={`rounded-xl border p-4 ${
+                            isSuperset
+                              ? "border-violet-200 border-l-4 border-l-violet-500 bg-violet-50/50"
+                              : isDropset
+                                ? "border-rose-200 border-l-4 border-l-rose-500 bg-rose-50/50"
+                                : ""
+                          }`}
                         >
                           <input
                             type="hidden"
@@ -689,6 +835,10 @@ Beklenen JSON formati:
                               valueAsNumber: true,
                             })}
                           />
+                          <input type="hidden" {...form.register(`exercises.${index}.groupId`)} />
+                          <input type="hidden" {...form.register(`exercises.${index}.groupType`)} />
+                          <input type="hidden" {...form.register(`exercises.${index}.groupOrder`, { valueAsNumber: true })} />
+                          <input type="hidden" {...form.register(`exercises.${index}.dropCount`, { valueAsNumber: true })} />
 
                           <div className="mb-4 flex items-start justify-between gap-3">
                             <div className="flex items-start gap-3">
@@ -706,10 +856,23 @@ Beklenen JSON formati:
                                 <p className="text-xs text-muted-foreground">
                                   {currentExercise?.exerciseType}
                                 </p>
+                                {isSuperset ? (
+                                  <span className="mt-1 inline-flex rounded-full bg-violet-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                                    SUPERSET
+                                  </span>
+                                ) : null}
+                                {isDropset ? (
+                                  <span className="mt-1 inline-flex rounded-full bg-rose-600 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-white">
+                                    DROPSET
+                                  </span>
+                                ) : null}
                               </div>
                             </div>
                             <ActionMenu
                               items={[
+                                ...(isSuperset
+                                  ? [{ label: "Supersetten cikar", onClick: () => removeFromSuperset(index) }]
+                                  : []),
                                 {
                                   label: "Egzersizi kaldir",
                                   danger: true,
@@ -720,43 +883,98 @@ Beklenen JSON formati:
                           </div>
 
                           {currentExercise?.exerciseType === "WEIGHT" ? (
-                            <div className="grid gap-3 md:grid-cols-3">
-                              <div className="space-y-1">
-                                <label className="text-sm font-medium">
-                                  Hedef Set
-                                </label>
-                                <Input
-                                  type="number"
-                                  {...form.register(
-                                    `exercises.${index}.targetSets`,
-                                    { valueAsNumber: true },
-                                  )}
-                                />
+                            <div className="space-y-3">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500">Tur:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => setGroupType(index, null)}
+                                  className={`rounded-lg px-2 py-1 text-xs font-bold ${!currentExercise?.groupType ? "bg-slate-800 text-white" : "bg-slate-100 text-slate-500"}`}
+                                >
+                                  Normal
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setGroupType(index, "SUPERSET")}
+                                  className={`rounded-lg px-2 py-1 text-xs font-bold ${currentExercise?.groupType === "SUPERSET" ? "bg-violet-600 text-white" : "bg-slate-100 text-slate-500"}`}
+                                >
+                                  SS
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setGroupType(index, "DROPSET")}
+                                  className={`rounded-lg px-2 py-1 text-xs font-bold ${currentExercise?.groupType === "DROPSET" ? "bg-rose-600 text-white" : "bg-slate-100 text-slate-500"}`}
+                                >
+                                  DS
+                                </button>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-sm font-medium">
-                                  Hedef Tekrar
-                                </label>
-                                <Input
-                                  type="number"
-                                  {...form.register(
-                                    `exercises.${index}.targetReps`,
-                                    { valueAsNumber: true },
-                                  )}
-                                />
+
+                              <div className="grid gap-3 md:grid-cols-3">
+                                <div className="space-y-1">
+                                  <label className="text-sm font-medium">
+                                    Hedef Set
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    {...form.register(
+                                      `exercises.${index}.targetSets`,
+                                      { valueAsNumber: true },
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-sm font-medium">
+                                    Hedef Tekrar
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    {...form.register(
+                                      `exercises.${index}.targetReps`,
+                                      { valueAsNumber: true },
+                                    )}
+                                  />
+                                </div>
+                                <div className="space-y-1">
+                                  <label className="text-sm font-medium">
+                                    Hedef RIR
+                                  </label>
+                                  <Input
+                                    type="number"
+                                    {...form.register(
+                                      `exercises.${index}.targetRir`,
+                                      { valueAsNumber: true },
+                                    )}
+                                  />
+                                </div>
                               </div>
-                              <div className="space-y-1">
-                                <label className="text-sm font-medium">
-                                  Hedef RIR
-                                </label>
-                                <Input
-                                  type="number"
-                                  {...form.register(
-                                    `exercises.${index}.targetRir`,
-                                    { valueAsNumber: true },
-                                  )}
-                                />
-                              </div>
+
+                              {currentExercise?.groupType === "DROPSET" ? (
+                                <div className="mt-2 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2">
+                                  <span className="text-xs font-bold text-rose-600">Drop sayısı:</span>
+                                  {[2, 3, 4, 5].map((dropNumber) => (
+                                    <button
+                                      key={dropNumber}
+                                      type="button"
+                                      onClick={() => setDropCount(index, dropNumber)}
+                                      className={`h-7 w-7 rounded-lg text-xs font-black ${currentExercise.dropCount === dropNumber ? "bg-rose-600 text-white" : "border border-rose-200 bg-white text-rose-400"}`}
+                                    >
+                                      {dropNumber}
+                                    </button>
+                                  ))}
+                                  <span className="ml-1 text-[10px] text-rose-400">×drop</span>
+                                </div>
+                              ) : null}
+
+                              {currentExercise?.groupType === "SUPERSET" ? (
+                                <p className="text-xs font-semibold text-violet-600">
+                                  Bu egzersiz bitişiğindeki SS blokla aynı tur içinde çalışır.
+                                </p>
+                              ) : null}
+                              {currentExercise?.groupType === "DROPSET" ? (
+                                <p className="text-xs font-semibold text-rose-600">
+                                  Dropset her drop için ayrı kayıt üretir.
+                                </p>
+                              ) : null}
                             </div>
                           ) : (
                             <div className="space-y-4">

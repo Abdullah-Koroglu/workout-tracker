@@ -7,6 +7,8 @@ import { SavedSet } from "./useWorkoutFlow";
 type SaveSetPayload = {
   exerciseId: string;
   setNumber: number;
+  groupInstanceId?: string;
+  dropIndex?: number;
   weightKg?: number;
   reps?: number;
   rir?: number;
@@ -23,7 +25,8 @@ export function useSaveSet(workoutId: string) {
     exerciseId: string,
     setNumber: number,
     payload: { weightKg: number; reps: number; rir: number },
-    actualRestSeconds?: number
+    actualRestSeconds?: number,
+    grouping?: { groupInstanceId?: string; dropIndex?: number }
   ): Promise<SavedSet | null> => {
     if (!workoutId) return null;
 
@@ -33,6 +36,8 @@ export function useSaveSet(workoutId: string) {
       ...payload,
       completed: true,
       ...(actualRestSeconds !== undefined ? { actualRestSeconds } : {}),
+      ...(grouping?.groupInstanceId ? { groupInstanceId: grouping.groupInstanceId } : {}),
+      ...(grouping?.dropIndex !== undefined ? { dropIndex: grouping.dropIndex } : {}),
     };
 
     try {

@@ -78,6 +78,8 @@ export async function POST(
           durationSeconds: parsed.data.durationSeconds,
           completed: parsed.data.completed,
           actualRestSeconds: parsed.data.actualRestSeconds ?? null,
+          groupInstanceId: parsed.data.groupInstanceId ?? null,
+          dropIndex: parsed.data.dropIndex ?? null,
         }
       })
     : await prisma.workoutSet.create({
@@ -92,6 +94,8 @@ export async function POST(
           durationSeconds: parsed.data.durationSeconds,
           completed: parsed.data.completed,
           actualRestSeconds: parsed.data.actualRestSeconds ?? null,
+          groupInstanceId: parsed.data.groupInstanceId ?? null,
+          dropIndex: parsed.data.dropIndex ?? null,
         }
       });
 

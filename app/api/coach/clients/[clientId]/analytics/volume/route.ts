@@ -5,6 +5,16 @@ import { checkFeatureAccess, tierAccessDenied } from "@/lib/feature-access";
 
 const MUSCLE_GROUPS = ["Göğüs", "Sırt", "Bacak", "Omuz", "Kol", "Core", "Diğer"] as const;
 type Muscle = (typeof MUSCLE_GROUPS)[number];
+type VolumeSetRow = {
+  workoutId: string;
+  exerciseId: string;
+  setNumber: number;
+  groupInstanceId: string | null;
+  dropIndex: number | null;
+  weightKg: number | null;
+  reps: number | null;
+  exercise: { targetMuscle: string | null };
+};
 
 function normalizeMuscle(raw: string | null): Muscle {
   if (!raw) return "Diğer";
@@ -19,17 +29,25 @@ function normalizeMuscle(raw: string | null): Muscle {
   return map[raw.toLowerCase().trim()] ?? "Diğer";
 }
 
-function tonnageByMuscle(
-  sets: { weightKg: number | null; reps: number | null; exercise: { targetMuscle: string | null } }[]
-): Record<Muscle, number> {
-  const result = Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<Muscle, number>;
+function buildMetricsByMuscle(sets: VolumeSetRow[]) {
+  const tonnage = Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<Muscle, number>;
+  const setCount = Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, 0])) as Record<Muscle, number>;
+  const uniqueRoundKeys = Object.fromEntries(MUSCLE_GROUPS.map((m) => [m, new Set<string>()])) as Record<Muscle, Set<string>>;
+
   for (const s of sets) {
     if (s.weightKg && s.reps) {
       const muscle = normalizeMuscle(s.exercise.targetMuscle);
-      result[muscle] += s.weightKg * s.reps;
+      tonnage[muscle] += s.weightKg * s.reps;
+
+      const roundKey = `${s.workoutId}:${s.exerciseId}:${s.groupInstanceId ?? `set-${s.setNumber}`}:${s.setNumber}`;
+      if (!uniqueRoundKeys[muscle].has(roundKey)) {
+        uniqueRoundKeys[muscle].add(roundKey);
+        setCount[muscle] += 1;
+      }
     }
   }
-  return result;
+
+  return { tonnage, setCount };
 }
 
 export async function GET(
@@ -71,10 +89,16 @@ export async function GET(
           status: "COMPLETED",
           startedAt: { gte: from, lte: to },
         },
+        completed: true,
         weightKg: { not: null },
         reps: { not: null },
       },
       select: {
+        workoutId: true,
+        exerciseId: true,
+        setNumber: true,
+        groupInstanceId: true,
+        dropIndex: true,
         weightKg: true,
         reps: true,
         exercise: { select: { targetMuscle: true } },
@@ -86,18 +110,20 @@ export async function GET(
     fetchSets(prevStart, prevEnd),
   ]);
 
-  const current = tonnageByMuscle(currentSets);
-  const prev = tonnageByMuscle(prevSets);
+  const current = buildMetricsByMuscle(currentSets);
+  const prev = buildMetricsByMuscle(prevSets);
 
   // Only include muscles that have any data in either period
-  const data = MUSCLE_GROUPS.filter((m) => current[m] > 0 || prev[m] > 0).map((m) => ({
+  const data = MUSCLE_GROUPS.filter((m) => current.tonnage[m] > 0 || prev.tonnage[m] > 0).map((m) => ({
     muscle: m,
-    currentPeriod: Math.round(current[m]),
-    prevPeriod: Math.round(prev[m]),
+    currentPeriod: Math.round(current.tonnage[m]),
+    prevPeriod: Math.round(prev.tonnage[m]),
+    currentSetCount: current.setCount[m],
+    prevSetCount: prev.setCount[m],
     change:
-      prev[m] > 0
-        ? Math.round(((current[m] - prev[m]) / prev[m]) * 100)
-        : current[m] > 0
+      prev.tonnage[m] > 0
+        ? Math.round(((current.tonnage[m] - prev.tonnage[m]) / prev.tonnage[m]) * 100)
+        : current.tonnage[m] > 0
         ? 100
         : 0,
   }));

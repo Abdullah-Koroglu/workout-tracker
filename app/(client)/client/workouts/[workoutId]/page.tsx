@@ -83,6 +83,9 @@ export default async function WorkoutDetailPage({
   const exerciseOrderMap = new Map(
     workout.template.exercises.map((te) => [te.exercise.name, te.order])
   );
+  const exerciseMetaMap = new Map(
+    workout.template.exercises.map((te) => [te.exerciseId, te])
+  );
 
   const setsByExercise: Record<string, typeof workout.sets> = {};
   workout.sets.forEach((set) => {
@@ -287,6 +290,8 @@ export default async function WorkoutDetailPage({
           ) : (
             sortedExercises.map(([exerciseName, sets]) => {
               const isCardio = sets[0].weightKg === null && sets[0].reps === null;
+              const exerciseMeta = exerciseMetaMap.get(sets[0].exerciseId);
+              const uniqueSetCount = new Set(sets.map((set) => set.setNumber)).size;
               const hasPr = sets.some((s) => {
                 if (!s.completed || s.weightKg === null) return false;
                 const prev = prevMaxByExercise[s.exerciseId];
@@ -313,6 +318,16 @@ export default async function WorkoutDetailPage({
                         <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
                           {isCardio ? "Kardiyo" : "Ağırlık"}
                         </p>
+                        {exerciseMeta?.groupType === "SUPERSET" ? (
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-violet-600">
+                            Superset
+                          </p>
+                        ) : null}
+                        {exerciseMeta?.groupType === "DROPSET" ? (
+                          <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-rose-600">
+                            Dropset x{exerciseMeta.dropCount ?? 2}
+                          </p>
+                        ) : null}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -322,7 +337,7 @@ export default async function WorkoutDetailPage({
                         </span>
                       )}
                       <span className="rounded-full px-2.5 py-1 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.08)", color: "#EA580C" }}>
-                        {sets.length} set
+                        {exerciseMeta?.groupType === "DROPSET" ? `${uniqueSetCount} tur • ${sets.length} kayıt` : `${sets.length} set`}
                       </span>
                     </div>
                   </div>
@@ -346,7 +361,21 @@ export default async function WorkoutDetailPage({
                               set.weightKg > (prevMaxByExercise[set.exerciseId] ?? 0));
                           return (
                             <tr key={set.id} style={{ borderBottom: "1px solid #F8FAFC" }} className="last:border-b-0">
-                              <td className="px-5 py-3 text-sm font-black text-slate-500">{set.setNumber}</td>
+                              <td className="px-5 py-3 text-sm font-black text-slate-500">
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span>{set.setNumber}</span>
+                                  {set.dropIndex !== null && set.dropIndex !== undefined ? (
+                                    <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(244,63,94,0.12)", color: "#E11D48" }}>
+                                      Drop {set.dropIndex + 1}
+                                    </span>
+                                  ) : null}
+                                  {exerciseMeta?.groupType === "SUPERSET" && set.groupInstanceId ? (
+                                    <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(139,92,246,0.12)", color: "#7C3AED" }}>
+                                      SS
+                                    </span>
+                                  ) : null}
+                                </span>
+                              </td>
                               <td className="px-5 py-3 text-sm font-black text-slate-800">
                                 {set.weightKg != null ? (
                                   <span className="flex items-center gap-1.5">

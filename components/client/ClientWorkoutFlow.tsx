@@ -135,14 +135,20 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           .slice(activeExerciseIndex + 1)
           .find((item) => !item.isCompleted) ?? null
       : null;
+  const activeSupersetBlock =
+    activeExercise.exercise.groupType === "SUPERSET" && activeExercise.exercise.groupId
+      ? exerciseManager.exerciseState
+          .filter((item) => item.exercise.groupId === activeExercise.exercise.groupId)
+          .sort((left, right) => (left.exercise.groupOrder ?? 0) - (right.exercise.groupOrder ?? 0))
+      : [];
 
   // Wrapper handlers for API calls with UI state management
   const handleSaveWeightSet = async (
     exerciseId: string,
     setNumber: number,
-    payload: { weightKg: number; reps: number; rir: number }
+    payload: { weightKg: number; reps: number; rir: number; groupInstanceId?: string; dropIndex?: number }
   ) => {
-    const saveKey = `${exerciseId}-${setNumber}`;
+    const saveKey = `${exerciseId}-${setNumber}-${payload.dropIndex ?? "base"}`;
     setSavingKey(saveKey);
 
     // Calculate rest seconds since last completed set for this exercise
@@ -152,7 +158,16 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         ? Math.round((Date.now() - lastCompletedAt) / 1000)
         : undefined;
 
-    const newSet = await saveWeightSetApi(exerciseId, setNumber, payload, actualRestSeconds);
+    const newSet = await saveWeightSetApi(
+      exerciseId,
+      setNumber,
+      payload,
+      actualRestSeconds,
+      {
+        groupInstanceId: payload.groupInstanceId,
+        dropIndex: payload.dropIndex
+      }
+    );
     setSavingKey(null);
 
     if (newSet) {
@@ -426,6 +441,16 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                       ? "Cardio"
                       : "Ağırlık"}
                   </div>
+                  {activeExercise.exercise.groupType === "SUPERSET" ? (
+                    <div className="inline-flex rounded-full bg-violet-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">
+                      Superset
+                    </div>
+                  ) : null}
+                  {activeExercise.exercise.groupType === "DROPSET" ? (
+                    <div className="inline-flex rounded-full bg-rose-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-rose-700">
+                      Dropset x{activeExercise.dropCount}
+                    </div>
+                  ) : null}
                   <button
                     onClick={() => setIsVideoModalOpen(true)}
                     className="inline-flex items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition hover:bg-primary/20"
@@ -442,6 +467,11 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                     ? "Protokolü takip et. Başlat, duraklat, durdur veya sıfırla."
                     : "Hedef tekrar ve RIR otomatik. İstersen ekstra set veya erken bitir."}
                 </p>
+                {activeExercise.supersetPeers.length > 0 ? (
+                  <p className="mt-2 text-[11px] md:text-sm font-medium text-violet-700">
+                    SS eşleşmesi: {activeExercise.supersetPeers.join(" + ")}
+                  </p>
+                ) : null}
                 {activeExercise.isCompleted && nextExercise ? (
                   <button
                     type="button"
@@ -527,6 +557,10 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
           {activeExercise.exercise.exercise.type === "WEIGHT" ? (
             <WeightExerciseSection
               exercise={activeExercise}
+              supersetBlock={activeSupersetBlock}
+              onSelectSupersetExercise={(exerciseId) =>
+                exerciseManager.setActiveExerciseId(exerciseId)
+              }
               onAddExtraSet={() =>
                 exerciseManager.addExtraSet(activeExercise.exercise.exerciseId)
               }
@@ -787,6 +821,8 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
  */
 function WeightExerciseSection({
   exercise,
+  supersetBlock,
+  onSelectSupersetExercise,
   onAddExtraSet,
   onFinishEarly,
   onSaveSet,
@@ -795,6 +831,8 @@ function WeightExerciseSection({
   confirm
 }: {
   exercise: ExerciseState;
+  supersetBlock: ExerciseState[];
+  onSelectSupersetExercise: (exerciseId: string) => void;
   onAddExtraSet: () => void;
   onFinishEarly: () => void;
   onSaveSet: (exerciseId: string, setNumber: number, payload: { weightKg: number; reps: number; rir: number }) => void;
@@ -803,9 +841,74 @@ function WeightExerciseSection({
   confirm: ReturnType<typeof useConfirmation>["confirm"];
 }) {
   const [editingSetId, setEditingSetId] = useState<string | null>(null);
+  const activeDropCount = exercise.exercise.groupType === "DROPSET" ? exercise.dropCount : 1;
+  const nextGroupInstanceId = exercise.exercise.groupType
+    ? `${exercise.exercise.groupId ?? exercise.exercise.exerciseId}-${exercise.nextSetNumber}`
+    : undefined;
+  const supersetRoundsCompleted = supersetBlock.length
+    ? Math.min(...supersetBlock.map((item) => item.completedCount))
+    : 0;
+  const supersetRoundsPlanned = supersetBlock.length
+    ? Math.max(...supersetBlock.map((item) => item.plannedSetCount))
+    : 0;
 
   return (
     <div className="rounded-xl md:rounded-[32px] border border-border/60 bg-card p-3 md:p-6 shadow-sm">
+      {supersetBlock.length > 1 ? (
+        <div className="mb-4 rounded-2xl border border-violet-200 bg-violet-50/80 p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-600">
+                Superset Bloğu
+              </p>
+              <h3 className="mt-1 text-base font-black text-violet-950">
+                {supersetBlock.map((item) => item.exercise.exercise.name).join(" + ")}
+              </h3>
+              <p className="mt-1 text-xs font-medium text-violet-700">
+                Tur {Math.min(supersetRoundsCompleted + 1, supersetRoundsPlanned || 1)} / {supersetRoundsPlanned || 1}
+              </p>
+            </div>
+            <div className="rounded-xl bg-white/80 px-3 py-2 text-right shadow-sm">
+              <p className="text-[10px] font-black uppercase tracking-wider text-violet-500">Blok İlerlemesi</p>
+              <p className="text-sm font-black text-violet-900">
+                {supersetBlock.filter((item) => item.isCompleted).length}/{supersetBlock.length} hareket tamam
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-3 grid gap-2 md:grid-cols-2">
+            {supersetBlock.map((item) => {
+              const isActiveItem = item.exercise.exerciseId === exercise.exercise.exerciseId;
+              return (
+                <button
+                  key={item.exercise.id}
+                  type="button"
+                  onClick={() => onSelectSupersetExercise(item.exercise.exerciseId)}
+                  className={`rounded-xl border px-3 py-3 text-left transition ${
+                    isActiveItem
+                      ? "border-violet-500 bg-violet-600 text-white shadow-sm"
+                      : "border-violet-200 bg-white text-violet-900 hover:border-violet-300"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div>
+                      <p className={`text-[10px] font-black uppercase tracking-wider ${isActiveItem ? "text-violet-100" : "text-violet-500"}`}>
+                        SS {((item.exercise.groupOrder ?? 0) + 1).toString().padStart(2, "0")}
+                      </p>
+                      <p className="mt-1 text-sm font-black">{item.exercise.exercise.name}</p>
+                    </div>
+                    {item.isCompleted ? <CheckCircle2 className={`h-4 w-4 ${isActiveItem ? "text-white" : "text-violet-600"}`} /> : null}
+                  </div>
+                  <p className={`mt-2 text-xs font-semibold ${isActiveItem ? "text-violet-100" : "text-violet-600"}`}>
+                    {item.completedCount}/{item.plannedSetCount} set
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="space-y-3 md:space-y-0 md:flex md:flex-col md:gap-4 md:lg:flex-row md:lg:items-center md:lg:justify-between">
         {/* <div>
           <p className="mt-1 text-xs text-muted-foreground md:text-sm">
@@ -848,7 +951,14 @@ function WeightExerciseSection({
           exercise.exerciseSets.map((setItem) => (
             <div key={setItem.id} className="space-y-2 rounded-sm bg-surface-container-low px-3 py-3">
               <div className="grid grid-cols-5 items-center">
-                <div className="font-bold text-secondary">{setItem.setNumber}</div>
+                <div className="font-bold text-secondary">
+                  {setItem.setNumber}
+                  {setItem.dropIndex !== null && setItem.dropIndex !== undefined ? (
+                    <span className="ml-1 inline-flex rounded-full bg-rose-100 px-1.5 py-0.5 text-[10px] font-black text-rose-700">
+                      D{setItem.dropIndex + 1}
+                    </span>
+                  ) : null}
+                </div>
                 <div className="font-bold text-secondary">{setItem.weightKg ?? 0}</div>
                 <div className="font-bold text-secondary">{setItem.reps ?? 0}</div>
                 <div className="font-bold text-secondary">{setItem.rir ?? 0}</div>
@@ -887,12 +997,15 @@ function WeightExerciseSection({
               {editingSetId === setItem.id ? (
                 <WorkoutSetForm
                   setNumber={setItem.setNumber}
+                  title={setItem.dropIndex !== null && setItem.dropIndex !== undefined ? `Set ${setItem.setNumber} • Drop ${setItem.dropIndex + 1}` : undefined}
                   defaultValues={{
                     weightKg: setItem.weightKg,
                     reps: setItem.reps,
                     rir: setItem.rir
                   }}
-                  disabled={savingKey === `${exercise.exercise.exerciseId}-${setItem.setNumber}`}
+                  disabled={savingKey === `${exercise.exercise.exerciseId}-${setItem.setNumber}-${setItem.dropIndex ?? "base"}`}
+                  groupInstanceId={setItem.groupInstanceId ?? undefined}
+                  dropIndex={setItem.dropIndex ?? undefined}
                   onSave={async (payload) => {
                     await onSaveSet(exercise.exercise.exerciseId, setItem.setNumber, payload);
                     setEditingSetId(null);
@@ -911,15 +1024,25 @@ function WeightExerciseSection({
             <Target className="h-4 w-4 text-primary" />
             <span>SET {exercise.nextSetNumber} / {exercise.plannedSetCount}</span>
           </div>
-          <WorkoutSetForm
-            key={`${exercise.exercise.exerciseId}-${exercise.nextSetNumber}`}
-            setNumber={exercise.nextSetNumber}
-            defaultValues={exercise.suggestedValues}
-            disabled={savingKey === `${exercise.exercise.exerciseId}-${exercise.nextSetNumber}`}
-            onSave={async (payload) => {
-              await onSaveSet(exercise.exercise.exerciseId, exercise.nextSetNumber, payload);
-            }}
-          />
+          {Array.from({ length: activeDropCount }, (_, dropIndex) => (
+            <WorkoutSetForm
+              key={`${exercise.exercise.exerciseId}-${exercise.nextSetNumber}-${dropIndex}`}
+              setNumber={exercise.nextSetNumber}
+              title={
+                activeDropCount > 1
+                  ? `Set ${exercise.nextSetNumber} • Drop ${dropIndex + 1}/${activeDropCount}`
+                  : `Set ${exercise.nextSetNumber} Bilgisi`
+              }
+              submitLabel={activeDropCount > 1 ? `Drop ${dropIndex + 1} Kaydet` : undefined}
+              defaultValues={exercise.suggestedValues}
+              disabled={savingKey === `${exercise.exercise.exerciseId}-${exercise.nextSetNumber}-${dropIndex}`}
+              groupInstanceId={nextGroupInstanceId}
+              dropIndex={activeDropCount > 1 ? dropIndex : undefined}
+              onSave={async (payload) => {
+                await onSaveSet(exercise.exercise.exerciseId, exercise.nextSetNumber, payload);
+              }}
+            />
+          ))}
         </div>
       )}
 

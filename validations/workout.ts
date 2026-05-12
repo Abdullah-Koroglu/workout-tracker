@@ -14,6 +14,8 @@ export const saveSetSchema = z.object({
   durationSeconds: z.number().int().min(0).optional(),
   completed: z.boolean().default(true),
   actualRestSeconds: z.number().int().min(0).optional(),
+  groupInstanceId: z.string().optional(),
+  dropIndex: z.number().int().min(0).max(5).optional(),
 });
 
 export const completeWorkoutSchema = z.object({

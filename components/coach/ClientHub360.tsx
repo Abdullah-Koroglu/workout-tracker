@@ -958,7 +958,7 @@ function FeedbackTab({ clientId }: { clientId: string }) {
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
         <Play className="mx-auto mb-3 h-8 w-8 text-slate-300" />
         <p className="text-sm font-semibold text-slate-600">Henüz video yok</p>
-        <p className="mt-1 text-xs text-slate-500">İstemci antrenman sırasında hareketnin videosunu çektiğinde burada görünecektir.</p>
+        <p className="mt-1 text-xs text-slate-500">İstemci antrenman içinden veya serbest form analizi ekranından video gönderdiğinde burada görünür.</p>
       </div>
     );
   }

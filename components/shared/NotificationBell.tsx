@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, X } from "lucide-react";
 
 type AppNotification = {
@@ -10,6 +11,8 @@ type AppNotification = {
   type: string;
   isRead: boolean;
   createdAt: string;
+  actionUrl?: string | null;
+  priority?: string | null;
 };
 
 const TYPE_ICON: Record<string, string> = {
@@ -60,6 +63,7 @@ function buildWsUrl(token: string): string {
 }
 
 export function NotificationBell() {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -321,43 +325,74 @@ export function NotificationBell() {
                 </p>
               </div>
             ) : (
-              notifications.slice(0, 10).map((n) => (
-                <div
-                  key={n.id}
-                  className="flex items-start gap-3 px-4 py-3"
-                  style={{
-                    background: n.isRead ? "#fff" : "#FFF7ED",
-                    borderBottom: "1px solid #F8FAFC",
-                  }}
-                >
+              notifications.slice(0, 10).map((n) => {
+                const isClickable = !!n.actionUrl;
+                const handleClick = isClickable
+                  ? async () => {
+                      setOpen(false);
+                      if (!n.isRead) {
+                        try {
+                          await fetch("/api/notifications", {
+                            method: "PATCH",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ id: n.id }),
+                          });
+                          setNotifications((prev) =>
+                            prev.map((item) => item.id === n.id ? { ...item, isRead: true } : item)
+                          );
+                          setUnreadCount((c) => Math.max(0, c - 1));
+                        } catch { /* silent */ }
+                      }
+                      router.push(n.actionUrl!);
+                    }
+                  : undefined;
+
+                return (
                   <div
-                    className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-base"
-                    style={{ background: n.isRead ? "#F1F5F9" : "#FED7AA" }}
+                    key={n.id}
+                    role={isClickable ? "button" : undefined}
+                    onClick={handleClick}
+                    className={`flex items-start gap-3 px-4 py-3 transition-colors ${isClickable ? "cursor-pointer hover:bg-orange-50" : ""}`}
+                    style={{
+                      background: n.isRead ? "#fff" : "#FFF7ED",
+                      borderBottom: "1px solid #F8FAFC",
+                    }}
                   >
-                    {TYPE_ICON[n.type] ?? "🔔"}
+                    <div
+                      className="mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl text-base"
+                      style={{ background: n.isRead ? "#F1F5F9" : "#FED7AA" }}
+                    >
+                      {TYPE_ICON[n.type] ?? "🔔"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-bold leading-snug" style={{ color: "#1E293B" }}>
+                        {n.title}
+                        {n.priority === "high" && (
+                          <span className="ml-1.5 inline-flex items-center rounded-full bg-red-100 px-1.5 py-0.5 text-[9px] font-black text-red-600">
+                            ÖNCELİKLİ
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-[12px] mt-0.5 leading-relaxed" style={{ color: "#64748B" }}>
+                        {n.body}
+                      </p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <p className="text-[10px]" style={{ color: "#94A3B8" }}>
+                          {timeAgo(n.createdAt)}
+                        </p>
+                        {isClickable && (
+                          <span className="text-[10px] font-bold text-orange-500">
+                            Görüntüle →
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    {!n.isRead && (
+                      <div className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-orange-400" />
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className="text-[13px] font-bold leading-snug"
-                      style={{ color: "#1E293B" }}
-                    >
-                      {n.title}
-                    </p>
-                    <p
-                      className="text-[12px] mt-0.5 leading-relaxed"
-                      style={{ color: "#64748B" }}
-                    >
-                      {n.body}
-                    </p>
-                    <p
-                      className="text-[10px] mt-1"
-                      style={{ color: "#94A3B8" }}
-                    >
-                      {timeAgo(n.createdAt)}
-                    </p>
-                  </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
           </div>

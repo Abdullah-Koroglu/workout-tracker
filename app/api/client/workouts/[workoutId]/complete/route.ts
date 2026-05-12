@@ -3,11 +3,10 @@ import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
-import { sendPushNotification } from "@/lib/push-notifications";
 import { completeWorkoutSchema } from "@/validations/workout";
 import { checkWorkoutAchievements } from "@/lib/achievements";
 import { updatePersonalRecordsForWorkout } from "@/lib/personal-records";
+import { notify } from "@/lib/notify";
 
 export async function PATCH(
   request: Request,
@@ -79,33 +78,13 @@ export async function PATCH(
 
     const clientName = auth.session.user.name ?? "Danışanın";
     const coachId = workout.template.coachId;
-    const notif = await prisma.notification.create({
-      data: {
-        userId: coachId,
-        title: "Antrenman tamamlandı",
-        body: `${clientName} "${workout.template.name}" programını tamamladı.`,
-        type: "WORKOUT_COMPLETED",
-      },
+    await notify({
+      userId: coachId,
+      title: "Antrenman tamamlandı",
+      body: `${clientName} "${workout.template.name}" programını tamamladı.`,
+      type: "WORKOUT_COMPLETED",
+      actionUrl: `/coach/clients/${auth.session.user.id}`,
     });
-    void emitNotificationViaWs(coachId, notifPayload(notif));
-
-    const coach = await prisma.user.findUnique({
-      where: { id: coachId },
-      select: { pushSubscription: true }
-    });
-
-    const pushResult = await sendPushNotification(coach?.pushSubscription, {
-      title: notif.title,
-      body: notif.body,
-      url: "/coach/dashboard"
-    });
-
-    if (pushResult.expired) {
-      await prisma.user.update({
-        where: { id: coachId },
-        data: { pushSubscription: Prisma.DbNull }
-      });
-    }
   }
 
   return NextResponse.json({ workout: updated });

@@ -72,6 +72,8 @@ export default async function CoachDashboardPage() {
     upcomingAppointments,
     topClientRelations,
     templateExerciseLookups,
+    upcomingSessionsCount,
+    activeSubscriptionCount,
   } = await (async () => {
     try {
       const coachProfile = await prisma.coachProfile.findUnique({
@@ -91,6 +93,8 @@ export default async function CoachDashboardPage() {
         monthlyNewClients,
         upcomingAppointments,
         topClientRelations,
+        upcomingSessionsCount,
+        activeSubscriptions,
       ] = await Promise.all([
         prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
         prisma.workout.count({
@@ -215,6 +219,19 @@ export default async function CoachDashboardPage() {
           orderBy: { createdAt: "desc" },
           take: TOP_CLIENT_LIMIT,
         }),
+        // Upcoming sessions in the next 30 days
+        prisma.session.count({
+          where: {
+            coachId,
+            status: "SCHEDULED",
+            scheduledFor: { gte: new Date(), lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+          },
+        }),
+        // Active subscriptions for MRR calculation
+        prisma.subscription.findMany({
+          where: { coachId, status: "active" },
+          select: { id: true },
+        }),
       ]);
 
       const templateExerciseKeys = Array.from(
@@ -251,6 +268,8 @@ export default async function CoachDashboardPage() {
         upcomingAppointments,
         topClientRelations,
         templateExerciseLookups,
+        upcomingSessionsCount,
+        activeSubscriptionCount: activeSubscriptions.length,
       };
     } catch (error) {
       console.error("[coach/dashboard] Failed to load dashboard data", error);
@@ -375,10 +394,11 @@ export default async function CoachDashboardPage() {
           <Avatar name={userName} imageUrl={coachAvatarUrl} size={44} bg="#F97316" />
         </div>
 
+        {/* KPI Row 1 */}
         <div className="grid grid-cols-3 gap-2.5">
           {[
             { label: "Aktif Danışan", val: totalClients, sub: `+${monthlyNewClients} bu ay`, color: "#fff" },
-            { label: "Uyumluluk", val: `${completionRate}%`, sub: "Optimum aralık", color: "#FED7AA" },
+            { label: "Uyumluluk", val: `${completionRate}%`, sub: "son 7 gün", color: "#FED7AA" },
             { label: "Bugün", val: workoutsToday, sub: `${pendingReviewCount} bekliyor`, color: "#fff" },
           ].map((m) => (
             <div
@@ -386,15 +406,52 @@ export default async function CoachDashboardPage() {
               className="rounded-[14px] p-3"
               style={{ background: "rgba(255,255,255,0.1)" }}
             >
-              <div
-                className="text-[22px] font-extrabold leading-none"
-                style={{ color: m.color }}
-              >
+              <div className="text-[22px] font-extrabold leading-none" style={{ color: m.color }}>
                 {m.val}
               </div>
-              <div className="text-[10px] text-white/55 mt-1 leading-tight">
-                {m.label}
+              <div className="text-[10px] text-white/55 mt-1 leading-tight">{m.label}</div>
+              <div className="text-[10px] text-white/35 mt-0.5">{m.sub}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* KPI Row 2 — new metrics */}
+        <div className="grid grid-cols-3 gap-2.5 mt-2">
+          {[
+            {
+              label: "Aktif Abone",
+              val: activeSubscriptionCount,
+              sub: "abonelik",
+              color: "#86EFAC",
+              icon: "💳",
+            },
+            {
+              label: "Seans",
+              val: upcomingSessionsCount,
+              sub: "30 günde planlı",
+              color: "#C4B5FD",
+              icon: "📅",
+            },
+            {
+              label: "Bekleyen",
+              val: pendingRequests.length,
+              sub: "bağlantı isteği",
+              color: pendingRequests.length > 0 ? "#FCA5A5" : "#fff",
+              icon: "🤝",
+            },
+          ].map((m) => (
+            <div
+              key={m.label}
+              className="rounded-[14px] p-3"
+              style={{ background: "rgba(255,255,255,0.07)" }}
+            >
+              <div className="flex items-baseline gap-1">
+                <span className="text-[11px]">{m.icon}</span>
+                <div className="text-[20px] font-extrabold leading-none" style={{ color: m.color }}>
+                  {m.val}
+                </div>
               </div>
+              <div className="text-[10px] text-white/55 mt-1 leading-tight">{m.label}</div>
               <div className="text-[10px] text-white/35 mt-0.5">{m.sub}</div>
             </div>
           ))}

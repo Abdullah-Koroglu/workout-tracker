@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { createElement } from "react";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/api-auth";
@@ -8,8 +7,7 @@ import { resolveCoachSubscription } from "@/lib/payment-service";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { CoachRequestEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
-import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
-import { sendPushNotification } from "@/lib/push-notifications";
+import { notify } from "@/lib/notify";
 import { canAcceptNewClient } from "@/lib/config/pricing";
 
 const schema = z.object({
@@ -75,29 +73,14 @@ export async function POST(request: Request) {
     });
 
     if (coach && coach.role === "COACH") {
-      // In-app notification + WS real-time for coach
-      const connNotif = await prisma.notification.create({
-        data: {
-          userId: parsed.data.coachId,
-          title: "Yeni danışan isteği",
-          body: `${auth.session.user.name ?? "Bir danışan"} koçluk isteği gönderdi.`,
-          type: "NEW_CONNECTION_REQUEST",
-        },
+      await notify({
+        userId: parsed.data.coachId,
+        title: "Yeni danışan isteği",
+        body: `${auth.session.user.name ?? "Bir danışan"} koçluk isteği gönderdi.`,
+        type: "NEW_CONNECTION_REQUEST",
+        actionUrl: `/coach/clients`,
+        priority: "high",
       });
-      void emitNotificationViaWs(parsed.data.coachId, notifPayload(connNotif));
-
-      const pushResult = await sendPushNotification(coach.pushSubscription, {
-        title: connNotif.title,
-        body: connNotif.body,
-        url: "/coach/dashboard"
-      });
-
-      if (pushResult.expired) {
-        await prisma.user.update({
-          where: { id: parsed.data.coachId },
-          data: { pushSubscription: Prisma.DbNull }
-        });
-      }
 
       const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 

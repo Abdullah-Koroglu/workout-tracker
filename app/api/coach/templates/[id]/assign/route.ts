@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
 import { createElement } from "react";
-import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { AssignmentEmail } from "@/lib/email/templates";
 import { prisma } from "@/lib/prisma";
-import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
-import { sendPushNotification } from "@/lib/push-notifications";
+import { notify } from "@/lib/notify";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireAuth("COACH");
@@ -88,29 +86,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   ]);
 
   if (client && client.role === "CLIENT") {
-    // In-app notification + WS real-time
-    const assignNotif = await prisma.notification.create({
-      data: {
-        userId: clientId,
-        title: "Yeni antrenman atandı",
-        body: `${coach?.name ?? "Koçun"} sana "${template.name}" programını ${scheduledForRaw.toLocaleDateString("tr-TR")} için atadı.`,
-        type: "NEW_ASSIGNMENT",
-      },
-    });
-    void emitNotificationViaWs(clientId, notifPayload(assignNotif));
-
-    const pushResult = await sendPushNotification(client.pushSubscription, {
+    await notify({
+      userId: clientId,
       title: "Yeni antrenman atandı",
-      body: `${coach?.name ?? "Koçun"} sana "${template.name}" programını atadı.`,
-      url: "/client/dashboard"
+      body: `${coach?.name ?? "Koçun"} sana "${template.name}" programını ${scheduledForRaw.toLocaleDateString("tr-TR")} için atadı.`,
+      type: "NEW_ASSIGNMENT",
+      actionUrl: `/client/workout/${assignment.id}/start`,
     });
-
-    if (pushResult.expired) {
-      await prisma.user.update({
-        where: { id: clientId },
-        data: { pushSubscription: Prisma.DbNull }
-      });
-    }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 

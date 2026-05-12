@@ -46,10 +46,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   const {
     saveWeightSet: saveWeightSetApi,
     saveCardio: saveCardioApi,
-    deleteSet: deleteSetApi,
-    pendingSyncCount,
-    isSyncing,
-    syncPendingSets
+    deleteSet: deleteSetApi
   } = useSaveSet(workoutState.workoutId);
   const { completeWorkout } = useCompleteWorkout();
 
@@ -224,10 +221,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       durationSeconds: elapsedSeconds,
     });
     setFinishing(false);
-  };
-
-  const handleManualSync = async () => {
-    await syncPendingSets(true);
   };
 
   const handleDeleteWeightSet = async (setId: string) => {
@@ -577,19 +570,6 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
             </p>
           </div>
           <div className="flex gap-2 md:flex-row md:gap-2">
-            {pendingSyncCount > 0 ? (
-              <Button
-                type="button"
-                disabled={isSyncing}
-                onClick={handleManualSync}
-                variant="outline"
-                className="border-amber-300 text-amber-800 hover:bg-amber-50 text-xs md:text-sm py-2 md:py-6 flex-1 md:flex-initial"
-              >
-                {isSyncing
-                  ? "Senkronize ediliyor..."
-                  : `Sync (${pendingSyncCount})`}
-              </Button>
-            ) : null}
             <Button
               type="button"
               disabled={cancelling}

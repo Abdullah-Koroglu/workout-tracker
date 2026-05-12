@@ -10,6 +10,7 @@ import { GoalsManager } from "@/components/shared/GoalsManager";
 import { AchievementsPanel } from "@/components/client/AchievementsPanel";
 import { PersonalRecordsPanel } from "@/components/client/PersonalRecordsPanel";
 import { SessionsPanel } from "@/components/shared/SessionsPanel";
+import { StreakWidget } from "@/components/client/StreakWidget";
 import { ensureAchievementsSeeded } from "@/lib/achievements";
 
 function Avatar({ name, size = 40, bg = "#1A365D" }: { name: string; size?: number; bg?: string }) {
@@ -237,6 +238,9 @@ export default async function ClientDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        {/* Streak tracker */}
+        <StreakWidget />
+
         <Link
           href="/client/nutrition/log"
           className="block rounded-[20px] p-5 text-white shadow-sm transition hover:opacity-95"

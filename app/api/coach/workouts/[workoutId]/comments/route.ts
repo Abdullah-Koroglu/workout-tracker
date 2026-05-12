@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
-import { sendPushNotification } from "@/lib/push-notifications";
 import { prisma } from "@/lib/prisma";
-import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
+import { notify } from "@/lib/notify";
 import { commentSchema } from "@/validations/workout";
 
 export async function POST(
@@ -25,15 +23,7 @@ export async function POST(
 
     const workout = await prisma.workout.findUnique({
       where: { id: workoutId },
-      select: {
-        id: true,
-        clientId: true,
-        client: {
-          select: {
-            pushSubscription: true,
-          },
-        },
-      },
+      select: { id: true, clientId: true },
     });
 
     if (!workout) {
@@ -61,28 +51,13 @@ export async function POST(
     });
 
     const coachName = auth.session.user.name ?? "Koçun";
-    const notif = await prisma.notification.create({
-      data: {
-        userId: workout.clientId,
-        title: `${coachName} antrenmanına yorum bıraktı`,
-        body: parsed.data.content.slice(0, 140),
-        type: "WORKOUT_COMMENT",
-      },
-    });
-    void emitNotificationViaWs(workout.clientId, notifPayload(notif));
-
-    const pushResult = await sendPushNotification(workout.client.pushSubscription, {
-      title: "Coach yeni bir yorum birakti",
+    await notify({
+      userId: workout.clientId,
+      title: `${coachName} antrenmanına yorum bıraktı`,
       body: parsed.data.content.slice(0, 140),
-      url: `/client/workouts/${workoutId}`,
+      type: "WORKOUT_COMMENT",
+      actionUrl: `/client/workouts/${workoutId}`,
     });
-
-    if (pushResult.expired) {
-      await prisma.user.update({
-        where: { id: workout.clientId },
-        data: { pushSubscription: Prisma.DbNull },
-      });
-    }
 
     return NextResponse.json({ comment }, { status: 201 });
   } catch (error) {

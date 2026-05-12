@@ -1,10 +1,9 @@
-import { Prisma, RelationStatus } from "@prisma/client";
+import { RelationStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
-import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
-import { sendPushNotification } from "@/lib/push-notifications";
+import { notify } from "@/lib/notify";
 import { canAcceptNewClient, TIER_LIMITS } from "@/lib/config/pricing";
 import { resolveCoachSubscription } from "@/lib/payment-service";
 import { TIER_LABELS } from "@/lib/subscription";
@@ -67,31 +66,17 @@ export async function PATCH(
       })
     ]);
 
-    const relationNotif = await prisma.notification.create({
-      data: {
-        userId: clientId,
-        title: status === "ACCEPTED" ? "Koç bağlantısı kabul edildi" : "Koç bağlantısı reddedildi",
-        body:
-          status === "ACCEPTED"
-            ? `${coach?.name ?? "Koçun"} koçluk isteğini kabul etti. Artık antrenman atayabilir.`
-            : `${coach?.name ?? "Koç"} koçluk isteğini reddetti.`,
-        type: status === "ACCEPTED" ? "COACH_ACCEPTED" : "COACH_REJECTED",
-      },
+    await notify({
+      userId: clientId,
+      title: status === "ACCEPTED" ? "Koç bağlantısı kabul edildi" : "Koç bağlantısı reddedildi",
+      body:
+        status === "ACCEPTED"
+          ? `${coach?.name ?? "Koçun"} koçluk isteğini kabul etti. Artık antrenman atayabilir.`
+          : `${coach?.name ?? "Koç"} koçluk isteğini reddetti.`,
+      type: status === "ACCEPTED" ? "COACH_ACCEPTED" : "COACH_REJECTED",
+      actionUrl: status === "ACCEPTED" ? `/client/coaches/${auth.session.user.id}` : `/client/coaches`,
+      priority: status === "ACCEPTED" ? "high" : "normal",
     });
-    void emitNotificationViaWs(clientId, notifPayload(relationNotif));
-
-    const pushResult = await sendPushNotification(client?.pushSubscription, {
-      title: relationNotif.title,
-      body: relationNotif.body,
-      url: "/client/coaches"
-    });
-
-    if (pushResult.expired) {
-      await prisma.user.update({
-        where: { id: clientId },
-        data: { pushSubscription: Prisma.DbNull }
-      });
-    }
   }
 
   return NextResponse.json({ relation });

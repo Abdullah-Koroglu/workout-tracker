@@ -1,13 +1,21 @@
 import { prisma } from "@/lib/prisma";
 
 export const BUILT_IN_ACHIEVEMENTS = [
-  { code: "FIRST_WORKOUT", title: "İlk Antrenman", description: "İlk antrenmanını tamamladın.", category: "consistency", points: 10 },
-  { code: "FIVE_WORKOUTS", title: "5 Antrenman", description: "5 antrenmanı tamamladın.", category: "consistency", points: 25 },
-  { code: "TEN_WORKOUTS", title: "10 Antrenman", description: "10 antrenmanı tamamladın.", category: "consistency", points: 50 },
-  { code: "FIFTY_WORKOUTS", title: "50 Antrenman", description: "50 antrenmana ulaştın!", category: "consistency", points: 200 },
-  { code: "FIRST_PR", title: "İlk PR", description: "İlk kişisel rekorunu kırdın.", category: "strength", points: 30 },
-  { code: "FIRST_REVIEW", title: "İlk Yorum", description: "İlk koç yorumunu bıraktın.", category: "social", points: 15 },
-  { code: "PHOTO_LOGGED", title: "İlk Foto", description: "İlk vücut fotoğrafını logladın.", category: "tracking", points: 10 },
+  // Consistency — workout count
+  { code: "FIRST_WORKOUT",  title: "İlk Antrenman",   description: "İlk antrenmanını tamamladın.",   category: "consistency", points: 10 },
+  { code: "FIVE_WORKOUTS",  title: "5 Antrenman",     description: "5 antrenmanı tamamladın.",       category: "consistency", points: 25 },
+  { code: "TEN_WORKOUTS",   title: "10 Antrenman",    description: "10 antrenmanı tamamladın.",      category: "consistency", points: 50 },
+  { code: "FIFTY_WORKOUTS", title: "50 Antrenman",    description: "50 antrenmana ulaştın!",         category: "consistency", points: 200 },
+  // Streaks
+  { code: "STREAK_3_DAYS",  title: "3 Günlük Seri",   description: "3 gün üst üste antrenman yaptın.",  category: "streak", points: 20 },
+  { code: "STREAK_7_DAYS",  title: "7 Günlük Seri",   description: "Tam bir hafta kesintisiz!",         category: "streak", points: 75 },
+  { code: "STREAK_30_DAYS", title: "30 Günlük Seri",  description: "30 gün hiç bırakmadın. Efsane!",   category: "streak", points: 300 },
+  // Strength / PRs
+  { code: "FIRST_PR",       title: "İlk PR",          description: "İlk kişisel rekorunu kırdın.",      category: "strength", points: 30 },
+  // Social
+  { code: "FIRST_REVIEW",   title: "İlk Yorum",       description: "İlk koç yorumunu bıraktın.",        category: "social",   points: 15 },
+  // Tracking
+  { code: "PHOTO_LOGGED",   title: "İlk Foto",        description: "İlk vücut fotoğrafını logladın.",   category: "tracking", points: 10 },
 ];
 
 export async function ensureAchievementsSeeded() {

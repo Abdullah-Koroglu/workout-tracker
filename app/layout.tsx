@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#F8FAFC",
+  themeColor: "#111827",
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -34,7 +34,7 @@ export default function RootLayout({
     <html lang="tr" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-        <meta name="theme-color" content="#F8FAFC" />
+        <meta name="theme-color" content="#111827" />
       </head>
       <body className={[  lexend.variable, ""].join(" ")}>
         {/* <ThemeProvider> */}

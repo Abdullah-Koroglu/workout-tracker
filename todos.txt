@@ -1,3 +1,9 @@
+kardiyo gelistirmeleri ozellikle sayac
+video call
+
+db drive a yedekleme
+server restart oldu mu tum servisler sifirdan ayaga kalksin
+
 1. Otomatik "Check-in" ve Form İstemcisi (kilo ve vucut olculeri bilgileri alinabilir)
 4. Devrimsel Beslenme Sistemi (Visio-Behavioral Loop)
 coach tarafindan beslenme listesi ve bigilerinin verilmesi

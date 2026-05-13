@@ -7,7 +7,6 @@ import {
   Compass,
   CreditCard,
   Dumbbell,
-  History,
   LayoutDashboard,
   MessageCircle,
   StretchHorizontal,
@@ -47,7 +46,7 @@ const coachItems: NavItem[] = [
 
 const clientItems: NavItem[] = [
   { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/client/workouts", label: "Geçmiş", icon: History },
+  { href: "/client/workouts", label: "Antrenmanlar", icon: Dumbbell },
   { href: "/client/coaches", label: "Koçlar", icon: Compass },
   { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/profile", label: "Profil", icon: User },
@@ -55,17 +54,17 @@ const clientItems: NavItem[] = [
 
 const coachMobileItems: NavItem[] = [
   { href: "/coach/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/coach/templates", label: "Antreman Oluştur", icon: ClipboardList },
-  { href: "/coach/clients", label: "Client Roster", icon: Users },
+  { href: "/coach/templates", label: "Oluştur", icon: ClipboardList },
+  { href: "/coach/clients", label: "Atletler", icon: Users },
   { href: "/coach/mobility", label: "Mobility", icon: StretchHorizontal },
   { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/coach/profile", label: "Profil", icon: User },
 ];
 
 const clientMobileItems: NavItem[] = [
-  { href: "/client/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/client/workouts", label: "Geçmiş", icon: History },
+  { href: "/client/dashboard", label: "Ana Sayfa", icon: LayoutDashboard },
   { href: "/client/coaches", label: "Koçlar", icon: Compass },
+  // center FAB is rendered separately
   { href: "/client/messages", label: "Mesajlar", icon: MessageCircle },
   { href: "/client/profile", label: "Profil", icon: User },
 ];
@@ -204,24 +203,89 @@ export function RoleNavShell({
       </main>
 
       <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around rounded-t-xl bg-white/90 px-2 pb-4 backdrop-blur-lg shadow-[0_-4px_24px_rgba(0,0,0,0.06)] md:hidden">
-        {mobileItems.map(({ href, label, icon: Icon }) => {
-          const active = isActive(pathname, href);
-          return (
+        {role === "CLIENT" ? (
+          <>
+            {clientMobileItems.slice(0, 2).map(({ href, label, icon: Icon }) => {
+              const active = isActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={[
+                    "flex flex-col items-center justify-center transition-colors duration-150",
+                    active ? "scale-110 text-orange-600" : "text-slate-400 hover:text-slate-900",
+                  ].join(" ")}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="mt-1 text-[11px] font-medium">{label}</span>
+                </Link>
+              );
+            })}
+
+            {/* Center Antrenman FAB */}
             <Link
-              key={href}
-              href={href}
-              className={[
-                "flex flex-col items-center justify-center transition-colors duration-150",
-                active
-                  ? "scale-110 text-orange-600"
-                  : "text-slate-400 hover:text-slate-900",
-              ].join(" ")}
+              href="/client/workouts"
+              className="relative -mt-8 flex flex-col items-center justify-center"
             >
-              <Icon className="h-5 w-5" />
-              <span className="mt-1 text-[11px] font-medium">{label}</span>
+              <div
+                className={[
+                  "flex h-14 w-14 items-center justify-center rounded-2xl shadow-lg transition-transform active:scale-95",
+                  isActive(pathname, "/client/workouts")
+                    ? "scale-105"
+                    : "",
+                ].join(" ")}
+                style={{
+                  background: isActive(pathname, "/client/workouts")
+                    ? "linear-gradient(135deg, #EA580C, #C2410C)"
+                    : "linear-gradient(135deg, #F97316, #EA580C)",
+                  boxShadow: "0 6px 20px rgba(234,88,12,0.45)",
+                }}
+              >
+                <Dumbbell className="h-6 w-6 text-white" />
+              </div>
+              <span
+                className="mt-1 text-[11px] font-black"
+                style={{ color: isActive(pathname, "/client/workouts") ? "#EA580C" : "#F97316" }}
+              >
+                Antrenman
+              </span>
             </Link>
-          );
-        })}
+
+            {clientMobileItems.slice(2).map(({ href, label, icon: Icon }) => {
+              const active = isActive(pathname, href);
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={[
+                    "flex flex-col items-center justify-center transition-colors duration-150",
+                    active ? "scale-110 text-orange-600" : "text-slate-400 hover:text-slate-900",
+                  ].join(" ")}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span className="mt-1 text-[11px] font-medium">{label}</span>
+                </Link>
+              );
+            })}
+          </>
+        ) : (
+          mobileItems.map(({ href, label, icon: Icon }) => {
+            const active = isActive(pathname, href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={[
+                  "flex flex-col items-center justify-center transition-colors duration-150",
+                  active ? "scale-110 text-orange-600" : "text-slate-400 hover:text-slate-900",
+                ].join(" ")}
+              >
+                <Icon className="h-5 w-5" />
+                <span className="mt-1 text-[11px] font-medium">{label}</span>
+              </Link>
+            );
+          })
+        )}
       </nav>
     </div>
   );

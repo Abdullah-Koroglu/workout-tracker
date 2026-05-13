@@ -420,4 +420,88 @@ function startWsServer() {
   });
 }
 
+// ── Auto-complete stale workouts ─────────────────────────────────────────────
+// Workouts that stay IN_PROGRESS longer than AUTO_COMPLETE_HOURS are finalised
+// automatically. If the client recorded at least one set → COMPLETED; otherwise
+// → ABANDONED.  Runs on startup and every CHECK_INTERVAL_MINUTES thereafter.
+
+async function autoCompleteStaleWorkouts() {
+  const thresholdHours = Number(process.env.WORKOUT_AUTO_COMPLETE_HOURS || 4);
+  const cutoff = new Date(Date.now() - thresholdHours * 60 * 60 * 1000);
+
+  const stale = await prisma.workout.findMany({
+    where: { status: "IN_PROGRESS", startedAt: { lt: cutoff } },
+    select: {
+      id: true,
+      clientId: true,
+      assignmentId: true,
+      template: { select: { name: true, coachId: true } },
+      sets: { where: { completed: true }, select: { id: true } },
+    },
+  });
+
+  if (stale.length === 0) return;
+
+  console.log(`[auto-complete] Found ${stale.length} stale workout(s), processing…`);
+
+  for (const workout of stale) {
+    const hasSets   = workout.sets.length > 0;
+    const newStatus = hasSets ? "COMPLETED" : "ABANDONED";
+    const now       = new Date();
+
+    await prisma.workout.update({
+      where: { id: workout.id },
+      data:  { status: newStatus, finishedAt: now },
+    });
+
+    console.log(
+      `[auto-complete] workout=${workout.id} client=${workout.clientId} → ${newStatus} ` +
+      `(${workout.sets.length} sets, threshold=${thresholdHours}h)`
+    );
+
+    // Notify client when we auto-complete (not abandon)
+    if (newStatus === "COMPLETED") {
+      try {
+        const notif = await prisma.notification.create({
+          data: {
+            userId:    workout.clientId,
+            title:     "Antrenman otomatik tamamlandı",
+            body:      `"${workout.template.name}" antrenmanın otomatik olarak tamamlandı.`,
+            type:      "WORKOUT_AUTO_COMPLETED",
+            actionUrl: `/client/workouts`,
+          },
+        });
+
+        // Emit via WebSocket if client is online
+        const sockets = socketsByUserId.get(workout.clientId) || [];
+        for (const ws of sockets) {
+          safeSend(ws, { type: "notification_created", notification: notif });
+        }
+      } catch { /* non-fatal */ }
+    }
+  }
+}
+
+function startWorkoutAutoComplete() {
+  const intervalMinutes = Number(process.env.WORKOUT_AUTO_COMPLETE_CHECK_MINUTES || 30);
+
+  // Run once on startup (catches any overnight stragglers)
+  autoCompleteStaleWorkouts().catch((err) =>
+    console.error("[auto-complete] startup run failed:", err)
+  );
+
+  setInterval(() => {
+    autoCompleteStaleWorkouts().catch((err) =>
+      console.error("[auto-complete] interval run failed:", err)
+    );
+  }, intervalMinutes * 60 * 1000);
+
+  console.log(
+    `> Workout auto-complete enabled ` +
+    `(threshold=${process.env.WORKOUT_AUTO_COMPLETE_HOURS || 4}h, ` +
+    `check every ${intervalMinutes}min)`
+  );
+}
+
 startWsServer();
+startWorkoutAutoComplete();

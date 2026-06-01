@@ -1,21 +1,13 @@
 import { NextResponse } from "next/server";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
 import { nanoid } from "nanoid";
 
 import { requireAuth } from "@/lib/api-auth";
+import { saveMediaFile } from "@/lib/media-storage";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["video/webm", "video/mp4", "video/quicktime"]);
-const UPLOAD_DIR = join(process.cwd(), "public/uploads/movement-videos");
-
-async function ensureUploadDir() {
-  if (!existsSync(UPLOAD_DIR)) {
-    mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
-}
 
 export async function POST(request: Request) {
   try {
@@ -74,17 +66,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Henüz kayıtlı bir antrenman bulunmadığı için video ilişkilendirilemedi." }, { status: 400 });
     }
 
-    await ensureUploadDir();
-
     const ext = videoFile.type === "video/mp4" ? "mp4" : videoFile.type === "video/quicktime" ? "mov" : "webm";
     const timestamp = Date.now();
     const movementId = `free-${nanoid(10)}`;
     const filename = `${userId}-${movementId}-${timestamp}.${ext}`;
-    const filepath = join(UPLOAD_DIR, filename);
-    const publicPath = `/uploads/movement-videos/${filename}`;
 
     const buffer = Buffer.from(await videoFile.arrayBuffer());
-    writeFileSync(filepath, buffer);
+    const saved = await saveMediaFile({ folder: "movement-videos", fileName: filename, buffer });
 
     const compactQuestion = questionRaw.length > 120 ? `${questionRaw.slice(0, 117)}...` : questionRaw;
     const displayMovementName = `FORM: ${movementNameRaw} | ${compactQuestion}`;
@@ -96,7 +84,7 @@ export async function POST(request: Request) {
         coachId: relation.coachId,
         movementId,
         movementName: displayMovementName,
-        videoPath: publicPath,
+        videoPath: saved.url,
         fileSizeBytes: videoFile.size,
         durationSeconds,
       },

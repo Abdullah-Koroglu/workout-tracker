@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 
 import { requireAuth } from "@/lib/api-auth";
+import { saveMediaFile } from "@/lib/media-storage";
 import { emitNotificationViaWs, notifPayload } from "@/lib/notify-ws";
 import { prisma } from "@/lib/prisma";
 import { uploadUrlExists } from "@/lib/upload-files";
@@ -146,30 +145,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Dosya boyutu 8MB'den büyük olamaz." }, { status: 400 });
     }
 
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "meals");
-    try {
-      await fs.mkdir(uploadDir, { recursive: true });
-    } catch (error) {
-      console.error("[NutritionLog] mkdir failed", { uploadDir, error });
-      return NextResponse.json({ error: "Klasör oluşturulamadı." }, { status: 500 });
-    }
-
     const originalName =
       file.name && file.name !== "blob"
         ? sanitizeName(file.name)
         : `meal.${extensionFromFile(file)}`;
     const fileName = `${Date.now()}-${auth.session.user.id}-${originalName}`;
-    const dest = path.join(uploadDir, fileName);
 
     try {
       const buffer = Buffer.from(await file.arrayBuffer());
-      await fs.writeFile(dest, buffer);
+      const saved = await saveMediaFile({ folder: "meals", fileName, buffer });
+      photoUrl = saved.url;
     } catch (error) {
-      console.error("[NutritionLog] writeFile failed", { dest, error });
+      console.error("[NutritionLog] write failed", { fileName, error });
       return NextResponse.json({ error: "Dosya kaydedilemedi." }, { status: 500 });
     }
-
-    photoUrl = `/uploads/meals/${fileName}`;
   }
 
   const aiSummary = await generateAiSummary(adherenceTag, clientNote);

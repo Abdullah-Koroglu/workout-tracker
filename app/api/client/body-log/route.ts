@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import { promises as fs } from "fs";
-import path from "path";
 
 import { requireAuth } from "@/lib/api-auth";
+import { saveMediaFile } from "@/lib/media-storage";
 import { prisma } from "@/lib/prisma";
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024;
@@ -29,14 +28,14 @@ async function savePhoto(
   if (!ALLOWED_TYPES.has(file.type)) return null;
   if (file.size > MAX_SIZE_BYTES) return null;
 
-  const uploadDir = path.join(process.cwd(), "public", "uploads", "checkins");
-  await fs.mkdir(uploadDir, { recursive: true });
-
   const ext = extensionFromMime(file.type);
   const fileName = `${Date.now()}-${clientId}-${slot}.${ext}`;
-  const dest = path.join(uploadDir, fileName);
-  await fs.writeFile(dest, Buffer.from(await file.arrayBuffer()));
-  return `/uploads/checkins/${fileName}`;
+  const saved = await saveMediaFile({
+    folder: "checkins",
+    fileName,
+    buffer: Buffer.from(await file.arrayBuffer()),
+  });
+  return saved.url;
 }
 
 function parseFloat_(v: FormDataEntryValue | null): number | undefined {

@@ -1,20 +1,11 @@
 import { NextResponse } from "next/server";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { join } from "path";
-import { nanoid } from "nanoid";
 
 import { requireAuth } from "@/lib/api-auth";
+import { saveMediaFile } from "@/lib/media-storage";
 import { prisma } from "@/lib/prisma";
 
 const MAX_SIZE_BYTES = 20 * 1024 * 1024;
 const ALLOWED_TYPES = new Set(["video/webm", "video/mp4"]);
-const UPLOAD_DIR = join(process.cwd(), "public/uploads/movement-videos");
-
-async function ensureUploadDir() {
-  if (!existsSync(UPLOAD_DIR)) {
-    mkdirSync(UPLOAD_DIR, { recursive: true });
-  }
-}
 
 export async function POST(
   request: Request,
@@ -77,19 +68,14 @@ export async function POST(
       );
     }
 
-    // Ensure upload directory exists
-    await ensureUploadDir();
-
     // Get file extension
     const ext = videoFile.type === "video/webm" ? "webm" : "mp4";
     const timestamp = Date.now();
     const filename = `${userId}-${movementId}-${timestamp}.${ext}`;
-    const filepath = join(UPLOAD_DIR, filename);
-    const publicPath = `/uploads/movement-videos/${filename}`;
 
     // Save file
     const buffer = Buffer.from(await videoFile.arrayBuffer());
-    writeFileSync(filepath, buffer);
+    const saved = await saveMediaFile({ folder: "movement-videos", fileName: filename, buffer });
 
     // Get coach ID from client's coach relationship
     const clientCoachRelation = await prisma.coachClientRelation.findFirst({
@@ -118,7 +104,7 @@ export async function POST(
         coachId: clientCoachRelation.coachId,
         movementId,
         movementName,
-        videoPath: publicPath,
+        videoPath: saved.url,
         fileSizeBytes: videoFile.size,
         durationSeconds,
       },

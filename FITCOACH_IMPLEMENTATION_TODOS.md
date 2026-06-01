@@ -18,14 +18,19 @@
 - [x] Add empty-state actions for coach dashboard, templates, clients, and profile.
 - [x] Review SaaS plan copy and limits: Free, Pro, Elite, Agency.
 - [x] Ensure tier gates redirect coaches to billing when limits are hit.
-- [ ] Prepare a clean demo seed scenario for independent coach sales demos.
+- [x] Prepare a clean demo seed scenario for independent coach sales demos.
 - [ ] Stabilize core E2E smoke path: auth, coach onboarding, invite, template, workout, marketplace.
+  - [x] Add manual demo smoke path for coach and client flows.
+  - [x] Automate the demo smoke path with Playwright behind `npm run test:e2e:demo`.
+  - [ ] Verify the Playwright demo smoke on an environment with browsers installed.
 - [ ] Decide and implement production media storage for avatar, transformation, meal photo, and movement video.
   - [x] Document production media storage strategy.
   - [x] Add shared media storage helper and migrate avatar uploads.
   - [x] Migrate transformation before/after uploads and deletes.
-  - [ ] Migrate meal photos, body check-in photos, movement videos, and form-analysis videos.
-  - [ ] Add S3/R2 driver and production env validation.
+  - [x] Migrate meal photos, body check-in photos, movement videos, and form-analysis videos.
+  - [x] Add S3/R2 driver and production env validation.
+  - [x] Decide and implement protected URL policy for sensitive client media.
+  - [ ] Configure production bucket/CDN and verify large video limits in deployment.
 
 ## P1 - Marketplace Trust
 

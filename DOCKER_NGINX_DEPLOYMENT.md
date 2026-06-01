@@ -6,7 +6,7 @@
 - **Staging**: Port 3002 (staging.fitcoach.akoroglu.com.tr)
 - **Prisma Studio**: Port 5555 (studio.fitcoach.akoroglu.com.tr)
 - **WebSocket Production**: Port 3001
-- **WebSocket Staging**: Port 3002 (hem Next.js hem WebSocket aynı port)
+- **WebSocket Staging**: Port 3003 (Nginx `/ws` path'i ile dışarıya 443 üzerinden sunulur)
 
 ---
 
@@ -29,24 +29,21 @@ NEXTAUTH_SECRET_STAGING="your-staging-secret"
 ### 2. Docker Compose ile Başlat
 
 ```bash
-# Production + Staging ortamlarını başlat
-docker-compose --env-file .env.docker.prod up -d
+# SADECE staging ortamını başlat (production'a dokunmaz)
+docker compose --env-file .env.docker.prod --profile staging up -d staging_postgres staging_nextjs_app staging_ws_server
 
 # Logs'u kontrol et
-docker-compose logs -f
+docker compose logs -f staging_nextjs_app staging_ws_server staging_postgres
 
 # Servis durumunu kontrol et
-docker-compose ps
+docker compose ps
 ```
 
 ### 3. Veritabanlarını Hazırla
 
 ```bash
-# Production DB'yi iniyalze et
-docker-compose exec nextjs_app npm run db:seed:production
-
-# Staging DB'yi iniyalize et (Zengin Türkçe veri)
-docker-compose exec staging_nextjs_app npm run db:seed:staging
+# Staging DB'yi initialize et (Zengin Türkçe veri)
+docker compose --env-file .env.docker.prod --profile staging-tools run --rm staging_seed
 ```
 
 ---
@@ -72,7 +69,7 @@ docker-compose exec staging_nextjs_app npm run db:seed:staging
 #### Staging (staging.fitcoach.akoroglu.com.tr)
 ```nginx
 - Next.js App: 127.0.0.1:3002
-- WebSocket: 127.0.0.1:3002
+- WebSocket: 127.0.0.1:3003
 - Path: /ws
 ```
 
@@ -139,53 +136,59 @@ sudo certbot renew --dry-run
 
 ```bash
 # Başlat
-docker-compose up -d
+docker compose up -d
+
+# Sadece staging başlat
+docker compose --profile staging up -d staging_postgres staging_nextjs_app staging_ws_server
 
 # Durdur
-docker-compose down
+docker compose down
+
+# Sadece staging durdur
+docker compose stop staging_postgres staging_nextjs_app staging_ws_server
 
 # Yeniden başlat
-docker-compose restart
+docker compose restart
 
 # Belirli servisi yeniden başlat
-docker-compose restart staging_nextjs_app
+docker compose restart staging_nextjs_app
 ```
 
 ### Logs Görüntüle
 
 ```bash
 # Tüm logs
-docker-compose logs
+docker compose logs
 
 # Production Next.js
-docker-compose logs -f nextjs_app
+docker compose logs -f nextjs_app
 
 # Staging Next.js
-docker-compose logs -f staging_nextjs_app
+docker compose logs -f staging_nextjs_app
 
 # WebSocket
-docker-compose logs -f ws_server
+docker compose logs -f ws_server
 
 # Staging WebSocket
-docker-compose logs -f staging_ws_server
+docker compose logs -f staging_ws_server
 ```
 
 ### Container İçinde Komut Çalıştır
 
 ```bash
 # Production
-docker-compose exec nextjs_app bash
-docker-compose exec nextjs_app npm run db:seed:production
+docker compose exec nextjs_app bash
+docker compose exec nextjs_app npm run db:seed:production
 
 # Staging
-docker-compose exec staging_nextjs_app bash
-docker-compose exec staging_nextjs_app npm run db:seed:staging
+docker compose exec staging_nextjs_app bash
+docker compose --profile staging-tools run --rm staging_seed
 
 # Prisma Studio (Production)
-docker-compose exec nextjs_app npm run db:studio
+docker compose exec nextjs_app npm run db:studio
 
 # Prisma Studio (Staging)
-docker-compose exec staging_nextjs_app npm run db:studio:staging
+docker compose exec staging_nextjs_app npm run db:studio:staging
 ```
 
 ---
@@ -198,13 +201,16 @@ docker-compose exec staging_nextjs_app npm run db:studio:staging
 # Linux/macOS
 lsof -i :3000  # Production Next.js
 lsof -i :3002  # Staging Next.js
+lsof -i :3003  # Staging WebSocket
 lsof -i :3001  # Production WebSocket
 lsof -i :5432  # Production DB
-lsof -i :5433  # Staging DB
+lsof -i :5434  # Staging DB
 
 # Windows
 netstat -ano | findstr :3000
 netstat -ano | findstr :3002
+netstat -ano | findstr :3003
+netstat -ano | findstr :5434
 ```
 
 ### Nginx Status
@@ -222,10 +228,10 @@ sudo nginx -s signal  # graceful stop/reload
 
 ```bash
 # Production
-docker-compose exec postgres psql -U fitcoach -d fitcoach
+docker compose exec postgres psql -U fitcoach -d fitcoach
 
 # Staging
-docker-compose exec staging_postgres psql -U fitcoach -d fitcoach_staging
+docker compose exec staging_postgres psql -U fitcoach -d fitcoach_staging
 
 # SQL Commands
 \dt              # Tables listele
@@ -253,18 +259,22 @@ SELECT version(); # Version kontrol et
 
 ```bash
 # Başlat/Durdur
-docker-compose up -d           # Başlat
-docker-compose down            # Durdur
-docker-compose restart         # Yeniden başlat
-docker-compose logs -f         # Logs (live)
+docker compose up -d           # Başlat
+docker compose down            # Durdur
+docker compose restart         # Yeniden başlat
+docker compose logs -f         # Logs (live)
+
+# Sadece staging
+docker compose --profile staging up -d staging_postgres staging_nextjs_app staging_ws_server
+docker compose stop staging_postgres staging_nextjs_app staging_ws_server
 
 # Seed
-docker-compose exec nextjs_app npm run db:seed:production
-docker-compose exec staging_nextjs_app npm run db:seed:staging
+docker compose exec nextjs_app npm run db:seed:production
+docker compose --profile staging-tools run --rm staging_seed
 
 # Database CLI
-docker-compose exec postgres psql -U fitcoach -d fitcoach
-docker-compose exec staging_postgres psql -U fitcoach -d fitcoach_staging
+docker compose exec postgres psql -U fitcoach -d fitcoach
+docker compose exec staging_postgres psql -U fitcoach -d fitcoach_staging
 ```
 
 ### Nginx
@@ -307,16 +317,16 @@ sudo certbot certonly --nginx -d staging.fitcoach.akoroglu.com.tr
 
 **Çözüm**: Logs kontrol et
 ```bash
-docker-compose logs staging_nextjs_app
+docker compose logs staging_nextjs_app
 # Veya container'a gir
-docker-compose exec staging_nextjs_app bash
+docker compose exec staging_nextjs_app bash
 ```
 
 ### Sorun: Database Bağlantı Hatası
 
 **Çözüm**: Database sağlık kontrolü
 ```bash
-docker-compose exec staging_postgres pg_isready -U fitcoach
+docker compose exec staging_postgres pg_isready -U fitcoach
 ```
 
 ### Sorun: Port Zaten Kullanımda
@@ -325,9 +335,11 @@ docker-compose exec staging_postgres pg_isready -U fitcoach
 ```bash
 # Linux/macOS
 lsof -i :3002
+lsof -i :3003
 
 # Windows
 netstat -ano | findstr :3002
+netstat -ano | findstr :3003
 ```
 
 ---
@@ -348,7 +360,6 @@ netstat -ano | findstr :3002
 - [ ] Production secrets güncellendi
 - [ ] Staging secrets güncellendi
 - [ ] PostgreSQL veritabanları oluşturuldu
-- [ ] Production seed çalıştırıldı
 - [ ] Staging seed çalıştırıldı
 - [ ] Nginx yapılandırması kontrol edildi
 - [ ] SSL sertifikaları oluşturuldu

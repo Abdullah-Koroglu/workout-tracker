@@ -1,0 +1,566 @@
+Senkronizasyon basladi: Wed May 13 03:56:38 PM +03 2026
+2026/05/13 15:56:57 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/13 15:56:57 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/13 15:56:57 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/13 15:56:57 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/13 15:57:01 INFO  : weekly/fitcoach-202619.sql.gz: Copied (new)
+2026/05/13 15:57:02 INFO  : weekly/fitcoach-202620.sql.gz: Copied (new)
+2026/05/13 15:57:02 INFO  : daily/fitcoach-20260505.sql.gz: Copied (new)
+2026/05/13 15:57:02 INFO  : daily/fitcoach-20260506.sql.gz: Copied (new)
+2026/05/13 15:57:03 INFO  : daily/fitcoach-20260507.sql.gz: Copied (new)
+2026/05/13 15:57:04 INFO  : daily/fitcoach-20260508.sql.gz: Copied (new)
+2026/05/13 15:57:04 INFO  : daily/fitcoach-20260509.sql.gz: Copied (new)
+2026/05/13 15:57:04 INFO  : daily/fitcoach-20260510.sql.gz: Copied (new)
+2026/05/13 15:57:05 INFO  : daily/fitcoach-20260511.sql.gz: Copied (new)
+2026/05/13 15:57:07 INFO  : daily/fitcoach-20260512.sql.gz: Copied (new)
+2026/05/13 15:57:07 INFO  : monthly/fitcoach-202605.sql.gz: Copied (new)
+2026/05/13 15:57:07 INFO  : daily/fitcoach-20260513.sql.gz: Copied (new)
+2026/05/13 15:57:08 INFO  : last/fitcoach-20260512-000000.sql.gz: Copied (new)
+2026/05/13 15:57:08 INFO  : last/fitcoach-20260513-000000.sql.gz: Copied (new)
+2026/05/13 15:57:09 INFO  : last: Set directory modification time (using DirSetModTime)
+2026/05/13 15:57:09 INFO  : monthly: Set directory modification time (using DirSetModTime)
+2026/05/13 15:57:09 INFO  : daily: Set directory modification time (using DirSetModTime)
+2026/05/13 15:57:09 INFO  : weekly: Set directory modification time (using DirSetModTime)
+2026/05/13 15:57:09 INFO  : 
+Transferred:   	  396.354 KiB / 396.354 KiB, 100%, 36.031 KiB/s, ETA 0s
+Checks:                 0 / 0, -, Listed 18
+Transferred:           14 / 14, 100%
+Elapsed time:        12.1s
+
+Senkronizasyon BASARILI: Wed May 13 03:57:09 PM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Thu May 14 11:00:01 AM +03 2026
+2026/05/14 11:00:02 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/14 11:00:03 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/14 11:00:03 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/14 11:00:04 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/14 11:00:04 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/14 11:00:04 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/14 11:00:04 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/14 11:00:04 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/14 11:00:06 INFO  : last/fitcoach-20260514-000000.sql.gz: Copied (new)
+2026/05/14 11:00:06 INFO  : weekly/fitcoach-202620.sql.gz: Copied (replaced existing)
+2026/05/14 11:00:06 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/14 11:00:06 INFO  : daily/fitcoach-20260514.sql.gz: Copied (new)
+2026/05/14 11:00:07 INFO  : daily/fitcoach-20260505.sql.gz: Deleted
+2026/05/14 11:00:07 INFO  : last/fitcoach-20260512-000000.sql.gz: Deleted
+2026/05/14 11:00:07 INFO  : last/fitcoach-20260513-000000.sql.gz: Deleted
+2026/05/14 11:00:07 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/14 11:00:07 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/14 11:00:07 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/14 11:00:07 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/14 11:00:07 INFO  : 
+Transferred:   	  152.742 KiB / 152.742 KiB, 100%, 38.185 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 35
+Deleted:                3 (files), 0 (dirs), 82.221 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         5.7s
+
+Senkronizasyon BASARILI: Thu May 14 11:00:07 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Fri May 15 11:00:01 AM +03 2026
+2026/05/15 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/15 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/15 11:00:05 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/15 11:00:05 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/15 11:00:05 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/15 11:00:05 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/15 11:00:05 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/15 11:00:05 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/15 11:00:07 INFO  : last/fitcoach-20260515-000000.sql.gz: Copied (new)
+2026/05/15 11:00:07 INFO  : daily/fitcoach-20260515.sql.gz: Copied (new)
+2026/05/15 11:00:07 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/15 11:00:08 INFO  : weekly/fitcoach-202620.sql.gz: Copied (replaced existing)
+2026/05/15 11:00:08 INFO  : daily/fitcoach-20260506.sql.gz: Deleted
+2026/05/15 11:00:09 INFO  : last/fitcoach-20260514-000000.sql.gz: Deleted
+2026/05/15 11:00:09 INFO  : daily/fitcoach-20260507.sql.gz: Deleted
+2026/05/15 11:00:09 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/15 11:00:09 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/15 11:00:09 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/15 11:00:09 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/15 11:00:09 INFO  : 
+Transferred:   	  153.383 KiB / 153.383 KiB, 100%, 30.676 KiB/s, ETA 0s
+Checks:                13 / 13, 100%, Listed 33
+Deleted:                3 (files), 0 (dirs), 81.588 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         6.3s
+
+Senkronizasyon BASARILI: Fri May 15 11:00:09 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sat May 16 11:00:01 AM +03 2026
+2026/05/16 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/16 11:00:03 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/16 11:00:03 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/16 11:00:05 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/16 11:00:05 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/16 11:00:05 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/16 11:00:05 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/16 11:00:05 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/16 11:00:06 INFO  : daily/fitcoach-20260516.sql.gz: Copied (new)
+2026/05/16 11:00:06 INFO  : weekly/fitcoach-202620.sql.gz: Copied (replaced existing)
+2026/05/16 11:00:06 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/16 11:00:06 INFO  : last/fitcoach-20260516-000000.sql.gz: Copied (new)
+2026/05/16 11:00:07 INFO  : last/fitcoach-20260515-000000.sql.gz: Deleted
+2026/05/16 11:00:07 INFO  : daily/fitcoach-20260508.sql.gz: Deleted
+2026/05/16 11:00:07 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/16 11:00:07 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/16 11:00:07 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/16 11:00:08 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/16 11:00:08 INFO  : 
+Transferred:   	  160.441 KiB / 160.441 KiB, 100%, 40.110 KiB/s, ETA 0s
+Checks:                12 / 12, 100%, Listed 32
+Deleted:                2 (files), 0 (dirs), 63.930 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         5.7s
+
+Senkronizasyon BASARILI: Sat May 16 11:00:08 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sun May 17 11:00:01 AM +03 2026
+2026/05/17 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/17 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/17 11:00:04 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/17 11:00:04 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/17 11:00:04 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/17 11:00:04 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/17 11:00:04 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/17 11:00:04 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/17 11:00:06 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/17 11:00:06 INFO  : daily/fitcoach-20260517.sql.gz: Copied (new)
+2026/05/17 11:00:06 INFO  : last/fitcoach-20260517-000000.sql.gz: Copied (new)
+2026/05/17 11:00:06 INFO  : weekly/fitcoach-202620.sql.gz: Copied (replaced existing)
+2026/05/17 11:00:07 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/17 11:00:07 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/17 11:00:07 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/17 11:00:07 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/17 11:00:07 INFO  : 
+Transferred:   	  160.434 KiB / 160.434 KiB, 100%, 53.476 KiB/s, ETA 0s
+Checks:                12 / 12, 100%, Listed 34
+Transferred:            4 / 4, 100%
+Elapsed time:         4.1s
+
+Senkronizasyon BASARILI: Sun May 17 11:00:07 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Mon May 18 11:00:01 AM +03 2026
+2026/05/18 11:00:04 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/18 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/18 11:00:05 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/18 11:00:06 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/18 11:00:06 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/18 11:00:06 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/18 11:00:06 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/18 11:00:06 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/18 11:00:08 INFO  : daily/fitcoach-20260518.sql.gz: Copied (new)
+2026/05/18 11:00:08 INFO  : weekly/fitcoach-202621.sql.gz: Copied (new)
+2026/05/18 11:00:08 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/18 11:00:09 INFO  : last/fitcoach-20260518-000000.sql.gz: Copied (new)
+2026/05/18 11:00:09 INFO  : daily/fitcoach-20260509.sql.gz: Deleted
+2026/05/18 11:00:10 INFO  : last/fitcoach-20260516-000000.sql.gz: Deleted
+2026/05/18 11:00:10 INFO  : daily/fitcoach-20260510.sql.gz: Deleted
+2026/05/18 11:00:10 INFO  : last/fitcoach-20260517-000000.sql.gz: Deleted
+2026/05/18 11:00:10 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/18 11:00:10 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/18 11:00:10 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/18 11:00:10 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/18 11:00:10 INFO  : 
+Transferred:   	  167.004 KiB / 167.004 KiB, 100%, 33.400 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 35
+Deleted:                4 (files), 0 (dirs), 133.195 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         7.2s
+
+Senkronizasyon BASARILI: Mon May 18 11:00:10 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Tue May 19 11:00:01 AM +03 2026
+2026/05/19 11:00:04 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/19 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/19 11:00:05 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/19 11:00:05 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/19 11:00:05 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/19 11:00:05 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/19 11:00:05 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/19 11:00:05 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/19 11:00:07 INFO  : daily/fitcoach-20260519.sql.gz: Copied (new)
+2026/05/19 11:00:08 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/19 11:00:08 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/19 11:00:08 INFO  : last/fitcoach-20260519-000000.sql.gz: Copied (new)
+2026/05/19 11:00:08 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/19 11:00:08 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/19 11:00:08 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/19 11:00:08 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/19 11:00:08 INFO  : 
+Transferred:   	  166.992 KiB / 166.992 KiB, 100%, 33.398 KiB/s, ETA 0s
+Checks:                13 / 13, 100%, Listed 36
+Transferred:            4 / 4, 100%
+Elapsed time:         5.8s
+
+Senkronizasyon BASARILI: Tue May 19 11:00:08 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Wed May 20 11:00:01 AM +03 2026
+2026/05/20 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/20 11:00:03 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/20 11:00:04 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/20 11:00:05 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/20 11:00:05 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/20 11:00:05 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/20 11:00:05 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/20 11:00:05 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/20 11:00:07 INFO  : daily/fitcoach-20260520.sql.gz: Copied (new)
+2026/05/20 11:00:07 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/20 11:00:07 INFO  : last/fitcoach-20260520-000000.sql.gz: Copied (new)
+2026/05/20 11:00:07 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/20 11:00:08 INFO  : daily/fitcoach-20260511.sql.gz: Deleted
+2026/05/20 11:00:08 INFO  : last/fitcoach-20260518-000000.sql.gz: Deleted
+2026/05/20 11:00:09 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/20 11:00:09 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/20 11:00:09 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/20 11:00:09 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/20 11:00:09 INFO  : 
+Transferred:   	  167.004 KiB / 167.004 KiB, 100%, 33.400 KiB/s, ETA 0s
+Checks:                15 / 15, 100%, Listed 38
+Deleted:                2 (files), 0 (dirs), 69.573 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         7.4s
+
+Senkronizasyon BASARILI: Wed May 20 11:00:09 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Thu May 21 11:00:01 AM +03 2026
+2026/05/21 11:00:38 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/21 11:00:39 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/21 11:00:39 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/21 11:00:40 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/21 11:00:40 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/21 11:00:40 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/21 11:00:40 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/21 11:00:40 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/21 11:00:42 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/21 11:00:42 INFO  : last/fitcoach-20260521-000000.sql.gz: Copied (new)
+2026/05/21 11:00:42 INFO  : daily/fitcoach-20260521.sql.gz: Copied (new)
+2026/05/21 11:00:42 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/21 11:00:43 INFO  : daily/fitcoach-20260512.sql.gz: Deleted
+2026/05/21 11:00:43 INFO  : last/fitcoach-20260520-000000.sql.gz: Deleted
+2026/05/21 11:00:43 INFO  : daily/fitcoach-20260513.sql.gz: Deleted
+2026/05/21 11:00:43 INFO  : last/fitcoach-20260519-000000.sql.gz: Deleted
+2026/05/21 11:00:44 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/21 11:00:44 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/21 11:00:44 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/21 11:00:44 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/21 11:00:44 INFO  : 
+Transferred:   	  167.691 KiB / 167.691 KiB, 100%, 9.825 KiB/s, ETA 0s
+Checks:                15 / 15, 100%, Listed 36
+Deleted:                4 (files), 0 (dirs), 148.277 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        41.9s
+
+Senkronizasyon BASARILI: Thu May 21 11:00:44 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Fri May 22 11:00:01 AM +03 2026
+2026/05/22 11:00:37 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/22 11:00:38 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/22 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/22 11:00:39 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/22 11:00:39 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/22 11:00:39 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/22 11:00:39 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/22 11:00:39 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/22 11:00:41 INFO  : last/fitcoach-20260522-000033.sql.gz: Copied (new)
+2026/05/22 11:00:41 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/22 11:00:41 INFO  : daily/fitcoach-20260522.sql.gz: Copied (new)
+2026/05/22 11:00:41 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/22 11:00:42 INFO  : last/fitcoach-20260521-000000.sql.gz: Deleted
+2026/05/22 11:00:42 INFO  : daily/fitcoach-20260514.sql.gz: Deleted
+2026/05/22 11:00:42 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/22 11:00:42 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/22 11:00:42 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/22 11:00:42 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/22 11:00:42 INFO  : 
+Transferred:   	  167.707 KiB / 167.707 KiB, 100%, 41.926 KiB/s, ETA 0s
+Checks:                13 / 13, 100%, Listed 34
+Deleted:                2 (files), 0 (dirs), 80.108 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         6.1s
+
+Senkronizasyon BASARILI: Fri May 22 11:00:42 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sat May 23 11:00:01 AM +03 2026
+2026/05/23 11:00:37 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/23 11:00:38 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/23 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/23 11:00:39 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/23 11:00:39 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/23 11:00:39 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/23 11:00:39 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/23 11:00:39 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/23 11:00:41 INFO  : last/fitcoach-20260523-000000.sql.gz: Copied (new)
+2026/05/23 11:00:41 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/23 11:00:41 INFO  : daily/fitcoach-20260523.sql.gz: Copied (new)
+2026/05/23 11:00:41 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/23 11:00:41 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/23 11:00:41 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/23 11:00:41 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/23 11:00:41 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/23 11:00:41 INFO  : 
+Transferred:   	  171.867 KiB / 171.867 KiB, 100%, 34.373 KiB/s, ETA 0s
+Checks:                13 / 13, 100%, Listed 36
+Transferred:            4 / 4, 100%
+Elapsed time:         5.4s
+
+Senkronizasyon BASARILI: Sat May 23 11:00:41 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sun May 24 11:00:01 AM +03 2026
+2026/05/24 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/24 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/24 11:00:21 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/24 11:00:37 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/24 11:00:37 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/24 11:00:37 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/24 11:00:37 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/24 11:00:37 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/24 11:00:39 INFO  : weekly/fitcoach-202621.sql.gz: Copied (replaced existing)
+2026/05/24 11:00:39 INFO  : daily/fitcoach-20260524.sql.gz: Copied (new)
+2026/05/24 11:00:39 INFO  : last/fitcoach-20260524-000000.sql.gz: Copied (new)
+2026/05/24 11:00:39 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/24 11:00:40 INFO  : last/fitcoach-20260523-000000.sql.gz: Deleted
+2026/05/24 11:00:40 INFO  : last/fitcoach-20260522-000033.sql.gz: Deleted
+2026/05/24 11:00:40 INFO  : daily/fitcoach-20260515.sql.gz: Deleted
+2026/05/24 11:00:40 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/24 11:00:40 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/24 11:00:40 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/24 11:00:40 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/24 11:00:40 INFO  : 
+Transferred:   	  171.863 KiB / 171.863 KiB, 100%, 10.573 KiB/s, ETA 0s
+Checks:                15 / 15, 100%, Listed 37
+Deleted:                3 (files), 0 (dirs), 123.239 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        37.9s
+
+Senkronizasyon BASARILI: Sun May 24 11:00:40 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Mon May 25 11:00:01 AM +03 2026
+2026/05/25 11:00:04 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/25 11:00:05 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/25 11:00:24 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/25 11:00:25 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/25 11:00:25 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/25 11:00:25 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/25 11:00:25 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/25 11:00:25 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/25 11:00:27 INFO  : daily/fitcoach-20260525.sql.gz: Copied (new)
+2026/05/25 11:00:27 INFO  : last/fitcoach-20260525-000000.sql.gz: Copied (new)
+2026/05/25 11:00:27 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/25 11:00:27 INFO  : weekly/fitcoach-202622.sql.gz: Copied (new)
+2026/05/25 11:00:28 INFO  : daily/fitcoach-20260517.sql.gz: Deleted
+2026/05/25 11:00:28 INFO  : last/fitcoach-20260524-000000.sql.gz: Deleted
+2026/05/25 11:00:28 INFO  : daily/fitcoach-20260516.sql.gz: Deleted
+2026/05/25 11:00:29 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/25 11:00:29 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/25 11:00:29 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/25 11:00:29 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/25 11:00:29 INFO  : 
+Transferred:   	  174.844 KiB / 174.844 KiB, 100%, 10.244 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 36
+Deleted:                3 (files), 0 (dirs), 123.185 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        26.1s
+
+Senkronizasyon BASARILI: Mon May 25 11:00:29 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Tue May 26 11:00:01 AM +03 2026
+2026/05/26 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/26 11:00:03 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/26 11:00:09 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/26 11:00:31 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/26 11:00:31 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/26 11:00:31 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/26 11:00:31 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/26 11:00:31 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/26 11:00:33 INFO  : daily/fitcoach-20260526.sql.gz: Copied (new)
+2026/05/26 11:00:33 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/26 11:00:33 INFO  : last/fitcoach-20260526-000000.sql.gz: Copied (new)
+2026/05/26 11:00:34 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/26 11:00:35 INFO  : last/fitcoach-20260525-000000.sql.gz: Deleted
+2026/05/26 11:00:35 INFO  : daily/fitcoach-20260518.sql.gz: Deleted
+2026/05/26 11:00:35 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/26 11:00:36 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/26 11:00:36 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/26 11:00:48 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/26 11:00:48 INFO  : 
+Transferred:   	  174.219 KiB / 174.219 KiB, 100%, 9.889 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 36
+Deleted:                2 (files), 0 (dirs), 85.462 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        45.8s
+
+Senkronizasyon BASARILI: Tue May 26 11:00:48 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Wed May 27 11:00:01 AM +03 2026
+2026/05/27 11:00:37 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/27 11:00:37 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/27 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/27 11:00:38 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/27 11:00:38 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/27 11:00:38 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/27 11:00:38 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/27 11:00:38 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/27 11:00:40 INFO  : daily/fitcoach-20260527.sql.gz: Copied (new)
+2026/05/27 11:00:40 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/27 11:00:40 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/27 11:00:40 INFO  : last/fitcoach-20260527-000000.sql.gz: Copied (new)
+2026/05/27 11:00:41 INFO  : daily/fitcoach-20260519.sql.gz: Deleted
+2026/05/27 11:00:42 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/27 11:00:42 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/27 11:00:42 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/27 11:00:42 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/27 11:00:42 INFO  : 
+Transferred:   	  174.238 KiB / 174.238 KiB, 100%, 43.560 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 37
+Deleted:                1 (files), 0 (dirs), 41.748 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         6.1s
+
+Senkronizasyon BASARILI: Wed May 27 11:00:42 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Thu May 28 11:00:01 AM +03 2026
+2026/05/28 11:00:36 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/28 11:00:37 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/28 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/28 11:00:38 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/28 11:00:38 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/28 11:00:38 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/28 11:00:38 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/28 11:00:38 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/28 11:00:40 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/28 11:00:40 INFO  : last/fitcoach-20260528-000000.sql.gz: Copied (new)
+2026/05/28 11:00:40 INFO  : daily/fitcoach-20260528.sql.gz: Copied (new)
+2026/05/28 11:00:41 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/28 11:00:41 INFO  : last/fitcoach-20260526-000000.sql.gz: Deleted
+2026/05/28 11:00:42 INFO  : last/fitcoach-20260527-000000.sql.gz: Deleted
+2026/05/28 11:00:42 INFO  : daily/fitcoach-20260520.sql.gz: Deleted
+2026/05/28 11:00:42 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/28 11:00:42 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/28 11:00:42 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/28 11:00:42 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/28 11:00:42 INFO  : 
+Transferred:   	  174.238 KiB / 174.238 KiB, 100%, 34.848 KiB/s, ETA 0s
+Checks:                15 / 15, 100%, Listed 37
+Deleted:                3 (files), 0 (dirs), 128.865 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         6.9s
+
+Senkronizasyon BASARILI: Thu May 28 11:00:42 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Fri May 29 11:00:01 AM +03 2026
+2026/05/29 11:00:54 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/29 11:00:55 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/29 11:00:56 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/29 11:00:57 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/29 11:00:57 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/29 11:00:57 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/29 11:00:57 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/29 11:00:57 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/29 11:00:59 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/29 11:01:03 INFO  : 
+Transferred:   	   43.555 KiB / 43.555 KiB, 100%, 2.722 KiB/s, ETA 0s
+Checks:                 4 / 4, 100%, Listed 26
+Transferred:            1 / 1, 100%
+Elapsed time:       1m0.0s
+
+2026/05/29 11:01:38 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/29 11:01:54 INFO  : last/fitcoach-20260529-000000.sql.gz: Copied (new)
+2026/05/29 11:01:55 INFO  : daily/fitcoach-20260529.sql.gz: Copied (new)
+2026/05/29 11:01:56 INFO  : daily/fitcoach-20260521.sql.gz: Deleted
+2026/05/29 11:01:56 INFO  : last/fitcoach-20260528-000000.sql.gz: Deleted
+2026/05/29 11:01:56 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/29 11:01:56 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/29 11:01:56 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/29 11:01:56 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/29 11:01:56 INFO  : 
+Transferred:   	  174.219 KiB / 174.219 KiB, 100%, 9.735 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 36
+Deleted:                2 (files), 0 (dirs), 85.482 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:      1m53.7s
+
+Senkronizasyon BASARILI: Fri May 29 11:01:56 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sat May 30 11:00:01 AM +03 2026
+2026/05/30 11:00:35 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/30 11:00:35 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/30 11:00:36 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/30 11:00:36 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/30 11:00:36 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/30 11:00:36 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/30 11:00:36 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/30 11:00:36 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/30 11:00:38 INFO  : last/fitcoach-20260530-000000.sql.gz: Copied (new)
+2026/05/30 11:00:38 INFO  : daily/fitcoach-20260530.sql.gz: Copied (new)
+2026/05/30 11:00:38 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/30 11:00:38 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/30 11:00:39 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/30 11:00:39 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/30 11:00:39 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/30 11:00:39 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/30 11:00:39 INFO  : 
+Transferred:   	  174.246 KiB / 174.246 KiB, 100%, 43.561 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 38
+Transferred:            4 / 4, 100%
+Elapsed time:         4.6s
+
+Senkronizasyon BASARILI: Sat May 30 11:00:39 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Sun May 31 11:00:01 AM +03 2026
+2026/05/31 11:00:03 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/31 11:00:04 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/31 11:00:21 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/31 11:00:39 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/31 11:00:39 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/31 11:00:39 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/31 11:00:39 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/31 11:00:39 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/05/31 11:00:41 INFO  : weekly/fitcoach-202622.sql.gz: Copied (replaced existing)
+2026/05/31 11:00:41 INFO  : daily/fitcoach-20260531.sql.gz: Copied (new)
+2026/05/31 11:00:43 INFO  : monthly/fitcoach-202605.sql.gz: Copied (replaced existing)
+2026/05/31 11:00:43 INFO  : last/fitcoach-20260531-000000.sql.gz: Copied (new)
+2026/05/31 11:00:43 INFO  : last/fitcoach-20260530-000000.sql.gz: Deleted
+2026/05/31 11:00:43 INFO  : last/fitcoach-20260529-000000.sql.gz: Deleted
+2026/05/31 11:00:43 INFO  : daily/fitcoach-20260522.sql.gz: Deleted
+2026/05/31 11:00:43 INFO  : daily/fitcoach-20260523.sql.gz: Deleted
+2026/05/31 11:00:44 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/05/31 11:00:44 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/05/31 11:00:44 INFO  : last: Set directory modification time (using SetModTime)
+2026/05/31 11:00:44 INFO  : daily: Set directory modification time (using SetModTime)
+2026/05/31 11:00:44 INFO  : 
+Transferred:   	  174.246 KiB / 174.246 KiB, 100%, 10.220 KiB/s, ETA 0s
+Checks:                16 / 16, 100%, Listed 38
+Deleted:                4 (files), 0 (dirs), 172.010 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        41.8s
+
+Senkronizasyon BASARILI: Sun May 31 11:00:44 AM +03 2026
+-----------------------------------
+Senkronizasyon basladi: Mon Jun  1 11:00:01 AM +03 2026
+2026/06/01 11:00:37 INFO  : daily: Set directory modification time (using SetModTime)
+2026/06/01 11:00:37 INFO  : last: Set directory modification time (using SetModTime)
+2026/06/01 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/06/01 11:00:38 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/06/01 11:00:38 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/01 11:00:38 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/01 11:00:38 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/01 11:00:38 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/01 11:00:40 INFO  : weekly/fitcoach-202623.sql.gz: Copied (new)
+2026/06/01 11:00:40 INFO  : monthly/fitcoach-202606.sql.gz: Copied (new)
+2026/06/01 11:00:41 INFO  : last/fitcoach-20260601-000000.sql.gz: Copied (new)
+2026/06/01 11:00:41 INFO  : daily/fitcoach-20260601.sql.gz: Copied (new)
+2026/06/01 11:00:42 INFO  : daily/fitcoach-20260524.sql.gz: Deleted
+2026/06/01 11:00:42 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/06/01 11:00:42 INFO  : last: Set directory modification time (using SetModTime)
+2026/06/01 11:00:42 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/06/01 11:00:42 INFO  : daily: Set directory modification time (using SetModTime)
+2026/06/01 11:00:42 INFO  : 
+Transferred:   	  174.234 KiB / 174.234 KiB, 100%, 34.847 KiB/s, ETA 0s
+Checks:                14 / 14, 100%, Listed 39
+Deleted:                1 (files), 0 (dirs), 42.966 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:         6.7s
+
+Senkronizasyon BASARILI: Mon Jun  1 11:00:42 AM +03 2026
+-----------------------------------

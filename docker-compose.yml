@@ -40,7 +40,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --accept-data-loss --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma db push --schema=/app/prisma/schema.prisma && npm run start"]
 
   ws_server:
     image: fitcoach:latest
@@ -65,6 +65,7 @@ services:
   # STAGING ORTAMI - DEMO VERİ İÇİN AYRı DB
   # ================================================
   staging_postgres:
+    profiles: ["staging", "staging-tools"]
     image: postgres:16-alpine
     restart: always
     environment:
@@ -72,7 +73,7 @@ services:
       - POSTGRES_USER=fitcoach
       - POSTGRES_PASSWORD=fitcoach
     ports:
-      - "5433:5432"
+      - "5434:5432"
     volumes:
       - staging_postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -82,6 +83,7 @@ services:
       retries: 20
 
   staging_nextjs_app:
+    profiles: ["staging"]
     image: fitcoach:latest
     build: .
     ports:
@@ -105,13 +107,14 @@ services:
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - NODE_ENV=staging
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma db push --accept-data-loss --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma db push --schema=/app/prisma/schema.prisma && npm run start"]
 
   staging_ws_server:
+    profiles: ["staging"]
     image: fitcoach:latest
     command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
     ports:
-      - "3002:3001"
+      - "3003:3001"
     restart: always
     depends_on:
       staging_postgres:
@@ -126,6 +129,20 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - NODE_ENV=staging
+
+  staging_seed:
+    profiles: ["staging-tools"]
+    build:
+      context: .
+      target: builder
+    depends_on:
+      staging_postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://fitcoach:fitcoach@staging_postgres:5432/fitcoach_staging?schema=public
+      - NODE_ENV=staging
+    command: ["npm", "run", "db:seed:staging"]
+    restart: "no"
 
   pg_backup:
     image: prodrigestivill/postgres-backup-local

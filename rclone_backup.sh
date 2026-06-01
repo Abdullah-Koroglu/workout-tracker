@@ -1,4 +1,3 @@
-cat << 'EOF' > /root/projects/workout-tracker/rclone_backup.sh
 #!/bin/bash
 
 # Docker'ın yedekleri attığı yerel klasör
@@ -10,11 +9,16 @@ REMOTE_DIR="gdrive:Fitcoach_Backups"
 # Log dosyası (Hata takibi için)
 LOG_FILE="/root/projects/workout-tracker/rclone_backup.log"
 
-echo "Senkronizasyon basladi: $(date)" >> $LOG_FILE
-rclone sync $LOCAL_DIR $REMOTE_DIR -v >> $LOG_FILE 2>&1
-echo "Senkronizasyon bitti: $(date)" >> $LOG_FILE
-echo "-----------------------------------" >> $LOG_FILE
-EOF
+echo "Senkronizasyon basladi: $(date)" >> "$LOG_FILE"
+rclone sync "$LOCAL_DIR" "$REMOTE_DIR" -v >> "$LOG_FILE" 2>&1
+EXIT_CODE=$?
 
-chmod +x /root/projects/workout-tracker/rclone_backup.sh
+if [ $EXIT_CODE -eq 0 ]; then
+    echo "Senkronizasyon BASARILI: $(date)" >> "$LOG_FILE"
+else
+    echo "Senkronizasyon HATALI (exit code: $EXIT_CODE): $(date)" >> "$LOG_FILE"
+fi
+echo "-----------------------------------" >> "$LOG_FILE"
+
+exit $EXIT_CODE
 

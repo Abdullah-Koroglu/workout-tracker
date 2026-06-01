@@ -17,8 +17,8 @@ export const TIER_CONFIG: Record<SubscriptionTier, TierConfig> = {
   FREE: {
     maxClients: BILLING_PLANS.FREE.maxClients ?? 9999,
     maxTemplates: BILLING_PLANS.FREE.maxTemplates ?? Infinity,
-    analytics: true,
-    bodyTracking: true,
+    analytics: false,
+    bodyTracking: false,
     label: BILLING_PLANS.FREE.label,
     color: "#64748B",
   },

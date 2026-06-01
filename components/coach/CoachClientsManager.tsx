@@ -298,10 +298,33 @@ export function CoachClientsManager({
       <div className="flex flex-col gap-2.5">
         {list.length === 0 ? (
           <div
-            className="rounded-[18px] p-8 text-center text-sm"
-            style={{ background: "#F8FAFC", color: "#94A3B8", border: "1px solid rgba(0,0,0,0.06)" }}
+            className="rounded-[18px] p-8 text-center"
+            style={{ background: "#F8FAFC", color: "#64748B", border: "1px solid rgba(0,0,0,0.06)" }}
           >
-            {tab === "accepted" ? "Aktif danışan bulunamadı." : "Bekleyen istek yok."}
+            <p className="text-sm font-black text-slate-700">
+              {tab === "accepted" ? "Henüz aktif danışanın yok" : "Bekleyen danışan isteği yok"}
+            </p>
+            <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-slate-500">
+              {tab === "accepted"
+                ? "İlk danışanı davet etmek için profilindeki davet linkini paylaş. Koçluk akışı danışan bağlandığında anlam kazanır."
+                : "Marketplace vitrinin ve paketlerin hazırsa yeni istekler burada görünür. Profilini güçlendirerek talep alma ihtimalini artır."}
+            </p>
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => router.push("/coach/profile")}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white transition hover:bg-slate-800"
+              >
+                {tab === "accepted" ? "Davet Linkini Aç" : "Marketplace Profilini Güçlendir"}
+              </button>
+              <button
+                type="button"
+                onClick={() => router.push("/coach/templates/new")}
+                className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 transition hover:border-emerald-200 hover:text-emerald-600"
+              >
+                İlk Şablonu Hazırla
+              </button>
+            </div>
           </div>
         ) : tab === "accepted" ? (
           list.map((client) => (

@@ -28,6 +28,7 @@ import { PageHero } from "@/components/shared/PageHero";
 import { TransformationPhotosManager, type TransformationPhoto } from "@/components/coach/TransformationPhotosManager";
 import { AvailabilityManager } from "@/components/coach/AvailabilityManager";
 import { ExtendedProfileEditor } from "@/components/coach/ExtendedProfileEditor";
+import { calculateCoachProfileQuality } from "@/lib/coach-profile-quality";
 
 /* ─── Types ─────────────────────────────────────────── */
 type CoachPackage = {
@@ -138,7 +139,7 @@ export default function CoachProfilePage() {
       }
       setLoading(false);
     })();
-  }, []);
+  }, [setLoading]);
 
   /* ── actions ── */
   const handleSaveProfile = async () => {
@@ -263,6 +264,18 @@ export default function CoachProfilePage() {
       </div>
     );
   }
+
+  const profileQuality = calculateCoachProfileQuality({
+    bio,
+    slogan,
+    city,
+    specialties,
+    experienceYears: experienceYears ? Number(experienceYears) : null,
+    socialMediaUrl,
+    transformationPhotos,
+    packages,
+    avatarUrl,
+  });
 
   return (
     <div className="space-y-6 pb-16">
@@ -660,12 +673,15 @@ export default function CoachProfilePage() {
                 style={{ background: "#F8FAFC", border: "1px dashed #E2E8F0" }}
               >
                 <Briefcase className="mx-auto mb-2 h-8 w-8 text-slate-200" />
-                <p className="text-sm font-bold text-slate-400">
-                  Henüz paket eklemediniz.
+                <p className="text-sm font-black text-slate-700">
+                  İlk koçluk paketini ekle
                 </p>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  Paket ekleyerek danışanlara sunabilirsiniz.
+                <p className="mx-auto mt-1 max-w-sm text-xs leading-relaxed text-slate-500">
+                  Marketplace vitrininin satışa dönmesi için net bir teklif gerekir. Aylık online koçluk, dönüşüm paketi veya performans paketiyle başla.
                 </p>
+                <div className="mt-4 inline-flex rounded-full bg-orange-50 px-3 py-1 text-[11px] font-bold text-orange-600">
+                  Öneri: 4 haftalık başlangıç paketi + haftalık check-in
+                </div>
               </div>
             )}
 
@@ -814,7 +830,7 @@ export default function CoachProfilePage() {
             }}
           >
             <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
-              Profil Tamamlığı
+              Marketplace Vitrin Skoru
             </h3>
             {(() => {
               const checks = [
@@ -853,6 +869,29 @@ export default function CoachProfilePage() {
                             : "linear-gradient(90deg, #FB923C, #EA580C)",
                       }}
                     />
+                  </div>
+                  <div
+                    className="rounded-xl px-3 py-2.5"
+                    style={{
+                      background: profileQuality.tone === "high"
+                        ? "rgba(34,197,94,0.10)"
+                        : profileQuality.tone === "medium"
+                          ? "rgba(249,115,22,0.10)"
+                          : "rgba(239,68,68,0.08)",
+                    }}
+                  >
+                    <p className="text-xs font-black text-slate-800">
+                      {profileQuality.label} · %{profileQuality.score}
+                    </p>
+                    {profileQuality.missing.length > 0 ? (
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                        Görünürlüğü artırmak için sıradaki alanlar: {profileQuality.missing.join(", ")}.
+                      </p>
+                    ) : (
+                      <p className="mt-1 text-[11px] leading-relaxed text-slate-500">
+                        Profilin açık marketplace için güçlü görünüyor. Yeni talepleri ve yorumları canlı tut.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     {checks.map(({ label, done }) => (

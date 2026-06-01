@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Dumbbell, Plus } from "lucide-react";
 
 import { ActionMenu } from "@/components/ui/action-menu";
 import { useConfirmation } from "@/contexts/ConfirmationContext";
@@ -27,34 +28,45 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
 
   const deleteTemplate = async (id: string) => {
     const approved = await confirm({
-      title: "Template sil",
-      description: "Bu template silinecek. Islem geri alinamaz.",
+      title: "Şablon sil",
+      description: "Bu şablon silinecek. İşlem geri alınamaz.",
       confirmText: "Sil",
-      cancelText: "Vazgec",
-      danger: true
+      cancelText: "Vazgeç",
+      danger: true,
     });
 
     if (!approved) return;
 
     const response = await fetch(`/api/coach/templates/${id}`, {
-      method: "DELETE"
+      method: "DELETE",
     });
 
     if (!response.ok) {
-      push("Template silinemedi.", "error");
+      push("Şablon silinemedi.", "error");
       return;
     }
 
-    push("Template silindi.", "success");
+    push("Şablon silindi.", "success");
     router.refresh();
   };
 
   if (templates.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/50 py-16 text-center">
-        <div className="mb-3 text-4xl">📋</div>
-        <p className="text-sm font-semibold text-slate-600">Henüz template yok</p>
-        <p className="mt-1 text-xs text-slate-400">Yeni Template butonuyla ilk şablonunu oluştur.</p>
+      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-16 text-center">
+        <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
+          <Dumbbell className="h-7 w-7" />
+        </div>
+        <p className="text-base font-black text-slate-700">İlk antrenman şablonunu oluştur</p>
+        <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
+          Koçların satış demosunda en hızlı değer gösteren adım hazır bir programdır. İlk şablonu oluştur, sonra danışanına tek tıkla ata.
+        </p>
+        <Link
+          href="/coach/templates/new"
+          className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700"
+        >
+          <Plus className="h-4 w-4" />
+          Yeni Şablon Oluştur
+        </Link>
       </div>
     );
   }
@@ -64,15 +76,15 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
       {templates.map((template) => (
         <div
           key={template.id}
-          className="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md "
+          className="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
         >
           {template.category && (
             <div
               className="mb-3 inline-flex items-center rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
               style={{
-                backgroundColor: template.category.color + "20",
+                backgroundColor: `${template.category.color}20`,
                 color: template.category.color,
-                border: `1px solid ${template.category.color}40`
+                border: `1px solid ${template.category.color}40`,
               }}
             >
               {template.category.name}
@@ -81,22 +93,22 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
 
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-base font-bold text-slate-900 leading-tight">{template.name}</p>
+              <p className="text-base font-bold leading-tight text-slate-900">{template.name}</p>
               <p className="mt-0.5 text-xs text-slate-400">{template.exerciseCount} egzersiz</p>
             </div>
             <ActionMenu
               items={[
                 {
                   label: "Düzenle",
-                  onClick: () => router.push(`/coach/templates/${template.id}/edit`)
+                  onClick: () => router.push(`/coach/templates/${template.id}/edit`),
                 },
                 {
                   label: "Sil",
                   danger: true,
                   onClick: () => {
                     void deleteTemplate(template.id);
-                  }
-                }
+                  },
+                },
               ]}
             />
           </div>

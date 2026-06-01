@@ -11,7 +11,7 @@ type Props = {
 };
 
 const TIER_LABELS: Record<SubscriptionTier, string> = {
-  FREE: "Starter",
+  FREE: "Free",
   TIER_1: "Pro",
   TIER_2: "Elite",
   AGENCY: "Agency",
@@ -35,13 +35,16 @@ export function QuotaWidget({ tier, currentClientCount }: Props) {
       className="rounded-2xl p-4"
       style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[11px] font-black uppercase tracking-wider text-slate-400">
             Danışan Kotası
           </p>
           <p className="mt-0.5 text-sm font-bold text-slate-700">
             {currentClientCount} / {max} danışan
+          </p>
+          <p className="mt-1 text-xs font-medium text-slate-500">
+            SaaS planın kapasiteni ve büyüme araçlarını belirler.
           </p>
         </div>
         <span

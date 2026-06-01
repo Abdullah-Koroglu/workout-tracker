@@ -20,11 +20,17 @@ export type BillingPlanDefinition = {
 export const BILLING_PLANS: Record<SubscriptionTier, BillingPlanDefinition> = {
   FREE: {
     tier: "FREE",
-    label: "Starter",
+    label: "Free",
     maxClients: 3,
     maxTemplates: 8,
     price: { monthly: 0, yearly: 0 },
-    features: ["3 aktif danışan", "Temel antrenman şablonları", "Mesajlaşma"],
+    features: [
+      "3 aktif danışan",
+      "8 antrenman şablonu",
+      "Temel mesajlaşma",
+      "Marketplace vitrin profili",
+      "Davet linki ile danışan alma",
+    ],
   },
   TIER_1: {
     tier: "TIER_1",
@@ -32,7 +38,13 @@ export const BILLING_PLANS: Record<SubscriptionTier, BillingPlanDefinition> = {
     maxClients: 15,
     maxTemplates: 20,
     price: { monthly: 2500, yearly: 2300 },
-    features: ["15 aktif danışan", "Özel antrenman şablonları", "Mesajlaşma", "Temel analitik"],
+    features: [
+      "15 aktif danışan",
+      "20 özel antrenman şablonu",
+      "Check-in, ölçüm ve beslenme takibi",
+      "Marketplace görünürlük önerileri",
+      "Haftalık sessiz AI koç raporu",
+    ],
     stripePriceIds: {
       monthly: process.env.STRIPE_PRO_PRICE_ID ?? "",
       yearly: process.env.STRIPE_PRO_YEARLY_PRICE_ID ?? "",
@@ -48,7 +60,13 @@ export const BILLING_PLANS: Record<SubscriptionTier, BillingPlanDefinition> = {
     maxClients: 50,
     maxTemplates: null,
     price: { monthly: 7900, yearly: 6300 },
-    features: ["50 aktif danışan", "Gelişmiş analitik", "Toplu mesaj", "Öncelikli destek"],
+    features: [
+      "50 aktif danışan",
+      "Limitsiz antrenman şablonu",
+      "Gelişmiş performans ve risk analitiği",
+      "Toplu mesaj ve aksiyon merkezi",
+      "Dönüşüm vitrini ve öncelikli destek",
+    ],
     popular: true,
     stripePriceIds: {
       monthly: process.env.STRIPE_ELITE_PRICE_ID ?? "",
@@ -65,7 +83,13 @@ export const BILLING_PLANS: Record<SubscriptionTier, BillingPlanDefinition> = {
     maxClients: 9999,
     maxTemplates: null,
     price: { monthly: 19900, yearly: null },
-    features: ["Çoklu koç", "Yüksek kapasite", "Beyaz etiket opsiyonu", "Öncelikli onboarding"],
+    features: [
+      "Çoklu koç ve ekip hazırlığı",
+      "Yüksek danışan kapasitesi",
+      "Gym ve ajans operasyon akışı",
+      "RTC görüşme katmanı entegrasyon hazırlığı",
+      "Öncelikli onboarding ve destek",
+    ],
   },
 };
 

@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FitCoach Ürün ve Yol Haritası Sunumu</title>
+  <style>
+    :root {
+      --ink: #101828;
+      --muted: #667085;
+      --line: #e4e7ec;
+      --soft: #f8fafc;
+      --navy: #15375f;
+      --navy-2: #0f172a;
+      --orange: #f97316;
+      --green: #16a34a;
+      --blue: #2563eb;
+      --red: #dc2626;
+      --amber: #d97706;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f3f5f8;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    .deck {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 60px;
+    }
+
+    .hero {
+      min-height: 560px;
+      border-radius: 8px;
+      padding: 44px;
+      color: white;
+      background:
+        linear-gradient(135deg, rgba(15,23,42,.88), rgba(21,55,95,.82)),
+        url("public/logo.png");
+      background-size: cover, 360px;
+      background-position: center, right 44px center;
+      background-repeat: no-repeat;
+      display: grid;
+      align-content: space-between;
+      overflow: hidden;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.08);
+      border-radius: 999px;
+      color: rgba(255,255,255,.82);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    h1 {
+      max-width: 780px;
+      font-size: clamp(44px, 7vw, 86px);
+      line-height: .94;
+      letter-spacing: 0;
+      margin-top: 28px;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin-top: 20px;
+      color: rgba(255,255,255,.72);
+      font-size: 19px;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 34px;
+    }
+
+    .meta div,
+    .card,
+    .slide {
+      border-radius: 8px;
+    }
+
+    .meta div {
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.13);
+      padding: 18px;
+    }
+
+    .meta b {
+      display: block;
+      font-size: 25px;
+      color: white;
+      line-height: 1;
+    }
+
+    .meta span {
+      display: block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(255,255,255,.62);
+      font-weight: 700;
+    }
+
+    .slide {
+      margin-top: 24px;
+      padding: 34px;
+      background: white;
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 60px rgba(16, 24, 40, .06);
+    }
+
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      align-items: start;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 20px;
+      margin-bottom: 22px;
+    }
+
+    h2 {
+      font-size: clamp(26px, 3vw, 40px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .section-note {
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .grid-2,
+    .grid-3,
+    .grid-4 {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
+    .card {
+      border: 1px solid var(--line);
+      background: var(--soft);
+      padding: 18px;
+    }
+
+    .card h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 17px;
+      margin-bottom: 9px;
+    }
+
+    .card p,
+    li {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+    }
+
+    li + li { margin-top: 7px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+
+    .good { color: var(--green); background: #dcfce7; }
+    .warn { color: var(--amber); background: #fef3c7; }
+    .bad { color: var(--red); background: #fee2e2; }
+    .info { color: var(--blue); background: #dbeafe; }
+    .brand { color: var(--orange); background: #ffedd5; }
+
+    .score {
+      display: grid;
+      grid-template-columns: 160px 1fr 56px;
+      gap: 12px;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    .bar {
+      height: 9px;
+      border-radius: 999px;
+      background: #edf2f7;
+      overflow: hidden;
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange), #ea580c);
+      border-radius: 999px;
+    }
+
+    .roadmap {
+      display: grid;
+      grid-template-columns: 150px 1fr;
+      gap: 18px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .roadmap:last-child { border-bottom: 0; }
+
+    .roadmap time {
+      color: var(--orange);
+      font-weight: 950;
+      font-size: 14px;
+      text-transform: uppercase;
+    }
+
+    .roadmap h3 {
+      margin-bottom: 7px;
+      font-size: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      font-size: 14px;
+    }
+
+    th, td {
+      padding: 13px 14px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #475467;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .quote {
+      border-left: 5px solid var(--orange);
+      background: #fff7ed;
+      padding: 20px;
+      border-radius: 8px;
+      font-size: 19px;
+      font-weight: 800;
+      color: #7c2d12;
+    }
+
+    .questions {
+      counter-reset: q;
+    }
+
+    .questions li {
+      list-style: none;
+      position: relative;
+      padding-left: 44px;
+      min-height: 34px;
+    }
+
+    .questions li::before {
+      counter-increment: q;
+      content: counter(q);
+      position: absolute;
+      left: 0;
+      top: -2px;
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--navy);
+      color: white;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 840px) {
+      .deck { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .hero, .slide { padding: 22px; }
+      .hero { min-height: 620px; background-size: cover, 220px; background-position: center, center bottom 30px; }
+      .meta, .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+      .slide-header { display: block; }
+      .section-note { margin-top: 10px; }
+      .roadmap { grid-template-columns: 1fr; }
+      .score { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; white-space: nowrap; }
+    }
+
+    @media print {
+      body { background: white; }
+      .deck { width: 100%; padding: 0; }
+      .slide, .hero { break-after: page; box-shadow: none; margin-top: 0; border-radius: 0; }
+      .footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Ürün analizi · Yol haritası · Marketing</span>
+        <h1>FitCoach artık tracker değil, koçluk işletim sistemi.</h1>
+        <p>
+          Kod tabanı; antrenman, koç-müşteri ilişkisi, marketplace, abonelik,
+          mesajlaşma, check-in, beslenme, video form analizi ve PWA temellerini taşıyor.
+          Bir sonraki aşama daha fazla ekran eklemek değil: akışları tamamlayıp ürünü satılabilir hale getirmek.
+        </p>
+      </div>
+      <div class="meta">
+        <div><b>Next.js</b><span>App Router, Prisma, PostgreSQL, NextAuth</span></div>
+        <div><b>2 taraf</b><span>Coach ve client rolleri ayrı deneyimler</span></div>
+        <div><b>B2B + B2C</b><span>Koç SaaS ürünü ve danışan pazaryeri</span></div>
+        <div><b>Odak</b><span>Retention, güven, ödeme, operasyon</span></div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Mevcut Durum</h2>
+        <p class="section-note">Eski raporlardaki bazı eksikler artık eklenmiş. Bu yüzden planı güncel kod tabanına göre yeniden çerçeveledim.</p>
+      </div>
+      <div class="grid-3">
+        <article class="card">
+          <h3><span class="pill good">Var</span> Çekirdek koçluk akışı</h3>
+          <p>Koç profil, paketler, invite link, müşteri ilişkisi, template oluşturma, atama, workout execution ve yorum akışı mevcut.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill good">Var</span> Engagement katmanı</h3>
+          <p>Streak, achievements, PR, check-in, body logs, mobilite rutinleri, beslenme logu ve video form analizi kodda yer alıyor.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill warn">Kısmi</span> Ticari ürünleşme</h3>
+          <p>Stripe/iyzico, subscription, payment, packages ve revenue panel var; fakat satın alma yolculuğu, fatura güveni ve satış analitiği sertleşmeli.</p>
+        </article>
+      </div>
+
+      <div class="score"><strong>Ürün kapsamı</strong><div class="bar"><i style="width:82%"></i></div><span>82%</span></div>
+      <div class="score"><strong>Akış bütünlüğü</strong><div class="bar"><i style="width:64%"></i></div><span>64%</span></div>
+      <div class="score"><strong>Satışa hazır güven</strong><div class="bar"><i style="width:48%"></i></div><span>48%</span></div>
+      <div class="score"><strong>Teknik sağlamlık</strong><div class="bar"><i style="width:58%"></i></div><span>58%</span></div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Uygulamanın Ruhu</h2>
+        <p class="section-note">FitCoach'ın en güçlü pozisyonu “spor takibi” değil; koçun danışanla ilişkisini ölçülebilir, görünür ve gelir üreten hale getirmek.</p>
+      </div>
+      <div class="quote">
+        Koç için: “Danışanlarımı tek panelden yönetiyorum, profesyonel görünüyorum ve marketplace sayesinde yeni müşteri buluyorum.”
+        <br />
+        Danışan için: “Bütçeme ve hedefime uygun iyi bir koç buluyorum, programımı ve ilerlememi net görüyorum.”
+      </div>
+      <div class="grid-3" style="margin-top:16px">
+        <article class="card">
+          <h3>1. Disiplin</h3>
+          <p>Takvim, streak, check-in, bildirim ve tamamlanma oranları uygulamanın ritmini kurmalı.</p>
+        </article>
+        <article class="card">
+          <h3>2. Kanıt</h3>
+          <p>PR, tonaj, before/after, yorum, video feedback ve başarı hikayeleri güven üretmeli.</p>
+        </article>
+        <article class="card">
+          <h3>3. İşletme</h3>
+          <p>Koçun müşteri limiti, geliri, paketleri, randevuları ve riskleri tek yerde yönetilmeli.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Alınan Ürün Kararları</h2>
+        <p class="section-note">Bu kararlar bundan sonraki backlog sıralamasını belirliyor. Artık ürünün ilk GTM çizgisi net: bağımsız koç odaklı SaaS ve açık marketplace.</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Konu</th><th>Karar</th><th>Ürün Etkisi</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>İlk müşteri</td>
+            <td>Önce bağımsız online koçlar; sonra ajanslar ve koçluk hizmeti veren gym sahipleri.</td>
+            <td>İlk versiyon self-serve, hızlı kurulum, sade fiyatlandırma ve koç verimliliğine odaklanmalı. Ajans özellikleri daha sonra çoklu koç/tenant olarak gelecek.</td>
+          </tr>
+          <tr>
+            <td>Gelir modeli</td>
+            <td>Koçtan SaaS aboneliği alınacak.</td>
+            <td>Koç ödeme yapma sebebini iki yerden görecek: danışan yönetimi ve marketplace üzerinden yeni müşteri kazanımı.</td>
+          </tr>
+          <tr>
+            <td>Marketplace</td>
+            <td>Herkese açık olacak.</td>
+            <td>SEO, profil kalitesi, doğrulanmış yorum, güven rozeti ve arama/filtreleme P0 seviyesine yükselir.</td>
+          </tr>
+          <tr>
+            <td>Marka hissi</td>
+            <td>Hem uygun fiyatlı iyi koç bulma, hem premium performans koçluğu hissi.</td>
+            <td>Segmentli marketplace gerekir: “Başlangıç için uygun”, “Performans koçu”, “Elite dönüşüm” gibi paket ve filtre dili kurulmalı.</td>
+          </tr>
+          <tr>
+            <td>AI rolü</td>
+            <td>Sessiz kahraman: koça rapor ve öneri üreten arka plan asistanı.</td>
+            <td>AI ana pazarlama iddiası değil; coach dashboard içinde haftalık özet, risk sinyali ve aksiyon önerisi olarak görünür.</td>
+          </tr>
+          <tr>
+            <td>Video call</td>
+            <td>Ayrı geliştirdiğin RTC katmanı ileride ortak altyapı olarak bağlanacak.</td>
+            <td>Şimdilik Zoom/Meet linki desteklenir; backlogda “RTC entegrasyonu” ayrı faz olarak tutulur.</td>
+          </tr>
+          <tr>
+            <td>Pazar</td>
+            <td>Öncelik Türkiye; ödeme yerel kalır. Dil tarafında locale sistemine geçilebilir.</td>
+            <td>TRY, iyzico/Stripe opsiyonu ve Türkçe içerik öncelikli; ama metinler i18n altyapısına taşınabilir.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Tamamlanmış veya İyi Durumda</h2>
+        <p class="section-note">Bu alanlarda sıfırdan yazmak yerine polish, test ve tutarlılık gerekir.</p>
+      </div>
+      <div class="grid-4">
+        <article class="card"><h3>Antrenman motoru</h3><p>Weight/cardio, timer, RIR, rest tracking, superset, dropset, ekstra set, workout note ve intensity akışı var.</p></article>
+        <article class="card"><h3>Coach CRM</h3><p>Danışan listesi, pending requests, notes, churn alerts, compliance, broadcast ve client hub mevcut.</p></article>
+        <article class="card"><h3>Marketplace</h3><p>Koç listesi, filtre, karşılaştırma, profil, reviews, similar coaches ve request akışı var.</p></article>
+        <article class="card"><h3>Profil vitrini</h3><p>Avatar, uzmanlıklar, şehir, paketler, dönüşüm fotoğrafları, sertifika, dil ve FAQ editörleri eklenmiş.</p></article>
+        <article class="card"><h3>Mesajlaşma</h3><p>Thread list, arama, unread, websocket, online status, push toggle ve optimistic send bulunuyor.</p></article>
+        <article class="card"><h3>Body & nutrition</h3><p>Body metric log, ölçüm frekansı, öğün fotoğrafı, adherence tag, makro hedefleri ve plan talimatları var.</p></article>
+        <article class="card"><h3>Seanslar</h3><p>Availability, exception, booking, session panel, meeting URL, agenda, summary ve paid flag modelleri mevcut.</p></article>
+        <article class="card"><h3>Gamification</h3><p>Achievements, streak ve personal record ekranları client dashboard içine alınmış.</p></article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Eksik Olanlar</h2>
+        <p class="section-note">Bunlar yeni tablo eklemekten çok, mevcut parçaları gerçek kullanıcı yolculuğuna bağlama işleri.</p>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Alan</th><th>Eksik</th><th>Neden Önemli</th><th>Öncelik</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Onboarding</td>
+            <td>Koç ve danışan için “ilk 10 dakika” kurulum sihirbazı yok.</td>
+            <td>Kullanıcı boş panele düşerse ürünün değeri anlaşılmaz.</td>
+            <td><span class="pill bad">P0</span></td>
+          </tr>
+          <tr>
+            <td>Ödeme akışı</td>
+            <td>Koç paketi keşif → satın alma → aktif subscription → fatura zinciri tam görünür değil.</td>
+            <td>Marketplace gelir modeli için kritik.</td>
+            <td><span class="pill bad">P0</span></td>
+          </tr>
+          <tr>
+            <td>Kalite</td>
+            <td>Test result klasöründe çok sayıda failure izi var; E2E suite güncel UI ile uyumsuz olabilir.</td>
+            <td>Satış öncesi güvenilirlik ve regresyon kontrolü gerekir.</td>
+            <td><span class="pill bad">P0</span></td>
+          </tr>
+          <tr>
+            <td>Medya</td>
+            <td>Uploadlar local path üstünde; production için S3/R2 gibi kalıcı storage şart.</td>
+            <td>Video, avatar, transformation ve meal photo için veri kaybı riski.</td>
+            <td><span class="pill bad">P0</span></td>
+          </tr>
+          <tr>
+            <td>Mesajlaşma</td>
+            <td>Video/voice call ikonları UI’da var ama gerçek çağrı akışına bağlı değil; attachment modeli var ama composer akışı eksik.</td>
+            <td>Koçluk ilişkisinde iletişim ürünün merkezi.</td>
+            <td><span class="pill warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>AI</td>
+            <td>OpenAI paketi var ama gerçek copilot deneyimi ürün omurgasına bağlanmamış.</td>
+            <td>Rakiplerden ayrışacak ana kaldıraç.</td>
+            <td><span class="pill warn">P1</span></td>
+          </tr>
+          <tr>
+            <td>Analytics</td>
+            <td>AnalyticsSnapshot modeli var; dashboardların pre-computed veriyle beslendiği net değil.</td>
+            <td>Veri büyüdükçe dashboardlar yavaşlar.</td>
+            <td><span class="pill warn">P1</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Sıfırdan Geliştirilecekler</h2>
+        <p class="section-note">Bu başlıklar mevcut kodun üstüne yamadan çok, ayrı ürün modülü gibi tasarlanmalı.</p>
+      </div>
+      <div class="grid-2">
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Guided onboarding</h3>
+          <p>Koç için: profil tamamla, paket oluştur, ilk danışanı davet et, ilk template ata. Danışan için: hedef, seviye, ölçü, koç seç, ilk check-in.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Satın alma ve sözleşme akışı</h3>
+          <p>Coach package checkout, invoice history, verified purchase, iptal/iade, paket yenileme, “aktif abonelik” deneyimi.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Coach Copilot</h3>
+          <p>Haftalık analiz raporu, riskli danışan özeti, yeni hafta program taslağı, beslenme davranış yorumu ve mesaj önerileri.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Program periodization</h3>
+          <p>Tekil template atama yerine 4/8/12 haftalık makro plan, deload haftası, hedef hacim ve performans progresyonu.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Realtime operations</h3>
+          <p>İlişki durumu, yeni istek, workout live status, check-in cevapları ve mesaj presence için ortak event sistemi.</p>
+        </article>
+        <article class="card">
+          <h3><span class="pill brand">Yeni</span> Growth & referral</h3>
+          <p>Koç davet kodu zaten var; bunu indirim, ücretsiz ay, başarı hikayesi paylaşımı ve referral dashboard ile büyüme kanalına çevir.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>12 Haftalık İlerleme Planı</h2>
+        <p class="section-note">Önerim: önce bağımsız koçların ödeme yapacağı net değeri tamamla; sonra açık marketplace’i büyüme motoruna çevir.</p>
+      </div>
+      <div class="roadmap">
+        <time>0-14 gün</time>
+        <div>
+          <h3>Bağımsız koç MVP’sini keskinleştir</h3>
+          <ul>
+            <li>Koç onboarding checklist: profil, paket, uygunluk, invite link, ilk template, ilk danışan.</li>
+            <li>Koç dashboard’da “bugün ne yapmalıyım?” alanı: bekleyen istek, riskli danışan, tamamlanmamış check-in, yaklaşan seans.</li>
+            <li>Demo seed datasını bağımsız koç satış demosuna göre düzenle.</li>
+            <li>Kırık E2E testlerini güncelle; satış demosunda patlayacak akışları önce düzelt.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="roadmap">
+        <time>15-30 gün</time>
+        <div>
+          <h3>SaaS ödeme ve paket sınırları</h3>
+          <ul>
+            <li>Koç planları: Free, Starter, Pro, Agency. Limitler: danışan sayısı, template sayısı, analytics, AI rapor, marketplace boost.</li>
+            <li>Checkout → aktif koç aboneliği → fatura → plan yükseltme/düşürme akışını tamamla.</li>
+            <li>FeatureGate ve tier-limit kontrollerini kritik aksiyonlara bağla: müşteri kabul, template atama, analytics, AI rapor.</li>
+            <li>Revenue panelini “koçun ödediği SaaS” odağına göre sadeleştir; marketplace komisyonu anlatısından kaçın.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="roadmap">
+        <time>31-45 gün</time>
+        <div>
+          <h3>Açık marketplace güven katmanı</h3>
+          <ul>
+            <li>Public coach profile SEO: şehir, uzmanlık, paket, dönüşüm fotoğrafı, yorum ve başarı hikayesi alanlarını zenginleştir.</li>
+            <li>Verified coach ve verified review mekanizması: herkes açık marketplace’e girebilir ama güven sinyalleri ayrışmalı.</li>
+            <li>Filtreleri segmentli hale getir: uygun fiyatlı, performans, kilo verme, kadın koç, şehir, online, yüksek puan.</li>
+            <li>Koç profil kalite skoru: düşük skorlu profil marketplace’te daha az görünür.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="roadmap">
+        <time>46-60 gün</time>
+        <div>
+          <h3>Danışan deneyimi ve uygun koç bulma</h3>
+          <ul>
+            <li>Danışan onboarding: hedef, bütçe, seviye, şehir/online tercihi, sağlık notu, beklenen iletişim sıklığı.</li>
+            <li>Koç eşleştirme skoru: hedef + bütçe + uzmanlık + rating + response time.</li>
+            <li>Karşılaştırma ekranını karar verdiren hale getir: fiyat, paket kapsamı, uzmanlık, yorum, dönüşüm örnekleri.</li>
+            <li>Koçu olmayan danışana self-service keşif akışı: “3 koç önerisi” ve hızlı istek gönderme.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="roadmap">
+        <time>61-75 gün</time>
+        <div>
+          <h3>Sessiz AI rapor motoru</h3>
+          <ul>
+            <li>Haftalık koç raporu: riskli danışanlar, en iyi ilerleme, eksik check-in, uyumsuz beslenme, PR kazananlar.</li>
+            <li>Her danışan için “önerilen koç aksiyonu”: mesaj gönder, seans planla, programı hafiflet, başarıyı kutla.</li>
+            <li>AI çıktısını otomatik aksiyona çevirmeden taslak olarak sun; koç onaylamadan danışana gitmesin.</li>
+            <li>AI özelliğini Pro plan avantajı olarak konumlandır.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="roadmap">
+        <time>76-90 gün</time>
+        <div>
+          <h3>Ajans/Gym hazırlığı ve RTC backlog</h3>
+          <ul>
+            <li>Agency plan taslağı: çoklu koç, ortak müşteri havuzu, rol yetkileri, finansal görünürlük sınırları.</li>
+            <li>RTC entegrasyonu için hazırlık: Session modelinde provider, roomId, callStatus, recordingUrl alanlarını planla.</li>
+            <li>Locale altyapısı: metinleri i18n yapısına taşıma planı; ödeme ve operasyon Türkiye öncelikli kalır.</li>
+            <li>Bağımsız koçlardan 10 beta müşteri topla; kullanım verisine göre Agency fazını başlat.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Marketing Pozisyonu</h2>
+        <p class="section-note">Ana satış mesajı koça: “Danışanlarını profesyonel yönet, marketplace’te görün, yeni müşteri kazan.”</p>
+      </div>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Birincil hedef: Bağımsız koç</h3>
+          <p>“Danışan takibini, program atamayı, check-in’i, mesajlaşmayı ve vitrini tek yerde yönet.”</p>
+          <ul>
+            <li>Acı: WhatsApp, Excel, notlar ve ödeme karmaşası</li>
+            <li>Vaad: profesyonel koç paneli + açık marketplace</li>
+            <li>Kanıt: compliance, PR, check-in, yorum, dönüşüm vitrini</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>İkincil hedef: Danışan</h3>
+          <p>“Bütçene ve hedefine uygun koçu bul; programını, ilerlemeni ve koç yorumlarını tek yerden takip et.”</p>
+          <ul>
+            <li>Acı: doğru koçu seçememe ve program disiplinini sürdürememe</li>
+            <li>Vaad: uygun fiyatlıdan premium’a şeffaf koç seçimi</li>
+            <li>Kanıt: rating, verified review, paket karşılaştırma, streak</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Sonraki hedef: Ajans / gym</h3>
+          <p>“Birden fazla koçu, danışanı ve operasyonu aynı standartta yönet.”</p>
+          <ul>
+            <li>Acı: operasyon kontrolü</li>
+            <li>Vaad: tenant, rol, rapor, çoklu koç yönetimi</li>
+            <li>Kanıt: analytics, revenue, audit</li>
+          </ul>
+        </article>
+      </div>
+      <table style="margin-top:18px">
+        <thead><tr><th>Kanal</th><th>İçerik fikri</th><th>CTA</th></tr></thead>
+        <tbody>
+          <tr><td>Instagram / TikTok</td><td>“Bir online koçun sabah rutini”: riskli danışan, check-in, program, mesaj ve yeni talep.</td><td>Koç hesabı aç</td></tr>
+          <tr><td>YouTube</td><td>“WhatsApp’tan profesyonel koçluk sistemine geçiş” gerçek workflow demosu.</td><td>Demo izle</td></tr>
+          <tr><td>SEO</td><td>Şehir + uzmanlık landingleri: İstanbul kilo verme koçu, online güç koçu, kadın fitness koçu.</td><td>Koç bul</td></tr>
+          <tr><td>Referral</td><td>Koç getiren koça ücretsiz ay; danışan davet eden koça marketplace görünürlük puanı.</td><td>Davet linkini paylaş</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>Yapılacaklar: Ürün Backlog</h2>
+        <p class="section-note">Aşağıdaki liste senin kararlarına göre yeniden önceliklendirildi. P0 satışa çıkmadan önce kapanmalı.</p>
+      </div>
+      <table>
+        <thead><tr><th>Öncelik</th><th>Yapılacak</th><th>Kabul kriteri</th></tr></thead>
+        <tbody>
+          <tr><td><span class="pill bad">P0</span></td><td>Bağımsız koç onboarding akışı</td><td>Yeni koç 10 dakika içinde profilini, ilk paketini, invite linkini ve ilk template’ini oluşturabiliyor.</td></tr>
+          <tr><td><span class="pill bad">P0</span></td><td>Koç SaaS planları ve checkout</td><td>Koç plan seçip ödeme yapıyor; planı dashboard’da aktif görünüyor; limitler çalışıyor.</td></tr>
+          <tr><td><span class="pill bad">P0</span></td><td>Açık marketplace profil kalite standardı</td><td>Profil tamamlığı düşük koç görünürlüğü sınırlı; verified ve yorumlu profiller öne çıkıyor.</td></tr>
+          <tr><td><span class="pill bad">P0</span></td><td>Production medya depolama</td><td>Avatar, transformation, meal photo ve movement video local disk dışında kalıcı saklanıyor.</td></tr>
+          <tr><td><span class="pill warn">P1</span></td><td>Koç dashboard aksiyon merkezi</td><td>Koç her girişte riskli danışan, bekleyen istek, yaklaşan seans ve okunmamış mesajları öncelikli görüyor.</td></tr>
+          <tr><td><span class="pill warn">P1</span></td><td>Danışan koç bulma sihirbazı</td><td>Danışan hedef/bütçe/seviye girince 3 önerilen koç ve karşılaştırma ekranına gidiyor.</td></tr>
+          <tr><td><span class="pill warn">P1</span></td><td>Sessiz AI haftalık rapor</td><td>Koç her hafta danışan bazlı özet ve önerilen aksiyon listesi alıyor.</td></tr>
+          <tr><td><span class="pill warn">P1</span></td><td>Verified review ve trust score</td><td>Sadece gerçek ilişki/abonelik geçmişi olan danışanların yorumları doğrulanmış görünüyor.</td></tr>
+          <tr><td><span class="pill info">P2</span></td><td>Locale altyapısı</td><td>UI metinleri i18n yapısına taşınmaya başlıyor; varsayılan Türkçe kalıyor.</td></tr>
+          <tr><td><span class="pill info">P2</span></td><td>RTC entegrasyon hazırlığı</td><td>Session model ve UI, ileride kendi RTC katmanına bağlanabilecek provider/room yapısını destekliyor.</td></tr>
+          <tr><td><span class="pill info">P2</span></td><td>Agency/Gym beta modeli</td><td>Çoklu koç, rol, müşteri havuzu ve owner dashboard teknik tasarımı hazır.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="slide">
+      <div class="slide-header">
+        <h2>İlk Sprint Planı</h2>
+        <p class="section-note">İlk sprintin hedefi: bağımsız koça “buna para öderim” dedirten net deneyimi çıkarmak.</p>
+      </div>
+      <table>
+        <thead><tr><th>Gün</th><th>İş</th><th>Çıktı</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Demo verisi ve satış senaryosu</td><td>1 koç, 5 danışan, 2 riskli danışan, 1 PR, 1 check-in, 1 marketplace talebi hazır.</td></tr>
+          <tr><td>2</td><td>Koç onboarding checklist UI</td><td>Dashboard veya profil üstünde tamamlanabilir görev listesi.</td></tr>
+          <tr><td>3</td><td>Boş durumları aksiyonlaştır</td><td>Boş dashboard, boş client listesi, boş template listesi koçu doğru aksiyona iter.</td></tr>
+          <tr><td>4</td><td>SaaS plan metni ve limitleri</td><td>Free/Starter/Pro/Agency planları ve hangi özelliklerin kilitli olduğu netleşir.</td></tr>
+          <tr><td>5</td><td>FeatureGate denetimi</td><td>Limit aşınca plan yükseltme ekranına yönlendirme çalışır.</td></tr>
+          <tr><td>6</td><td>Marketplace profil kalite skoru</td><td>Koç hangi alanları doldurursa daha görünür olacağını bilir.</td></tr>
+          <tr><td>7</td><td>Landing mesajını değiştir</td><td>Ana sayfa “tracker” değil “online koçluk işletim sistemi” mesajı verir.</td></tr>
+          <tr><td>8</td><td>Testleri demo yolculuğuna göre düzelt</td><td>Auth, coach onboarding, invite, template, workout, marketplace smoke test geçer.</td></tr>
+          <tr><td>9</td><td>İlk 10 koç beta listesi</td><td>Görüşme notları, ihtiyaçlar, ödeme isteği ve itirazlar kaydedilir.</td></tr>
+          <tr><td>10</td><td>Satış demosu videosu</td><td>2 dakikalık kayıt: koç nasıl kurulur, danışan nasıl yönetilir, marketplace değeri nedir.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">
+      <span>FitCoach ürün planı · Kod tabanı incelemesi üzerinden hazırlanmıştır</span>
+      <span>Dosya: FITCOACH_PRODUCT_PLAN_PRESENTATION.html</span>
+    </div>
+  </main>
+</body>
+</html>

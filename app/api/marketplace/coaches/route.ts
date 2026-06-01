@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 
 import { requireAuth } from "@/lib/api-auth";
 import { attachCoachAvatars } from "@/lib/coach-avatar";
+import { calculateCoachProfileQuality } from "@/lib/coach-profile-quality";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/marketplace/coaches?q=&specialty=&minPrice=&maxPrice=&minExp=&hasPackages=&city=
@@ -44,6 +45,10 @@ export async function GET(request: Request) {
           rating: true,
           successRate: true,
           reviewCount: true,
+          socialMediaUrl: true,
+          videoIntroUrl: true,
+          certifications: true,
+          isVerified: true,
           packages: {
             where: { isActive: true },
             select: { id: true, price: true },
@@ -70,8 +75,8 @@ export async function GET(request: Request) {
     // Price filter
     if (minPrice !== null || maxPrice !== null) {
       const prices = coach.coachProfile?.packages
-        .map((p: any) => p.price)
-        .filter((p: any): p is number => p !== null);
+        .map((p: { price: number | null }) => p.price)
+        .filter((p: number | null): p is number => p !== null);
 
       if (!prices || prices.length === 0) {
         // If coach has no packages with prices, exclude them
@@ -92,6 +97,26 @@ export async function GET(request: Request) {
   });
 
   const coachesWithAvatar = await attachCoachAvatars(filtered);
+  const coachesWithQuality = coachesWithAvatar
+    .map((coach) => ({
+      ...coach,
+      coachProfile: coach.coachProfile
+        ? {
+            ...coach.coachProfile,
+            profileQuality: calculateCoachProfileQuality({
+              ...coach.coachProfile,
+              rating: coach.coachProfile.rating?.toString() ?? null,
+              avatarUrl: coach.avatarUrl,
+            }),
+          }
+        : null,
+    }))
+    .sort((left, right) => {
+      const leftScore = left.coachProfile?.profileQuality.score ?? 0;
+      const rightScore = right.coachProfile?.profileQuality.score ?? 0;
+      if (rightScore !== leftScore) return rightScore - leftScore;
+      return left.name.localeCompare(right.name, "tr");
+    });
 
-  return NextResponse.json({ coaches: coachesWithAvatar });
+  return NextResponse.json({ coaches: coachesWithQuality });
 }

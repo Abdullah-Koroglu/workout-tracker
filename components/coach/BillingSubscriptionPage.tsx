@@ -18,10 +18,17 @@ import {
 import type { SubscriptionTier } from "@prisma/client";
 
 const PLAN_FEATURES: Record<SubscriptionTier, string[]> = {
-  FREE: ["3 aktif danisan", "Temel antrenman sablonlari", "Mesajlasma"],
-  TIER_1: ["15 aktif danisan", "Ozel antrenman sablonlari", "Mesajlasma", "Temel analitik"],
-  TIER_2: ["50 aktif danisan", "Gelismis analitik", "Toplu mesaj", "Oncelikli destek"],
-  AGENCY: ["Coklu koc", "Yuksek kapasite", "Beyaz etiket opsiyonu", "Oncelikli onboarding"],
+  FREE: ["3 aktif danışan", "8 antrenman şablonu", "Temel mesajlaşma", "Marketplace vitrin profili"],
+  TIER_1: ["15 aktif danışan", "20 özel antrenman şablonu", "Check-in, ölçüm ve beslenme takibi", "Haftalık AI koç raporu"],
+  TIER_2: ["50 aktif danışan", "Limitsiz şablon", "Gelişmiş risk analitiği", "Toplu mesaj ve aksiyon merkezi"],
+  AGENCY: ["Çoklu koç hazırlığı", "Yüksek kapasite", "Gym ve ajans operasyonu", "Öncelikli onboarding"],
+};
+
+const PLAN_POSITIONING: Record<SubscriptionTier, string> = {
+  FREE: "İlk danışanlarınla sistemi dene.",
+  TIER_1: "Bağımsız online koç için ana büyüme planı.",
+  TIER_2: "Yüksek hacimli koçluk ve premium servis.",
+  AGENCY: "Ajans ve gym ekipleri için hazırlık katmanı.",
 };
 
 const PLAN_ICONS: Record<SubscriptionTier, typeof Users> = {
@@ -108,8 +115,8 @@ function cycleSuffix(cycle: BillingCycle) {
 function quotaText(state: BillingInfo["quotaState"]) {
   if (state === "full") return "Kapasite doldu";
   if (state === "critical") return "Kritik";
-  if (state === "warning") return "Yaklasiliyor";
-  return "Saglikli";
+  if (state === "warning") return "Yaklaşılıyor";
+  return "Sağlıklı";
 }
 
 function quotaColor(state: BillingInfo["quotaState"]) {
@@ -137,7 +144,7 @@ function BillingSubscriptionPageInner() {
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) {
-          throw new Error(data.error || "Abonelik bilgileri alinamadi.");
+          throw new Error(data.error || "Abonelik bilgileri alınamadı.");
         }
         setInfo(data);
         setBillingCycle(data.supportedBillingCycles.includes("yearly") ? "yearly" : "monthly");
@@ -191,7 +198,7 @@ function BillingSubscriptionPageInner() {
 
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.url) {
-      setError(data.error || "Odeme oturumu baslatilamadi.");
+      setError(data.error || "Ödeme oturumu başlatılamadı.");
       setUpgradingPlan(null);
       return;
     }
@@ -206,7 +213,7 @@ function BillingSubscriptionPageInner() {
     const response = await fetch("/api/coach/subscription/portal", { method: "POST" });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data.url) {
-      setError(data.error || "Faturalama portali acilamadi.");
+      setError(data.error || "Faturalama portalı açılamadı.");
       setPortalBusy(false);
       return;
     }
@@ -241,21 +248,23 @@ function BillingSubscriptionPageInner() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="mb-6">
-        <h1 className="text-[28px] font-black tracking-[-0.04em] text-slate-900">Faturalama & Abonelik</h1>
-        <p className="mt-1 text-sm text-slate-500">Koc planini, danisan limitini ve faturalama gecmisini yonet.</p>
+        <h1 className="text-[28px] font-black tracking-[-0.04em] text-slate-900">Koç SaaS Planları</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Danışanlarını yönet, marketplace vitrinini büyüt ve kapasiten doldukça planını yükselt.
+        </p>
       </div>
 
       {success && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm font-bold text-green-700">
           <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
-          Plan guncellendi.
+          Plan güncellendi.
         </div>
       )}
 
       {canceled && (
         <div className="mb-4 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-700">
           <AlertTriangle className="h-4 w-4 flex-shrink-0" />
-          Odeme islemi iptal edildi.
+          Ödeme işlemi iptal edildi.
         </div>
       )}
 
@@ -281,11 +290,11 @@ function BillingSubscriptionPageInner() {
             <div className="mb-2 flex items-center gap-3">
               <div className="text-[30px] font-black tracking-[-0.06em]">{info.label}</div>
               <span className="rounded-full border border-orange-400/30 bg-orange-500/20 px-3 py-1 text-[11px] font-bold text-orange-100">
-                {info.subscriptionStatus ? info.subscriptionStatus.toUpperCase() : "AKTIF"}
+                {info.subscriptionStatus ? info.subscriptionStatus.toUpperCase() : "AKTİF"}
               </span>
             </div>
             <div className="text-[24px] font-black tracking-[-0.04em] text-orange-100">
-              {currentPrice === 0 ? "Ucretsiz" : formatMoney(currentPrice, "TRY")}
+              {currentPrice === 0 ? "Ücretsiz" : formatMoney(currentPrice, "TRY")}
               {currentPrice > 0 && <span className="ml-1 text-sm font-medium text-white/45">{cycleSuffix(billingCycle)}</span>}
             </div>
             <div className="mt-2 text-xs text-white/50">
@@ -294,7 +303,7 @@ function BillingSubscriptionPageInner() {
           </div>
 
           <div>
-            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.24em] text-white/55">Danisan Kotasi</div>
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.24em] text-white/55">Danışan Kotası</div>
             <div className="mb-2 flex items-end justify-between gap-3">
               <div className="text-[30px] font-black tracking-[-0.06em]">
                 {info.currentClientCount}
@@ -319,19 +328,19 @@ function BillingSubscriptionPageInner() {
             </div>
             <div className="text-xs font-medium text-white/65">
               {info.maxClients === null
-                ? "Bu planda pratikte limitsiz danisan kapasitesi var."
+                ? "Bu planda pratikte limitsiz danışan kapasitesi var."
                 : info.remainingClients === 0
-                  ? "Yeni danisan almak icin daha ust plana gecmen gerekiyor."
-                  : `${info.remainingClients} bos kontenjan kaldi.`}
+                  ? "Yeni danışan almak için daha üst plana geçmen gerekiyor."
+                  : `${info.remainingClients} boş kontenjan kaldı.`}
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Aylik Gelir", value: currentPrice === 0 ? "-" : formatMoney(info.currentPlanPrice.monthly, "TRY"), icon: CreditCard },
+              { label: "Aylık Plan", value: currentPrice === 0 ? "-" : formatMoney(info.currentPlanPrice.monthly, "TRY"), icon: CreditCard },
               { label: "Sonraki Fatura", value: formatDate(info.nextInvoiceDate), icon: ShieldCheck },
-              { label: "Aktif Sure", value: info.activeSince ? `${Math.max(1, Math.round((Date.now() - new Date(info.activeSince).getTime()) / (1000 * 60 * 60 * 24 * 30)))} ay` : "-", icon: Loader2 },
-              { label: "Toplam Odeme", value: info.totalPaid > 0 ? formatMoney(info.totalPaid, currentCurrency) : "-", icon: Sparkles },
+              { label: "Aktif Süre", value: info.activeSince ? `${Math.max(1, Math.round((Date.now() - new Date(info.activeSince).getTime()) / (1000 * 60 * 60 * 24 * 30)))} ay` : "-", icon: Loader2 },
+              { label: "Toplam Ödeme", value: info.totalPaid > 0 ? formatMoney(info.totalPaid, currentCurrency) : "-", icon: Sparkles },
             ].map((stat) => {
               const Icon = stat.icon;
               return (
@@ -363,13 +372,13 @@ function BillingSubscriptionPageInner() {
                   boxShadow: billingCycle === cycle ? "0 3px 10px rgba(249,115,22,0.28)" : "none",
                 }}
               >
-                {cycle === "monthly" ? "Aylik" : "Yillik"}
+                {cycle === "monthly" ? "Aylık" : "Yıllık"}
               </button>
             );
           })}
         </div>
         {billingCycle === "yearly" && info.supportedBillingCycles.includes("yearly") && (
-          <span className="rounded-full bg-green-50 px-4 py-2 text-xs font-bold text-green-600">2 ay ucretsiz</span>
+          <span className="rounded-full bg-green-50 px-4 py-2 text-xs font-bold text-green-600">2 ay ücretsiz</span>
         )}
       </div>
 
@@ -380,8 +389,8 @@ function BillingSubscriptionPageInner() {
             : plan.isDowngrade
               ? "Alt plan"
               : !plan.isUpgradeable
-                ? "Kullanilamaz"
-                : `${plan.label}'e Gec`;
+                ? "Kullanılamaz"
+                : `${plan.label}'e Geç`;
 
           return (
             <div
@@ -402,7 +411,7 @@ function BillingSubscriptionPageInner() {
               )}
               {plan.popular && (
                 <span className="absolute right-4 top-4 rounded-full bg-gradient-to-r from-orange-400 to-orange-600 px-3 py-1 text-[11px] font-bold text-white shadow-sm">
-                  En Populer
+                  En Popüler
                 </span>
               )}
               {plan.isCurrent && (
@@ -429,7 +438,7 @@ function BillingSubscriptionPageInner() {
                     style={{ color: plan.popular ? "#fff" : "#0F172A" }}
                   >
                     {plan.price === 0
-                      ? "Ucretsiz"
+                      ? "Ücretsiz"
                       : formatMoney(plan.price, "TRY")}
                   </div>
                   {plan.price > 0 && (
@@ -442,11 +451,17 @@ function BillingSubscriptionPageInner() {
                       }}
                     >
                       {billingCycle === "yearly" && plan.priceYearly
-                        ? `${formatMoney(plan.priceYearly * 12, "TRY")}/yil faturalandirilir`
+                        ? `${formatMoney(plan.priceYearly * 12, "TRY")}/yıl faturalandırılır`
                         : "/ay"}
                     </div>
                   )}
                 </div>
+                <p
+                  className="mt-2 min-h-[36px] text-sm font-semibold leading-snug"
+                  style={{ color: plan.popular ? "rgba(255,255,255,0.68)" : "#64748B" }}
+                >
+                  {PLAN_POSITIONING[plan.tier]}
+                </p>
               </div>
 
               <div
@@ -463,7 +478,7 @@ function BillingSubscriptionPageInner() {
                 >
                   {plan.maxClients === null
                     ? "Esnek kapasite"
-                    : `${plan.maxClients} Danisan`}
+                    : `${plan.maxClients} danışan`}
                 </div>
               </div>
 
@@ -501,7 +516,7 @@ function BillingSubscriptionPageInner() {
                       background: "linear-gradient(135deg,#6D28D9,#7C3AED)",
                     }}
                   >
-                    Iletisime Gec
+                    İletişime Geç
                   </Link>
                 ) : (
                   <button
@@ -550,8 +565,8 @@ function BillingSubscriptionPageInner() {
       <section className="mt-6 overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
           <div>
-            <h2 className="text-lg font-black tracking-[-0.03em] text-slate-900">Faturalama Gecmisi</h2>
-            <p className="mt-1 text-sm text-slate-500">Tum fatura ve odemeler.</p>
+            <h2 className="text-lg font-black tracking-[-0.03em] text-slate-900">Faturalama Geçmişi</h2>
+            <p className="mt-1 text-sm text-slate-500">Tüm fatura ve ödemeler.</p>
           </div>
           {info.portalAvailable ? (
             <button
@@ -561,14 +576,14 @@ function BillingSubscriptionPageInner() {
               className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-600 transition hover:border-orange-200 hover:text-orange-500 disabled:opacity-60"
             >
               {portalBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-              Tumunu Yonet
+              Tümünü Yönet
             </button>
           ) : null}
         </div>
 
         {info.invoices.length === 0 ? (
           <div className="px-6 py-10 text-center text-sm text-slate-500">
-            Stripe faturalari henuz olusmamis. Ilk odemeden sonra bu alan dolacak.
+            Stripe faturaları henüz oluşmamış. İlk ödemeden sonra bu alan dolacak.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -578,7 +593,7 @@ function BillingSubscriptionPageInner() {
                   {[
                     "Fatura No",
                     "Tarih",
-                    "Aciklama",
+                    "Açıklama",
                     "Tutar",
                     "Durum",
                     "",
@@ -632,7 +647,7 @@ function BillingSubscriptionPageInner() {
             <div className="text-sm font-black text-slate-900">
               {info.paymentMethod
                 ? `${info.paymentMethod.brand.toUpperCase()} •••• ${info.paymentMethod.last4}`
-                : "Kayitli odeme yontemi yok"}
+                : "Kayıtlı ödeme yöntemi yok"}
             </div>
             <div className="mt-1 text-xs text-slate-500">
               {info.paymentMethod
@@ -640,7 +655,7 @@ function BillingSubscriptionPageInner() {
                 : info.portalAvailable
                   ? info.paymentProvider === "STRIPE"
                     ? "Stripe portalinden kart ekleyebilirsin."
-                    : "Iyzico odemeleri için iç faturalama sayfasına yönlendirilirsin."
+                    : "Iyzico ödemeleri için iç faturalama sayfasına yönlendirilirsin."
                   : "Ödeme yöntemi yönetimi için sağlayıcı kurulumu gerekli."}
             </div>
           </div>
@@ -653,7 +668,7 @@ function BillingSubscriptionPageInner() {
             disabled={!info.portalAvailable || portalBusy}
             className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-600 transition hover:border-orange-200 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {info.paymentMethod ? "Degistir" : "Portal Ac"}
+            {info.paymentMethod ? "Değiştir" : "Portal Aç"}
           </button>
           <button
             type="button"

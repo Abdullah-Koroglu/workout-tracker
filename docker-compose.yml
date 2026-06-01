@@ -61,6 +61,72 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
 
+  # ================================================
+  # STAGING ORTAMI - DEMO VERİ İÇİN AYRı DB
+  # ================================================
+  staging_postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      - POSTGRES_DB=fitcoach_staging
+      - POSTGRES_USER=fitcoach
+      - POSTGRES_PASSWORD=fitcoach
+    ports:
+      - "5433:5432"
+    volumes:
+      - staging_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitcoach -d fitcoach_staging"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  staging_nextjs_app:
+    image: fitcoach:latest
+    build: .
+    ports:
+      - "3002:3000"
+    restart: always
+    depends_on:
+      staging_postgres:
+        condition: service_healthy
+    volumes:
+      - staging_uploads_data:/app/public/uploads
+    environment:
+      - DATABASE_URL=postgresql://fitcoach:fitcoach@staging_postgres:5432/fitcoach_staging?schema=public
+      - AUTH_TRUST_HOST=true
+      - NEXTAUTH_URL=${NEXTAUTH_URL_STAGING}
+      - AUTH_SECRET=${NEXTAUTH_SECRET_STAGING}
+      - PORT=3000
+      - NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL_STAGING}
+      - NEXT_PUBLIC_VAPID_PUBLIC_KEY=${NEXT_PUBLIC_VAPID_PUBLIC_KEY}
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - NODE_ENV=staging
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma db push --accept-data-loss --schema=/app/prisma/schema.prisma && npm run start"]
+
+  staging_ws_server:
+    image: fitcoach:latest
+    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
+    ports:
+      - "3002:3001"
+    restart: always
+    depends_on:
+      staging_postgres:
+        condition: service_healthy
+    volumes:
+      - staging_uploads_data:/app/public/uploads
+    environment:
+      - DATABASE_URL=postgresql://fitcoach:fitcoach@staging_postgres:5432/fitcoach_staging?schema=public
+      - AUTH_SECRET=${NEXTAUTH_SECRET_STAGING}
+      - WS_PORT=3001
+      - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
+      - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
+      - VAPID_SUBJECT=${VAPID_SUBJECT}
+      - NODE_ENV=staging
+
   pg_backup:
     image: prodrigestivill/postgres-backup-local
     restart: always
@@ -79,4 +145,6 @@ services:
 
 volumes:
   postgres_data:
+  staging_postgres_data:
   uploads_data:
+  staging_uploads_data:

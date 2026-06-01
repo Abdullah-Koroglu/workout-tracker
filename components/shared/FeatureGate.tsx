@@ -7,13 +7,13 @@ type GatedFeature = "analytics" | "bodyTracking";
 
 const FEATURE_META: Record<GatedFeature, { label: string; description: string; minPlan: string }> = {
   analytics: {
-    label: "Performans Analitik",
-    description: "Güç trendi, tonaj karşılaştırması ve ısı haritası grafikleri.",
+    label: "Performans Analitiği",
+    description: "Güç trendi, hacim karşılaştırması ve ısı haritası raporları Pro planla açılır.",
     minPlan: "Pro",
   },
   bodyTracking: {
     label: "Vücut Takibi",
-    description: "Kilo, ölçüm ve before/after fotoğraf takibi.",
+    description: "Kilo, ölçüm ve before/after fotoğraf takibi Pro planla açılır.",
     minPlan: "Pro",
   },
 };
@@ -34,11 +34,9 @@ export function FeatureGate({ feature, tier, children }: Props) {
 
   return (
     <div className="relative overflow-hidden rounded-2xl">
-      {/* Blurred preview */}
       <div className="pointer-events-none select-none opacity-30 blur-[3px]">{children}</div>
 
-      {/* Upgrade overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 backdrop-blur-sm p-6 text-center">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/70 p-6 text-center backdrop-blur-sm">
         <div
           className="mb-3 flex h-14 w-14 items-center justify-center rounded-2xl"
           style={{ background: "linear-gradient(135deg, #FEF3C7, #FDE68A)" }}
@@ -46,7 +44,7 @@ export function FeatureGate({ feature, tier, children }: Props) {
           <Lock className="h-7 w-7 text-amber-600" />
         </div>
         <p className="text-[15px] font-black text-slate-800">{meta.label}</p>
-        <p className="mt-1.5 max-w-[240px] text-[12px] text-slate-500 leading-relaxed">
+        <p className="mt-1.5 max-w-[260px] text-[12px] leading-relaxed text-slate-500">
           {meta.description}
         </p>
         <div className="mt-1.5 flex items-center gap-1.5">

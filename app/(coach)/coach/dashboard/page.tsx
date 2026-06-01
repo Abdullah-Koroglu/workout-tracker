@@ -6,6 +6,7 @@ import { QuotaWidget } from "@/components/coach/QuotaWidget";
 import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
 import { CheckInManager } from "@/components/coach/CheckInManager";
 import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
+import { CoachOnboardingChecklist } from "@/components/coach/CoachOnboardingChecklist";
 import { SessionsPanel } from "@/components/shared/SessionsPanel";
 import { CoachRevenuePanel } from "@/components/coach/CoachRevenuePanel";
 import { auth } from "@/lib/auth";
@@ -74,11 +75,25 @@ export default async function CoachDashboardPage() {
     templateExerciseLookups,
     upcomingSessionsCount,
     activeSubscriptionCount,
+    onboarding,
   } = await (async () => {
     try {
       const coachProfile = await prisma.coachProfile.findUnique({
         where: { userId: coachId },
-        select: { subscriptionTier: true },
+        select: {
+          bio: true,
+          slogan: true,
+          city: true,
+          specialties: true,
+          experienceYears: true,
+          transformationPhotos: true,
+          inviteCode: true,
+          subscriptionTier: true,
+          packages: {
+            where: { isActive: true },
+            select: { id: true },
+          },
+        },
       });
 
       const [
@@ -95,6 +110,8 @@ export default async function CoachDashboardPage() {
         topClientRelations,
         upcomingSessionsCount,
         activeSubscriptions,
+        templateCount,
+        availabilityCount,
       ] = await Promise.all([
         prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
         prisma.workout.count({
@@ -232,6 +249,8 @@ export default async function CoachDashboardPage() {
           where: { coachId, status: "active" },
           select: { id: true },
         }),
+        prisma.workoutTemplate.count({ where: { coachId } }),
+        prisma.coachAvailability.count({ where: { coachId } }),
       ]);
 
       const templateExerciseKeys = Array.from(
@@ -270,6 +289,23 @@ export default async function CoachDashboardPage() {
         templateExerciseLookups,
         upcomingSessionsCount,
         activeSubscriptionCount: activeSubscriptions.length,
+        onboarding: {
+          profileReady: Boolean(
+            coachProfile?.bio
+              && coachProfile.slogan
+              && coachProfile.city
+              && coachProfile.experienceYears !== null
+              && Array.isArray(coachProfile.specialties)
+              && coachProfile.specialties.length > 0
+          ),
+          packageReady: (coachProfile?.packages.length ?? 0) > 0,
+          availabilityReady: availabilityCount > 0,
+          templateReady: templateCount > 0,
+          inviteReady: Boolean(coachProfile?.inviteCode),
+          transformationReady: Array.isArray(coachProfile?.transformationPhotos)
+            && coachProfile.transformationPhotos.length > 0,
+          clientReady: totalClients > 0,
+        },
       };
     } catch (error) {
       console.error("[coach/dashboard] Failed to load dashboard data", error);
@@ -460,6 +496,8 @@ export default async function CoachDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
+        <CoachOnboardingChecklist {...onboarding} />
+
         {/* Active Workout Stories */}
         {activeStories.length > 0 && (
           <div>
@@ -674,10 +712,27 @@ export default async function CoachDashboardPage() {
 
           {recentWorkouts.length === 0 ? (
             <div
-              className="bg-white rounded-[18px] p-4 shadow-sm text-center text-[13px] text-slate-400"
+              className="bg-white rounded-[18px] p-4 shadow-sm text-center"
               style={{ border: "1px solid rgba(0,0,0,0.06)" }}
             >
-              Henüz aktivite yok.
+              <p className="text-[13px] font-black text-slate-700">Bugün henüz aktivite yok</p>
+              <p className="mx-auto mt-1 max-w-xs text-[12px] leading-relaxed text-slate-400">
+                İlk hareketi yaratmak için bir danışana hazır şablon ata veya ilk şablonunu oluştur.
+              </p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <Link
+                  href="/coach/templates"
+                  className="rounded-xl bg-slate-900 px-3 py-2 text-[12px] font-black text-white"
+                >
+                  Şablonları Aç
+                </Link>
+                <Link
+                  href="/coach/clients"
+                  className="rounded-xl border border-slate-200 px-3 py-2 text-[12px] font-black text-slate-600"
+                >
+                  Danışanları Gör
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2">
@@ -749,10 +804,27 @@ export default async function CoachDashboardPage() {
 
           {topClients.length === 0 ? (
             <div
-              className="bg-white rounded-[18px] p-4 shadow-sm text-center text-[13px] text-slate-400"
+              className="bg-white rounded-[18px] p-4 shadow-sm text-center"
               style={{ border: "1px solid rgba(0,0,0,0.06)" }}
             >
-              Henüz danışan yok.
+              <p className="text-[13px] font-black text-slate-700">İlk danışanını bağla</p>
+              <p className="mx-auto mt-1 max-w-xs text-[12px] leading-relaxed text-slate-400">
+                Davet linkini paylaş veya marketplace profilini tamamla. Danışan geldiğinde uyumluluk ve aksiyonlar burada görünür.
+              </p>
+              <div className="mt-3 flex flex-wrap justify-center gap-2">
+                <Link
+                  href="/coach/profile"
+                  className="rounded-xl bg-orange-500 px-3 py-2 text-[12px] font-black text-white"
+                >
+                  Davet Linkini Al
+                </Link>
+                <Link
+                  href="/coach/templates/new"
+                  className="rounded-xl border border-slate-200 px-3 py-2 text-[12px] font-black text-slate-600"
+                >
+                  İlk Şablon
+                </Link>
+              </div>
             </div>
           ) : (
             <div className="flex flex-col gap-2">

@@ -37,16 +37,15 @@ export function TemplatesPageClient({
     activeCategory === null
       ? templates
       : activeCategory === "__none__"
-      ? templates.filter((t) => !t.category)
-      : templates.filter((t) => t.category?.id === activeCategory);
+        ? templates.filter((template) => !template.category)
+        : templates.filter((template) => template.category?.id === activeCategory);
 
-  const uncategorizedCount = templates.filter((t) => !t.category).length;
+  const uncategorizedCount = templates.filter((template) => !template.category).length;
   const tierCfg = TIER_CONFIG[tier];
   const isAtLimit = maxTemplates !== null && templateCount >= maxTemplates;
 
   return (
     <div className="space-y-6">
-      {/* Limit banner for FREE users near/at limit */}
       {maxTemplates !== null && (
         <div
           className="flex items-center justify-between rounded-2xl px-4 py-3"
@@ -57,7 +56,7 @@ export function TemplatesPageClient({
           }}
         >
           <div className="flex items-center gap-2.5">
-            {isAtLimit && <Lock className="h-4 w-4 text-red-500 shrink-0" />}
+            {isAtLimit && <Lock className="h-4 w-4 shrink-0 text-red-500" />}
             <div>
               <p className="text-[12px] font-black" style={{ color: isAtLimit ? "#DC2626" : "#475569" }}>
                 {isAtLimit ? "Şablon limitine ulaştınız" : "Şablon Kotası"}
@@ -70,7 +69,7 @@ export function TemplatesPageClient({
           {isAtLimit ? (
             <Link
               href="/coach/billing"
-              className="rounded-xl px-3 py-1.5 text-[11px] font-black text-white shrink-0"
+              className="shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-black text-white"
               style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
             >
               Planı Yükselt →
@@ -89,7 +88,6 @@ export function TemplatesPageClient({
         </div>
       )}
 
-      {/* Category Filter Tabs + Add Button */}
       <div className="flex flex-wrap items-center gap-2">
         <button
           onClick={() => setActiveCategory(null)}
@@ -105,26 +103,26 @@ export function TemplatesPageClient({
           </span>
         </button>
 
-        {categories.map((cat) => {
-          const count = templates.filter((t) => t.category?.id === cat.id).length;
-          const isActive = activeCategory === cat.id;
+        {categories.map((category) => {
+          const count = templates.filter((template) => template.category?.id === category.id).length;
+          const isActive = activeCategory === category.id;
           return (
             <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all border ${isActive ? "shadow-sm" : "opacity-70 hover:opacity-100"}`}
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={`rounded-full border px-4 py-1.5 text-xs font-semibold transition-all ${isActive ? "shadow-sm" : "opacity-70 hover:opacity-100"}`}
               style={{
-                borderColor: cat.color,
-                backgroundColor: isActive ? cat.color : "transparent",
-                color: isActive ? "#fff" : cat.color,
+                borderColor: category.color,
+                backgroundColor: isActive ? category.color : "transparent",
+                color: isActive ? "#fff" : category.color,
               }}
             >
-              {cat.name}
+              {category.name}
               <span
                 className="ml-1.5 rounded-full px-1.5 py-0.5 text-[10px]"
                 style={{
-                  backgroundColor: isActive ? "rgba(255,255,255,0.2)" : cat.color + "22",
-                  color: isActive ? "#fff" : cat.color,
+                  backgroundColor: isActive ? "rgba(255,255,255,0.2)" : `${category.color}22`,
+                  color: isActive ? "#fff" : category.color,
                 }}
               >
                 {count}
@@ -136,7 +134,7 @@ export function TemplatesPageClient({
         {uncategorizedCount > 0 && (
           <button
             onClick={() => setActiveCategory("__none__")}
-            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all border border-slate-200 ${
+            className={`rounded-full border border-slate-200 px-4 py-1.5 text-xs font-semibold transition-all ${
               activeCategory === "__none__"
                 ? "bg-slate-100 text-slate-700 shadow-sm"
                 : "text-slate-400 hover:text-slate-600"
@@ -149,13 +147,12 @@ export function TemplatesPageClient({
           </button>
         )}
 
-        {/* Add Template button — disabled at limit */}
         {canAdd ? (
           <Link
             href="/coach/templates/new"
-            className="ml-auto rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+            className="ml-auto rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
           >
-            + Yeni Template
+            + Yeni Şablon
           </Link>
         ) : (
           <Link

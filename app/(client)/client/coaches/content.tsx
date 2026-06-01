@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   BadgeCheck,
-  Briefcase,
   Clock3,
   Loader2,
   MessageCircle,
   Search,
-  Star,
   UserCheck,
   UserPlus,
   Users,
@@ -47,8 +45,21 @@ type MarketplaceCoach = {
     rating: number | null;
     successRate: number | null;
     reviewCount: number | null;
+    profileQuality?: {
+      score: number;
+      label: string;
+      tone: "low" | "medium" | "high";
+      missing: string[];
+      strengths: string[];
+    };
     packages: { id: string; price: number | null }[];
   } | null;
+};
+
+type TransformationPhotoPreview = {
+  beforeUrl?: string;
+  afterUrl?: string;
+  title?: string;
 };
 
 /* ─── Helpers ─────────────────────────────────────────── */
@@ -63,6 +74,12 @@ const POPULAR_SPECIALTIES = [
   "Kardiyovasküler",
   "Sporcu Performansı",
 ];
+
+const QUALITY_STYLE = {
+  high: { bg: "rgba(34,197,94,0.12)", color: "#16A34A", label: "Güçlü" },
+  medium: { bg: "rgba(249,115,22,0.12)", color: "#EA580C", label: "Gelişiyor" },
+  low: { bg: "rgba(239,68,68,0.10)", color: "#DC2626", label: "Eksik" },
+} as const;
 
 /* ─── Avatar ──────────────────────────────────────────── */
 function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: string | null; size?: number }) {
@@ -564,6 +581,8 @@ export default function ClientCoachesContent() {
                 const isConnected = relationStatus === "ACCEPTED";
                 const isRequestDisabled = loadingCoachId === coach.id || isPending || isConnected;
                 const accentColor = profile?.accentColor || "#F97316";
+                const quality = profile?.profileQuality;
+                const qualityStyle = quality ? QUALITY_STYLE[quality.tone] : null;
 
                 if (layout === "list") {
                   return (
@@ -591,6 +610,14 @@ export default function ClientCoachesContent() {
                             {isPending && (
                               <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
                                 Bekliyor
+                              </span>
+                            )}
+                            {quality && qualityStyle && (
+                              <span
+                                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                                style={{ background: qualityStyle.bg, color: qualityStyle.color }}
+                              >
+                                Vitrin %{quality.score}
                               </span>
                             )}
                           </div>
@@ -631,6 +658,14 @@ export default function ClientCoachesContent() {
                             <div className="text-center">
                               <p className="text-base font-black text-slate-800">{profile.reviewCount}</p>
                               <p className="text-[9px] font-bold text-blue-600">Yorum</p>
+                            </div>
+                          )}
+                          {quality && (
+                            <div className="text-center">
+                              <p className="text-base font-black text-slate-800">%{quality.score}</p>
+                              <p className="text-[9px] font-bold" style={{ color: qualityStyle?.color ?? "#64748B" }}>
+                                Vitrin
+                              </p>
                             </div>
                           )}
                         </div>
@@ -685,6 +720,14 @@ export default function ClientCoachesContent() {
                                 ⭐ {Number(profile.rating).toFixed(1)}
                               </span>
                             )}
+                            {quality && qualityStyle && (
+                              <span
+                                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                                style={{ background: qualityStyle.bg, color: qualityStyle.color }}
+                              >
+                                %{quality.score} vitrin
+                              </span>
+                            )}
                           </div>
                           <p className="mt-1 flex items-center gap-4 text-[11px] text-slate-500">
                             {profile?.city && <span>📍 {profile.city}</span>}
@@ -718,7 +761,7 @@ export default function ClientCoachesContent() {
                       )}
 
                       {/* Stats Row */}
-                      {(profile?.successRate || profile?.reviewCount) && (
+                      {(profile?.successRate || profile?.reviewCount || quality) && (
                         <div className="flex gap-2 mb-3">
                           {profile?.successRate && (
                             <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
@@ -730,6 +773,12 @@ export default function ClientCoachesContent() {
                             <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}>
                               <p className="text-[10px] font-black">{profile.reviewCount}</p>
                               <p className="text-[9px] font-bold">Yorum</p>
+                            </div>
+                          )}
+                          {quality && qualityStyle && (
+                            <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: qualityStyle.bg, color: qualityStyle.color }}>
+                              <p className="text-[10px] font-black">%{quality.score}</p>
+                              <p className="text-[9px] font-bold">{qualityStyle.label}</p>
                             </div>
                           )}
                         </div>
@@ -762,7 +811,7 @@ export default function ClientCoachesContent() {
                       {/* Transformation preview */}
                       {Array.isArray(profile?.transformationPhotos) && profile.transformationPhotos.length > 0 && (
                         <div className="mb-3 flex gap-2 overflow-hidden rounded-lg">
-                          {profile.transformationPhotos.slice(0, 2).map((photo: any, idx) => (
+                          {profile.transformationPhotos.slice(0, 2).map((photo: TransformationPhotoPreview, idx) => (
                             <img
                               key={idx}
                               src={photo.afterUrl || photo.beforeUrl}

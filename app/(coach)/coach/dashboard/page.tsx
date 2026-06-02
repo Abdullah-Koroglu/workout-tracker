@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
 import { DashboardActionMenu } from "@/components/coach/DashboardActionMenu";
@@ -6,11 +7,14 @@ import { QuotaWidget } from "@/components/coach/QuotaWidget";
 import { ChurnAlerts } from "@/components/coach/ChurnAlerts";
 import { CheckInManager } from "@/components/coach/CheckInManager";
 import { NudgeAssistantCard } from "@/components/coach/NudgeAssistantCard";
+import { CoachActionCenter } from "@/components/coach/CoachActionCenter";
 import { CoachOnboardingChecklist } from "@/components/coach/CoachOnboardingChecklist";
+import { WeeklyCoachDigestCard } from "@/components/coach/WeeklyCoachDigestCard";
 import { SessionsPanel } from "@/components/shared/SessionsPanel";
 import { CoachRevenuePanel } from "@/components/coach/CoachRevenuePanel";
 import { auth } from "@/lib/auth";
 import { getCoachAvatarUrl } from "@/lib/coach-avatar";
+import { buildCoachWeeklyDigest } from "@/lib/coach-weekly-digest";
 import { prisma } from "@/lib/prisma";
 
 const RECENT_WORKOUT_LIMIT = 10;
@@ -18,6 +22,7 @@ const ACTIVE_WORKOUT_LIMIT = 10;
 const REST_SAMPLE_LIMIT = 10;
 const PENDING_REQUEST_LIMIT = 10;
 const UPCOMING_APPOINTMENT_LIMIT = 10;
+const ACTION_PREVIEW_LIMIT = 3;
 const TOP_CLIENT_LIMIT = 10;
 const TOP_CLIENT_WORKOUT_LIMIT = 10;
 
@@ -40,7 +45,14 @@ function Avatar({ name, imageUrl, size = 40, bg = "#1A365D" }: { name: string; i
       }}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+        <Image
+          src={imageUrl}
+          alt={name}
+          width={size}
+          height={size}
+          unoptimized
+          className="h-full w-full object-cover"
+        />
       ) : (
         initials
       )}
@@ -56,6 +68,7 @@ export default async function CoachDashboardPage() {
 
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
+  const now = new Date();
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
@@ -75,6 +88,12 @@ export default async function CoachDashboardPage() {
     templateExerciseLookups,
     upcomingSessionsCount,
     activeSubscriptionCount,
+    unreadMessagesCount,
+    unreadMessagesPreview,
+    unansweredCheckInsCount,
+    unansweredCheckInsPreview,
+    upcomingSessionsPreview,
+    riskClients,
     onboarding,
   } = await (async () => {
     try {
@@ -112,6 +131,12 @@ export default async function CoachDashboardPage() {
         activeSubscriptions,
         templateCount,
         availabilityCount,
+        unreadMessagesCount,
+        unreadMessagesPreview,
+        unansweredCheckInsCount,
+        unansweredCheckInsPreview,
+        upcomingSessionsPreview,
+        riskRelations,
       ] = await Promise.all([
         prisma.coachClientRelation.count({ where: { coachId, status: "ACCEPTED" } }),
         prisma.workout.count({
@@ -251,6 +276,76 @@ export default async function CoachDashboardPage() {
         }),
         prisma.workoutTemplate.count({ where: { coachId } }),
         prisma.coachAvailability.count({ where: { coachId } }),
+        prisma.message.count({
+          where: { receiverId: coachId, isRead: false },
+        }),
+        prisma.message.findMany({
+          where: { receiverId: coachId, isRead: false },
+          select: {
+            id: true,
+            content: true,
+            createdAt: true,
+            sender: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: ACTION_PREVIEW_LIMIT,
+        }),
+        prisma.checkIn.count({
+          where: { coachId, response: { is: null } },
+        }),
+        prisma.checkIn.findMany({
+          where: { coachId, response: { is: null } },
+          select: {
+            id: true,
+            createdAt: true,
+            client: { select: { id: true, name: true } },
+          },
+          orderBy: { createdAt: "desc" },
+          take: ACTION_PREVIEW_LIMIT,
+        }),
+        prisma.session.findMany({
+          where: {
+            coachId,
+            status: "SCHEDULED",
+            scheduledFor: { gte: now },
+          },
+          select: {
+            id: true,
+            type: true,
+            scheduledFor: true,
+            client: { select: { id: true, name: true } },
+          },
+          orderBy: { scheduledFor: "asc" },
+          take: ACTION_PREVIEW_LIMIT,
+        }),
+        prisma.coachClientRelation.findMany({
+          where: { coachId, status: "ACCEPTED" },
+          select: {
+            client: {
+              select: {
+                id: true,
+                name: true,
+                workouts: {
+                  where: { status: "COMPLETED" },
+                  orderBy: { finishedAt: "desc" },
+                  take: 1,
+                  select: { finishedAt: true },
+                },
+                assignments: {
+                  where: { scheduledFor: { lte: now } },
+                  orderBy: { scheduledFor: "desc" },
+                  take: 5,
+                  select: {
+                    workouts: {
+                      select: { status: true },
+                      take: 1,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        }),
       ]);
 
       const templateExerciseKeys = Array.from(
@@ -273,6 +368,41 @@ export default async function CoachDashboardPage() {
           })
         : [];
 
+      const riskClients = riskRelations
+        .map(({ client }) => {
+          const lastWorkout = client.workouts[0]?.finishedAt ?? null;
+          const inactiveDays = lastWorkout
+            ? Math.floor((Date.now() - lastWorkout.getTime()) / 86400000)
+            : null;
+          const missedCount = client.assignments.filter(
+            (assignment) => assignment.workouts.length === 0 || assignment.workouts[0].status === "ABANDONED"
+          ).length;
+
+          let reason = "Takip öneriliyor";
+          if (lastWorkout === null && client.assignments.length > 0) {
+            reason = "Henüz tamamlanan antrenman yok";
+          } else if (inactiveDays !== null && inactiveDays >= 7) {
+            reason = `${inactiveDays} gündür tamamlanan antrenman yok`;
+          } else if (missedCount >= 2) {
+            reason = `${missedCount} atlanmış program görünüyor`;
+          }
+
+          const isAtRisk =
+            (lastWorkout === null && client.assignments.length > 0) ||
+            (lastWorkout !== null && lastWorkout < sevenDaysAgo) ||
+            missedCount >= 2;
+
+          return {
+            clientId: client.id,
+            name: client.name,
+            reason,
+            inactiveDays,
+            isAtRisk,
+          };
+        })
+        .filter((client) => client.isAtRisk)
+        .sort((a, b) => (b.inactiveDays ?? 999) - (a.inactiveDays ?? 999));
+
       return {
         subscriptionTier: coachProfile?.subscriptionTier ?? "FREE",
         totalClients,
@@ -289,6 +419,12 @@ export default async function CoachDashboardPage() {
         templateExerciseLookups,
         upcomingSessionsCount,
         activeSubscriptionCount: activeSubscriptions.length,
+        unreadMessagesCount,
+        unreadMessagesPreview,
+        unansweredCheckInsCount,
+        unansweredCheckInsPreview,
+        upcomingSessionsPreview,
+        riskClients,
         onboarding: {
           profileReady: Boolean(
             coachProfile?.bio
@@ -316,6 +452,10 @@ export default async function CoachDashboardPage() {
   const completionRate =
     weeklyActive > 0 ? Math.round((completedThisWeek / weeklyActive) * 100) : 0;
   const pendingReviewCount = Math.max(weeklyActive - completedThisWeek, 0);
+  const onboardingCompletedCount = Object.values(onboarding).filter(Boolean).length;
+  const onboardingTotalCount = Object.keys(onboarding).length;
+  const onboardingRemainingCount = onboardingTotalCount - onboardingCompletedCount;
+  const weeklyDigest = await buildCoachWeeklyDigest(coachId);
 
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
@@ -325,6 +465,14 @@ export default async function CoachDashboardPage() {
     if (hours < 24) return `${hours} sa önce`;
     return `${Math.floor(hours / 24)} gün önce`;
   };
+
+  const formatFutureTime = (date: Date) =>
+    new Intl.DateTimeFormat("tr-TR", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(date);
 
   const topClients = topClientRelations.map((rel) => {
     const total = rel.client.workouts.length;
@@ -496,7 +644,57 @@ export default async function CoachDashboardPage() {
 
       {/* ── Content ── */}
       <div className="mt-4 flex flex-col gap-5">
-        <CoachOnboardingChecklist {...onboarding} />
+        <div id="onboarding-checklist">
+          <CoachOnboardingChecklist {...onboarding} />
+        </div>
+
+        <CoachActionCenter
+          onboarding={{
+            completed: onboardingCompletedCount,
+            remaining: onboardingRemainingCount,
+            total: onboardingTotalCount,
+          }}
+          pendingRequests={{
+            count: pendingRequests.length,
+            items: pendingRequests.slice(0, ACTION_PREVIEW_LIMIT).map((request) => ({
+              label: request.client.name,
+              meta: request.client.email,
+              href: "/coach/clients",
+            })),
+          }}
+          riskClients={{
+            count: riskClients.length,
+            items: riskClients.slice(0, ACTION_PREVIEW_LIMIT).map((client) => ({
+              label: client.name,
+              meta: client.reason,
+              href: `/coach/clients/${client.clientId}`,
+            })),
+          }}
+          unansweredCheckIns={{
+            count: unansweredCheckInsCount,
+            items: unansweredCheckInsPreview.map((checkIn) => ({
+              label: checkIn.client.name,
+              meta: `${formatTimeAgo(checkIn.createdAt)} gÃ¶nderildi`,
+              href: "/coach/dashboard#coach-checkins",
+            })),
+          }}
+          unreadMessages={{
+            count: unreadMessagesCount,
+            items: unreadMessagesPreview.map((message) => ({
+              label: message.sender.name,
+              meta: message.content,
+              href: `/coach/messages?withUserId=${message.sender.id}`,
+            })),
+          }}
+          upcomingSessions={{
+            count: upcomingSessionsCount,
+            items: upcomingSessionsPreview.map((session) => ({
+              label: session.client.name,
+              meta: `${formatFutureTime(session.scheduledFor)} · ${session.type}`,
+              href: "/coach/dashboard#coach-sessions",
+            })),
+          }}
+        />
 
         {/* Active Workout Stories */}
         {activeStories.length > 0 && (
@@ -594,11 +792,15 @@ export default async function CoachDashboardPage() {
 
         <NudgeAssistantCard />
 
+        <WeeklyCoachDigestCard digest={weeklyDigest} subscriptionTier={subscriptionTier} />
+
         {/* Revenue panel */}
-        <CoachRevenuePanel />
+        <CoachRevenuePanel subscriptionTier={subscriptionTier} currentClientCount={totalClients} />
 
         {/* Sessions */}
-        <SessionsPanel role="COACH" />
+        <div id="coach-sessions">
+          <SessionsPanel role="COACH" />
+        </div>
 
         {/* Quota Widget */}
         <QuotaWidget tier={subscriptionTier} currentClientCount={totalClients} />
@@ -607,9 +809,11 @@ export default async function CoachDashboardPage() {
         <ChurnAlerts />
 
         {/* Check-in Manager */}
-        <CheckInManager
-          clients={topClientRelations.map((r) => ({ id: r.client.id, name: r.client.name }))}
-        />
+        <div id="coach-checkins">
+          <CheckInManager
+            clients={topClientRelations.map((r) => ({ id: r.client.id, name: r.client.name }))}
+          />
+        </div>
 
         {/* Pending Requests */}
         {pendingRequests.length > 0 && (

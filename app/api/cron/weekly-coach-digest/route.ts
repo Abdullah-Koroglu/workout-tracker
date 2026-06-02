@@ -4,23 +4,7 @@ import { createElement } from "react";
 import { prisma } from "@/lib/prisma";
 import { sendTemplatedEmail } from "@/lib/email/send-email";
 import { WeeklyDigestEmail } from "@/lib/email/templates";
-
-function getPreviousWeekRange() {
-  const now = new Date();
-  const day = now.getDay();
-  const mondayOffset = (day + 6) % 7;
-
-  const thisMonday = new Date(now);
-  thisMonday.setDate(now.getDate() - mondayOffset);
-  thisMonday.setHours(0, 0, 0, 0);
-
-  const lastMonday = new Date(thisMonday);
-  lastMonday.setDate(thisMonday.getDate() - 7);
-
-  const thisMondayEnd = new Date(thisMonday);
-
-  return { start: lastMonday, end: thisMondayEnd };
-}
+import { buildCoachWeeklyDigest, getPreviousWeekRange, saveCoachWeeklyDigestSnapshot } from "@/lib/coach-weekly-digest";
 
 export async function POST(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -30,7 +14,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { start, end } = getPreviousWeekRange();
+  const range = getPreviousWeekRange();
 
   const coaches = await prisma.user.findMany({
     where: { role: "COACH" },
@@ -40,57 +24,28 @@ export async function POST(request: Request) {
   let sentCount = 0;
 
   for (const coach of coaches) {
-    const relations = await prisma.coachClientRelation.findMany({
-      where: {
-        coachId: coach.id,
-        status: "ACCEPTED"
-      },
-      select: { clientId: true }
-    });
-
-    const clientIds = relations.map((item) => item.clientId);
-    if (!clientIds.length) {
+    const digest = await buildCoachWeeklyDigest(coach.id, range);
+    if (!digest.activeClients) {
       continue;
     }
-
-    const [completedCount, abandonedCount] = await Promise.all([
-      prisma.workout.count({
-        where: {
-          clientId: { in: clientIds },
-          status: "COMPLETED",
-          finishedAt: {
-            gte: start,
-            lt: end
-          }
-        }
-      }),
-      prisma.workout.count({
-        where: {
-          clientId: { in: clientIds },
-          status: "ABANDONED",
-          finishedAt: {
-            gte: start,
-            lt: end
-          }
-        }
-      })
-    ]);
-
-    const totalRelevant = completedCount + abandonedCount;
-    const completionRate = totalRelevant > 0 ? Math.round((completedCount / totalRelevant) * 100) : 0;
+    await saveCoachWeeklyDigestSnapshot(digest);
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "https://fitcoach.akoroglu.com.tr";
 
     const result = await sendTemplatedEmail({
       to: coach.email,
-      subject: `Haftalik Ozet - %${completionRate} Tamamlanma`,
+      subject: `Haftalik Ozet - %${digest.completionRate} Tamamlanma`,
       template: createElement(WeeklyDigestEmail, {
         coachName: coach.name,
-        weekLabel: `${start.toLocaleDateString("tr-TR")} - ${new Date(end.getTime() - 1).toLocaleDateString("tr-TR")}`,
-        completionRate,
-        completedCount,
-        abandonedCount,
-        activeClients: clientIds.length,
+        weekLabel: digest.weekLabel,
+        completionRate: digest.completionRate,
+        completedCount: digest.completedCount,
+        abandonedCount: digest.abandonedCount,
+        activeClients: digest.activeClients,
+        prCount: digest.prCount,
+        nutritionAdherenceRate: digest.nutritionAdherenceRate,
+        atRiskCount: digest.atRiskClients.length,
+        suggestedActions: digest.suggestedActions,
         dashboardUrl: `${appUrl}/coach/dashboard`
       })
     });

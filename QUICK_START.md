@@ -66,8 +66,9 @@ npm run start:staging    # Staging start
 
 # 🗄️ VERİTABANI
 npm run db:push          # Production schema
-npm run db:push:staging  # Staging schema
+npm run db:migrate:deploy:staging  # Staging migrations
 npm run db:seed:staging  # Demo veriyi yükle
+npm run staging:prepare  # Migration + seed tek komut
 npm run db:studio        # Production DB Studio
 npm run db:studio:staging # Staging DB Studio
 
@@ -103,11 +104,8 @@ npm run db:studio:staging # Staging DB
 ### Senaryo 2: Staging'i Sıfırla ve Yeniden Yükle
 
 ```bash
-# Staging veritabanını sıfırla
-npm run db:push:staging
-
-# Demo veriyi yeniden yükle
-npm run db:seed:staging
+# Staging migration + seed
+npm run staging:prepare
 ```
 
 ---
@@ -163,7 +161,7 @@ npm start
 |-------|-------|
 | **Port kullanımda** | Farklı port kullan: `npm run dev:staging:next -- -p 3003` |
 | **DB bağlantı hatası** | PostgreSQL çalışıyor mu kontrol et |
-| **Seed hatası** | Önce `npm run db:push:staging` çalıştır |
+| **Seed hatası** | Önce `npm run db:migrate:deploy:staging` çalıştır |
 | **WebSocket hatası** | `.env.staging` dosyasını kontrol et |
 
 ---

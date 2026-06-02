@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 
 import { requireAuth } from "@/lib/api-auth";
 import { getCoachAvatarUrl } from "@/lib/coach-avatar";
+import { calculateCoachProfileQuality } from "@/lib/coach-profile-quality";
+import { calculateMarketplaceTrustScore } from "@/lib/marketplace-trust";
 import { prisma } from "@/lib/prisma";
 
 // GET /api/marketplace/coaches/[coachId]
@@ -71,6 +73,45 @@ export async function GET(
   }
 
   const avatarUrl = await getCoachAvatarUrl(coach.id);
+  const verifiedReviewCount = await prisma.review.count({
+    where: { coachId: coach.id, verifiedPurchase: true },
+  });
 
-  return NextResponse.json({ coach: { ...coach, avatarUrl } });
+  const profileQuality = coach.coachProfile
+    ? calculateCoachProfileQuality({
+        ...coach.coachProfile,
+        rating: coach.coachProfile.rating?.toString() ?? null,
+        avatarUrl,
+      })
+    : null;
+
+  const trustScore = coach.coachProfile && profileQuality
+    ? calculateMarketplaceTrustScore({
+        profileQualityScore: profileQuality.score,
+        isVerified: coach.coachProfile.isVerified,
+        rating: coach.coachProfile.rating != null ? Number(coach.coachProfile.rating) : null,
+        reviewCount: coach.coachProfile.reviewCount,
+        verifiedReviewCount,
+        successRate: coach.coachProfile.successRate,
+        responseTimeHours: coach.coachProfile.responseTimeHours,
+        totalClientsHelped: coach.coachProfile.totalClientsHelped,
+        hasTransformationPhotos: Array.isArray(coach.coachProfile.transformationPhotos) && coach.coachProfile.transformationPhotos.length > 0,
+        hasPricedPackages: coach.coachProfile.packages.some((pkg) => Number(pkg.price ?? 0) > 0),
+      })
+    : null;
+
+  return NextResponse.json({
+    coach: {
+      ...coach,
+      avatarUrl,
+      coachProfile: coach.coachProfile
+        ? {
+            ...coach.coachProfile,
+            profileQuality,
+            trustScore,
+            verifiedReviewCount,
+          }
+        : null,
+    },
+  });
 }

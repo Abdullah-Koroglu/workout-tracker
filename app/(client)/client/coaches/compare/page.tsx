@@ -4,7 +4,7 @@ import { CompareContent } from "./CompareContent";
 export default function ComparePage({
   searchParams,
 }: {
-  searchParams: Promise<{ ids?: string }>;
+  searchParams: Promise<{ ids?: string; lang?: string }>;
 }) {
   return (
     <Suspense fallback={<div className="h-96 animate-pulse rounded-2xl bg-slate-100" />}>
@@ -16,9 +16,9 @@ export default function ComparePage({
 async function ComparePageInner({
   searchParams,
 }: {
-  searchParams: Promise<{ ids?: string }>;
+  searchParams: Promise<{ ids?: string; lang?: string }>;
 }) {
-  const { ids } = await searchParams;
+  const { ids, lang } = await searchParams;
   const coachIds = (ids ?? "").split(",").filter(Boolean).slice(0, 3);
-  return <CompareContent coachIds={coachIds} />;
+  return <CompareContent coachIds={coachIds} lang={lang} />;
 }

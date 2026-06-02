@@ -9,6 +9,8 @@ export interface CoachFilters {
   minExp: number | null;
   hasPackages: boolean;
   city: string;
+  segment: "all" | "affordable" | "performance" | "transformation" | "highlyRated" | "online";
+  verifiedOnly: boolean;
 }
 
 interface CoachFilterPanelProps {
@@ -59,6 +61,20 @@ export function CoachFilterPanel({
     });
   };
 
+  const handleSegmentChange = (value: CoachFilters["segment"]) => {
+    onFiltersChange({
+      ...filters,
+      segment: value,
+    });
+  };
+
+  const handleVerifiedOnlyChange = (value: boolean) => {
+    onFiltersChange({
+      ...filters,
+      verifiedOnly: value,
+    });
+  };
+
   const handleClearFilters = () => {
     onFiltersChange({
       minPrice: null,
@@ -66,6 +82,8 @@ export function CoachFilterPanel({
       minExp: null,
       hasPackages: false,
       city: "",
+      segment: "all",
+      verifiedOnly: false,
     });
   };
 
@@ -75,6 +93,8 @@ export function CoachFilterPanel({
     filters.minExp !== null,
     filters.hasPackages,
     filters.city.trim().length > 0,
+    filters.segment !== "all",
+    filters.verifiedOnly,
   ].filter(Boolean).length;
 
   return (
@@ -102,6 +122,35 @@ export function CoachFilterPanel({
       {/* Filter Panel */}
       {isExpanded && (
         <div className="mt-3 rounded-xl bg-white p-4 border border-slate-100 space-y-4" style={{ boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+
+          <div>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+              HÄ±zlÄ± Segment
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: "Hepsi", value: "all" as const },
+                { label: "Uygun Fiyat", value: "affordable" as const },
+                { label: "Performans", value: "performance" as const },
+                { label: "DÃ¶nÃ¼ÅŸÃ¼m", value: "transformation" as const },
+                { label: "YÃ¼ksek Puan", value: "highlyRated" as const },
+                { label: "Online", value: "online" as const },
+              ].map(({ label, value }) => (
+                <button
+                  key={value}
+                  onClick={() => handleSegmentChange(value)}
+                  disabled={isLoading}
+                  className={`rounded-lg px-3 py-2 text-xs font-bold transition-all ${
+                    filters.segment === value
+                      ? "bg-orange-100 text-orange-600 border border-orange-300"
+                      : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  } disabled:opacity-50`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Price Range */}
           <div>
@@ -181,6 +230,31 @@ export function CoachFilterPanel({
                   disabled={isLoading}
                   className={`rounded-lg px-3 py-2 text-xs font-bold transition-all ${
                     filters.hasPackages === value
+                      ? "bg-orange-100 text-orange-600 border border-orange-300"
+                      : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
+                  } disabled:opacity-50`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
+              GÃ¼ven Sinyali
+            </label>
+            <div className="flex gap-2">
+              {[
+                { label: "Hepsi", value: false },
+                { label: "Sadece DoÄŸrulananlar", value: true },
+              ].map(({ label, value }) => (
+                <button
+                  key={label}
+                  onClick={() => handleVerifiedOnlyChange(value)}
+                  disabled={isLoading}
+                  className={`rounded-lg px-3 py-2 text-xs font-bold transition-all ${
+                    filters.verifiedOnly === value
                       ? "bg-orange-100 text-orange-600 border border-orange-300"
                       : "bg-slate-50 text-slate-600 border border-slate-200 hover:bg-slate-100"
                   } disabled:opacity-50`}

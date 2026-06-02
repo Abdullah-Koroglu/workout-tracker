@@ -76,10 +76,10 @@ fi
 
 echo ""
 
-# Adım 3: Prisma schema'sını oluştur
-echo -e "${YELLOW}[3/5]${NC} Staging veritabanı schema'sı oluşturuluyor..."
-NODE_ENV=staging npm run db:push:staging
-echo -e "${GREEN}✓${NC} Schema başarıyla oluşturuldu"
+# Adım 3: Prisma migration'larını uygula
+echo -e "${YELLOW}[3/5]${NC} Staging veritabanı migration'ları uygulanıyor..."
+NODE_ENV=staging npm run db:migrate:deploy:staging
+echo -e "${GREEN}✓${NC} Migration'lar başarıyla uygulandı"
 
 echo ""
 

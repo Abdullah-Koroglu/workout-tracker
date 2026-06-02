@@ -3,10 +3,16 @@ import ClientCoachesContent from "./content";
 
 export const dynamic = "force-dynamic";
 
-export default function ClientCoachesPage() {
+export default async function ClientCoachesPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const { lang } = await searchParams;
+
   return (
     <Suspense>
-      <ClientCoachesContent />
+      <ClientCoachesContent lang={lang} />
     </Suspense>
   );
 };

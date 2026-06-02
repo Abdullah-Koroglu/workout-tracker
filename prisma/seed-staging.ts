@@ -99,6 +99,9 @@ async function clearDatabase() {
   await prisma.mediaAsset.deleteMany();
   await prisma.coachBadge.deleteMany();
   await prisma.analyticsSnapshot.deleteMany();
+  await prisma.agencySharedClient.deleteMany();
+  await prisma.agencyMembership.deleteMany();
+  await prisma.agencyWorkspace.deleteMany();
 
   await prisma.nutritionMealLog.deleteMany();
   await prisma.nutritionPlan.deleteMany();
@@ -133,6 +136,19 @@ async function main() {
       timezone: "Europe/Istanbul",
       locale: "tr-TR",
       lastActiveAt: daysAgo(0, 8, 45)
+    }
+  });
+
+  const teammateCoach = await prisma.user.create({
+    data: {
+      name: "Asli Cetin",
+      email: "asli@fitcoach.demo",
+      password: passwordHash,
+      role: "COACH",
+      phone: "+90 539 220 11 88",
+      timezone: "Europe/Istanbul",
+      locale: "tr-TR",
+      lastActiveAt: daysAgo(0, 9, 10)
     }
   });
 
@@ -173,6 +189,27 @@ async function main() {
   });
 
   const coachProfile = await prisma.coachProfile.findUniqueOrThrow({ where: { userId: coach.id } });
+
+  await prisma.coachProfile.create({
+    data: {
+      userId: teammateCoach.id,
+      bio: "Strength ve habit coaching tarafinda ekip ici destek veriyorum.",
+      slogan: "Ekip ici ikinci koc destegi.",
+      accentColor: "#7C3AED",
+      specialties: ["Strength", "Habit Coaching"],
+      experienceYears: 5,
+      city: "Istanbul",
+      rating: 4.8,
+      successRate: 88,
+      reviewCount: 2,
+      totalClientsHelped: 116,
+      isVerified: true,
+      isAcceptingClients: true,
+      subscriptionTier: "AGENCY",
+      subscriptionStatus: "active",
+      inviteCode: "ASLIFIT"
+    }
+  });
 
   await prisma.coachPackage.createMany({
     data: [
@@ -331,6 +368,68 @@ async function main() {
       })
     )
   );
+
+  const workspace = await prisma.agencyWorkspace.create({
+    data: {
+      name: "Marmara Strength Lab",
+      slug: "marmara-strength-lab",
+      ownerId: coach.id,
+      billingEmail: "ops@marmarastrengthlab.demo",
+      city: "Istanbul",
+      isGym: true,
+      seatsIncluded: 8,
+      members: {
+        create: [
+          {
+            userId: coach.id,
+            role: "OWNER",
+            status: "ACTIVE",
+            joinedAt: daysAgo(120, 10, 0),
+            permissions: {
+              billing: true,
+              coachInvites: true,
+              reporting: true,
+              sharedClients: true
+            }
+          },
+          {
+            userId: teammateCoach.id,
+            role: "COACH",
+            status: "ACTIVE",
+            joinedAt: daysAgo(45, 10, 0),
+            permissions: {
+              ownRoster: true,
+              sharedClients: true,
+              sessions: true
+            }
+          }
+        ]
+      }
+    }
+  });
+
+  await prisma.agencySharedClient.createMany({
+    data: [
+      {
+        workspaceId: workspace.id,
+        clientId: aktif.id,
+        primaryCoachId: coach.id,
+        visibility: "shared"
+      },
+      {
+        workspaceId: workspace.id,
+        clientId: kiloVeren.id,
+        primaryCoachId: coach.id,
+        visibility: "shared"
+      },
+      {
+        workspaceId: workspace.id,
+        clientId: yeniBaslayan.id,
+        primaryCoachId: teammateCoach.id,
+        visibility: "shared"
+      }
+    ]
+  });
 
   await prisma.clientNotes.createMany({
     data: [
@@ -896,6 +995,9 @@ async function main() {
         status: "SCHEDULED",
         agenda: "Kuvvet progresyonu ve koşu hacmi güncellemesi",
         meetingUrl: "https://meet.fitcoach.demo/serkan-merve-weekly",
+        rtcProvider: "custom_rtc",
+        rtcRoomId: "serkan-merve-weekly-review",
+        rtcCallStatus: "READY",
         isPaid: true
       },
       {
@@ -907,6 +1009,9 @@ async function main() {
         status: "SCHEDULED",
         agenda: "Stres yönetimi ve uyku planı",
         meetingUrl: "https://meet.fitcoach.demo/serkan-oguz-support",
+        rtcProvider: "custom_rtc",
+        rtcRoomId: "serkan-oguz-support-call",
+        rtcCallStatus: "READY",
         isPaid: true
       },
       {
@@ -917,6 +1022,10 @@ async function main() {
         type: "progress-review",
         status: "COMPLETED",
         summary: "8 haftalık süreçte yağ kaybı çok iyi, protein hedefi korundu.",
+        rtcProvider: "custom_rtc",
+        rtcRoomId: "serkan-sena-progress-review",
+        rtcCallStatus: "ENDED",
+        recordingUrl: "https://cdn.fitcoach.demo/recordings/serkan-sena-progress-review.mp4",
         rating: 5,
         isPaid: true
       }

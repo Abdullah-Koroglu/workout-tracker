@@ -22,6 +22,8 @@ export type BodyLog = {
   backPhotoUrl: string | null;
 };
 
+type BodyMetricKey = "weight" | "shoulder" | "chest" | "waist" | "hips" | "arm" | "leg";
+
 type Props = {
   logs: BodyLog[];
   activeMeasurements: string[];
@@ -48,13 +50,31 @@ function deltaColor(key: string, delta: number): string {
   return positive ? "#22C55E" : "#EF4444";
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+type ChartTooltipPayload = {
+  dataKey?: string;
+  name?: string;
+  color?: string;
+  value?: number | string;
+  unit?: string;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: ChartTooltipPayload[];
+  label?: string;
+};
+
+function getBodyMetric(log: BodyLog, key: BodyMetricKey): number | null {
+  return log[key];
+}
+
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl bg-white px-3 py-2.5 shadow-lg ring-1 ring-black/8">
       <p className="mb-1 text-[11px] font-black text-slate-700">{label}</p>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-3">
+      {payload.map((p) => (
+        <div key={p.dataKey ?? p.name} className="flex items-center justify-between gap-3">
           <span className="text-[11px] text-slate-500">{p.name}</span>
           <span className="text-[11px] font-bold" style={{ color: p.color }}>
             {p.value} {p.unit ?? ""}
@@ -66,6 +86,19 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 export function BodyProgressClient({ logs, activeMeasurements }: Props) {
+  const [modalAngle, setModalAngle] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (modalAngle === null) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setModalAngle(null);
+      if (e.key === "ArrowLeft") setModalAngle((p) => p !== null ? (p + 2) % 3 : null);
+      if (e.key === "ArrowRight") setModalAngle((p) => p !== null ? (p + 1) % 3 : null);
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [modalAngle]);
+
   if (logs.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 rounded-[20px] bg-white py-16 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
@@ -128,9 +161,12 @@ export function BodyProgressClient({ logs, activeMeasurements }: Props) {
 
   // ── History table columns ────────────────────────────────────────────────────
   const tableCols = [
-    "weight",
+    "weight" as BodyMetricKey,
     ...activeMeasurements,
-  ].filter((c) => logs.some((l) => (l as any)[c] !== null));
+  ].filter((c): c is BodyMetricKey => {
+    if (!(c in logs[0])) return false;
+    return logs.some((l) => getBodyMetric(l, c as BodyMetricKey) !== null);
+  });
 
   const COL_LABELS: Record<string, string> = {
     weight: "Kilo (kg)",
@@ -150,19 +186,6 @@ export function BodyProgressClient({ logs, activeMeasurements }: Props) {
     { key: "sidePhotoUrl" as const, label: "Yan" },
     { key: "backPhotoUrl" as const, label: "Arka" },
   ];
-
-  const [modalAngle, setModalAngle] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (modalAngle === null) return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setModalAngle(null);
-      if (e.key === "ArrowLeft") setModalAngle((p) => p !== null ? (p + 2) % 3 : null);
-      if (e.key === "ArrowRight") setModalAngle((p) => p !== null ? (p + 1) % 3 : null);
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [modalAngle]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -235,10 +258,12 @@ export function BodyProgressClient({ logs, activeMeasurements }: Props) {
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} />
               <Tooltip
-                formatter={(v: number, _: any, props: any) => [
-                  `${v > 0 ? "+" : ""}${v} cm`,
-                  props.payload.label,
-                ]}
+                formatter={(v: number, _name, item) => {
+                  const label = typeof item?.payload === "object" && item.payload && "label" in item.payload
+                    ? String((item.payload as { label?: string }).label ?? "")
+                    : "";
+                  return [`${v > 0 ? "+" : ""}${v} cm`, label];
+                }}
               />
               <Bar dataKey="delta" radius={[4, 4, 0, 0]}>
                 {deltaData.map((entry) => (
@@ -464,8 +489,8 @@ export function BodyProgressClient({ logs, activeMeasurements }: Props) {
                       {fmt(log.date)}
                     </td>
                     {tableCols.map((col) => {
-                      const val = (log as any)[col] as number | null;
-                      const prevVal = prev ? (prev as any)[col] as number | null : null;
+                      const val = getBodyMetric(log, col);
+                      const prevVal = prev ? getBodyMetric(prev, col) : null;
                       const delta = val !== null && prevVal !== null ? +(val - prevVal).toFixed(1) : null;
                       return (
                         <td key={col} className="px-4 py-2.5 whitespace-nowrap">

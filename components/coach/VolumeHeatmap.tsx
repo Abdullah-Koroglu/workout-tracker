@@ -28,6 +28,17 @@ type DataPoint = {
 };
 
 type Props = { clientId: string };
+type VolumeTooltipPayload = {
+  dataKey?: string;
+  value?: number;
+  payload?: DataPoint;
+};
+
+type VolumeTooltipProps = {
+  active?: boolean;
+  payload?: VolumeTooltipPayload[];
+  label?: string;
+};
 
 const WINDOWS = [
   { label: "7 Gün", value: 7 },
@@ -58,10 +69,10 @@ function formatKg(value: number) {
   return value >= 1000 ? `${(value / 1000).toFixed(1)}t` : `${value}kg`;
 }
 
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: VolumeTooltipProps) => {
   if (!active || !payload?.length) return null;
-  const cur = payload.find((p: any) => p.dataKey === "currentPeriod")?.value ?? 0;
-  const prev = payload.find((p: any) => p.dataKey === "prevPeriod")?.value ?? 0;
+  const cur = payload.find((p) => p.dataKey === "currentPeriod")?.value ?? 0;
+  const prev = payload.find((p) => p.dataKey === "prevPeriod")?.value ?? 0;
   const point = payload[0]?.payload as DataPoint | undefined;
   const change = prev > 0 ? Math.round(((cur - prev) / prev) * 100) : cur > 0 ? 100 : 0;
   return (

@@ -15,7 +15,10 @@ import { TransformCarousel, type TransformationPhoto } from "@/components/shared
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { getCoachAvatarUrl } from "@/lib/coach-avatar";
+import { calculateCoachProfileQuality } from "@/lib/coach-profile-quality";
+import { calculateMarketplaceTrustScore } from "@/lib/marketplace-trust";
 import { PageHero } from "@/components/shared/PageHero";
+import { getReviewVerificationContext } from "@/lib/review-verification";
 import { RequestCoachButton } from "./RequestCoachButton";
 import { ReviewsSection } from "./ReviewsSection";
 import { SessionBookingButton } from "./SessionBookingButton";
@@ -68,6 +71,10 @@ export default async function CoachVitrinPage({
           transformationPhotos: true,
           specialties: true,
           experienceYears: true,
+          city: true,
+          rating: true,
+          reviewCount: true,
+          successRate: true,
           socialMediaUrl: true,
           videoIntroUrl: true,
           languages: true,
@@ -97,6 +104,10 @@ export default async function CoachVitrinPage({
   if (!coach) return notFound();
 
   const avatarUrl = await getCoachAvatarUrl(coach.id);
+  const verifiedReviewCount = await prisma.review.count({
+    where: { coachId: coach.id, verifiedPurchase: true },
+  });
+  const reviewEligibility = await getReviewVerificationContext(coach.id, session.user.id);
 
   const profile       = coach.coachProfile;
   const accentColor   = profile?.accentColor || "#F97316";
@@ -107,6 +118,27 @@ export default async function CoachVitrinPage({
   const relationStatus = coach.coachRelations[0]?.status ?? null;
   const messageHref   = `/chat/${coachId}`;
   const pkgCount      = profile?.packages.length ?? 0;
+  const profileQuality = profile
+    ? calculateCoachProfileQuality({
+        ...profile,
+        rating: profile.rating?.toString() ?? null,
+        avatarUrl,
+      })
+    : null;
+  const trustScore = profile && profileQuality
+    ? calculateMarketplaceTrustScore({
+        profileQualityScore: profileQuality.score,
+        isVerified: profile.isVerified,
+        rating: profile.rating != null ? Number(profile.rating) : null,
+        reviewCount: profile.reviewCount,
+        verifiedReviewCount,
+        successRate: profile.successRate,
+        responseTimeHours: profile.responseTimeHours,
+        totalClientsHelped: profile.totalClientsHelped,
+        hasTransformationPhotos: transformationPhotos.length > 0,
+        hasPricedPackages: profile.packages.some((pkg) => Number(pkg.price ?? 0) > 0),
+      })
+    : null;
   const relationMeta =
     relationStatus === "ACCEPTED"
       ? { label: "Aktif Bağlantı", color: "#16A34A", bg: "rgba(34,197,94,0.12)" }
@@ -199,7 +231,7 @@ export default async function CoachVitrinPage({
 
           <ReviewsSection
             coachId={coachId}
-            isConnected={relationStatus !== null}
+            canReview={reviewEligibility.canReview}
           />
 
           <div className="flex items-center gap-2">
@@ -372,6 +404,66 @@ export default async function CoachVitrinPage({
 
         {/* ── RIGHT: CTA sidebar ── */}
         <div className="space-y-4 self-start xl:sticky xl:top-24">
+          {trustScore && (
+            <div
+              className="rounded-2xl bg-white p-5 space-y-4 border border-slate-100"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-black uppercase tracking-widest text-slate-500">
+                    Marketplace Güveni
+                  </p>
+                  <p className="mt-1 text-lg font-black text-slate-800">
+                    {trustScore.label}
+                  </p>
+                </div>
+                <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-center">
+                  <p className="text-[22px] font-black text-emerald-600">%{trustScore.score}</p>
+                </div>
+              </div>
+
+              <p className="text-xs leading-relaxed text-slate-500">{trustScore.summary}</p>
+
+              <div className="grid grid-cols-2 gap-2 text-[11px]">
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-black text-slate-700">{verifiedReviewCount}</p>
+                  <p className="mt-0.5 text-slate-400">Doğrulanmış yorum</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-black text-slate-700">
+                    {profile?.responseTimeHours != null ? `${profile.responseTimeHours} sa` : "—"}
+                  </p>
+                  <p className="mt-0.5 text-slate-400">Dönüş süresi</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-black text-slate-700">
+                    {profile?.rating != null ? profile.rating.toFixed(1) : "—"}
+                  </p>
+                  <p className="mt-0.5 text-slate-400">Ortalama puan</p>
+                </div>
+                <div className="rounded-xl bg-slate-50 px-3 py-2">
+                  <p className="font-black text-slate-700">
+                    {profile?.successRate != null ? `%${profile.successRate}` : "—"}
+                  </p>
+                  <p className="mt-0.5 text-slate-400">Başarı oranı</p>
+                </div>
+              </div>
+
+              {trustScore.signals.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {trustScore.signals.map((signal) => (
+                    <span
+                      key={signal}
+                      className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-black text-emerald-700"
+                    >
+                      {signal}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Request / status card */}
           <div

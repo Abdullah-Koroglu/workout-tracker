@@ -1,4 +1,5 @@
 import { CoachClientsManager } from "@/components/coach/CoachClientsManager";
+import { CoachReferralGrowthCard } from "@/components/coach/CoachReferralGrowthCard";
 import { InviteLinkGenerator } from "@/components/coach/InviteLinkGenerator";
 import { BroadcastModal } from "@/components/coach/BroadcastModal";
 import { auth } from "@/lib/auth";
@@ -9,7 +10,7 @@ export default async function CoachClientsPage() {
   const session = await auth();
   const coachId = session?.user.id || "";
 
-  const [coachProfile, relations] = await Promise.all([
+  const [coachProfile, relations, referrals] = await Promise.all([
     prisma.coachProfile.findUnique({
       where: { userId: coachId },
       select: { inviteCode: true },
@@ -18,6 +19,11 @@ export default async function CoachClientsPage() {
       where: { coachId },
       include: { client: true },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.referral.findMany({
+      where: { referrerId: coachId },
+      orderBy: { createdAt: "desc" },
+      include: { referee: { select: { id: true, name: true } } },
     }),
   ]);
 
@@ -64,6 +70,16 @@ export default async function CoachClientsPage() {
       {coachProfile?.inviteCode && (
         <InviteLinkGenerator inviteCode={coachProfile.inviteCode} />
       )}
+
+      <CoachReferralGrowthCard
+        initialReferrals={referrals.map((item) => ({
+          id: item.id,
+          code: item.code,
+          status: item.status,
+          createdAt: item.createdAt.toISOString(),
+          referee: item.referee ? { id: item.referee.id, name: item.referee.name } : null,
+        }))}
+      />
 
       <CoachClientsManager accepted={accepted} pending={pending} />
     </div>

@@ -22,7 +22,7 @@ FitCoach uygulaması başarıyla **çoklu ortam (multi-environment)** yapısına
   - `dev:staging` - Staging geliştirme ortamı
   - `dev:staging:next` - Staging Next.js sunucusu
   - `dev:staging:ws` - Staging WebSocket sunucusu
-  - `db:push:staging` - Staging DB şemasını güncelle
+  - `db:migrate:deploy:staging` - Staging migration'larını uygula
   - `db:seed:production` - Production seed'ini çalıştır
   - `db:seed:staging` - Staging seed'ini çalıştır
   - `db:studio:staging` - Staging DB'yi Prisma Studio'da aç
@@ -87,7 +87,7 @@ FitCoach uygulaması başarıyla **çoklu ortam (multi-environment)** yapısına
 
 # VEYA manuel kurulum:
 # 2. PostgreSQL'de veritabanı oluştur
-npm run db:push:staging
+npm run db:migrate:deploy:staging
 
 # 3. Demo veriyi yükle
 npm run db:seed:staging
@@ -100,7 +100,7 @@ chmod +x setup-staging.sh
 ./setup-staging.sh
 
 # VEYA manuel kurulum:
-npm run db:push:staging
+npm run db:migrate:deploy:staging
 npm run db:seed:staging
 ```
 
@@ -109,8 +109,8 @@ npm run db:seed:staging
 # 1. PostgreSQL'de veritabanı oluştur (pgAdmin veya psql)
 CREATE DATABASE fitcoach_staging;
 
-# 2. Prisma schema'sını oluştur
-npm run db:push:staging
+# 2. Prisma migration'larını uygula
+npm run db:migrate:deploy:staging
 
 # 3. Staging seed'ini çalıştır
 npm run db:seed:staging
@@ -226,8 +226,8 @@ npm run dev:staging:next -- -p 3003
 
 ### Seed çalıştırılırken hata
 ```bash
-# Önce şemayı oluştur
-npm run db:push:staging
+# Önce migration'ları uygula
+npm run db:migrate:deploy:staging
 
 # Sonra seed'i çalıştır
 npm run db:seed:staging

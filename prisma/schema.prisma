@@ -75,6 +75,10 @@ model User {
   mediaAssets             MediaAsset[]
   coachBadges             CoachBadge[]
   messageReactions        MessageReaction[]
+  ownedAgencyWorkspaces   AgencyWorkspace[]   @relation("AgencyOwner")
+  agencyMemberships       AgencyMembership[]
+  agencySharedClients     AgencySharedClient[] @relation("AgencySharedClient")
+  primaryAgencyClients    AgencySharedClient[] @relation("AgencyPrimaryCoach")
 }
 
 model ClientProfile {
@@ -168,6 +172,69 @@ enum SubscriptionTier {
   TIER_1
   TIER_2
   AGENCY
+}
+
+model AgencyWorkspace {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  owner         User     @relation("AgencyOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  ownerId       String
+  billingEmail  String?
+  city          String?
+  isGym         Boolean  @default(false)
+  seatsIncluded Int      @default(5)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  members       AgencyMembership[]
+  sharedClients AgencySharedClient[]
+
+  @@index([ownerId, createdAt])
+}
+
+enum AgencyMembershipRole {
+  OWNER
+  ADMIN
+  COACH
+  STAFF
+}
+
+enum AgencyMembershipStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+model AgencyMembership {
+  id          String                 @id @default(cuid())
+  workspace   AgencyWorkspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId      String
+  role        AgencyMembershipRole   @default(COACH)
+  status      AgencyMembershipStatus @default(ACTIVE)
+  permissions Json?
+  joinedAt    DateTime?
+  createdAt   DateTime               @default(now())
+
+  @@unique([workspaceId, userId])
+  @@index([userId, status])
+}
+
+model AgencySharedClient {
+  id             String          @id @default(cuid())
+  workspace      AgencyWorkspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspaceId    String
+  client         User            @relation("AgencySharedClient", fields: [clientId], references: [id], onDelete: Cascade)
+  clientId       String
+  primaryCoach   User?           @relation("AgencyPrimaryCoach", fields: [primaryCoachId], references: [id], onDelete: SetNull)
+  primaryCoachId String?
+  visibility     String          @default("shared")
+  createdAt      DateTime        @default(now())
+
+  @@unique([workspaceId, clientId])
+  @@index([primaryCoachId])
 }
 
 model CoachClientRelation {
@@ -631,6 +698,9 @@ model Session {
   createdAt    DateTime      @default(now())
 
   meetingUrl       String?
+  rtcProvider      String?
+  rtcRoomId        String?
+  rtcCallStatus    RtcCallStatus @default(NOT_CONFIGURED)
   recordingUrl     String?
   agenda           String?
   summary          String?
@@ -647,6 +717,13 @@ enum SessionStatus {
   SCHEDULED
   COMPLETED
   CANCELLED
+}
+
+enum RtcCallStatus {
+  NOT_CONFIGURED
+  READY
+  LIVE
+  ENDED
 }
 
 model ClientNotes {

@@ -20,6 +20,10 @@ export async function POST(request: Request) {
       typeof body.inviteCode === "string" && body.inviteCode.trim()
         ? body.inviteCode.trim()
         : undefined;
+    const referralCode: string | undefined =
+      typeof body.referralCode === "string" && body.referralCode.trim()
+        ? body.referralCode.trim().toUpperCase()
+        : undefined;
 
     // Legacy support: coachId directly (from /invite/[coachId] page)
     const coachId: string | undefined =
@@ -67,6 +71,23 @@ export async function POST(request: Request) {
         role: parsed.data.role,
       },
     });
+
+    if (parsed.data.role === "COACH" && referralCode) {
+      const referral = await prisma.referral.findUnique({
+        where: { code: referralCode },
+        select: { id: true, referrerId: true, refereeId: true, status: true },
+      });
+
+      if (referral && !referral.refereeId && referral.referrerId !== user.id) {
+        await prisma.referral.update({
+          where: { id: referral.id },
+          data: {
+            refereeId: user.id,
+            status: "joined",
+          },
+        });
+      }
+    }
 
     if (resolvedCoachId && coachTier) {
       const acceptedCount = await prisma.coachClientRelation.count({

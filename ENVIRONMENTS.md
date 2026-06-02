@@ -62,8 +62,8 @@ npm run start:staging
 # WebSocket sunucusu başlat (Staging)
 npm run start:staging:ws:local
 
-# Veritabanını güncelle (Staging)
-npm run db:push:staging
+# Migration'ları uygula (Staging)
+npm run db:migrate:deploy:staging
 
 # Staging seed'i çalıştır (ZENGİN TÜRKÇE VERİ) - İLK KURULUMDA
 npm run db:seed:staging
@@ -111,8 +111,8 @@ npm run db:push
 # 3. Production seed'i çalıştır
 npm run db:seed:production
 
-# 4. Staging DB şemasını oluştur
-npm run db:push:staging
+# 4. Staging DB migration'larını uygula
+npm run db:migrate:deploy:staging
 
 # 5. Staging seed'i çalıştır (Zengin demo veri)
 npm run db:seed:staging
@@ -249,8 +249,8 @@ npm run dev:staging:next -- -p 3003
 
 ### Seed çalıştırılırken hata
 ```bash
-# Önce şema oluştur
-npm run db:push:staging
+# Önce migration'ları uygula
+npm run db:migrate:deploy:staging
 
 # Sonra seed çalıştır
 npm run db:seed:staging

@@ -7,7 +7,7 @@ import { ReviewForm } from "@/components/coach/ReviewForm";
 
 interface Props {
   coachId: string;
-  isConnected: boolean; // client has or had a relation with this coach
+  canReview: boolean;
 }
 
 function AverageStars({ rating }: { rating: number }) {
@@ -25,7 +25,7 @@ function AverageStars({ rating }: { rating: number }) {
   );
 }
 
-export function ReviewsSection({ coachId, isConnected }: Props) {
+export function ReviewsSection({ coachId, canReview }: Props) {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -81,7 +81,7 @@ export function ReviewsSection({ coachId, isConnected }: Props) {
       </div>
 
       {/* Write review button */}
-      {isConnected && (
+      {canReview && (
         <button
           onClick={() => setShowForm((v) => !v)}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-orange-200 bg-orange-50 py-2.5 text-sm font-bold text-orange-600 transition-all hover:bg-orange-100"
@@ -126,7 +126,7 @@ export function ReviewsSection({ coachId, isConnected }: Props) {
             <Star className="h-6 w-6 text-orange-400" />
           </div>
           <p className="font-bold text-slate-600">Henüz yorum yok</p>
-          {isConnected && (
+          {canReview && (
             <p className="mt-1 text-xs text-slate-400">
               İlk yorumu siz yapın!
             </p>

@@ -100,6 +100,10 @@ type WeeklyDigestCoach = {
   completedCount: number;
   abandonedCount: number;
   activeClients: number;
+  prCount: number;
+  nutritionAdherenceRate: number;
+  atRiskCount: number;
+  suggestedActions: string[];
   dashboardUrl: string;
 };
 
@@ -110,6 +114,10 @@ export function WeeklyDigestEmail({
   completedCount,
   abandonedCount,
   activeClients,
+  prCount,
+  nutritionAdherenceRate,
+  atRiskCount,
+  suggestedActions,
   dashboardUrl
 }: WeeklyDigestCoach) {
   return (
@@ -127,8 +135,22 @@ export function WeeklyDigestEmail({
               <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>Tamamlanma Orani:</strong> %{completionRate}</p>
               <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>Tamamlanan:</strong> {completedCount}</p>
               <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>Yarida Birakilan:</strong> {abandonedCount}</p>
-              <p style={{ margin: 0, fontSize: 14 }}><strong>Aktif Client:</strong> {activeClients}</p>
+              <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>Aktif Client:</strong> {activeClients}</p>
+              <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>PR:</strong> {prCount}</p>
+              <p style={{ margin: "0 0 8px", fontSize: 14 }}><strong>Beslenme Uyumu:</strong> {nutritionAdherenceRate > 0 ? `%${nutritionAdherenceRate}` : "-"}</p>
+              <p style={{ margin: 0, fontSize: 14 }}><strong>Riskli Danisan:</strong> {atRiskCount}</p>
             </div>
+
+            {suggestedActions.length > 0 && (
+              <div style={{ marginTop: 16, border: "1px solid #ede9fe", borderRadius: 12, padding: 16, backgroundColor: "#f5f3ff" }}>
+                <p style={{ margin: "0 0 10px", fontSize: 13, fontWeight: 700, color: "#6d28d9" }}>Bu haftanin oncelikli aksiyonlari</p>
+                <ul style={{ margin: 0, paddingLeft: 18, color: "#4c1d95", fontSize: 14, lineHeight: 1.6 }}>
+                  {suggestedActions.map((action) => (
+                    <li key={action}>{action}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <a
               href={dashboardUrl}

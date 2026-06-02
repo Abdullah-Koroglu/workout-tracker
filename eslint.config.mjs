@@ -32,6 +32,7 @@ const eslintConfig = [
       "test-results/**",
       "coverage/**",
       "prisma/dev.db",
+      "designs/**",
     ],
   },
 ];

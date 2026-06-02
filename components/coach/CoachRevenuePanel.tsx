@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { SubscriptionTier } from "@prisma/client";
 import { TrendingUp, CreditCard, Users } from "lucide-react";
 
 interface Payment {
@@ -20,7 +22,64 @@ interface Subscription {
   expiresAt: string | null;
 }
 
-export function CoachRevenuePanel() {
+const PANEL_COPY: Record<
+  SubscriptionTier,
+  {
+    title: string;
+    body: string;
+    bullets: string[];
+    ctaLabel: string;
+  }
+> = {
+  FREE: {
+    title: "Ucretsiz planda tabani kur, Pro ile buyumeyi ac",
+    body: "Koctan SaaS odemesi aldiran ana fark, danisan yonetimi ile yeni musteri kazanimi ayni yerde toplamak.",
+    bullets: [
+      "15 danisana kadar buyu ve marketplace vitrini daha guclu kullan.",
+      "Haftalik sessiz AI raporuyla riskli danisanlari erken yakala.",
+      "Check-in, beslenme ve olcum takibini satis argumanina cevir.",
+    ],
+    ctaLabel: "Pro plana gec",
+  },
+  TIER_1: {
+    title: "Pro ile operasyonu kur, Elite ile premium servisi sat",
+    body: "Bu seviyeden sonra gelir artisi, daha cok danisan almak kadar daha iyi gorunen bir servis sunmaktan geliyor.",
+    bullets: [
+      "50 danisana kadar kapasite ac.",
+      "Aksiyon merkezi ve AI strateji raporuyla ekibi hizlandir.",
+      "Donusum vitrini ve premium servis algisini guclendir.",
+    ],
+    ctaLabel: "Elite farklarini gor",
+  },
+  TIER_2: {
+    title: "Elite planda premium kocluk paketin guclu gorunuyor",
+    body: "Bu katmanda esas hedef, retention ve donusum hikayelerini buyuterek daha yuksek fiyatli paketleri savunabilmek.",
+    bullets: [
+      "Haftalik AI strateji raporunu satis ve retention rutinine bagla.",
+      "Toplu mesaj ve risk analitigi ile operasyon suresini kisalt.",
+      "Marketplace ve sosyal kanit yuzeylerini aktif tut.",
+    ],
+    ctaLabel: "Planini yonet",
+  },
+  AGENCY: {
+    title: "Agency katmani ekip workspace ve shared client akisini aciyor",
+    body: "Bu seviyede deger artik tek koc kapasitesi degil; coklu koc, ortak roster ve merkezi billing ile operasyonu buyutmek.",
+    bullets: [
+      "Ekip bazli roller ve raporlama icin altyapiyi planla.",
+      "Marketplace talebini ekip kapasitesine bagla.",
+      "RTC ve operasyon panelleri icin sonraki sprinti hazirla.",
+    ],
+    ctaLabel: "Agency planini incele",
+  },
+};
+
+export function CoachRevenuePanel({
+  subscriptionTier,
+  currentClientCount,
+}: {
+  subscriptionTier: SubscriptionTier;
+  currentClientCount: number;
+}) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [summary, setSummary] = useState<{ totalRevenue: number; paymentCount: number } | null>(null);
   const [subs, setSubs] = useState<Subscription[]>([]);
@@ -42,6 +101,15 @@ export function CoachRevenuePanel() {
 
   const totalActive = subs.length;
   const mrr = subs.reduce((sum, s) => sum + (s.package?.price ?? 0), 0);
+  const panelCopy = PANEL_COPY[subscriptionTier];
+  const capacityHint =
+    subscriptionTier === "FREE"
+      ? `${currentClientCount}/3 danisan slotu kullaniliyor`
+      : subscriptionTier === "TIER_1"
+        ? `${currentClientCount}/15 aktif danisan kapasitesi`
+        : subscriptionTier === "TIER_2"
+          ? `${currentClientCount}/50 aktif danisan kapasitesi`
+          : `${currentClientCount} aktif danisan ile ekip hazirligi`;
 
   return (
     <div className="space-y-3">
@@ -68,6 +136,34 @@ export function CoachRevenuePanel() {
         <div className="rounded-2xl bg-white border border-slate-100 p-3">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Aktif Abone</p>
           <p className="mt-1 text-lg font-black text-indigo-500">{totalActive}</p>
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 p-4 text-white">
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-orange-300">Koc SaaS Degeri</p>
+            <h3 className="mt-2 text-lg font-black tracking-[-0.03em]">{panelCopy.title}</h3>
+            <p className="mt-2 text-sm leading-6 text-white/70">{panelCopy.body}</p>
+            <div className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold text-white/75">
+              {capacityHint}
+            </div>
+          </div>
+
+          <Link
+            href="/coach/subscription"
+            className="inline-flex h-11 items-center justify-center rounded-2xl bg-gradient-to-r from-orange-400 to-orange-600 px-4 text-sm font-black text-white shadow-sm transition hover:opacity-95"
+          >
+            {panelCopy.ctaLabel}
+          </Link>
+        </div>
+
+        <div className="mt-4 grid gap-2 md:grid-cols-3">
+          {panelCopy.bullets.map((bullet) => (
+            <div key={bullet} className="rounded-2xl border border-white/10 bg-white/5 px-3 py-3 text-sm text-white/80">
+              {bullet}
+            </div>
+          ))}
         </div>
       </div>
 

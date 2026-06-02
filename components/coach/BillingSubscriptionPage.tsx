@@ -21,14 +21,14 @@ const PLAN_FEATURES: Record<SubscriptionTier, string[]> = {
   FREE: ["3 aktif danışan", "8 antrenman şablonu", "Temel mesajlaşma", "Marketplace vitrin profili"],
   TIER_1: ["15 aktif danışan", "20 özel antrenman şablonu", "Check-in, ölçüm ve beslenme takibi", "Haftalık AI koç raporu"],
   TIER_2: ["50 aktif danışan", "Limitsiz şablon", "Gelişmiş risk analitiği", "Toplu mesaj ve aksiyon merkezi"],
-  AGENCY: ["Çoklu koç hazırlığı", "Yüksek kapasite", "Gym ve ajans operasyonu", "Öncelikli onboarding"],
+  AGENCY: ["Workspace ve rol yönetimi", "Shared client roster", "Gym ve ajans operasyonu", "Merkezi billing ve onboarding"],
 };
 
 const PLAN_POSITIONING: Record<SubscriptionTier, string> = {
   FREE: "İlk danışanlarınla sistemi dene.",
   TIER_1: "Bağımsız online koç için ana büyüme planı.",
   TIER_2: "Yüksek hacimli koçluk ve premium servis.",
-  AGENCY: "Ajans ve gym ekipleri için hazırlık katmanı.",
+  AGENCY: "Ajans ve gym ekipleri için ekip workspace katmanı.",
 };
 
 const PLAN_ICONS: Record<SubscriptionTier, typeof Users> = {

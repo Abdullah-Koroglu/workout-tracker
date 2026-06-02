@@ -11,8 +11,8 @@ import { PwaRegister } from "../components/shared/PwaRegister";
 const lexend = Lexend({ subsets: ["latin"], variable: "--font-lexend" });
 
 export const metadata: Metadata = {
-  title: "Fit Coach",
-  description: "Coach and client workout tracking platform",
+  title: "FitCoach",
+  description: "Online kocluk isletim sistemi ve acik koc marketplace'i",
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

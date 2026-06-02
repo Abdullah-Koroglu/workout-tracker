@@ -101,15 +101,15 @@ if (Test-Path "node_modules") {
 
 Write-Host ""
 
-# Adım 3: Prisma schema'sını oluştur
+# Adım 3: Prisma migration'larını uygula
 Write-Host "[3/5]" -ForegroundColor Yellow -NoNewLine
-Write-Host " Staging veritabanı schema'sı oluşturuluyor..."
+Write-Host " Staging veritabanı migration'ları uygulanıyor..."
 
 $env:NODE_ENV = "staging"
-npm run db:push:staging --silent 2>$null | Out-Null
+npm run db:migrate:deploy:staging --silent 2>$null | Out-Null
 $env:NODE_ENV = ""
 
-Write-Success "Schema başarıyla oluşturuldu"
+Write-Success "Migration'lar başarıyla uygulandı"
 
 Write-Host ""
 
@@ -153,6 +153,7 @@ Write-Host ""
 Write-Info "İlave Komutlar:"
 Write-Host "  npm run db:studio:staging  (Staging DB'yi görüntüle)"
 Write-Host "  npm run db:seed:staging    (Demo veriyi yeniden yükle)"
+Write-Host "  npm run db:migrate:deploy:staging  (Migration'ları tekrar uygula)"
 Write-Host ""
 
 Write-Host "📖 Daha fazla bilgi için ENVIRONMENTS.md dosyasını okuyun"

@@ -361,7 +361,7 @@
     <section class="slide">
       <div class="slide-header">
         <h2>Mevcut Durum</h2>
-        <p class="section-note">Eski raporlardaki bazı eksikler artık eklenmiş. Bu yüzden planı güncel kod tabanına göre yeniden çerçeveledim.</p>
+        <p class="section-note">Sunum artık mevcut worktree ile hizalı. Ana boşluklar ürün fikrinde değil; staging, production hardening ve launch disiplini tarafında.</p>
       </div>
       <div class="grid-3">
         <article class="card">
@@ -378,10 +378,10 @@
         </article>
       </div>
 
-      <div class="score"><strong>Ürün kapsamı</strong><div class="bar"><i style="width:82%"></i></div><span>82%</span></div>
-      <div class="score"><strong>Akış bütünlüğü</strong><div class="bar"><i style="width:64%"></i></div><span>64%</span></div>
-      <div class="score"><strong>Satışa hazır güven</strong><div class="bar"><i style="width:48%"></i></div><span>48%</span></div>
-      <div class="score"><strong>Teknik sağlamlık</strong><div class="bar"><i style="width:58%"></i></div><span>58%</span></div>
+      <div class="score"><strong>Ürün kapsamı</strong><div class="bar"><i style="width:90%"></i></div><span>90%</span></div>
+      <div class="score"><strong>Akış bütünlüğü</strong><div class="bar"><i style="width:81%"></i></div><span>81%</span></div>
+      <div class="score"><strong>Satışa hazır güven</strong><div class="bar"><i style="width:72%"></i></div><span>72%</span></div>
+      <div class="score"><strong>Teknik sağlamlık</strong><div class="bar"><i style="width:78%"></i></div><span>78%</span></div>
     </section>
 
     <section class="slide">
@@ -467,7 +467,7 @@
       <div class="grid-4">
         <article class="card"><h3>Antrenman motoru</h3><p>Weight/cardio, timer, RIR, rest tracking, superset, dropset, ekstra set, workout note ve intensity akışı var.</p></article>
         <article class="card"><h3>Coach CRM</h3><p>Danışan listesi, pending requests, notes, churn alerts, compliance, broadcast ve client hub mevcut.</p></article>
-        <article class="card"><h3>Marketplace</h3><p>Koç listesi, filtre, karşılaştırma, profil, reviews, similar coaches ve request akışı var.</p></article>
+        <article class="card"><h3>Marketplace</h3><p>Koç listesi, filtre, karşılaştırma, profil, reviews, similar coaches, public vitrin sayfaları ve request akışı var.</p></article>
         <article class="card"><h3>Profil vitrini</h3><p>Avatar, uzmanlıklar, şehir, paketler, dönüşüm fotoğrafları, sertifika, dil ve FAQ editörleri eklenmiş.</p></article>
         <article class="card"><h3>Mesajlaşma</h3><p>Thread list, arama, unread, websocket, online status, push toggle ve optimistic send bulunuyor.</p></article>
         <article class="card"><h3>Body & nutrition</h3><p>Body metric log, ölçüm frekansı, öğün fotoğrafı, adherence tag, makro hedefleri ve plan talimatları var.</p></article>
@@ -478,8 +478,8 @@
 
     <section class="slide">
       <div class="slide-header">
-        <h2>Eksik Olanlar</h2>
-        <p class="section-note">Bunlar yeni tablo eklemekten çok, mevcut parçaları gerçek kullanıcı yolculuğuna bağlama işleri.</p>
+        <h2>Kalan Açıklar</h2>
+        <p class="section-note">Açık maddeler artık ürün çekirdeğinden çok launch ve production riskleriyle ilgili. Staging öncesi ve sonrası odak burada olmalı.</p>
       </div>
       <table>
         <thead>
@@ -487,46 +487,34 @@
         </thead>
         <tbody>
           <tr>
-            <td>Onboarding</td>
-            <td>Koç ve danışan için “ilk 10 dakika” kurulum sihirbazı yok.</td>
-            <td>Kullanıcı boş panele düşerse ürünün değeri anlaşılmaz.</td>
+            <td>E2E doğrulama</td>
+            <td>Playwright demo smoke scripti var ama browser kurulu staging-benzeri ortamda son doğrulama henüz yapılmadı.</td>
+            <td>Commit sonrası staging regresyonunu görmek için tek otomatik kanıt bu olacak.</td>
             <td><span class="pill bad">P0</span></td>
           </tr>
           <tr>
-            <td>Ödeme akışı</td>
-            <td>Koç paketi keşif → satın alma → aktif subscription → fatura zinciri tam görünür değil.</td>
-            <td>Marketplace gelir modeli için kritik.</td>
+            <td>Media deployment</td>
+            <td>S3/R2 driver ve korumalı URL politikaları kodda var; fakat production bucket/CDN ve büyük video limitleri henüz deploy ortamında doğrulanmadı.</td>
+            <td>Gerçek koç ve danışan medyası için launch riskini bu belirliyor.</td>
             <td><span class="pill bad">P0</span></td>
           </tr>
           <tr>
-            <td>Kalite</td>
-            <td>Test result klasöründe çok sayıda failure izi var; E2E suite güncel UI ile uyumsuz olabilir.</td>
-            <td>Satış öncesi güvenilirlik ve regresyon kontrolü gerekir.</td>
-            <td><span class="pill bad">P0</span></td>
-          </tr>
-          <tr>
-            <td>Medya</td>
-            <td>Uploadlar local path üstünde; production için S3/R2 gibi kalıcı storage şart.</td>
-            <td>Video, avatar, transformation ve meal photo için veri kaybı riski.</td>
-            <td><span class="pill bad">P0</span></td>
-          </tr>
-          <tr>
-            <td>Mesajlaşma</td>
-            <td>Video/voice call ikonları UI’da var ama gerçek çağrı akışına bağlı değil; attachment modeli var ama composer akışı eksik.</td>
-            <td>Koçluk ilişkisinde iletişim ürünün merkezi.</td>
+            <td>RTC bağlantısı</td>
+            <td>Provider, roomId, callStatus ve recordingUrl alanları hazır; ama ayrı RTC ürününe gerçek entegrasyon yapılmadı.</td>
+            <td>Seans akışı bugün link tabanlı yürür; entegre call deneyimi ikinci faza kalır.</td>
             <td><span class="pill warn">P1</span></td>
           </tr>
           <tr>
-            <td>AI</td>
-            <td>OpenAI paketi var ama gerçek copilot deneyimi ürün omurgasına bağlanmamış.</td>
-            <td>Rakiplerden ayrışacak ana kaldıraç.</td>
+            <td>Production migration uygulaması</td>
+            <td>RTC ve agency workspace migration artifact'ları yazıldı; hedef staging/prod DB'lerde apply adımı operasyonel olarak henüz yapılmadı.</td>
+            <td>Schema ile çalışan app'i aynı satırda tutmak için deploy disiplini şart.</td>
             <td><span class="pill warn">P1</span></td>
           </tr>
           <tr>
-            <td>Analytics</td>
-            <td>AnalyticsSnapshot modeli var; dashboardların pre-computed veriyle beslendiği net değil.</td>
-            <td>Veri büyüdükçe dashboardlar yavaşlar.</td>
-            <td><span class="pill warn">P1</span></td>
+            <td>Beta kullanıcı geribildirimi</td>
+            <td>Ürün artık gösterilebilir durumda; ama fiyatlandırma, onboarding ve coach retention dili gerçek bağımsız koçlarla henüz test edilmedi.</td>
+            <td>Marketing mesajını ve paket değerini kilitlemek için gerekecek.</td>
+            <td><span class="pill info">P2</span></td>
           </tr>
         </tbody>
       </table>
@@ -534,111 +522,74 @@
 
     <section class="slide">
       <div class="slide-header">
-        <h2>Sıfırdan Geliştirilecekler</h2>
-        <p class="section-note">Bu başlıklar mevcut kodun üstüne yamadan çok, ayrı ürün modülü gibi tasarlanmalı.</p>
+        <h2>Bir Sonraki Faz</h2>
+        <p class="section-note">Bunlar launch blokajı değil; staging sonrası ürünü derinleştirecek ikinci faz işleri.</p>
       </div>
       <div class="grid-2">
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Guided onboarding</h3>
-          <p>Koç için: profil tamamla, paket oluştur, ilk danışanı davet et, ilk template ata. Danışan için: hedef, seviye, ölçü, koç seç, ilk check-in.</p>
+          <h3><span class="pill brand">Next</span> RTC entegrasyonu</h3>
+          <p>Session modelleri ve UI hazır. Ayrı geliştirilen RTC katmanı ile room ve call lifecycle birleştirilecek.</p>
         </article>
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Satın alma ve sözleşme akışı</h3>
-          <p>Coach package checkout, invoice history, verified purchase, iptal/iade, paket yenileme, “aktif abonelik” deneyimi.</p>
+          <h3><span class="pill brand">Next</span> Coach copilot derinleştirme</h3>
+          <p>Haftalık digest başladı. Sonraki seviye, program taslağı, mesaj önerisi ve churn önleme otomasyonları.</p>
         </article>
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Coach Copilot</h3>
-          <p>Haftalık analiz raporu, riskli danışan özeti, yeni hafta program taslağı, beslenme davranış yorumu ve mesaj önerileri.</p>
+          <h3><span class="pill brand">Next</span> Attachment ve realtime polish</h3>
+          <p>Mesaj attachment deneyimi, presence ve koçluk operasyon event'leri daha güçlü hale getirilebilir.</p>
         </article>
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Program periodization</h3>
+          <h3><span class="pill brand">Next</span> Periodization</h3>
           <p>Tekil template atama yerine 4/8/12 haftalık makro plan, deload haftası, hedef hacim ve performans progresyonu.</p>
         </article>
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Realtime operations</h3>
-          <p>İlişki durumu, yeni istek, workout live status, check-in cevapları ve mesaj presence için ortak event sistemi.</p>
+          <h3><span class="pill brand">Next</span> Agency analytics</h3>
+          <p>Workspace, roles ve shared clients çıktı. Sonraki adım owner reporting, seat economics ve ekip KPI ekranları.</p>
         </article>
         <article class="card">
-          <h3><span class="pill brand">Yeni</span> Growth & referral</h3>
-          <p>Koç davet kodu zaten var; bunu indirim, ücretsiz ay, başarı hikayesi paylaşımı ve referral dashboard ile büyüme kanalına çevir.</p>
+          <h3><span class="pill brand">Next</span> SEO growth machine</h3>
+          <p>Public coach pages ve marketplace hazır. Bunu şehir + uzmanlık landingleri ve içerik dağıtımı ile büyütmek gerekir.</p>
         </article>
       </div>
     </section>
 
     <section class="slide">
       <div class="slide-header">
-        <h2>12 Haftalık İlerleme Planı</h2>
-        <p class="section-note">Önerim: önce bağımsız koçların ödeme yapacağı net değeri tamamla; sonra açık marketplace’i büyüme motoruna çevir.</p>
+        <h2>Launch Sırası</h2>
+        <p class="section-note">Bugün en mantıklı yol 12 haftalık yeni plan yazmak değil; staging, beta ve production hardening sırasını disipline etmek.</p>
       </div>
       <div class="roadmap">
-        <time>0-14 gün</time>
+        <time>1. adım</time>
         <div>
-          <h3>Bağımsız koç MVP’sini keskinleştir</h3>
+          <h3>Commit ve staging deploy</h3>
           <ul>
-            <li>Koç onboarding checklist: profil, paket, uygunluk, invite link, ilk template, ilk danışan.</li>
-            <li>Koç dashboard’da “bugün ne yapmalıyım?” alanı: bekleyen istek, riskli danışan, tamamlanmamış check-in, yaklaşan seans.</li>
-            <li>Demo seed datasını bağımsız koç satış demosuna göre düzenle.</li>
-            <li>Kırık E2E testlerini güncelle; satış demosunda patlayacak akışları önce düzelt.</li>
+            <li>Değişiklikleri tek commit'e topla.</li>
+            <li>RTC ve agency migration'larını staging DB'de uygula.</li>
+            <li>Staging seed'i yeni coach, marketplace ve agency workspace verisiyle tekrar bas.</li>
+            <li>Landing, marketplace, dashboard, team ve admin sayfalarını staging'de elle kontrol et.</li>
           </ul>
         </div>
       </div>
       <div class="roadmap">
-        <time>15-30 gün</time>
+        <time>2. adım</time>
         <div>
-          <h3>SaaS ödeme ve paket sınırları</h3>
+          <h3>Beta coach wave</h3>
           <ul>
-            <li>Koç planları: Free, Starter, Pro, Agency. Limitler: danışan sayısı, template sayısı, analytics, AI rapor, marketplace boost.</li>
-            <li>Checkout → aktif koç aboneliği → fatura → plan yükseltme/düşürme akışını tamamla.</li>
-            <li>FeatureGate ve tier-limit kontrollerini kritik aksiyonlara bağla: müşteri kabul, template atama, analytics, AI rapor.</li>
-            <li>Revenue panelini “koçun ödediği SaaS” odağına göre sadeleştir; marketplace komisyonu anlatısından kaçın.</li>
+            <li>10 bağımsız koç ile onboarding, paket oluşturma ve marketplace görünürlük akışlarını test et.</li>
+            <li>Koçların hangi plan noktasında para ödemeye razı olduğunu topla.</li>
+            <li>Pricing copy ve objection handling metinlerini gerçek itirazlara göre güncelle.</li>
           </ul>
         </div>
       </div>
       <div class="roadmap">
-        <time>31-45 gün</time>
+        <time>3. adım</time>
         <div>
-          <h3>Açık marketplace güven katmanı</h3>
+          <h3>Production hardening</h3>
           <ul>
-            <li>Public coach profile SEO: şehir, uzmanlık, paket, dönüşüm fotoğrafı, yorum ve başarı hikayesi alanlarını zenginleştir.</li>
-            <li>Verified coach ve verified review mekanizması: herkes açık marketplace’e girebilir ama güven sinyalleri ayrışmalı.</li>
-            <li>Filtreleri segmentli hale getir: uygun fiyatlı, performans, kilo verme, kadın koç, şehir, online, yüksek puan.</li>
-            <li>Koç profil kalite skoru: düşük skorlu profil marketplace’te daha az görünür.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="roadmap">
-        <time>46-60 gün</time>
-        <div>
-          <h3>Danışan deneyimi ve uygun koç bulma</h3>
-          <ul>
-            <li>Danışan onboarding: hedef, bütçe, seviye, şehir/online tercihi, sağlık notu, beklenen iletişim sıklığı.</li>
-            <li>Koç eşleştirme skoru: hedef + bütçe + uzmanlık + rating + response time.</li>
-            <li>Karşılaştırma ekranını karar verdiren hale getir: fiyat, paket kapsamı, uzmanlık, yorum, dönüşüm örnekleri.</li>
-            <li>Koçu olmayan danışana self-service keşif akışı: “3 koç önerisi” ve hızlı istek gönderme.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="roadmap">
-        <time>61-75 gün</time>
-        <div>
-          <h3>Sessiz AI rapor motoru</h3>
-          <ul>
-            <li>Haftalık koç raporu: riskli danışanlar, en iyi ilerleme, eksik check-in, uyumsuz beslenme, PR kazananlar.</li>
-            <li>Her danışan için “önerilen koç aksiyonu”: mesaj gönder, seans planla, programı hafiflet, başarıyı kutla.</li>
-            <li>AI çıktısını otomatik aksiyona çevirmeden taslak olarak sun; koç onaylamadan danışana gitmesin.</li>
-            <li>AI özelliğini Pro plan avantajı olarak konumlandır.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="roadmap">
-        <time>76-90 gün</time>
-        <div>
-          <h3>Ajans/Gym hazırlığı ve RTC backlog</h3>
-          <ul>
-            <li>Agency plan taslağı: çoklu koç, ortak müşteri havuzu, rol yetkileri, finansal görünürlük sınırları.</li>
-            <li>RTC entegrasyonu için hazırlık: Session modelinde provider, roomId, callStatus, recordingUrl alanlarını planla.</li>
-            <li>Locale altyapısı: metinleri i18n yapısına taşıma planı; ödeme ve operasyon Türkiye öncelikli kalır.</li>
-            <li>Bağımsız koçlardan 10 beta müşteri topla; kullanım verisine göre Agency fazını başlat.</li>
+            <li>Production bucket/CDN kur ve protected media policy'yi gerçek ortamda doğrula.</li>
+            <li>Upload body-size limitlerini hareket/form video için test et.</li>
+            <li>Browser kurulu ortamda Playwright demo smoke'ını son kez koş.</li>
+            <li>Launch checklist ve incident path'lerini sadeleştir.</li>
           </ul>
         </div>
       </div>
@@ -691,23 +642,20 @@
 
     <section class="slide">
       <div class="slide-header">
-        <h2>Yapılacaklar: Ürün Backlog</h2>
-        <p class="section-note">Aşağıdaki liste senin kararlarına göre yeniden önceliklendirildi. P0 satışa çıkmadan önce kapanmalı.</p>
+        <h2>Release Durumu</h2>
+        <p class="section-note">Liste güncel worktree ile hizalı. Tamamlananlar gerçekten üründe; açık kalanlar launch ve production riskleri.</p>
       </div>
       <table>
         <thead><tr><th>Öncelik</th><th>Yapılacak</th><th>Kabul kriteri</th></tr></thead>
         <tbody>
-          <tr><td><span class="pill bad">P0</span></td><td>Bağımsız koç onboarding akışı</td><td>Yeni koç 10 dakika içinde profilini, ilk paketini, invite linkini ve ilk template’ini oluşturabiliyor.</td></tr>
-          <tr><td><span class="pill bad">P0</span></td><td>Koç SaaS planları ve checkout</td><td>Koç plan seçip ödeme yapıyor; planı dashboard’da aktif görünüyor; limitler çalışıyor.</td></tr>
-          <tr><td><span class="pill bad">P0</span></td><td>Açık marketplace profil kalite standardı</td><td>Profil tamamlığı düşük koç görünürlüğü sınırlı; verified ve yorumlu profiller öne çıkıyor.</td></tr>
-          <tr><td><span class="pill bad">P0</span></td><td>Production medya depolama</td><td>Avatar, transformation, meal photo ve movement video local disk dışında kalıcı saklanıyor.</td></tr>
-          <tr><td><span class="pill warn">P1</span></td><td>Koç dashboard aksiyon merkezi</td><td>Koç her girişte riskli danışan, bekleyen istek, yaklaşan seans ve okunmamış mesajları öncelikli görüyor.</td></tr>
-          <tr><td><span class="pill warn">P1</span></td><td>Danışan koç bulma sihirbazı</td><td>Danışan hedef/bütçe/seviye girince 3 önerilen koç ve karşılaştırma ekranına gidiyor.</td></tr>
-          <tr><td><span class="pill warn">P1</span></td><td>Sessiz AI haftalık rapor</td><td>Koç her hafta danışan bazlı özet ve önerilen aksiyon listesi alıyor.</td></tr>
-          <tr><td><span class="pill warn">P1</span></td><td>Verified review ve trust score</td><td>Sadece gerçek ilişki/abonelik geçmişi olan danışanların yorumları doğrulanmış görünüyor.</td></tr>
-          <tr><td><span class="pill info">P2</span></td><td>Locale altyapısı</td><td>UI metinleri i18n yapısına taşınmaya başlıyor; varsayılan Türkçe kalıyor.</td></tr>
-          <tr><td><span class="pill info">P2</span></td><td>RTC entegrasyon hazırlığı</td><td>Session model ve UI, ileride kendi RTC katmanına bağlanabilecek provider/room yapısını destekliyor.</td></tr>
-          <tr><td><span class="pill info">P2</span></td><td>Agency/Gym beta modeli</td><td>Çoklu koç, rol, müşteri havuzu ve owner dashboard teknik tasarımı hazır.</td></tr>
+          <tr><td><span class="pill good">Tamam</span></td><td>Bağımsız koç onboarding checklist ve boş durumlar</td><td>Dashboard ve ilgili yüzeyler koçu profil, paket, template ve davet aksiyonuna itiyor.</td></tr>
+          <tr><td><span class="pill good">Tamam</span></td><td>Koç SaaS planları, quota ve revenue paneli</td><td>Free / Pro / Elite / Agency kademeleri ve upgrade mantığı coach SaaS diliyle çalışıyor.</td></tr>
+          <tr><td><span class="pill good">Tamam</span></td><td>Açık marketplace trust layer</td><td>Profile quality, trust score, verified review, public SEO pages, compare ve matching wizard aktif.</td></tr>
+          <tr><td><span class="pill good">Tamam</span></td><td>Sessiz AI koç raporu</td><td>Weekly digest, cron email ve upgrade value proposition aynı sistem üzerinden çalışıyor.</td></tr>
+          <tr><td><span class="pill good">Tamam</span></td><td>Locale, RTC prep, referral ve agency groundwork</td><td>i18n foundation, RTC session alanları, referral loop ve team workspace üründe var.</td></tr>
+          <tr><td><span class="pill bad">Açık</span></td><td>Playwright demo smoke'ı staging-benzeri ortamda doğrulama</td><td><code>npm run test:e2e:demo</code> browser kurulu ortamda gerçekten geçiyor.</td></tr>
+          <tr><td><span class="pill bad">Açık</span></td><td>Production bucket/CDN ve video limit doğrulama</td><td>Media storage strategy deploy ortamında test edilip checklist kapatılıyor.</td></tr>
+          <tr><td><span class="pill warn">Operasyon</span></td><td>Migration apply + staging deploy</td><td>Yeni migration'lar staging DB'de apply, seed ve smoke kontrol geçmiş oluyor.</td></tr>
         </tbody>
       </table>
     </section>

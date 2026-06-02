@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Building2,
   ClipboardList,
   Compass,
   CreditCard,
@@ -40,6 +41,7 @@ const coachItems: NavItem[] = [
   { href: "/coach/exercises", label: "Egzersizler", icon: Dumbbell },
   { href: "/coach/mobility", label: "Mobility Library", icon: StretchHorizontal },
   { href: "/coach/messages", label: "Mesajlar", icon: MessageCircle },
+  { href: "/coach/team", label: "Ekip", icon: Building2 },
   { href: "/coach/billing", label: "Faturalandırma", icon: CreditCard },
   { href: "/coach/profile", label: "Profil", icon: User },
 ];

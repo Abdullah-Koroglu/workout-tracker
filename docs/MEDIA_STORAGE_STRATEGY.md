@@ -72,4 +72,19 @@ Production rule: `MEDIA_STORAGE_DRIVER=local` throws unless `MEDIA_ALLOW_LOCAL_S
 - Movement video and form-analysis upload routes: migrated to helper.
 - S3/R2 driver and production env validation: implemented.
 - Protected URL policy for sensitive client media: implemented.
+- Internal deployment readiness surface: available at `/coach/admin`.
 - Remaining production work: configure production bucket/CDN and verify large video limits in the deployment platform.
+
+## Current Upload Limit Reference
+
+- Coach avatar: 2MB
+- Nutrition photo: 8MB
+- Body check-in photo set: 10MB per file
+- Movement video: 20MB, max 30 seconds
+- Form analysis video: 20MB, max 90 seconds
+
+Deployment recommendation:
+
+- Configure platform/body-size limit to at least `20MB`.
+- Keep public media on CDN-backed `MEDIA_PUBLIC_BASE_URL`.
+- Keep protected media behind `/api/uploads/...` access checks.

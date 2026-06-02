@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   LineChart, Line, BarChart, Bar,
@@ -9,8 +8,8 @@ import {
 } from "recharts";
 import {
   Bell, MessageCircle, ChevronLeft, TrendingUp, TrendingDown,
-  AlertTriangle, Leaf, Dumbbell, Calendar, ClipboardList,
-  Activity, Flame, User, BarChart2, Play, CheckCircle2, X,
+  AlertTriangle, Leaf, Calendar, ClipboardList,
+  Activity, User, BarChart2, Play,
 } from "lucide-react";
 import type { TimelineItem } from "@/lib/coach-timeline";
 import { WorkoutHistoryPanel } from "@/components/coach/WorkoutHistoryPanel";
@@ -53,6 +52,19 @@ export type ClientHub360Props = {
   strengthTrend: StrengthPoint[];
   weeklyTonnage: TonnageWeek;
   heatmap: HeatCell[];
+};
+
+type ChartTooltipPayload = {
+  dataKey?: string;
+  name?: string;
+  color?: string;
+  value?: number | string;
+};
+
+type ChartTooltipProps = {
+  active?: boolean;
+  payload?: ChartTooltipPayload[];
+  label?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -111,13 +123,13 @@ function ComplianceGauge({ score }: { score: number }) {
 }
 
 // ─── Custom Recharts Tooltip ──────────────────────────────────────────────────
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl bg-white px-3 py-2.5 shadow-lg ring-1 ring-black/8" style={{ minWidth: 160 }}>
       <p className="mb-1.5 text-xs font-black text-slate-700">{label}</p>
-      {payload.map((p: any) => (
-        <div key={p.dataKey} className="flex items-center justify-between gap-4">
+      {payload.map((p) => (
+        <div key={p.dataKey ?? p.name} className="flex items-center justify-between gap-4">
           <span className="text-[11px] text-slate-500">{p.name}</span>
           <span className="text-[11px] font-bold" style={{ color: p.color }}>{p.value} kg</span>
         </div>
@@ -141,12 +153,10 @@ function OverviewTab({
   complianceScore,
   subscriptionTier,
   assignments,
-  goal,
-  fitnessLevel,
   heatmap,
   completedWorkouts,
   totalWorkouts,
-}: Pick<ClientHub360Props, "complianceScore" | "subscriptionTier" | "assignments" | "goal" | "fitnessLevel" | "heatmap" | "completedWorkouts" | "totalWorkouts"> & { clientId: string }) {
+}: Pick<ClientHub360Props, "complianceScore" | "subscriptionTier" | "assignments" | "heatmap" | "completedWorkouts" | "totalWorkouts">) {
   const TIER_LABEL: Record<string, string> = {
     FREE: "Starter", TIER_1: "Pro", TIER_2: "Elite", AGENCY: "Agency",
   };
@@ -443,12 +453,11 @@ const PHOTO_SLOTS = [
   { key: "backPhotoUrl" as const, label: "Arka" },
 ];
 
-function BodyTab({ clientId }: { clientId: string; weightKg: number | null; goal: string | null; fitnessLevel: string | null }) {
+function BodyTab({ clientId }: { clientId: string }) {
   const [logs, setLogs] = useState<BodyLogEntry[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
   const [modalAngle, setModalAngle] = useState<number | null>(null); // null = closed
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     fetch(`/api/coach/clients/${clientId}/body-logs`)
       .then((r) => r.json())
@@ -1024,7 +1033,7 @@ function FeedbackTab({ clientId }: { clientId: string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function ClientHub360(props: ClientHub360Props) {
-  const { clientId, name, email, age, weightKg, goal, fitnessLevel,
+  const { clientId, name, age, weightKg, goal,
     completedWorkouts, totalWorkouts, complianceScore, subscriptionTier,
     assignments, timelineItems, currentPage, totalPages,
     strengthTrend, weeklyTonnage, heatmap } = props;
@@ -1102,12 +1111,9 @@ export function ClientHub360(props: ClientHub360Props) {
       <div className="pt-4">
         {activeTab === "overview" && (
           <OverviewTab
-            clientId={clientId}
             complianceScore={cScore}
             subscriptionTier={subscriptionTier}
             assignments={assignments}
-            goal={goal}
-            fitnessLevel={fitnessLevel}
             heatmap={heatmap}
             completedWorkouts={completedWorkouts}
             totalWorkouts={totalWorkouts}
@@ -1120,7 +1126,7 @@ export function ClientHub360(props: ClientHub360Props) {
         )}
         {activeTab === "body" && (
           <FeatureGate feature="bodyTracking" tier={subscriptionTier as import("@prisma/client").SubscriptionTier}>
-            <BodyTab clientId={clientId} weightKg={weightKg} goal={goal} fitnessLevel={fitnessLevel} />
+            <BodyTab clientId={clientId} />
           </FeatureGate>
         )}
         {activeTab === "history" && (

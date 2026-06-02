@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
+import { getReviewVerificationContext } from "@/lib/review-verification";
 
 const createSchema = z.object({
   coachId: z.string().min(1),
@@ -19,27 +21,27 @@ export async function GET(request: Request) {
 
   const reviews = await prisma.review.findMany({
     where: { coachId },
-    orderBy: { createdAt: "desc" },
+    orderBy: [{ verifiedPurchase: "desc" }, { helpfulCount: "desc" }, { createdAt: "desc" }],
     include: {
       client: { select: { name: true } },
     },
   });
 
   return NextResponse.json({
-    reviews: reviews.map((r) => ({
-      id: r.id,
-      rating: r.rating,
-      title: r.title,
-      content: r.content,
-      isAnon: r.isAnon,
-      createdAt: r.createdAt,
-      authorName: r.isAnon ? "Anonim" : r.client.name,
-      helpfulCount: r.helpfulCount,
-      coachReply: r.coachReply,
-      coachReplyAt: r.coachReplyAt,
-      verifiedPurchase: r.verifiedPurchase,
-      photos: r.photos ?? null,
-      durationWithCoach: r.durationWithCoach,
+    reviews: reviews.map((review) => ({
+      id: review.id,
+      rating: review.rating,
+      title: review.title,
+      content: review.content,
+      isAnon: review.isAnon,
+      createdAt: review.createdAt,
+      authorName: review.isAnon ? "Anonim" : review.client.name,
+      helpfulCount: review.helpfulCount,
+      coachReply: review.coachReply,
+      coachReplyAt: review.coachReplyAt,
+      verifiedPurchase: review.verifiedPurchase,
+      photos: review.photos ?? null,
+      durationWithCoach: review.durationWithCoach,
     })),
   });
 }
@@ -57,29 +59,19 @@ export async function POST(request: Request) {
 
   const { coachId, rating, title, content, isAnon } = parsed.data;
 
-  // Verify coach exists
   const coach = await prisma.user.findUnique({
     where: { id: coachId, role: "COACH" },
     select: { id: true },
   });
   if (!coach) return NextResponse.json({ error: "Coach not found" }, { status: 404 });
 
-  // Verify client has/had a relation with this coach
-  const relation = await prisma.coachClientRelation.findFirst({
-    where: { coachId, clientId: auth.session.user.id },
-  });
-  if (!relation) {
+  const verification = await getReviewVerificationContext(coachId, auth.session.user.id);
+  if (!verification.canReview) {
     return NextResponse.json(
-      { error: "Sadece bağlı olduğunuz koça yorum yapabilirsiniz" },
+      { error: verification.eligibilityReason ?? "Bu koç icin yorum uygunlugu dogrulanamadi." },
       { status: 403 }
     );
   }
-
-  const isAccepted = relation.status === "ACCEPTED";
-  const durationWithCoach = Math.max(
-    1,
-    Math.floor((Date.now() - new Date(relation.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 7)),
-  );
 
   const review = await prisma.review.upsert({
     where: { coachId_clientId: { coachId, clientId: auth.session.user.id } },
@@ -90,18 +82,24 @@ export async function POST(request: Request) {
       title,
       content,
       isAnon,
-      verifiedPurchase: isAccepted,
-      durationWithCoach,
+      verifiedPurchase: verification.verifiedPurchase,
+      durationWithCoach: verification.durationWithCoach,
     },
-    update: { rating, title, content, isAnon },
+    update: {
+      rating,
+      title,
+      content,
+      isAnon,
+      verifiedPurchase: verification.verifiedPurchase,
+      durationWithCoach: verification.durationWithCoach,
+    },
   });
 
-  // Update coach profile aggregate rating
   const allReviews = await prisma.review.findMany({
     where: { coachId },
     select: { rating: true },
   });
-  const avgRating = allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length;
+  const avgRating = allReviews.reduce((sum, item) => sum + item.rating, 0) / allReviews.length;
 
   await prisma.coachProfile.update({
     where: { userId: coachId },

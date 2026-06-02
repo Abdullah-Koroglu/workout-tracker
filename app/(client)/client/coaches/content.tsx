@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -20,6 +21,8 @@ import { useNotificationContext } from "@/contexts/NotificationContext";
 import { ActionMenu } from "@/components/ui/action-menu";
 import { PageHero } from "@/components/shared/PageHero";
 import { CoachFilterPanel, type CoachFilters } from "@/components/client/CoachFilterPanel";
+import { CoachMatchingWizard } from "@/components/client/CoachMatchingWizard";
+import { buildLocalizedPath, formatCurrency, getDictionary, resolveLocale } from "@/lib/i18n";
 
 /* ─── Types ──────────────────────────────────────────── */
 type Coach = {
@@ -52,6 +55,14 @@ type MarketplaceCoach = {
       missing: string[];
       strengths: string[];
     };
+    trustScore?: {
+      score: number;
+      label: string;
+      tone: "low" | "medium" | "high";
+      summary: string;
+      signals: string[];
+    };
+    isVerified?: boolean | null;
     packages: { id: string; price: number | null }[];
   } | null;
 };
@@ -95,7 +106,14 @@ function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: s
       }}
     >
       {imageUrl ? (
-        <img src={imageUrl} alt={name} className="h-full w-full object-cover" />
+        <Image
+          src={imageUrl}
+          alt={name}
+          width={size}
+          height={size}
+          unoptimized
+          className="h-full w-full object-cover"
+        />
       ) : (
         getInitials(name)
       )}
@@ -103,11 +121,20 @@ function CoachAvatar({ name, imageUrl, size = 48 }: { name: string; imageUrl?: s
   );
 }
 
+const TRUST_STYLE = {
+  high: { bg: "rgba(16,185,129,0.12)", color: "#047857", label: "Yüksek güven" },
+  medium: { bg: "rgba(59,130,246,0.12)", color: "#1D4ED8", label: "Güven oluşuyor" },
+  low: { bg: "rgba(245,158,11,0.12)", color: "#B45309", label: "Geliştirilmeli" },
+} as const;
+
 /* ─── Main Component ──────────────────────────────────── */
-export default function ClientCoachesContent() {
+export default function ClientCoachesContent({ lang }: { lang?: string }) {
   const { push } = useNotificationContext();
   const { confirm } = useConfirmation();
   const router = useRouter();
+  const locale = resolveLocale(lang);
+  const dictionary = getDictionary(locale);
+  const coachListLoadError = dictionary.clientCoachDiscovery.coachListLoadError;
 
   const [tab, setTab] = useState<"my" | "find">("my");
   const [coaches, setCoaches] = useState<Coach[]>([]);
@@ -118,6 +145,7 @@ export default function ClientCoachesContent() {
   const [marketLoading, setMarketLoading] = useState(false);
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState("");
+  const [matchHeadline, setMatchHeadline] = useState(dictionary.clientCoachDiscovery.marketplaceHeadline);
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
@@ -132,17 +160,26 @@ export default function ClientCoachesContent() {
     minExp: null,
     hasPackages: false,
     city: "",
+    segment: "all",
+    verifiedOnly: false,
   });
 
   /* load my coaches */
-  const loadCoaches = useCallback(async (q = "") => {
+  const loadCoaches = async (q = "") => {
     const res = await fetch(`/api/client/coaches${q ? `?q=${encodeURIComponent(q)}` : ""}`);
     const data = await res.json().catch(() => ({}));
-    if (!res.ok) { push(data.error || "Koç listesi yüklenemedi."); return; }
+    if (!res.ok) { push(data.error || coachListLoadError); return; }
     setCoaches(data.coaches || []);
-  }, [push]);
+  };
 
-  useEffect(() => { void loadCoaches(); }, [loadCoaches]);
+  useEffect(() => {
+    void (async () => {
+      const res = await fetch("/api/client/coaches");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { push(data.error || coachListLoadError); return; }
+      setCoaches(data.coaches || []);
+    })();
+  }, [coachListLoadError, push]);
 
   /* load marketplace */
   const loadMarket = useCallback(async (q = "", spec = "", filterArgs?: CoachFilters) => {
@@ -157,6 +194,8 @@ export default function ClientCoachesContent() {
     if (activeFilters.minExp !== null) params.set("minExp", String(activeFilters.minExp));
     if (activeFilters.hasPackages) params.set("hasPackages", "true");
     if (activeFilters.city.trim()) params.set("city", activeFilters.city);
+    if (activeFilters.segment !== "all") params.set("segment", activeFilters.segment);
+    if (activeFilters.verifiedOnly) params.set("verifiedOnly", "true");
 
     const res = await fetch(`/api/marketplace/coaches?${params.toString()}`);
     const data = await res.json() as { coaches: MarketplaceCoach[] };
@@ -189,17 +228,17 @@ export default function ClientCoachesContent() {
       body: JSON.stringify({ coachId }),
     });
     setLoadingCoachId(null);
-    if (!res.ok) { push("Koç isteği gönderilemedi."); return; }
-    push("Koç isteği gönderildi.");
+    if (!res.ok) { push(dictionary.clientCoachDiscovery.requestSendError); return; }
+    push(dictionary.clientCoachDiscovery.requestSent);
     await loadCoaches();
   };
 
   const disconnectCoach = async (coachId: string) => {
     const ok = await confirm({
-      title: "Koç bağlantısını kaldır",
-      description: "Bu koç ile bağlantıyı kaldırmak istediğinize emin misiniz?",
-      confirmText: "Kaldır",
-      cancelText: "Vazgeç",
+      title: dictionary.clientCoachDiscovery.disconnectTitle,
+      description: dictionary.clientCoachDiscovery.disconnectDescription,
+      confirmText: dictionary.clientCoachDiscovery.disconnectConfirm,
+      cancelText: dictionary.clientCoachDiscovery.disconnectCancel,
       danger: true,
     });
     if (!ok) return;
@@ -207,8 +246,8 @@ export default function ClientCoachesContent() {
     const res = await fetch(`/api/client/coaches/${coachId}`, { method: "DELETE" });
     const data = await res.json().catch(() => ({}));
     setLoadingCoachId(null);
-    if (!res.ok) { push(data.error || "Koç bağlantısı kaldırılamadı."); return; }
-    push("Koç bağlantısı kaldırıldı.");
+    if (!res.ok) { push(data.error || dictionary.clientCoachDiscovery.disconnectError); return; }
+    push(dictionary.clientCoachDiscovery.disconnected);
     await loadCoaches();
   };
 
@@ -218,22 +257,22 @@ export default function ClientCoachesContent() {
 
       {/* ── Hero header ── */}
       <PageHero
-        eyebrow="Koç Ağı"
-        title="Koçlarım"
-        subtitle="Koç bul, bağlantı yönet ve iletişim kur."
+        eyebrow={dictionary.clientCoachDiscovery.heroEyebrow}
+        title={dictionary.clientCoachDiscovery.heroTitle}
+        subtitle={dictionary.clientCoachDiscovery.heroSubtitle}
         variant="light"
         stats={[
-          { label: "Aktif Koç",      value: stats.accepted, color: "#22C55E", bg: "rgba(34,197,94,0.15)" },
-          { label: "Bekleyen İstek", value: stats.pending,  color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
-          { label: "Koç Havuzu",     value: stats.pool,     color: "#2563EB", bg: "rgba(37,99,235,0.15)" },
+          { label: dictionary.clientCoachDiscovery.activeCoach, value: stats.accepted, color: "#22C55E", bg: "rgba(34,197,94,0.15)" },
+          { label: dictionary.clientCoachDiscovery.pendingRequest, value: stats.pending, color: "#F59E0B", bg: "rgba(245,158,11,0.15)" },
+          { label: dictionary.clientCoachDiscovery.coachPool, value: stats.pool, color: "#2563EB", bg: "rgba(37,99,235,0.15)" },
         ]}
       />
 
       {/* ── Tabs ── */}
       <div className="flex border-b border-slate-200">
         {[
-          { k: "my"   as const, label: "Koçlarım", icon: UserCheck },
-          { k: "find" as const, label: "Koç Bul",  icon: Search },
+          { k: "my"   as const, label: dictionary.clientCoachDiscovery.myCoachesTab, icon: UserCheck },
+          { k: "find" as const, label: dictionary.clientCoachDiscovery.findCoachTab,  icon: Search },
         ].map(({ k, label, icon: Icon }) => (
           <button
             key={k}
@@ -259,7 +298,7 @@ export default function ClientCoachesContent() {
             {/* Active coaches grid */}
             {myCoaches.length > 0 && (
               <div>
-                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Aktif Bağlantılar</h2>
+                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">{dictionary.clientCoachDiscovery.activeConnections}</h2>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {myCoaches.map((coach) => (
                     <div
@@ -280,7 +319,7 @@ export default function ClientCoachesContent() {
                                 style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}
                               >
                                 <BadgeCheck className="mr-0.5 inline h-3 w-3" />
-                                Aktif
+                                {dictionary.clientCoachDiscovery.activeStatus}
                               </span>
                             </div>
                             <p className="truncate text-xs text-slate-400">{coach.email}</p>
@@ -294,11 +333,11 @@ export default function ClientCoachesContent() {
                             style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
                           >
                             <MessageCircle className="h-3.5 w-3.5" />
-                            Mesaj
+                            {dictionary.clientCoachDiscovery.message}
                           </Link>
                           <ActionMenu
                             items={[{
-                              label: "Bağlantıyı Kaldır",
+                              label: dictionary.clientCoachDiscovery.disconnectConfirm,
                               danger: true,
                               onClick: () => { void disconnectCoach(coach.id); },
                             }]}
@@ -314,7 +353,7 @@ export default function ClientCoachesContent() {
             {/* Pending requests */}
             {pending.length > 0 && (
               <div>
-                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Bekleyen İstekler</h2>
+                <h2 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">{dictionary.clientCoachDiscovery.pendingRequests}</h2>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   {pending.map((coach) => (
                     <div
@@ -334,7 +373,7 @@ export default function ClientCoachesContent() {
                           style={{ background: "rgba(245,158,11,0.12)", color: "#D97706" }}
                         >
                           <Clock3 className="h-3 w-3" />
-                          Bekliyor
+                          {dictionary.clientCoachDiscovery.waitingStatus}
                         </span>
                       </div>
                     </div>
@@ -355,8 +394,8 @@ export default function ClientCoachesContent() {
                 >
                   <Users className="h-7 w-7" style={{ color: "#F97316" }} />
                 </div>
-                <p className="font-bold text-slate-800">Henüz bağlı koçun yok</p>
-                <p className="mb-4 mt-1 text-sm text-slate-600">Sana uygun bir koç bulmak için "Koç Bul" sekmesine geç.</p>
+                <p className="font-bold text-slate-800">{dictionary.clientCoachDiscovery.noConnectedCoach}</p>
+                <p className="mb-4 mt-1 text-sm text-slate-600">{dictionary.clientCoachDiscovery.noConnectedCoachBody}</p>
                 <button
                   type="button"
                   onClick={() => setTab("find")}
@@ -364,7 +403,7 @@ export default function ClientCoachesContent() {
                   style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.35)" }}
                 >
                   <Zap className="h-4 w-4" />
-                  Koç Bul
+                  {dictionary.clientCoachDiscovery.findCoachTab}
                 </button>
               </div>
             )}
@@ -372,11 +411,11 @@ export default function ClientCoachesContent() {
 
           <div className="space-y-4">
             <div className="rounded-2xl bg-white p-5" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
-              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Bağlantı Özeti</h3>
+              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">{dictionary.clientCoachDiscovery.connectionSummary}</h3>
               <div className="space-y-2.5">
                 {[
-                  { label: "Aktif Koç", value: stats.accepted, color: "#16A34A", bg: "rgba(34,197,94,0.12)" },
-                  { label: "Bekleyen", value: stats.pending, color: "#D97706", bg: "rgba(245,158,11,0.12)" },
+                  { label: dictionary.clientCoachDiscovery.activeCoach, value: stats.accepted, color: "#16A34A", bg: "rgba(34,197,94,0.12)" },
+                  { label: dictionary.clientCoachDiscovery.pendingRequest, value: stats.pending, color: "#D97706", bg: "rgba(245,158,11,0.12)" },
                   { label: "Toplam", value: coaches.length, color: "#2563EB", bg: "rgba(37,99,235,0.12)" },
                 ].map((item) => (
                   <div key={item.label} className="flex items-center justify-between rounded-xl px-3 py-2.5" style={{ background: item.bg }}>
@@ -388,7 +427,7 @@ export default function ClientCoachesContent() {
             </div>
 
             <div className="rounded-2xl bg-white p-5" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
-              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">Hızlı İşlemler</h3>
+              <h3 className="mb-3 text-[11px] font-black uppercase tracking-widest text-slate-400">{dictionary.clientCoachDiscovery.quickActions}</h3>
               <div className="space-y-2">
                 <button
                   type="button"
@@ -414,6 +453,17 @@ export default function ClientCoachesContent() {
       {/* ── FIND COACHES TAB ── */}
       {tab === "find" && (
         <div className="space-y-5">
+          <CoachMatchingWizard
+            isLoading={marketLoading}
+            onApply={({ filters: nextFilters, specialty: nextSpecialty, query: nextQuery, headline }) => {
+              setFilters(nextFilters);
+              setSpecialty(nextSpecialty);
+              setQuery(nextQuery);
+              setMatchHeadline(headline);
+              void loadMarket(nextQuery, nextSpecialty, nextFilters);
+            }}
+          />
+
           {/* Filter Panel */}
           <CoachFilterPanel
             filters={filters}
@@ -430,6 +480,9 @@ export default function ClientCoachesContent() {
               onSubmit={(e) => { e.preventDefault(); void loadMarket(query, specialty, filters); }}
               className="flex-1 space-y-3"
             >
+              <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
+                {matchHeadline}
+              </div>
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -437,7 +490,7 @@ export default function ClientCoachesContent() {
                     type="text"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Koç adı ile ara..."
+                    placeholder={dictionary.clientCoachDiscovery.findCoachTab}
                     className="h-11 w-full rounded-xl border-0 bg-white pl-10 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                     style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                   />
@@ -447,7 +500,7 @@ export default function ClientCoachesContent() {
                   className="rounded-xl px-5 text-sm font-black text-white transition-all hover:shadow-lg"
                   style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 4px 14px rgba(249,115,22,0.35)" }}
                 >
-                  Ara
+                  {dictionary.clientCoachDiscovery.findCoachTab}
                 </button>
                 {(query || specialty) && (
                   <button
@@ -455,8 +508,17 @@ export default function ClientCoachesContent() {
                     onClick={() => {
                       setQuery("");
                       setSpecialty("");
-                      const emptyFilters: CoachFilters = { minPrice: null, maxPrice: null, minExp: null, hasPackages: false, city: "" };
+                      const emptyFilters: CoachFilters = {
+                        minPrice: null,
+                        maxPrice: null,
+                        minExp: null,
+                        hasPackages: false,
+                        city: "",
+                        segment: "all",
+                        verifiedOnly: false,
+                      };
                       setFilters(emptyFilters);
+                      setMatchHeadline(dictionary.clientCoachDiscovery.marketplaceHeadline);
                       void loadMarket("", "", emptyFilters);
                     }}
                     className="rounded-xl border border-slate-200 px-3 text-slate-400 transition hover:bg-slate-50"
@@ -559,13 +621,22 @@ export default function ClientCoachesContent() {
                   onClick={() => {
                     setQuery("");
                     setSpecialty("");
-                    const emptyFilters: CoachFilters = { minPrice: null, maxPrice: null, minExp: null, hasPackages: false, city: "" };
-                    setFilters(emptyFilters);
-                    void loadMarket("", "", emptyFilters);
+                      const emptyFilters: CoachFilters = {
+                        minPrice: null,
+                        maxPrice: null,
+                        minExp: null,
+                        hasPackages: false,
+                        city: "",
+                        segment: "all",
+                        verifiedOnly: false,
+                      };
+                      setFilters(emptyFilters);
+                      setMatchHeadline(dictionary.clientCoachDiscovery.marketplaceHeadline);
+                      void loadMarket("", "", emptyFilters);
                   }}
                   className="mt-3 text-xs font-semibold text-orange-600 hover:text-orange-700 transition-colors"
                 >
-                  Filtreleri temizle
+                  {dictionary.publicMarketplace.filterButton}
                 </button>
               )}
             </div>
@@ -583,12 +654,14 @@ export default function ClientCoachesContent() {
                 const accentColor = profile?.accentColor || "#F97316";
                 const quality = profile?.profileQuality;
                 const qualityStyle = quality ? QUALITY_STYLE[quality.tone] : null;
+                const trust = profile?.trustScore;
+                const trustStyle = trust ? TRUST_STYLE[trust.tone] : null;
 
                 if (layout === "list") {
                   return (
                     <Link
                       key={coach.id}
-                      href={`/client/coaches/${coach.id}`}
+                      href={buildLocalizedPath(`/client/coaches/${coach.id}`, locale)}
                       className="group bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg"
                       style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                     >
@@ -604,12 +677,12 @@ export default function ClientCoachesContent() {
                             </p>
                             {isConnected && (
                               <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
-                                Aktif
+                                {dictionary.clientCoachDiscovery.activeStatus}
                               </span>
                             )}
                             {isPending && (
                               <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
-                                Bekliyor
+                                {dictionary.clientCoachDiscovery.waitingStatus}
                               </span>
                             )}
                             {quality && qualityStyle && (
@@ -618,6 +691,11 @@ export default function ClientCoachesContent() {
                                 style={{ background: qualityStyle.bg, color: qualityStyle.color }}
                               >
                                 Vitrin %{quality.score}
+                              </span>
+                            )}
+                            {profile?.isVerified && (
+                              <span className="flex-shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider text-emerald-700">
+                                Doğrulandı
                               </span>
                             )}
                           </div>
@@ -660,6 +738,14 @@ export default function ClientCoachesContent() {
                               <p className="text-[9px] font-bold text-blue-600">Yorum</p>
                             </div>
                           )}
+                          {trust && trustStyle && (
+                            <div className="text-center">
+                              <p className="text-base font-black text-slate-800">%{trust.score}</p>
+                              <p className="text-[9px] font-bold" style={{ color: trustStyle.color }}>
+                                Güven
+                              </p>
+                            </div>
+                          )}
                           {quality && (
                             <div className="text-center">
                               <p className="text-base font-black text-slate-800">%{quality.score}</p>
@@ -674,8 +760,8 @@ export default function ClientCoachesContent() {
                         <div className="text-right flex-shrink-0">
                           {minPrice && (
                             <div>
-                              <p className="text-lg font-black text-slate-800">{Math.round(minPrice).toLocaleString('tr')} ₺</p>
-                              <p className="text-[10px] text-slate-400">/ay'dan</p>
+                              <p className="text-lg font-black text-slate-800">{formatCurrency(Math.round(minPrice), locale)}</p>
+                              <p className="text-[10px] text-slate-400">{dictionary.clientCoachDiscovery.monthlyFrom}</p>
                             </div>
                           )}
                           <button
@@ -685,7 +771,7 @@ export default function ClientCoachesContent() {
                             className="mt-2 px-4 py-1.5 text-xs font-black rounded-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)" }}
                           >
-                            {isConnected ? "Mesaj" : isPending ? "Beklemede" : "İstek"}
+                            {isConnected ? dictionary.clientCoachDiscovery.message : isPending ? dictionary.clientCoachDiscovery.waitingStatus : dictionary.clientCoachDiscovery.request}
                           </button>
                         </div>
                       </div>
@@ -696,7 +782,7 @@ export default function ClientCoachesContent() {
                 return (
                   <Link
                     key={coach.id}
-                    href={`/client/coaches/${coach.id}`}
+                    href={buildLocalizedPath(`/client/coaches/${coach.id}`, locale)}
                     className="group bg-white rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg"
                     style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                   >
@@ -728,6 +814,14 @@ export default function ClientCoachesContent() {
                                 %{quality.score} vitrin
                               </span>
                             )}
+                            {trust && trustStyle && (
+                              <span
+                                className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                                style={{ background: trustStyle.bg, color: trustStyle.color }}
+                              >
+                                %{trust.score} güven
+                              </span>
+                            )}
                           </div>
                           <p className="mt-1 flex items-center gap-4 text-[11px] text-slate-500">
                             {profile?.city && <span>📍 {profile.city}</span>}
@@ -736,12 +830,12 @@ export default function ClientCoachesContent() {
                         </div>
                         {isConnected && (
                           <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(34,197,94,0.14)", color: "#16A34A" }}>
-                            Aktif
+                            {dictionary.clientCoachDiscovery.activeStatus}
                           </span>
                         )}
                         {isPending && (
                           <span className="flex-shrink-0 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider" style={{ background: "rgba(245,158,11,0.15)", color: "#D97706" }}>
-                            Bekliyor
+                            {dictionary.clientCoachDiscovery.waitingStatus}
                           </span>
                         )}
                       </div>
@@ -761,18 +855,24 @@ export default function ClientCoachesContent() {
                       )}
 
                       {/* Stats Row */}
-                      {(profile?.successRate || profile?.reviewCount || quality) && (
+                      {(profile?.successRate || profile?.reviewCount || quality || trust) && (
                         <div className="flex gap-2 mb-3">
                           {profile?.successRate && (
                             <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(34,197,94,0.12)", color: "#16A34A" }}>
                               <p className="text-[10px] font-black">{profile.successRate}%</p>
-                              <p className="text-[9px] font-bold">Başarı</p>
+                              <p className="text-[9px] font-bold">{dictionary.clientCoachDiscovery.successLabel}</p>
                             </div>
                           )}
                           {profile?.reviewCount != null && (
                             <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: "rgba(37,99,235,0.12)", color: "#2563EB" }}>
                               <p className="text-[10px] font-black">{profile.reviewCount}</p>
-                              <p className="text-[9px] font-bold">Yorum</p>
+                              <p className="text-[9px] font-bold">{dictionary.clientCoachDiscovery.reviewsLabel}</p>
+                            </div>
+                          )}
+                          {trust && trustStyle && (
+                            <div className="flex-1 rounded-lg px-2 py-1.5" style={{ background: trustStyle.bg, color: trustStyle.color }}>
+                              <p className="text-[10px] font-black">%{trust.score}</p>
+                              <p className="text-[9px] font-bold">{trustStyle.label}</p>
                             </div>
                           )}
                           {quality && qualityStyle && (
@@ -812,10 +912,13 @@ export default function ClientCoachesContent() {
                       {Array.isArray(profile?.transformationPhotos) && profile.transformationPhotos.length > 0 && (
                         <div className="mb-3 flex gap-2 overflow-hidden rounded-lg">
                           {profile.transformationPhotos.slice(0, 2).map((photo: TransformationPhotoPreview, idx) => (
-                            <img
+                            <Image
                               key={idx}
-                              src={photo.afterUrl || photo.beforeUrl}
+                              src={photo.afterUrl || photo.beforeUrl || ""}
                               alt="Transformation"
+                              width={64}
+                              height={64}
+                              unoptimized
                               className="h-16 w-16 object-cover"
                             />
                           ))}
@@ -826,9 +929,9 @@ export default function ClientCoachesContent() {
                       <div className="mt-auto pt-3 flex items-center justify-between border-t border-slate-100">
                         <div className="text-xs text-slate-600">
                           {minPrice && (
-                            <p className="font-black text-slate-800">{Math.round(minPrice).toLocaleString('tr')} ₺<span className="text-slate-400 font-normal"> /ay</span></p>
+                            <p className="font-black text-slate-800">{formatCurrency(Math.round(minPrice), locale)}<span className="text-slate-400 font-normal"> {dictionary.clientCoachDiscovery.monthlyFrom}</span></p>
                           )}
-                          {pkgs.length > 0 && <p className="text-slate-400">{pkgs.length} paket</p>}
+                          {pkgs.length > 0 && <p className="text-slate-400">{pkgs.length} {dictionary.clientCoachDiscovery.packagesCount}</p>}
                         </div>
                         <span className="text-xs font-black text-orange-500 group-hover:underline">
                           Profili Gör →
@@ -843,7 +946,7 @@ export default function ClientCoachesContent() {
                           className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#1A365D] py-2.5 text-xs font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90"
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
-                          Mesaj Gönder
+                          {dictionary.clientCoachDiscovery.message}
                         </Link>
                       ) : (
                         <button
@@ -854,7 +957,7 @@ export default function ClientCoachesContent() {
                           style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}
                         >
                           <UserPlus className="h-3.5 w-3.5" />
-                          {loadingCoachId === coach.id ? "Gönderiliyor..." : isPending ? "İstek Beklemede" : "İstek Gönder"}
+                          {loadingCoachId === coach.id ? dictionary.clientCoachDiscovery.requestSending : isPending ? dictionary.clientCoachDiscovery.requestPending : dictionary.clientCoachDiscovery.sendRequest}
                         </button>
                       )}
 
@@ -869,7 +972,7 @@ export default function ClientCoachesContent() {
                           border: compareIds.includes(coach.id) ? "1px solid rgba(249,115,22,0.3)" : "1px solid #E2E8F0",
                         }}
                       >
-                        {compareIds.includes(coach.id) ? "✓ Karşılaştırmada" : "Karşılaştır"}
+                        {compareIds.includes(coach.id) ? `✓ ${dictionary.clientCoachDiscovery.compareSelected}` : dictionary.clientCoachDiscovery.compare}
                       </button>
                     </div>
                   </Link>
@@ -886,12 +989,12 @@ export default function ClientCoachesContent() {
           className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-5 py-3 shadow-2xl"
           style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)", color: "#fff" }}
         >
-          <span className="text-sm font-black">{compareIds.length} koç seçildi</span>
+          <span className="text-sm font-black">{compareIds.length} {dictionary.clientCoachDiscovery.compareBarSelected}</span>
           <button
-            onClick={() => router.push(`/client/coaches/compare?ids=${compareIds.join(",")}`)}
+            onClick={() => router.push(buildLocalizedPath("/client/coaches/compare", locale, { ids: compareIds.join(",") }))}
             className="rounded-xl bg-white px-4 py-1.5 text-xs font-black text-slate-800 transition-opacity hover:opacity-90"
           >
-            Karşılaştır →
+            {dictionary.clientCoachDiscovery.compareAction} →
           </button>
           <button
             onClick={() => setCompareIds([])}

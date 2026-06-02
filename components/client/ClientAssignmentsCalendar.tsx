@@ -225,16 +225,13 @@ export function ClientAssignmentsCalendar({ assignments }: { assignments: Assign
 
   // weekly stats helpers
   const weekStart = useMemo(() => {
-    const d = new Date(now);
-    d.setDate(now.getDate() - now.getDay());
+    const d = new Date();
+    d.setDate(d.getDate() - d.getDay());
     d.setHours(0, 0, 0, 0);
     return d;
   }, []);
 
-  const weekAssignments = useMemo(
-    () => assignments.filter((a) => new Date(a.scheduledFor) >= weekStart),
-    [assignments, weekStart]
-  );
+  const weekAssignments = assignments.filter((a) => new Date(a.scheduledFor) >= weekStart);
   const weekCompleted = weekAssignments.filter((a) => getStatus(a) === "COMPLETED").length;
   const weekTotal    = weekAssignments.length;
   const weekProgress = weekTotal > 0 ? Math.min(100, (weekCompleted / weekTotal) * 100) : 0;

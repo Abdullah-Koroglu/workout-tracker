@@ -406,8 +406,36 @@ async function main() {
   ]);
 
   await Promise.all([
-    prisma.session.create({ data: { coachId: coach.id, clientId: clientAylin.id, scheduledFor: dateAt(14, 0, 1), duration: 45, type: "weekly_checkin", status: "SCHEDULED", agenda: "Bel ölçüsü, yürüyüş temposu, haftalık plan güncellemesi", meetingUrl: "https://meet.fitcoach.local/demo-aylin" } }),
-    prisma.session.create({ data: { coachId: coach.id, clientId: clientMert.id, scheduledFor: dateAt(20, 0, 0), duration: 30, type: "form_review", status: "SCHEDULED", agenda: "Bench press video analizi", meetingUrl: "https://meet.fitcoach.local/demo-mert" } }),
+    prisma.session.create({
+      data: {
+        coachId: coach.id,
+        clientId: clientAylin.id,
+        scheduledFor: dateAt(14, 0, 1),
+        duration: 45,
+        type: "weekly_checkin",
+        status: "SCHEDULED",
+        agenda: "Bel ölçüsü, yürüyüş temposu, haftalık plan güncellemesi",
+        meetingUrl: "https://meet.fitcoach.local/demo-aylin",
+        rtcProvider: "custom_rtc",
+        rtcRoomId: "demo-aylin-weekly-checkin",
+        rtcCallStatus: "READY",
+      },
+    }),
+    prisma.session.create({
+      data: {
+        coachId: coach.id,
+        clientId: clientMert.id,
+        scheduledFor: dateAt(20, 0, 0),
+        duration: 30,
+        type: "form_review",
+        status: "SCHEDULED",
+        agenda: "Bench press video analizi",
+        meetingUrl: "https://meet.fitcoach.local/demo-mert",
+        rtcProvider: "custom_rtc",
+        rtcRoomId: "demo-mert-form-review",
+        rtcCallStatus: "READY",
+      },
+    }),
     prisma.review.create({ data: { coachId: coach.id, clientId: clientAylin.id, rating: 5, title: "İlk kez bu kadar takipli hissettim", content: "Ece hem antrenmanı hem beslenmeyi tek yerden takip ediyor. Haftalık raporlar motivasyonumu çok artırdı.", verifiedPurchase: true, durationWithCoach: 12 } }),
     prisma.review.create({ data: { coachId: coach.id, clientId: clientMert.id, rating: 4.8, title: "Performans odaklı ve net", content: "Bench hedefimde her hafta ne yapacağımı biliyorum. Video yorumları özellikle çok değerli.", verifiedPurchase: true, durationWithCoach: 8 } }),
     prisma.subscription.create({ data: { clientId: clientAylin.id, coachId: coach.id, packageId: coachProfile.packages[0]?.id, status: "active", startedAt: dateAt(9, 0, -20), expiresAt: dateAt(9, 0, 10), payments: { create: { amount: 4500, currency: "TRY", status: "paid", provider: "demo", providerRef: "demo-paid-aylin" } } } }),

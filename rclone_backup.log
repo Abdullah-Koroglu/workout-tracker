@@ -564,3 +564,30 @@ Elapsed time:         6.7s
 
 Senkronizasyon BASARILI: Mon Jun  1 11:00:42 AM +03 2026
 -----------------------------------
+Senkronizasyon basladi: Wed Jun  3 11:00:01 AM +03 2026
+2026/06/03 11:00:37 INFO  : daily: Set directory modification time (using SetModTime)
+2026/06/03 11:00:38 INFO  : last: Set directory modification time (using SetModTime)
+2026/06/03 11:00:38 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/06/03 11:00:39 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/06/03 11:00:39 NOTICE: weekly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/03 11:00:39 NOTICE: monthly/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/03 11:00:39 NOTICE: last/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/03 11:00:39 NOTICE: daily/fitcoach-latest.sql.gz: Can't follow symlink without -L/--copy-links
+2026/06/03 11:00:41 INFO  : weekly/fitcoach-202623.sql.gz: Copied (replaced existing)
+2026/06/03 11:00:41 INFO  : daily/fitcoach-20260603.sql.gz: Copied (new)
+2026/06/03 11:00:41 INFO  : last/fitcoach-20260603-000000.sql.gz: Copied (new)
+2026/06/03 11:00:41 INFO  : monthly/fitcoach-202606.sql.gz: Copied (replaced existing)
+2026/06/03 11:00:42 INFO  : last/fitcoach-20260601-000000.sql.gz: Deleted
+2026/06/03 11:00:42 INFO  : last: Set directory modification time (using SetModTime)
+2026/06/03 11:00:42 INFO  : monthly: Set directory modification time (using SetModTime)
+2026/06/03 11:00:42 INFO  : weekly: Set directory modification time (using SetModTime)
+2026/06/03 11:00:43 INFO  : daily: Set directory modification time (using SetModTime)
+2026/06/03 11:00:43 INFO  : 
+Transferred:   	  174.227 KiB / 174.227 KiB, 100%, 10.549 KiB/s, ETA 0s
+Checks:                17 / 17, 100%, Listed 43
+Deleted:                1 (files), 0 (dirs), 43.559 KiB (freed)
+Transferred:            4 / 4, 100%
+Elapsed time:        40.2s
+
+Senkronizasyon BASARILI: Wed Jun  3 11:00:43 AM +03 2026
+-----------------------------------

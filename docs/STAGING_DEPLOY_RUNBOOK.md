@@ -1,6 +1,6 @@
 # Staging Deploy Runbook
 
-This runbook is the current source of truth for taking FitCoach to staging after the recent marketplace, RTC prep, and agency workspace work.
+This runbook is the current source of truth for taking FitCoach to staging after the recent marketplace, RTC, instant call, push calling, and agency workspace work.
 
 ## Preconditions
 
@@ -10,6 +10,8 @@ This runbook is the current source of truth for taking FitCoach to staging after
 - New migrations exist for:
   - `20260602113000_add_session_rtc_fields`
   - `20260602130000_add_agency_workspace`
+  - `20260603090000_add_fitcoach_rtc_session_flow`
+  - `20260603111500_add_call_invites`
 
 ## Local Verification Before Deploy
 
@@ -42,8 +44,10 @@ Notes:
 - `db:seed:staging` resets and rehydrates the staging demo dataset.
 - The staging seed now includes:
   - richer coach marketplace/demo data
-  - RTC session preparation fields
+  - RTC session flow fields
+  - instant audio/video call invite data paths
   - an example agency/gym workspace with memberships and shared clients
+  - call/push-ready app state assuming real `RTC_*`, `VAPID_*`, and `WS_AUTH_SECRET` env values exist
 
 ## Docker Staging Deploy
 
@@ -67,6 +71,19 @@ npm run staging:docker:seed
 
 `staging_seed` now runs its own `prisma migrate deploy` before seeding, so it does not depend on a prior app container start just to create the latest tables.
 
+If web-push calling is part of the staging pass, set:
+
+```bash
+NEXT_PUBLIC_ENABLE_SERVICE_WORKER=true
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+NEXT_PUBLIC_VAPID_PUBLIC_KEY=...
+VAPID_SUBJECT=...
+WS_AUTH_SECRET=...
+```
+
+Without real values, RTC/push calling remains integration-ready but not fully validated.
+
 The Docker entrypoints now run:
 
 ```bash
@@ -87,6 +104,8 @@ Minimum smoke checks after staging starts:
 5. Check `/coach/clients`
 6. Check `/coach/team`
 7. Check `/coach/admin`
+8. Check instant call flow from `/coach/messages` or `/client/messages`
+9. If service worker + VAPID are configured, verify push notification click-through into `/calls/[id]`
 
 ## Promote To Production (Manual Only)
 

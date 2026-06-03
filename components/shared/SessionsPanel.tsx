@@ -168,7 +168,11 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
                     </Link>
                   ) : (
                     <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">
-                      Henuz join penceresi acilmadi
+                      {merged.callStatus === "FAILED"
+                        ? "RTC baglantisi tekrar hazirlanmali"
+                        : merged.callStatus === "ENDED"
+                          ? "Oturum kapandi"
+                          : "Henuz join penceresi acilmadi"}
                     </span>
                   )}
                 </div>

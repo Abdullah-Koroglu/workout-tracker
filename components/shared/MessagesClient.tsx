@@ -34,6 +34,20 @@ type MessageItem = {
   sender?: { id: string; name: string };
 };
 
+type RecentCall = {
+  id: string;
+  type: "AUDIO" | "VIDEO";
+  status: "RINGING" | "ACCEPTED" | "REJECTED" | "MISSED" | "CANCELLED" | "ENDED" | "FAILED";
+  createdAt: string;
+  actionUrl: string;
+  direction: "INCOMING" | "OUTGOING";
+  peer: {
+    id: string;
+    name: string;
+    role: "COACH" | "CLIENT";
+  };
+};
+
 type WsIncomingMessage =
   | {
       type: "welcome";
@@ -209,6 +223,7 @@ export function MessagesClient({
   const [showChat, setShowChat] = useState(false);
   const [startingCallMode, setStartingCallMode] = useState<"AUDIO" | "VIDEO" | null>(null);
   const [peerOnlineStatus, setPeerOnlineStatus] = useState<Record<string, boolean>>({});
+  const [recentCalls, setRecentCalls] = useState<RecentCall[]>([]);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   // tracks whether the next messages state update should scroll to bottom
   const scrollToBottomRef = useRef(true);
@@ -231,6 +246,17 @@ export function MessagesClient({
   }, [threadSearchQuery, threads]);
 
   const wsStatusDotClass = wsConnected ? "bg-emerald-500" : "bg-amber-500";
+
+  const fetchRecentCalls = useCallback(async () => {
+    try {
+      const response = await fetch("/api/calls/recent", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = await response.json().catch(() => ({}));
+      setRecentCalls(data.calls ?? []);
+    } catch {
+      return;
+    }
+  }, []);
 
   const selectThread = useCallback((userId: string) => {
     activePeerRef.current = userId;
@@ -532,7 +558,8 @@ export function MessagesClient({
 
   useEffect(() => {
     void fetchThreads({ syncSelectedMessages: true });
-  }, [fetchThreads]);
+    void fetchRecentCalls();
+  }, [fetchRecentCalls, fetchThreads]);
 
   useEffect(() => {
     if (!selectedUserId) return;
@@ -551,6 +578,7 @@ export function MessagesClient({
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
         syncFromApi();
+        void fetchRecentCalls();
       }
     };
 
@@ -565,7 +593,7 @@ export function MessagesClient({
         window.clearInterval(refreshTimerRef.current);
       }
     };
-  }, [fetchThreads]);
+  }, [fetchRecentCalls, fetchThreads]);
 
   useEffect(() => {
     if (!scrollToBottomRef.current) return;
@@ -651,8 +679,11 @@ export function MessagesClient({
     void fetchThreads({ syncSelectedMessages: true, silent: true });
   };
 
-  const startCall = useCallback(async (mode: "AUDIO" | "VIDEO") => {
-    if (!activeThread || startingCallMode) {
+  const startCallWithPeer = useCallback(async (
+    peer: { id: string; role: "COACH" | "CLIENT" },
+    mode: "AUDIO" | "VIDEO",
+  ) => {
+    if (startingCallMode || peer.role === currentUserRole) {
       return;
     }
 
@@ -661,7 +692,7 @@ export function MessagesClient({
       const response = await fetch("/api/calls/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ targetUserId: activeThread.user.id, mode }),
+        body: JSON.stringify({ targetUserId: peer.id, mode }),
       });
 
       const data = await response.json().catch(() => ({}));
@@ -670,16 +701,26 @@ export function MessagesClient({
       }
 
       success(mode === "AUDIO" ? "Sesli arama baslatildi" : "Goruntulu arama baslatildi");
+      void fetchRecentCalls();
       router.push(`/calls/${data.call.id}`);
     } catch (err) {
       error(err instanceof Error ? err.message : "Arama baslatilamadi");
     } finally {
       setStartingCallMode(null);
     }
-  }, [activeThread, error, router, startingCallMode, success]);
+  }, [currentUserRole, error, fetchRecentCalls, router, startingCallMode, success]);
+
+  const startCall = useCallback(async (mode: "AUDIO" | "VIDEO") => {
+    if (!activeThread) {
+      return;
+    }
+
+    await startCallWithPeer(activeThread.user, mode);
+  }, [activeThread, startCallWithPeer]);
 
   const handleRefresh = () => {
     void fetchThreads({ syncSelectedMessages: true });
+    void fetchRecentCalls();
   };
 
   // ─── helpers ────────────────────────────────────────────────────────────────
@@ -706,6 +747,41 @@ export function MessagesClient({
       groups[groups.length - 1].messages.push(msg);
     }
     return groups;
+  }
+
+  function getCallStatusLabel(status: RecentCall["status"]) {
+    switch (status) {
+      case "RINGING":
+        return "Bekliyor";
+      case "ACCEPTED":
+        return "Baglandi";
+      case "REJECTED":
+        return "Reddedildi";
+      case "MISSED":
+        return "Kacti";
+      case "CANCELLED":
+        return "Iptal";
+      case "ENDED":
+        return "Tamamlandi";
+      default:
+        return "Hata";
+    }
+  }
+
+  function getCallStatusClass(status: RecentCall["status"]) {
+    switch (status) {
+      case "ACCEPTED":
+      case "ENDED":
+        return "bg-emerald-50 text-emerald-700";
+      case "MISSED":
+      case "REJECTED":
+      case "FAILED":
+        return "bg-rose-50 text-rose-700";
+      case "RINGING":
+        return "bg-amber-50 text-amber-700";
+      default:
+        return "bg-slate-100 text-slate-600";
+    }
   }
 
   // ─── render ─────────────────────────────────────────────────────────────────
@@ -750,6 +826,48 @@ export function MessagesClient({
                 className="w-full border-none bg-transparent text-sm font-medium placeholder:text-slate-400 focus:outline-none"
               />
             </div>
+            {recentCalls.length > 0 ? (
+              <div className="mt-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-3">
+                <div className="mb-2 flex items-center justify-between">
+                  <p className="text-[11px] font-black uppercase tracking-[0.2em] text-slate-400">Son aramalar</p>
+                  <span className="text-[10px] font-bold text-slate-400">{recentCalls.length} kayit</span>
+                </div>
+                <div className="space-y-2">
+                  {recentCalls.slice(0, 4).map((call) => (
+                    <div key={call.id} className="rounded-xl bg-white px-3 py-2 shadow-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <button type="button" onClick={() => selectThread(call.peer.id)} className="min-w-0 text-left">
+                          <p className="truncate text-sm font-bold text-slate-700">{call.peer.name}</p>
+                          <p className="text-[11px] text-slate-400">
+                            {call.direction === "OUTGOING" ? "Giden" : "Gelen"} · {new Date(call.createdAt).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </button>
+                        <span className={`rounded-full px-2 py-1 text-[10px] font-black ${getCallStatusClass(call.status)}`}>
+                          {getCallStatusLabel(call.status)}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-slate-500">
+                          {call.type === "AUDIO" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}
+                          {call.type === "AUDIO" ? "Sesli" : "Goruntulu"}
+                        </span>
+                        <button
+                          type="button"
+                          disabled={startingCallMode !== null || call.peer.role === currentUserRole}
+                          onClick={() => {
+                            selectThread(call.peer.id);
+                            void startCallWithPeer(call.peer, call.type);
+                          }}
+                          className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-700 hover:bg-slate-200 disabled:opacity-50"
+                        >
+                          Geri ara
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           {/* Thread rows */}

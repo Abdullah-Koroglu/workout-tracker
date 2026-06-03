@@ -3,6 +3,7 @@ import type { CallInvite, SessionCallMode, User } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requireAuth } from "@/lib/api-auth";
+import { emitCallStatusEvent, notifyCallMissed } from "@/lib/call-notifications";
 
 const ACTIVE_CALL_STATUSES = ["RINGING", "ACCEPTED"] as const;
 
@@ -44,7 +45,10 @@ export async function assertNoActiveCallForUsers(userIds: string[]) {
 export async function expireStaleInvite(inviteId: string) {
   const invite = await prisma.callInvite.findUnique({
     where: { id: inviteId },
-    select: { id: true, status: true, expiresAt: true },
+    include: {
+      caller: { select: { id: true, name: true, role: true } },
+      callee: { select: { id: true, name: true, role: true } },
+    },
   });
 
   if (!invite) {
@@ -52,10 +56,29 @@ export async function expireStaleInvite(inviteId: string) {
   }
 
   if (invite.status === "RINGING" && invite.expiresAt.getTime() <= Date.now()) {
-    await prisma.callInvite.update({
+    const expiredInvite = await prisma.callInvite.update({
       where: { id: invite.id },
       data: { status: "MISSED", endedAt: new Date() },
+      include: {
+        caller: { select: { id: true, name: true, role: true } },
+        callee: { select: { id: true, name: true, role: true } },
+      },
     });
+
+    await Promise.all([
+      notifyCallMissed(expiredInvite),
+      emitCallStatusEvent(expiredInvite.callerId, "call_missed", {
+        id: expiredInvite.id,
+        calleeId: expiredInvite.calleeId,
+        calleeName: expiredInvite.callee.name,
+      }),
+      emitCallStatusEvent(expiredInvite.calleeId, "call_missed", {
+        id: expiredInvite.id,
+        callerId: expiredInvite.callerId,
+        callerName: expiredInvite.caller.name,
+      }),
+    ]);
+
     return true;
   }
 

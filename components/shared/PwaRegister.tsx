@@ -8,7 +8,13 @@ export function PwaRegister() {
       return;
     }
 
-    if (process.env.NODE_ENV !== "production") {
+    const runtimeEnv = (process.env.NODE_ENV ?? "") as string;
+    const allowServiceWorker =
+      runtimeEnv === "production"
+      || runtimeEnv === "staging"
+      || process.env.NEXT_PUBLIC_ENABLE_SERVICE_WORKER === "true";
+
+    if (!allowServiceWorker) {
       navigator.serviceWorker.getRegistrations().then((registrations) => {
         registrations.forEach((registration) => {
           registration.unregister().catch((error) => {

@@ -13,12 +13,13 @@ Implemented:
 - App-open incoming call modal via WebSocket
 - Web push notification path for incoming calls
 - Call accept/reject/cancel/end/join lifecycle APIs
+- Call event persistence into notification history
+- Recent call history surface inside messages
 
 Not yet fully closed:
 - Real provider contract verification
 - Staging/prod env wiring
-- Full call history and notification persistence polish
-- Background lifecycle completion for all call end states
+- Full end-to-end staging/prod validation with real infra
 
 ## Can Be Closed Without User Input
 
@@ -39,27 +40,7 @@ These can be implemented directly in this repo without asking for more product o
 - Current issue: push flow is gated by `NODE_ENV === "production"` in `components/shared/PwaRegister.tsx`
 - Result today: `NODE_ENV=staging` flow likely disables service worker registration and blocks push-based call testing in staging
 
-### 3. Call lifecycle completion
-- Add push notifications for:
-  - call cancelled
-  - call ended
-  - call missed
-- Ensure caller/callee both receive consistent close-state feedback
-
-### 4. Notification center integration
-- Persist call events into DB notifications
-- Surface them in existing notification center/history
-
-### 5. Minimal call history surface
-- Add recent calls / missed calls list
-- Basic fields:
-  - peer
-  - mode
-  - status
-  - createdAt
-  - callback CTA
-
-### 6. Small RTC/call UX cleanup
+### 3. Small RTC/call UX cleanup
 - Improve button disabled/loading states
 - Improve empty/error text for call states
 - Unify labels between scheduled call and instant call surfaces
@@ -67,6 +48,16 @@ These can be implemented directly in this repo without asking for more product o
 ## Requires User Input
 
 These need real values, external confirmation, or product decisions.
+
+### 0. User-owned pending items summary
+This is the short list of items currently blocked on direct user input or action:
+
+- provide real RTC provider env values
+- provide real push/VAPID env values
+- run the new commit on the server and execute the target deploy flow
+- return staging/prod smoke-test results for scheduled call, instant call, third-user block, and push notification flow
+- share real provider error logs or example responses if the actual contract differs from current assumptions
+- decide where call history should live and whether iframe remains acceptable for the current phase
 
 ### 1. Real RTC provider contract verification
 Needs confirmation for:
@@ -149,9 +140,7 @@ If continuing without external input, the next safe implementation batch should 
 
 1. Update TODO/runbook/env docs
 2. Enable service worker/push flow in staging
-3. Add cancel/end/missed push events
-4. Write call notifications into DB notification history
-5. Add minimal recent calls UI
+3. Keep polishing RTC/call UX and close any repo-local drift
 
 If continuing with external input, the highest-value blocker to clear is:
 
@@ -172,4 +161,3 @@ Before calling the RTC/call work "fully integrated", the following must happen:
    - instant video call
    - app-open incoming modal
    - push notification -> click -> call screen
-

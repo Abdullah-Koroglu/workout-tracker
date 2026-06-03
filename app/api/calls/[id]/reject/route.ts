@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 
 import { requireCallInviteParticipant } from "@/lib/call-invite";
-import { emitWsEvent } from "@/lib/notify-ws";
+import { emitCallStatusEvent, notifyCallRejected } from "@/lib/call-notifications";
 import { prisma } from "@/lib/prisma";
-import { sendPushNotification } from "@/lib/push-notifications";
 
 export async function POST(
   _request: Request,
@@ -34,33 +32,14 @@ export async function POST(
     },
   });
 
-  await emitWsEvent(invite.callerId, {
-    type: "call_rejected",
-    call: {
+  await Promise.all([
+    emitCallStatusEvent(invite.callerId, "call_rejected", {
       id: invite.id,
       calleeId: invite.calleeId,
       calleeName: invite.callee.name,
-    },
-  });
-
-  const callerWithPush = await prisma.user.findUnique({
-    where: { id: invite.callerId },
-    select: { pushSubscription: true },
-  });
-
-  const pushResult = await sendPushNotification(callerWithPush?.pushSubscription, {
-    title: `${invite.callee.name} cagriyi reddetti`,
-    body: "Gorusme baslatilamadi.",
-    url: `/calls/${invite.id}`,
-    tag: `call-rejected-${invite.id}`,
-  });
-
-  if (pushResult.expired) {
-    await prisma.user.update({
-      where: { id: invite.callerId },
-      data: { pushSubscription: Prisma.DbNull },
-    });
-  }
+    }),
+    notifyCallRejected(invite),
+  ]);
 
   return NextResponse.json({ call: invite });
 }

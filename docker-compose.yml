@@ -106,8 +106,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - NODE_ENV=staging
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run start"]
 
   staging_ws_server:
     profiles: ["staging"]
@@ -128,7 +127,6 @@ services:
       - VAPID_PUBLIC_KEY=${VAPID_PUBLIC_KEY}
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
-      - NODE_ENV=staging
 
   staging_seed:
     profiles: ["staging-tools"]
@@ -140,12 +138,11 @@ services:
         condition: service_healthy
     environment:
       - DATABASE_URL=postgresql://fitcoach:fitcoach@staging_postgres:5432/fitcoach_staging?schema=public
-      - NODE_ENV=staging
     command:
       [
         "sh",
         "-c",
-        "npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
+        "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
       ]
     restart: "no"
 

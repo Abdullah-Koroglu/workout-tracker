@@ -200,6 +200,12 @@ RTC_INTERNAL_API_SECRET="replace-me"
 RTC_TOKEN_TTL_SECONDS="3600"
 RTC_JOIN_WINDOW_MINUTES="10"
 RTC_CALL_RING_TIMEOUT_SECONDS="30"
+VAPID_PUBLIC_KEY="replace-me"
+VAPID_PRIVATE_KEY="replace-me"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="replace-me"
+VAPID_SUBJECT="mailto:replace-me@example.com"
+WS_AUTH_SECRET="replace-me"
+NEXT_PUBLIC_ENABLE_SERVICE_WORKER="false"
 NODE_ENV=production
 ```
 
@@ -216,10 +222,22 @@ RTC_INTERNAL_API_SECRET="replace-me"
 RTC_TOKEN_TTL_SECONDS="3600"
 RTC_JOIN_WINDOW_MINUTES="10"
 RTC_CALL_RING_TIMEOUT_SECONDS="30"
-NODE_ENV=staging
+VAPID_PUBLIC_KEY="replace-me"
+VAPID_PRIVATE_KEY="replace-me"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="replace-me"
+VAPID_SUBJECT="mailto:replace-me@example.com"
+WS_AUTH_SECRET="replace-me"
+NEXT_PUBLIC_ENABLE_SERVICE_WORKER="true"
+# Next.js icin NODE_ENV degerini production/development disinda ozellestirmeyin.
 ```
 
 ---
+
+## Call / Push Notes
+
+- `RTC_*`, `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, and `WS_AUTH_SECRET` values above are placeholders until real infra values are provided.
+- `NEXT_PUBLIC_ENABLE_SERVICE_WORKER="true"` can be used in staging to validate web-push calling without requiring a production-only runtime gate.
+- Production seed is bootstrap-only and must never be used to refresh a live production database.
 
 ## 🐳 Docker ile Çalıştırma (İsteğe Bağlı)
 
@@ -239,7 +257,6 @@ services:
     ports:
       - "3002:3002"
     environment:
-      - NODE_ENV=staging
       - DATABASE_URL=postgresql://fitcoach:fitcoach@postgres:5432/fitcoach_staging
     depends_on:
       - postgres

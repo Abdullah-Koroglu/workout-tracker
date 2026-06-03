@@ -8,7 +8,7 @@
 - Marketplace: public and searchable.
 - Brand feel: accessible enough to find a good affordable coach, credible enough for premium performance coaching.
 - AI role: quiet assistant for coaches; reports, risk signals, and suggested actions, not the main front-stage promise.
-- Video calls: prepare for later integration with the separate RTC layer.
+- Video calls: FitCoach-side session RTC and instant calling are implemented; real provider contract/env validation remains external.
 - Market: Turkey first; prepare locale/i18n, but keep payments and operations Turkey-first.
 
 ## P0 - Start Here
@@ -49,13 +49,23 @@
 - [x] Position AI reports as Pro/Elite plan value.
 - [x] Improve revenue/subscription panel so it reflects coach SaaS subscription value clearly.
 
-## P2 - Next Expansion
+## P2 - RTC / Calling
 
-- [ ] Prepare RTC integration fields and UI: provider, roomId, callStatus, recordingUrl.
+- [x] Prepare RTC session integration fields and UI: provider, roomId, callStatus, recordingUrl.
   - [x] Add RTC prep fields to session schema and session update API.
   - [x] Surface RTC provider, room ID, call status, and recording URL in shared session panel.
   - [x] Add DB migration artifact and seed coverage for new session fields.
-  - [ ] Connect the separate RTC stack and apply the DB migration in target environments.
+  - [x] Expand session flow to strict roster-based audio/video join tokens and embedded call screen.
+- [x] Add instant audio/video calling between accepted coach-client pairs.
+  - [x] Add call invite schema, lifecycle APIs, and provider adapter hooks.
+  - [x] Add app-open incoming call modal over WebSocket.
+  - [x] Add web push notification path for incoming call recovery.
+  - [x] Add recent calls surface in messages and persist call events into notifications.
+  - [x] Add push/lifecycle handling for accepted, rejected, cancelled, ended, and missed states.
+- [ ] Finish external RTC validation and deployment wiring.
+  - [ ] Confirm real RTC provider contract and env values.
+  - [ ] Apply latest RTC/call migrations in target environments.
+  - [ ] Run multi-user staging smoke for scheduled call, instant call, third-user block, and push click-through.
 - [x] Introduce locale/i18n structure while keeping Turkish as default.
   - [x] Add shared locale config, dictionaries, and localized path helpers.
   - [x] Wire landing, public marketplace, and register surfaces to the locale layer.
@@ -65,3 +75,11 @@
   - [x] Seed an example team workspace for staging demos.
   - [x] Add coach-facing team workspace surface for roles, seats, shared clients, and billing readiness.
 - [x] Add referral growth loop for independent coaches.
+
+## Cross-App Gaps
+
+- [x] Keep repo-local RTC/call backlog in sync with `RTC_CALL_INTEGRATION_GAPS_REPORT.md`.
+- [ ] Close non-provider app-wide gaps that still matter before deployment.
+  - [ ] Resolve remaining repo-local lint/hardening issues outside targeted RTC files.
+  - [ ] Decide and implement production media bucket/CDN validation.
+  - [ ] Validate remaining dummy/placeholder areas listed in the app-wide gaps report.

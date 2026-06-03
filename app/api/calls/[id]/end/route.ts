@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireCallInviteParticipant } from "@/lib/call-invite";
-import { emitWsEvent } from "@/lib/notify-ws";
+import { emitCallStatusEvent, notifyCallEnded } from "@/lib/call-notifications";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
@@ -29,13 +29,13 @@ export async function POST(
   });
 
   const otherUserId = access.actorRole === "CALLER" ? invite.calleeId : invite.callerId;
-  await emitWsEvent(otherUserId, {
-    type: "call_ended",
-    call: {
+  await Promise.all([
+    emitCallStatusEvent(otherUserId, "call_ended", {
       id: invite.id,
       endedBy: access.auth.session.user.id,
-    },
-  });
+    }),
+    notifyCallEnded(invite, access.auth.session.user.id),
+  ]);
 
   return NextResponse.json({ call: invite });
 }

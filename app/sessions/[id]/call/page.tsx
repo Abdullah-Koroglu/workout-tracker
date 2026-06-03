@@ -38,6 +38,7 @@ export default async function SessionCallPage({ params }: { params: Promise<{ id
       peerName={peerName}
       callMode={rtcSession.callMode}
       canEnd={session.user.role === "COACH"}
+      fallbackPath={session.user.role === "COACH" ? "/coach/dashboard" : "/client/dashboard"}
     />
   );
 }

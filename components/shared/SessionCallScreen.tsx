@@ -10,9 +10,10 @@ type SessionCallScreenProps = {
   peerName: string;
   callMode: "AUDIO" | "VIDEO";
   canEnd: boolean;
+  fallbackPath?: string;
 };
 
-export function SessionCallScreen({ sessionId, title, peerName, callMode, canEnd }: SessionCallScreenProps) {
+export function SessionCallScreen({ sessionId, title, peerName, callMode, canEnd, fallbackPath = "/client/dashboard" }: SessionCallScreenProps) {
   const [embedUrl, setEmbedUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,7 +92,7 @@ export function SessionCallScreen({ sessionId, title, peerName, callMode, canEnd
         ) : error ? (
           <div className="rounded-3xl border border-rose-500/30 bg-rose-500/10 px-5 py-4">
             <p className="text-sm font-bold text-rose-100">{error}</p>
-            <Link href="/client/dashboard" className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-900">
+            <Link href={fallbackPath} className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-black text-slate-900">
               Geri don
             </Link>
           </div>

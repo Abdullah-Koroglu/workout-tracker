@@ -78,14 +78,14 @@ echo ""
 
 # Adım 3: Prisma migration'larını uygula
 echo -e "${YELLOW}[3/5]${NC} Staging veritabanı migration'ları uygulanıyor..."
-NODE_ENV=staging npm run db:migrate:deploy:staging
+npm run db:migrate:deploy:staging
 echo -e "${GREEN}✓${NC} Migration'lar başarıyla uygulandı"
 
 echo ""
 
 # Adım 4: Seed'i çalıştır
 echo -e "${YELLOW}[4/5]${NC} Zengin demo verisi yükleniyor (Türkçe)..."
-NODE_ENV=staging npm run db:seed:staging
+npm run db:seed:staging
 echo -e "${GREEN}✓${NC} Demo verisi başarıyla yüklendi"
 
 echo ""

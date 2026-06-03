@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { requireCallInviteParticipant } from "@/lib/call-invite";
-import { emitWsEvent } from "@/lib/notify-ws";
+import { emitCallStatusEvent, notifyCallCancelled } from "@/lib/call-notifications";
 import { prisma } from "@/lib/prisma";
 
 export async function POST(
@@ -32,14 +32,14 @@ export async function POST(
     },
   });
 
-  await emitWsEvent(invite.calleeId, {
-    type: "call_cancelled",
-    call: {
+  await Promise.all([
+    emitCallStatusEvent(invite.calleeId, "call_cancelled", {
       id: invite.id,
       callerId: invite.callerId,
       callerName: invite.caller.name,
-    },
-  });
+    }),
+    notifyCallCancelled(invite),
+  ]);
 
   return NextResponse.json({ call: invite });
 }

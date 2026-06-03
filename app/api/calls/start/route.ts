@@ -1,13 +1,11 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { z } from "zod";
 
 import { requireAuth } from "@/lib/api-auth";
 import { assertNoActiveCallForUsers, getCallInviteExpiry, validateCallPeerAccess } from "@/lib/call-invite";
-import { emitWsEvent } from "@/lib/notify-ws";
+import { emitCallStatusEvent, notifyIncomingCall } from "@/lib/call-notifications";
 import { prisma } from "@/lib/prisma";
 import { provisionCallInviteRoom } from "@/lib/rtc-provider";
-import { sendPushNotification } from "@/lib/push-notifications";
 
 const startCallSchema = z.object({
   targetUserId: z.string().min(1),
@@ -70,40 +68,17 @@ export async function POST(request: Request) {
 
   const invite = await provisionCallInviteRoom(created.id);
 
-  await emitWsEvent(targetUserId, {
-    type: "call_incoming",
-    call: {
-      id: invite.id,
-      callerId: invite.callerId,
-      callerName: invite.caller.name,
-      calleeId: invite.calleeId,
-      mode: invite.type,
-      status: invite.status,
-      expiresAt: invite.expiresAt.toISOString(),
-      sessionId: invite.sessionId,
-    },
+  await emitCallStatusEvent(targetUserId, "call_incoming", {
+    id: invite.id,
+    callerId: invite.callerId,
+    callerName: invite.caller.name,
+    calleeId: invite.calleeId,
+    mode: invite.type,
+    status: invite.status,
+    expiresAt: invite.expiresAt.toISOString(),
+    sessionId: invite.sessionId,
   });
-
-  const calleeWithPush = await prisma.user.findUnique({
-    where: { id: targetUserId },
-    select: { pushSubscription: true },
-  });
-
-  const pushResult = await sendPushNotification(calleeWithPush?.pushSubscription, {
-    title: `${invite.caller.name} ariyor`,
-    body: invite.type === "AUDIO" ? "Sesli gorusme daveti" : "Goruntulu gorusme daveti",
-    url: `/calls/${invite.id}`,
-    tag: `incoming-call-${invite.id}`,
-    requireInteraction: true,
-    vibrate: [200, 120, 200, 120, 200],
-  });
-
-  if (pushResult.expired) {
-    await prisma.user.update({
-      where: { id: targetUserId },
-      data: { pushSubscription: Prisma.DbNull },
-    });
-  }
+  await notifyIncomingCall(invite);
 
   return NextResponse.json({ call: invite }, { status: 201 });
 }

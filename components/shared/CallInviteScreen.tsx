@@ -144,6 +144,36 @@ export function CallInviteScreen({ callId, currentUserId, fallbackPath }: CallIn
   }
 
   const callMode = statusPayload?.call.type ?? "VIDEO";
+  const statusMessage =
+    statusPayload?.call.status === "RINGING"
+      ? {
+          title: "Karsi taraf cevap bekleniyor",
+          body: "Kabul geldigi anda oturum burada acilacak.",
+        }
+      : statusPayload?.call.status === "REJECTED"
+        ? {
+            title: "Cagri reddedildi",
+            body: "Karsi taraf bu aramayi kabul etmedi.",
+          }
+        : statusPayload?.call.status === "MISSED"
+          ? {
+              title: "Cagri kacti",
+              body: "Arama cevap gelmeden zaman asimina ugradi.",
+            }
+          : statusPayload?.call.status === "CANCELLED"
+            ? {
+                title: "Arama iptal edildi",
+                body: "Bu cagri artik aktif degil.",
+              }
+            : statusPayload?.call.status === "ENDED"
+              ? {
+                  title: "Cagri tamamlandi",
+                  body: "Gorusme sonlandirildi.",
+                }
+              : {
+                  title: "Cagri kapandi",
+                  body: "Bu cagri artik aktif degil.",
+                };
 
   return (
     <div className="min-h-[calc(100vh-5rem)] bg-slate-950 px-4 py-6 text-white">
@@ -192,14 +222,8 @@ export function CallInviteScreen({ callId, currentUserId, fallbackPath }: CallIn
           </div>
         ) : (
           <div className="flex min-h-[60vh] flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/5 px-6 text-center">
-            <div className="text-lg font-black">
-              {statusPayload?.call.status === "RINGING" ? "Karsi taraf cevap bekleniyor" : "Cagri kapandi"}
-            </div>
-            <p className="mt-2 text-sm text-white/60">
-              {statusPayload?.call.status === "RINGING"
-                ? "Kabul geldigi anda oturum burada acilacak."
-                : "Bu cagri artik aktif degil."}
-            </p>
+            <div className="text-lg font-black">{statusMessage.title}</div>
+            <p className="mt-2 text-sm text-white/60">{statusMessage.body}</p>
             {statusPayload?.actorRole === "CALLEE" && statusPayload.call.status === "RINGING" ? (
               <div className="mt-6 flex items-center gap-3">
                 <button

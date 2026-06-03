@@ -40,7 +40,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && ./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && ./node_modules/.bin/next start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && node ./scripts/prisma-startup.mjs && ./node_modules/.bin/next start"]
 
   ws_server:
     image: fitcoach:latest
@@ -106,7 +106,7 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && ./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && ./node_modules/.bin/next start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && node ./scripts/prisma-startup.mjs && ./node_modules/.bin/next start"]
 
   staging_ws_server:
     profiles: ["staging"]
@@ -142,7 +142,7 @@ services:
       [
         "sh",
         "-c",
-        "./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
+        "node ./scripts/prisma-startup.mjs && npm run db:seed:staging:docker"
       ]
     restart: "no"
 

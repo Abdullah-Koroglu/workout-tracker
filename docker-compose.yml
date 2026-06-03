@@ -40,11 +40,11 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && ./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && ./node_modules/.bin/next start"]
 
   ws_server:
     image: fitcoach:latest
-    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
+    command: ["node", "server.js"]
     ports:
       - "3001:3001"
     restart: always
@@ -106,12 +106,12 @@ services:
       - VAPID_PRIVATE_KEY=${VAPID_PRIVATE_KEY}
       - VAPID_SUBJECT=${VAPID_SUBJECT}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run start"]
+    entrypoint: ["sh", "-c", "mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/uploads/checkins /app/public/uploads/transformations && chmod -R 755 /app/public/uploads && ./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && ./node_modules/.bin/next start"]
 
   staging_ws_server:
     profiles: ["staging"]
     image: fitcoach:latest
-    command: ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start:ws"]
+    command: ["node", "server.js"]
     ports:
       - "3003:3001"
     restart: always
@@ -142,7 +142,7 @@ services:
       [
         "sh",
         "-c",
-        "npx prisma generate --schema=/app/prisma/schema.prisma && npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
+        "./node_modules/.bin/prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
       ]
     restart: "no"
 

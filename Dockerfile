@@ -4,8 +4,11 @@ FROM node:20-alpine AS base
 FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
+ENV PRISMA_ENGINES_CHECKSUM_IGNORE_MISSING=1
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma
 RUN npm ci --legacy-peer-deps --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 --fetch-retries=5
+RUN ./node_modules/.bin/prisma generate --schema=/app/prisma/schema.prisma
 
 # 2. Build aşaması
 FROM base AS builder
@@ -14,7 +17,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Guard against stale local build artifacts leaking into container context.
 RUN rm -rf .next && rm -f tsconfig.tsbuildinfo
-RUN npx prisma generate
 RUN npm run build
 
 # 3. Çalıştırma aşaması
@@ -36,4 +38,4 @@ RUN mkdir -p /app/public/uploads/avatars /app/public/uploads/meals /app/public/u
 
 EXPOSE 3000
 ENV PORT 3000
-CMD ["sh", "-c", "npx prisma generate --schema=/app/prisma/schema.prisma && npm run start"]
+CMD ["./node_modules/.bin/next", "start"]

@@ -9,7 +9,27 @@ function dateAt(hour: number, minute = 0, plusDays = 0) {
   return date;
 }
 
+async function assertProductionSeedSafety() {
+  if (process.env.NODE_ENV !== "production") {
+    return;
+  }
+
+  const [userCount, relationCount, workoutCount] = await Promise.all([
+    prisma.user.count(),
+    prisma.coachClientRelation.count(),
+    prisma.workout.count()
+  ]);
+
+  if (userCount > 0 || relationCount > 0 || workoutCount > 0) {
+    throw new Error(
+      "Production seed blocked: target database already contains live data. This seed never deletes existing production records. Use migrations or targeted backfill scripts instead."
+    );
+  }
+}
+
 async function main() {
+  await assertProductionSeedSafety();
+
   await prisma.comment.deleteMany();
   await prisma.workoutSet.deleteMany();
   await prisma.workout.deleteMany();

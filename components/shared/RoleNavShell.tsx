@@ -17,6 +17,7 @@ import {
 import { GlobalBreadcrumb } from "./GlobalBreadcrumb";
 import Image from "next/image";
 import { NotificationBell } from "./NotificationBell";
+import { IncomingCallLayer } from "./IncomingCallLayer";
 
 type Role = "COACH" | "CLIENT";
 type SubscriptionTier = "FREE" | "TIER_1" | "TIER_2" | "AGENCY";
@@ -99,6 +100,7 @@ export function RoleNavShell({
 
   return (
     <div className="relative min-h-screen">
+      <IncomingCallLayer />
             <aside className="fixed left-0 top-0 z-40 hidden h-screen w-64 flex-col bg-slate-900 py-8 shadow-2xl md:flex">
         <div className="mb-10 flex items-center gap-3 px-6">
           <Image src="/logo.png" alt="Logo" width={32} height={32} className="h-8 w-8 rounded-full" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Calendar, Clock, X, Loader2, CheckCircle2 } from "lucide-react";
+import { Calendar, Clock, X, Loader2, CheckCircle2, Mic, Video } from "lucide-react";
 
 const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
@@ -23,12 +23,18 @@ interface Props {
   onClose: () => void;
 }
 
+const CALL_MODES = [
+  { value: "AUDIO", label: "Sesli gorusme", icon: Mic },
+  { value: "VIDEO", label: "Goruntulu gorusme", icon: Video },
+] as const;
+
 export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
   const [availability, setAvailability] = useState<AvailabilitySlot[]>([]);
   const [loadingSlots, setLoadingSlots] = useState(true);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [type, setType] = useState("consultation");
+  const [callMode, setCallMode] = useState<"AUDIO" | "VIDEO">("VIDEO");
   const [duration, setDuration] = useState(60);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -71,7 +77,7 @@ export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
       const res = await fetch("/api/sessions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ coachId, scheduledFor, duration, type, notes: notes || undefined }),
+        body: JSON.stringify({ coachId, scheduledFor, duration, type, callMode, notes: notes || undefined }),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -205,6 +211,30 @@ export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
                     }}
                   >
                     {t.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Oturum Modu
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {CALL_MODES.map(({ value, label, icon: Icon }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setCallMode(value)}
+                    className="flex items-center justify-center gap-2 rounded-xl border px-3 py-2.5 text-xs font-black transition-all"
+                    style={{
+                      background: callMode === value ? "rgba(249,115,22,0.12)" : "#fff",
+                      color: callMode === value ? "#EA580C" : "#475569",
+                      borderColor: callMode === value ? "rgba(249,115,22,0.35)" : "#E2E8F0",
+                    }}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    {label}
                   </button>
                 ))}
               </div>

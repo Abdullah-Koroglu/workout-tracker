@@ -285,7 +285,7 @@ function startWsServer() {
     }
 
     // Internal endpoint — only accessible from localhost
-    if (req.method === "POST" && req.url === "/internal/notify") {
+    if (req.method === "POST" && (req.url === "/internal/notify" || req.url === "/internal/emit")) {
       const remote = req.socket.remoteAddress || "";
       const isLocal =
         remote === "127.0.0.1" ||
@@ -302,8 +302,10 @@ function startWsServer() {
       req.on("data", (chunk) => { body += chunk; });
       req.on("end", () => {
         try {
-          const { userId, notification } = JSON.parse(body);
-          if (userId && notification) {
+          const { userId, notification, event } = JSON.parse(body);
+          if (userId && event && typeof event.type === "string") {
+            sendToUser(userId, event);
+          } else if (userId && notification) {
             sendToUser(userId, { type: "notification_created", notification });
           }
         } catch { /* ignore parse errors */ }

@@ -79,6 +79,7 @@ async function clearExistingDemoData() {
     prisma.message.deleteMany({ where: { OR: [{ senderId: { in: userIds } }, { receiverId: { in: userIds } }] } }),
     prisma.notification.deleteMany({ where: { userId: { in: userIds } } }),
     prisma.review.deleteMany({ where: { OR: [{ coachId: { in: userIds } }, { clientId: { in: userIds } }] } }),
+    prisma.callInvite.deleteMany({ where: { OR: [{ callerId: { in: userIds } }, { calleeId: { in: userIds } }] } }),
     prisma.session.deleteMany({ where: { OR: [{ coachId: { in: userIds } }, { clientId: { in: userIds } }] } }),
     prisma.subscription.deleteMany({ where: { OR: [{ coachId: { in: userIds } }, { clientId: { in: userIds } }] } }),
     prisma.payment.deleteMany({ where: { subscription: null } }),
@@ -91,6 +92,7 @@ async function clearExistingDemoData() {
     prisma.goal.deleteMany({ where: { OR: [{ clientId: { in: userIds } }, { coachId: { in: userIds } }] } }),
     prisma.user.deleteMany({ where: { id: { in: userIds } } }),
   ]);
+
 }
 
 async function ensureExercise(name: string, type: "WEIGHT" | "CARDIO", targetMuscle?: string) {
@@ -415,10 +417,19 @@ async function main() {
         type: "weekly_checkin",
         status: "SCHEDULED",
         agenda: "Bel ölçüsü, yürüyüş temposu, haftalık plan güncellemesi",
-        meetingUrl: "https://meet.fitcoach.local/demo-aylin",
-        rtcProvider: "custom_rtc",
-        rtcRoomId: "demo-aylin-weekly-checkin",
-        rtcCallStatus: "READY",
+        rtcProvider: "link",
+        providerRoomCode: "demo-aylin-weekly-checkin",
+        providerHostUserId: `coach:${coach.id}`,
+        callMode: "VIDEO",
+        callStatus: "READY",
+        syncState: "SYNCED",
+        recordingStatus: "NOT_REQUESTED",
+        participants: {
+          create: [
+            { userId: coach.id, role: "COACH" },
+            { userId: clientAylin.id, role: "CLIENT" },
+          ],
+        },
       },
     }),
     prisma.session.create({
@@ -430,10 +441,19 @@ async function main() {
         type: "form_review",
         status: "SCHEDULED",
         agenda: "Bench press video analizi",
-        meetingUrl: "https://meet.fitcoach.local/demo-mert",
-        rtcProvider: "custom_rtc",
-        rtcRoomId: "demo-mert-form-review",
-        rtcCallStatus: "READY",
+        rtcProvider: "link",
+        providerRoomCode: "demo-mert-form-review",
+        providerHostUserId: `coach:${coach.id}`,
+        callMode: "AUDIO",
+        callStatus: "READY",
+        syncState: "SYNCED",
+        recordingStatus: "NOT_REQUESTED",
+        participants: {
+          create: [
+            { userId: coach.id, role: "COACH" },
+            { userId: clientMert.id, role: "CLIENT" },
+          ],
+        },
       },
     }),
     prisma.review.create({ data: { coachId: coach.id, clientId: clientAylin.id, rating: 5, title: "İlk kez bu kadar takipli hissettim", content: "Ece hem antrenmanı hem beslenmeyi tek yerden takip ediyor. Haftalık raporlar motivasyonumu çok artırdı.", verifiedPurchase: true, durationWithCoach: 12 } }),

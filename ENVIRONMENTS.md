@@ -37,7 +37,7 @@ npm start
 # Veritabanını güncelle
 npm run db:push
 
-# Production seed'i çalıştır (İLK KURULUMDA)
+# Production seed'i çalıştır (SADECE BOS PRODUCTION DB ILK KURULUMUNDA)
 npm run db:seed:production
 
 # Prisma Studio aç
@@ -108,7 +108,7 @@ npm install
 # 2. Production DB şemasını oluştur
 npm run db:push
 
-# 3. Production seed'i çalıştır
+# 3. Production seed'i çalıştır (yalnizca bos production DB)
 npm run db:seed:production
 
 # 4. Staging DB migration'larını uygula
@@ -192,6 +192,14 @@ npm run db:studio:staging
 DATABASE_URL="postgresql://fitcoach:fitcoach@localhost:5432/fitcoach?schema=public"
 NEXTAUTH_URL="http://localhost:3000"
 NEXT_PUBLIC_WS_URL="ws://localhost:3001/ws"
+RTC_PROVIDER="link"
+RTC_API_BASE_URL="https://rtc-provider.example.com/v1"
+RTC_ROOM_BASE_URL="https://rtc-provider.example.com"
+RTC_SIGNALING_URL="wss://rtc-provider.example.com"
+RTC_INTERNAL_API_SECRET="replace-me"
+RTC_TOKEN_TTL_SECONDS="3600"
+RTC_JOIN_WINDOW_MINUTES="10"
+RTC_CALL_RING_TIMEOUT_SECONDS="30"
 NODE_ENV=production
 ```
 
@@ -200,6 +208,14 @@ NODE_ENV=production
 DATABASE_URL="postgresql://fitcoach:fitcoach@localhost:5432/fitcoach_staging?schema=public"
 NEXTAUTH_URL="http://localhost:3002"
 NEXT_PUBLIC_WS_URL="ws://localhost:3002/ws"
+RTC_PROVIDER="link"
+RTC_API_BASE_URL="https://staging-rtc-provider.example.com/v1"
+RTC_ROOM_BASE_URL="https://staging-rtc-provider.example.com"
+RTC_SIGNALING_URL="wss://staging-rtc-provider.example.com"
+RTC_INTERNAL_API_SECRET="replace-me"
+RTC_TOKEN_TTL_SECONDS="3600"
+RTC_JOIN_WINDOW_MINUTES="10"
+RTC_CALL_RING_TIMEOUT_SECONDS="30"
 NODE_ENV=staging
 ```
 

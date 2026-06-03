@@ -65,6 +65,8 @@ Re-seed staging data if needed:
 npm run staging:docker:seed
 ```
 
+`staging_seed` now runs its own `prisma migrate deploy` before seeding, so it does not depend on a prior app container start just to create the latest tables.
+
 The Docker entrypoints now run:
 
 ```bash
@@ -103,6 +105,14 @@ Optional SHA guard:
 For webhook listener setup and operational details, see:
 
 - `docs/WEBHOOK_DEPLOY_AUTOMATION.md`
+
+## Production Seed Safety Rule
+
+- `npm run db:seed:production` must never be used as a refresh/reset tool on a live production database.
+- The production seed is now guarded in code: if the target database already contains users, coach-client relations, or workouts, the seed exits with an error before any destructive statement runs.
+- Allowed production use is limited to first bootstrap on an empty database.
+- If production needs new baseline data after launch, use migrations or targeted backfill scripts instead of rerunning the seed.
+- Full reference: `docs/PRODUCTION_SEED_SAFETY.md`
 
 ## Known Remaining Gaps
 

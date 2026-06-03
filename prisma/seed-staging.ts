@@ -81,6 +81,7 @@ async function clearDatabase() {
   await prisma.bodyTrackingPreference.deleteMany();
 
   await prisma.clientNotes.deleteMany();
+  await prisma.callInvite.deleteMany();
   await prisma.session.deleteMany();
   await prisma.coachAvailability.deleteMany();
   await prisma.availabilityException.deleteMany();
@@ -994,10 +995,13 @@ async function main() {
         type: "weekly-review",
         status: "SCHEDULED",
         agenda: "Kuvvet progresyonu ve koşu hacmi güncellemesi",
-        meetingUrl: "https://meet.fitcoach.demo/serkan-merve-weekly",
-        rtcProvider: "custom_rtc",
-        rtcRoomId: "serkan-merve-weekly-review",
-        rtcCallStatus: "READY",
+        rtcProvider: "link",
+        providerRoomCode: "serkan-merve-weekly-review",
+        providerHostUserId: `coach:${coach.id}`,
+        callMode: "VIDEO",
+        callStatus: "READY",
+        syncState: "SYNCED",
+        recordingStatus: "NOT_REQUESTED",
         isPaid: true
       },
       {
@@ -1008,10 +1012,13 @@ async function main() {
         type: "support-call",
         status: "SCHEDULED",
         agenda: "Stres yönetimi ve uyku planı",
-        meetingUrl: "https://meet.fitcoach.demo/serkan-oguz-support",
-        rtcProvider: "custom_rtc",
-        rtcRoomId: "serkan-oguz-support-call",
-        rtcCallStatus: "READY",
+        rtcProvider: "link",
+        providerRoomCode: "serkan-oguz-support-call",
+        providerHostUserId: `coach:${coach.id}`,
+        callMode: "AUDIO",
+        callStatus: "READY",
+        syncState: "SYNCED",
+        recordingStatus: "NOT_REQUESTED",
         isPaid: true
       },
       {
@@ -1022,14 +1029,39 @@ async function main() {
         type: "progress-review",
         status: "COMPLETED",
         summary: "8 haftalık süreçte yağ kaybı çok iyi, protein hedefi korundu.",
-        rtcProvider: "custom_rtc",
-        rtcRoomId: "serkan-sena-progress-review",
-        rtcCallStatus: "ENDED",
+        rtcProvider: "link",
+        providerRoomCode: "serkan-sena-progress-review",
+        providerHostUserId: `coach:${coach.id}`,
+        callMode: "VIDEO",
+        callStatus: "ENDED",
+        syncState: "SYNCED",
+        recordingStatus: "READY",
         recordingUrl: "https://cdn.fitcoach.demo/recordings/serkan-sena-progress-review.mp4",
+        endedAt: daysAgo(5, 19, 45),
         rating: 5,
         isPaid: true
       }
     ]
+  });
+
+  const stagedSessions = await prisma.session.findMany({
+    where: {
+      providerRoomCode: {
+        in: [
+          "serkan-merve-weekly-review",
+          "serkan-oguz-support-call",
+          "serkan-sena-progress-review",
+        ],
+      },
+    },
+    select: { id: true, clientId: true },
+  });
+
+  await prisma.sessionParticipant.createMany({
+    data: stagedSessions.flatMap((session) => [
+      { sessionId: session.id, userId: coach.id, role: "COACH" as const },
+      { sessionId: session.id, userId: session.clientId, role: "CLIENT" as const },
+    ]),
   });
 
   await prisma.review.createMany({

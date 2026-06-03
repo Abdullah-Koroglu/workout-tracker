@@ -7,6 +7,7 @@ type ThreadUser = {
   id: string;
   name: string;
   email: string;
+  role: "COACH" | "CLIENT";
 };
 
 export async function GET(request: Request) {
@@ -56,7 +57,8 @@ export async function GET(request: Request) {
         select: {
           id: true,
           name: true,
-          email: true
+          email: true,
+          role: true,
         }
       })
     : [];

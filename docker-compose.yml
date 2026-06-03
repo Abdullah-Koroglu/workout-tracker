@@ -141,7 +141,12 @@ services:
     environment:
       - DATABASE_URL=postgresql://fitcoach:fitcoach@staging_postgres:5432/fitcoach_staging?schema=public
       - NODE_ENV=staging
-    command: ["npm", "run", "db:seed:staging"]
+    command:
+      [
+        "sh",
+        "-c",
+        "npx prisma generate --schema=/app/prisma/schema.prisma && NODE_ENV=staging npx prisma migrate deploy --schema=/app/prisma/schema.prisma && npm run db:seed:staging:docker"
+      ]
     restart: "no"
 
   pg_backup:

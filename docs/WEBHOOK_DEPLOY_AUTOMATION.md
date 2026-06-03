@@ -123,8 +123,7 @@ Override with:
 
 ## 9) Minimal Host Requirements
 
-- `node`
-- `git`
 - `docker` + `docker compose`
 
-If `npm` is missing, deployment still works. Shell wrappers execute Node scripts directly.
+If `npm`, `node`, or `git` are missing on the host, deployment still works.
+Shell wrappers run the deploy scripts inside a temporary Docker runtime.

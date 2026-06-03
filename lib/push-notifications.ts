@@ -4,6 +4,9 @@ type PushPayload = {
   title: string;
   body: string;
   url?: string;
+  tag?: string;
+  requireInteraction?: boolean;
+  vibrate?: number[];
 };
 
 type StoredSubscription = {

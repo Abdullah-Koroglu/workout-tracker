@@ -1,9 +1,16 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Calendar, ChevronDown, ChevronUp, ExternalLink, Loader2, Radio, Save, Star } from "lucide-react";
+import { Calendar, ChevronDown, ChevronUp, Loader2, Mic, Radio, Save, Star, Video } from "lucide-react";
 
-import { getRtcCallStatusMeta, getRtcProviderLabel, RTC_CALL_STATUS_OPTIONS, RTC_PROVIDER_OPTIONS } from "@/lib/rtc-session";
+import {
+  getRecordingStatusLabel,
+  getRtcProviderLabel,
+  getSessionCallModeLabel,
+  getSessionCallStatusMeta,
+  isJoinWindowOpen,
+} from "@/lib/rtc-session";
 
 interface Session {
   id: string;
@@ -12,10 +19,13 @@ interface Session {
   type: string;
   status: "SCHEDULED" | "COMPLETED" | "CANCELLED";
   notes: string | null;
-  meetingUrl: string | null;
   rtcProvider?: string | null;
-  rtcRoomId?: string | null;
-  rtcCallStatus?: "NOT_CONFIGURED" | "READY" | "LIVE" | "ENDED";
+  providerRoomCode?: string | null;
+  providerHostUserId?: string | null;
+  callMode: "AUDIO" | "VIDEO";
+  callStatus: "SCHEDULED" | "PROVISIONING" | "READY" | "LIVE" | "ENDED" | "FAILED";
+  syncState?: "PENDING" | "SYNCED" | "ERROR";
+  recordingStatus?: "NOT_REQUESTED" | "PENDING" | "READY" | "FAILED";
   agenda: string | null;
   summary: string | null;
   clientFeedback: string | null;
@@ -32,6 +42,7 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [edits, setEdits] = useState<Record<string, Partial<Session>>>({});
   const [saving, setSaving] = useState<string | null>(null);
+  const [provisioningId, setProvisioningId] = useState<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -57,6 +68,13 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
     await load();
   }
 
+  async function provision(id: string) {
+    setProvisioningId(id);
+    await fetch(`/api/sessions/${id}/rtc/provision`, { method: "POST" });
+    setProvisioningId(null);
+    await load();
+  }
+
   function setField(id: string, key: keyof Session, value: unknown) {
     setEdits((current) => ({ ...current, [id]: { ...(current[id] ?? {}), [key]: value } }));
   }
@@ -79,7 +97,8 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
         const merged = { ...session, ...localEdits };
         const otherPartyName = role === "COACH" ? session.client.name : session.coach.name;
         const sessionDate = new Date(session.scheduledFor);
-        const rtcStatus = getRtcCallStatusMeta(merged.rtcCallStatus);
+        const callStatus = getSessionCallStatusMeta(merged.callStatus);
+        const joinOpen = isJoinWindowOpen(session.scheduledFor);
 
         return (
           <div key={session.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
@@ -100,9 +119,10 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
                   {sessionDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} · {session.duration} dk · {session.type}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${rtcStatus.className}`}>
-                    RTC {rtcStatus.label}
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${callStatus.className}`}>
+                    {callStatus.label}
                   </span>
+                  <span className="text-[10px] font-bold text-slate-400">{getSessionCallModeLabel(merged.callMode)}</span>
                   {merged.rtcProvider ? (
                     <span className="text-[10px] font-bold text-slate-400">{getRtcProviderLabel(merged.rtcProvider)}</span>
                   ) : null}
@@ -126,92 +146,47 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
 
             {isExpanded ? (
               <div className="space-y-3 border-t border-slate-100 p-4">
-                {role === "COACH" ? (
-                  <div>
-                    <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Toplanti Linki</label>
-                    <input
-                      type="url"
-                      placeholder="https://zoom.us/..."
-                      value={merged.meetingUrl ?? ""}
-                      onChange={(event) => setField(session.id, "meetingUrl", event.target.value)}
-                      className="mt-1 h-10 w-full rounded-xl bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                    />
-                  </div>
-                ) : merged.meetingUrl ? (
-                  <a
-                    href={merged.meetingUrl}
-                    target="_blank"
-                    className="inline-flex items-center gap-1 rounded-xl bg-indigo-500 px-3 py-2 text-xs font-black text-white hover:bg-indigo-600"
-                  >
-                    <ExternalLink className="h-3 w-3" />
-                    Toplantiya Katil
-                  </a>
-                ) : null}
+                <div className="flex flex-wrap items-center gap-2">
+                  {role === "COACH" && !merged.providerRoomCode ? (
+                    <button
+                      onClick={() => provision(session.id)}
+                      disabled={provisioningId === session.id}
+                      className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
+                    >
+                      {provisioningId === session.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Radio className="h-3.5 w-3.5" />}
+                      Odayi hazirla
+                    </button>
+                  ) : null}
 
-                {role === "COACH" ? (
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">RTC Provider</label>
-                      <select
-                        value={merged.rtcProvider ?? ""}
-                        onChange={(event) => setField(session.id, "rtcProvider", event.target.value || null)}
-                        className="mt-1 h-10 w-full rounded-xl bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      >
-                        <option value="">Secilmedi</option>
-                        {RTC_PROVIDER_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </div>
+                  {joinOpen && merged.callStatus !== "ENDED" && merged.callStatus !== "FAILED" ? (
+                    <Link
+                      href={`/sessions/${session.id}/call`}
+                      className="inline-flex items-center gap-1 rounded-xl bg-indigo-500 px-3 py-2 text-xs font-black text-white hover:bg-indigo-600"
+                    >
+                      {merged.callMode === "AUDIO" ? <Mic className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}
+                      {merged.callMode === "AUDIO" ? "Sesli gorusmeye katil" : "Goruntulu gorusmeye katil"}
+                    </Link>
+                  ) : (
+                    <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">
+                      Henuz join penceresi acilmadi
+                    </span>
+                  )}
+                </div>
 
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">RTC Durumu</label>
-                      <select
-                        value={merged.rtcCallStatus ?? "NOT_CONFIGURED"}
-                        onChange={(event) => setField(session.id, "rtcCallStatus", event.target.value)}
-                        className="mt-1 h-10 w-full rounded-xl bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      >
-                        {RTC_CALL_STATUS_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>{option.label}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">RTC Room ID</label>
-                      <input
-                        type="text"
-                        placeholder="rtc-room-123"
-                        value={merged.rtcRoomId ?? ""}
-                        onChange={(event) => setField(session.id, "rtcRoomId", event.target.value)}
-                        className="mt-1 h-10 w-full rounded-xl bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      />
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Recording URL</label>
-                      <input
-                        type="url"
-                        placeholder="https://storage.example.com/recording.mp4"
-                        value={merged.recordingUrl ?? ""}
-                        onChange={(event) => setField(session.id, "recordingUrl", event.target.value)}
-                        className="mt-1 h-10 w-full rounded-xl bg-slate-50 px-3 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-indigo-400"
-                      />
-                    </div>
-                  </div>
-                ) : merged.rtcProvider || merged.rtcRoomId ? (
-                  <div className="rounded-xl bg-slate-50 px-3 py-2.5">
+                {merged.rtcProvider || merged.providerRoomCode ? (
+                  <div className="rounded-xl bg-slate-50 px-3 py-2.5 text-sm text-slate-600">
                     <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-400">
                       <Radio className="h-3 w-3" />
-                      RTC Hazirligi
+                      RTC Oturumu
                     </div>
-                    <div className="mt-2 text-sm text-slate-600">
+                    <div className="mt-2 space-y-1">
                       <div>Provider: {getRtcProviderLabel(merged.rtcProvider)}</div>
-                      {merged.rtcRoomId ? <div>Room ID: {merged.rtcRoomId}</div> : null}
+                      {merged.providerRoomCode ? <div>Room: {merged.providerRoomCode}</div> : null}
+                      <div>Mod: {getSessionCallModeLabel(merged.callMode)}</div>
+                      <div>Kayit: {getRecordingStatusLabel(merged.recordingStatus)}</div>
                       {merged.recordingUrl ? (
-                        <a href={merged.recordingUrl} target="_blank" className="mt-1 inline-flex items-center gap-1 font-bold text-indigo-600 hover:text-indigo-700">
-                          <ExternalLink className="h-3 w-3" />
-                          Kayit
+                        <a href={merged.recordingUrl} target="_blank" className="inline-flex font-bold text-indigo-600 hover:text-indigo-700">
+                          Kayit baglantisi
                         </a>
                       ) : null}
                     </div>

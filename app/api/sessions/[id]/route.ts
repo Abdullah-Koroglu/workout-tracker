@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { requireAuth } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
@@ -10,12 +11,21 @@ const patchSchema = z.object({
   rtcProvider: z.string().max(100).nullable().optional(),
   rtcRoomId: z.string().max(200).nullable().optional(),
   rtcCallStatus: z.enum(["NOT_CONFIGURED", "READY", "LIVE", "ENDED"]).optional(),
+  providerRoomCode: z.string().max(200).nullable().optional(),
+  providerHostUserId: z.string().max(200).nullable().optional(),
+  callMode: z.enum(["AUDIO", "VIDEO"]).optional(),
+  callStatus: z.enum(["SCHEDULED", "PROVISIONING", "READY", "LIVE", "ENDED", "FAILED"]).optional(),
+  syncState: z.enum(["PENDING", "SYNCED", "ERROR"]).optional(),
+  recordingStatus: z.enum(["NOT_REQUESTED", "PENDING", "READY", "FAILED"]).optional(),
   recordingUrl: z.string().url().max(1000).nullable().optional(),
   agenda: z.string().max(2000).nullable().optional(),
   summary: z.string().max(2000).nullable().optional(),
   clientFeedback: z.string().max(2000).nullable().optional(),
   rating: z.number().int().min(1).max(5).nullable().optional(),
   isPaid: z.boolean().optional(),
+  startedAt: z.string().datetime().nullable().optional(),
+  endedAt: z.string().datetime().nullable().optional(),
+  providerMetadata: z.record(z.string(), z.unknown()).nullable().optional(),
 });
 
 // PATCH /api/sessions/[id]
@@ -43,6 +53,13 @@ export async function PATCH(
 
   const isCoach = session.coachId === userId;
   const d = parsed.data;
+  const providerMetadataUpdate =
+    isCoach && d.providerMetadata !== undefined
+      ? d.providerMetadata === null
+        ? Prisma.JsonNull
+        : (d.providerMetadata as Prisma.InputJsonValue)
+      : undefined;
+
   const updated = await prisma.session.update({
     where: { id },
     data: {
@@ -52,7 +69,16 @@ export async function PATCH(
       ...(isCoach && d.rtcProvider !== undefined ? { rtcProvider: d.rtcProvider } : {}),
       ...(isCoach && d.rtcRoomId !== undefined ? { rtcRoomId: d.rtcRoomId } : {}),
       ...(isCoach && d.rtcCallStatus !== undefined ? { rtcCallStatus: d.rtcCallStatus } : {}),
+      ...(isCoach && d.providerRoomCode !== undefined ? { providerRoomCode: d.providerRoomCode } : {}),
+      ...(isCoach && d.providerHostUserId !== undefined ? { providerHostUserId: d.providerHostUserId } : {}),
+      ...(isCoach && d.callMode !== undefined ? { callMode: d.callMode } : {}),
+      ...(isCoach && d.callStatus !== undefined ? { callStatus: d.callStatus } : {}),
+      ...(isCoach && d.syncState !== undefined ? { syncState: d.syncState } : {}),
+      ...(isCoach && d.recordingStatus !== undefined ? { recordingStatus: d.recordingStatus } : {}),
       ...(isCoach && d.recordingUrl !== undefined ? { recordingUrl: d.recordingUrl } : {}),
+      ...(isCoach && d.startedAt !== undefined ? { startedAt: d.startedAt ? new Date(d.startedAt) : null } : {}),
+      ...(isCoach && d.endedAt !== undefined ? { endedAt: d.endedAt ? new Date(d.endedAt) : null } : {}),
+      ...(providerMetadataUpdate !== undefined ? { providerMetadata: providerMetadataUpdate } : {}),
       ...(isCoach && d.agenda !== undefined ? { agenda: d.agenda } : {}),
       ...(isCoach && d.summary !== undefined ? { summary: d.summary } : {}),
       ...(isCoach && d.isPaid !== undefined ? { isPaid: d.isPaid } : {}),

@@ -8,6 +8,7 @@ const createSchema = z.object({
   scheduledFor: z.string().datetime(),
   duration: z.number().int().min(15).max(180).default(60),
   type: z.enum(["consultation", "follow_up", "check_in"]).default("consultation"),
+  callMode: z.enum(["AUDIO", "VIDEO"]).default("VIDEO"),
   notes: z.string().max(500).optional(),
 });
 
@@ -50,7 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const { coachId, scheduledFor, duration, type, notes } = parsed.data;
+  const { coachId, scheduledFor, duration, type, callMode, notes } = parsed.data;
 
   // Must have an accepted relation
   const relation = await prisma.coachClientRelation.findFirst({
@@ -63,15 +64,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const session = await prisma.session.create({
-    data: {
-      coachId,
-      clientId: auth.session.user.id,
-      scheduledFor: new Date(scheduledFor),
-      duration,
-      type,
-      notes,
-    },
+  const session = await prisma.$transaction(async (tx) => {
+    const created = await tx.session.create({
+      data: {
+        coachId,
+        clientId: auth.session.user.id,
+        scheduledFor: new Date(scheduledFor),
+        duration,
+        type,
+        callMode,
+        notes,
+      },
+    });
+
+    await tx.sessionParticipant.createMany({
+      data: [
+        { sessionId: created.id, userId: coachId, role: "COACH" },
+        { sessionId: created.id, userId: auth.session.user.id, role: "CLIENT" },
+      ],
+    });
+
+    return created;
   });
 
   return NextResponse.json({ session }, { status: 201 });

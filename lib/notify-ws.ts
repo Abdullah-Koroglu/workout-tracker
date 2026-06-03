@@ -25,6 +25,22 @@ export async function emitNotificationViaWs(
   }
 }
 
+export async function emitWsEvent<T extends Record<string, unknown>>(
+  userId: string,
+  event: T & { type: string },
+): Promise<void> {
+  const wsPort = process.env.WS_PORT || "3001";
+  try {
+    await fetch(`http://127.0.0.1:${wsPort}/internal/emit`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, event }),
+    });
+  } catch {
+    /* WS server unavailable */
+  }
+}
+
 /** Convenience: create a DB notification and emit it via WS. */
 export function notifPayload(n: {
   id: string;

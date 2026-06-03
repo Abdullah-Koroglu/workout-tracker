@@ -57,6 +57,9 @@ model User {
 
   coachSessions   Session[] @relation("SessionCoach")
   clientSessions  Session[] @relation("SessionClient")
+  sessionParticipants SessionParticipant[]
+  outgoingCallInvites CallInvite[] @relation("CallInviteCaller")
+  incomingCallInvites CallInvite[] @relation("CallInviteCallee")
 
   coachAvailability       CoachAvailability[]
   availabilityExceptions  AvailabilityException[]
@@ -702,15 +705,62 @@ model Session {
   rtcRoomId        String?
   rtcCallStatus    RtcCallStatus @default(NOT_CONFIGURED)
   recordingUrl     String?
+  providerRoomCode String?
+  providerHostUserId String?
+  callMode       SessionCallMode @default(VIDEO)
+  callStatus     SessionCallStatus @default(SCHEDULED)
+  syncState      SessionRtcSyncState @default(PENDING)
+  recordingStatus SessionRecordingStatus @default(NOT_REQUESTED)
+  startedAt      DateTime?
+  endedAt        DateTime?
+  providerMetadata Json?
   agenda           String?
   summary          String?
   clientFeedback   String?
   rating           Int?
   reminderSentAt   DateTime?
   isPaid           Boolean   @default(false)
+  participants     SessionParticipant[]
+  callInvites      CallInvite[]
 
   @@index([coachId, scheduledFor])
   @@index([clientId, scheduledFor])
+}
+
+enum CallInviteStatus {
+  RINGING
+  ACCEPTED
+  REJECTED
+  MISSED
+  CANCELLED
+  ENDED
+  FAILED
+}
+
+model CallInvite {
+  id                 String            @id @default(cuid())
+  caller             User              @relation("CallInviteCaller", fields: [callerId], references: [id], onDelete: Cascade)
+  callerId           String
+  callee             User              @relation("CallInviteCallee", fields: [calleeId], references: [id], onDelete: Cascade)
+  calleeId           String
+  session            Session?          @relation(fields: [sessionId], references: [id], onDelete: SetNull)
+  sessionId          String?
+  type               SessionCallMode
+  status             CallInviteStatus  @default(RINGING)
+  rtcProvider        String?           @default("link")
+  providerRoomCode   String?
+  providerHostUserId String?
+  startedAt          DateTime?
+  acceptedAt         DateTime?
+  endedAt            DateTime?
+  expiresAt          DateTime
+  metadata           Json?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+
+  @@index([callerId, createdAt])
+  @@index([calleeId, status, expiresAt])
+  @@index([sessionId, createdAt])
 }
 
 enum SessionStatus {
@@ -724,6 +774,62 @@ enum RtcCallStatus {
   READY
   LIVE
   ENDED
+}
+
+enum SessionCallMode {
+  AUDIO
+  VIDEO
+}
+
+enum SessionCallStatus {
+  SCHEDULED
+  PROVISIONING
+  READY
+  LIVE
+  ENDED
+  FAILED
+}
+
+enum SessionRtcSyncState {
+  PENDING
+  SYNCED
+  ERROR
+}
+
+enum SessionRecordingStatus {
+  NOT_REQUESTED
+  PENDING
+  READY
+  FAILED
+}
+
+enum SessionParticipantRole {
+  COACH
+  CLIENT
+}
+
+enum SessionParticipantJoinState {
+  INVITED
+  JOINED
+  LEFT
+  REMOVED
+}
+
+model SessionParticipant {
+  id         String                      @id @default(cuid())
+  session    Session                     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sessionId  String
+  user       User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId     String
+  role       SessionParticipantRole
+  joinState  SessionParticipantJoinState @default(INVITED)
+  joinedAt   DateTime?
+  leftAt     DateTime?
+  createdAt  DateTime                    @default(now())
+  updatedAt  DateTime                    @updatedAt
+
+  @@unique([sessionId, userId])
+  @@index([userId, joinState])
 }
 
 model ClientNotes {

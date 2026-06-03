@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, Check, CheckCheck, MessageCircle, Phone, Plus, Search, Send, Video } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { PushNotificationToggle } from "@/components/shared/PushNotificationToggle";
@@ -11,6 +12,7 @@ type Thread = {
     id: string;
     name: string;
     email: string;
+    role: "COACH" | "CLIENT";
   };
   unreadCount: number;
   lastMessage: {
@@ -176,10 +178,13 @@ function updateThreadsWithLatestMessage(
 }
 
 export function MessagesClient({
-  currentUserId
+  currentUserId,
+  currentUserRole,
 }: {
   currentUserId: string;
+  currentUserRole: "COACH" | "CLIENT";
 }) {
+  const router = useRouter();
   const { error, success } = useNotificationContext();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [threadSearchQuery, setThreadSearchQuery] = useState("");
@@ -202,6 +207,7 @@ export function MessagesClient({
   const preferredPeerRef = useRef<string>("");
   const [refreshing, setRefreshing] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [startingCallMode, setStartingCallMode] = useState<"AUDIO" | "VIDEO" | null>(null);
   const [peerOnlineStatus, setPeerOnlineStatus] = useState<Record<string, boolean>>({});
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   // tracks whether the next messages state update should scroll to bottom
@@ -211,6 +217,7 @@ export function MessagesClient({
     () => threads.find((thread) => thread.user.id === selectedUserId) || null,
     [selectedUserId, threads]
   );
+  const activeThread = selectedThread || threads[0] || null;
 
   const filteredThreads = useMemo(() => {
     const query = threadSearchQuery.trim().toLowerCase();
@@ -644,6 +651,33 @@ export function MessagesClient({
     void fetchThreads({ syncSelectedMessages: true, silent: true });
   };
 
+  const startCall = useCallback(async (mode: "AUDIO" | "VIDEO") => {
+    if (!activeThread || startingCallMode) {
+      return;
+    }
+
+    setStartingCallMode(mode);
+    try {
+      const response = await fetch("/api/calls/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetUserId: activeThread.user.id, mode }),
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error ?? "Arama baslatilamadi");
+      }
+
+      success(mode === "AUDIO" ? "Sesli arama baslatildi" : "Goruntulu arama baslatildi");
+      router.push(`/calls/${data.call.id}`);
+    } catch (err) {
+      error(err instanceof Error ? err.message : "Arama baslatilamadi");
+    } finally {
+      setStartingCallMode(null);
+    }
+  }, [activeThread, error, router, startingCallMode, success]);
+
   const handleRefresh = () => {
     void fetchThreads({ syncSelectedMessages: true });
   };
@@ -676,7 +710,6 @@ export function MessagesClient({
 
   // ─── render ─────────────────────────────────────────────────────────────────
   const messageGroups = groupMessagesByDate(messages);
-  const activeThread = selectedThread || threads[0] || null;
 
   // Shell header = 4rem (h-16). Content fills the rest of the viewport.
   // Mobile: bottom nav = h-20 (5rem). Composer is fixed at bottom-20.
@@ -845,6 +878,8 @@ export function MessagesClient({
                 <div className="flex gap-2">
                   <button
                     type="button"
+                    onClick={() => void startCall("VIDEO")}
+                    disabled={startingCallMode !== null || activeThread.user.role === currentUserRole}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100"
                     aria-label="Görüntülü görüşme"
                   >
@@ -852,6 +887,8 @@ export function MessagesClient({
                   </button>
                   <button
                     type="button"
+                    onClick={() => void startCall("AUDIO")}
+                    disabled={startingCallMode !== null || activeThread.user.role === currentUserRole}
                     className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-secondary hover:bg-slate-100"
                     aria-label="Sesli görüşme"
                   >

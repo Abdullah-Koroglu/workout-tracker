@@ -25,6 +25,9 @@ self.addEventListener("push", (event) => {
     body: data.body || "Yeni bir bildirimin var.",
     icon: "/manifest-icon-192.maskable.png",
     badge: "/favicon-196.png",
+    tag: data.tag,
+    requireInteraction: Boolean(data.requireInteraction),
+    vibrate: Array.isArray(data.vibrate) ? data.vibrate : undefined,
     data: {
       url: data.url || "/"
     }

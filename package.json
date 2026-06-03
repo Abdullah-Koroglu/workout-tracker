@@ -39,7 +39,11 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:headed": "playwright test --headed",
-    "test:e2e:report": "playwright show-report"
+    "test:e2e:report": "playwright show-report",
+    "deploy:staging": "node scripts/deploy-staging.mjs",
+    "deploy:status": "node scripts/deploy-status.mjs",
+    "deploy:webhook": "node scripts/github-webhook-listener.mjs",
+    "promote:prod": "node scripts/promote-production.mjs --approve"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

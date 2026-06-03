@@ -53,6 +53,12 @@ Bring staging services up:
 npm run staging:docker:up
 ```
 
+Automated path (used by GitHub webhook listener):
+
+```bash
+./scripts/deploy-staging.sh
+```
+
 Re-seed staging data if needed:
 
 ```bash
@@ -79,6 +85,24 @@ Minimum smoke checks after staging starts:
 5. Check `/coach/clients`
 6. Check `/coach/team`
 7. Check `/coach/admin`
+
+## Promote To Production (Manual Only)
+
+Production is promoted only by explicit manual command:
+
+```bash
+./scripts/promote-production.sh
+```
+
+Optional SHA guard:
+
+```bash
+./scripts/promote-production.sh <full_commit_sha>
+```
+
+For webhook listener setup and operational details, see:
+
+- `docs/WEBHOOK_DEPLOY_AUTOMATION.md`
 
 ## Known Remaining Gaps
 

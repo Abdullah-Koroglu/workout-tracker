@@ -36,3 +36,4 @@ dev.db
 /deploy.sh
 
 /db_backups/
+/.deploy/

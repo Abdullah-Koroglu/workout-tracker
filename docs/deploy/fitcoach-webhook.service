@@ -1,0 +1,18 @@
+[Unit]
+Description=FitCoach GitHub Webhook Deploy Listener
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/opt/fitcoach/workout-tracker
+EnvironmentFile=/opt/fitcoach/workout-tracker/scripts/webhook.env
+ExecStart=/opt/fitcoach/workout-tracker/scripts/deploy-webhook.sh
+Restart=always
+RestartSec=5
+StandardOutput=append:/var/log/fitcoach-webhook.log
+StandardError=append:/var/log/fitcoach-webhook.log
+
+[Install]
+WantedBy=multi-user.target

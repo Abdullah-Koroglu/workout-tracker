@@ -37,3 +37,4 @@ dev.db
 
 /db_backups/
 /.deploy/
+./rclone_backup.log

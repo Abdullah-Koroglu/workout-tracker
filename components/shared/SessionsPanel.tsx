@@ -187,7 +187,7 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
                       <div>Provider: {getRtcProviderLabel(merged.rtcProvider)}</div>
                       {merged.providerRoomCode ? <div>Room: {merged.providerRoomCode}</div> : null}
                       <div>Mod: {getSessionCallModeLabel(merged.callMode)}</div>
-                      <div>Kayit: {getRecordingStatusLabel(merged.recordingStatus)}</div>
+                      <div>Kayit: {merged.rtcProvider === "link" && !merged.recordingUrl ? "Provider desteklemiyor" : getRecordingStatusLabel(merged.recordingStatus)}</div>
                       {merged.recordingUrl ? (
                         <a href={merged.recordingUrl} target="_blank" className="inline-flex font-bold text-indigo-600 hover:text-indigo-700">
                           Kayit baglantisi

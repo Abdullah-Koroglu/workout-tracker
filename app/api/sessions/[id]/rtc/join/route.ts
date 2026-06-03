@@ -40,6 +40,15 @@ export async function POST(
     },
   });
 
+  await prisma.session.update({
+    where: { id },
+    data: {
+      callStatus: "LIVE",
+      syncState: "SYNCED",
+      startedAt: access.session.startedAt ?? new Date(),
+    },
+  });
+
   await syncSessionRoom(id);
 
   return NextResponse.json({

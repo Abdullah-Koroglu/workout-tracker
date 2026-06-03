@@ -19,23 +19,38 @@ function requiredEnv(name: string) {
 }
 
 function getRtcConfig() {
+  const signalingUrl = process.env.RTC_SIGNALING_URL?.replace(/\/$/, "") ?? "";
+  const signalingInternalUrl =
+    (process.env.RTC_SIGNALING_INTERNAL_URL ?? signalingUrl.replace(/^wss?:\/\//, (match) => (match === "wss://" ? "https://" : "http://"))).replace(/\/ws$/, "").replace(/\/$/, "");
+
   return {
     provider: process.env.RTC_PROVIDER ?? "link",
     apiBaseUrl: requiredEnv("RTC_API_BASE_URL").replace(/\/$/, ""),
     roomBaseUrl: (process.env.RTC_ROOM_BASE_URL ?? process.env.RTC_API_BASE_URL ?? "").replace(/\/$/, ""),
-    signalingUrl: process.env.RTC_SIGNALING_URL?.replace(/\/$/, "") ?? "",
+    signalingUrl,
+    signalingInternalUrl,
     internalSecret: requiredEnv("RTC_INTERNAL_API_SECRET"),
     tokenTtlSeconds: Number(process.env.RTC_TOKEN_TTL_SECONDS ?? "3600"),
   };
 }
 
-async function providerRequest<T>(path: string, init?: RequestInit): Promise<T> {
+async function providerRequest<T>(
+  path: string,
+  init?: RequestInit,
+  options?: { auth?: "internal" | "public"; userId?: string },
+): Promise<T> {
   const config = getRtcConfig();
+  const authMode = options?.auth ?? "public";
   const response = await fetch(`${config.apiBaseUrl}${path}`, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      "x-internal-secret": config.internalSecret,
+      ...(authMode === "internal"
+        ? {
+            Authorization: `Bearer ${config.internalSecret}`,
+            "x-user-id": options?.userId ?? "anonymous",
+          }
+        : {}),
       ...(init?.headers ?? {}),
     },
     cache: "no-store",
@@ -75,18 +90,17 @@ export async function loadCallInviteForRtc(callInviteId: string) {
   });
 }
 
-function buildProviderSubject(userId: string, role: "COACH" | "CLIENT") {
-  return `${role === "COACH" ? "coach" : "client"}:${userId}`;
+function buildProviderSubject(userId: string) {
+  return userId;
 }
 
 function buildEmbedUrl(roomCode: string, token: string, callMode: "AUDIO" | "VIDEO") {
   const config = getRtcConfig();
   const roomBaseUrl = config.roomBaseUrl || config.signalingUrl;
-  const url = new URL(`${roomBaseUrl}/rooms/${roomCode}`);
+  const url = new URL(`${roomBaseUrl}/room/${roomCode}`);
   url.searchParams.set("token", token);
-  url.searchParams.set("mode", callMode.toLowerCase());
-  url.searchParams.set("audio", "1");
-  url.searchParams.set("video", callMode === "VIDEO" ? "1" : "0");
+  url.searchParams.set("micEnabled", "true");
+  url.searchParams.set("cameraEnabled", callMode === "VIDEO" ? "true" : "false");
   return url.toString();
 }
 
@@ -95,12 +109,17 @@ function mapProviderStateToLocalStatus(snapshot: Record<string, unknown> | null)
     return { callStatus: "FAILED" as const, syncState: "ERROR" as const };
   }
 
+  const isExpired = snapshot.isExpired === true;
   const participantCount =
     typeof snapshot.participantCount === "number"
       ? snapshot.participantCount
       : Array.isArray(snapshot.participants)
         ? snapshot.participants.length
         : 0;
+
+  if (isExpired) {
+    return { callStatus: "ENDED" as const, syncState: "SYNCED" as const };
+  }
 
   if (participantCount > 0) {
     return { callStatus: "LIVE" as const, syncState: "SYNCED" as const };
@@ -111,42 +130,49 @@ function mapProviderStateToLocalStatus(snapshot: Record<string, unknown> | null)
 
 async function provisionProviderRoom(input: {
   hostFitcoachUserId: string;
-  hostRole: "COACH" | "CLIENT";
   metadata: Record<string, unknown>;
 }) {
   const payload = {
-    type: "private",
-    hostUserId: buildProviderSubject(input.hostFitcoachUserId, input.hostRole),
-    metadata: input.metadata,
+    type: "public",
   };
 
   const created = await providerRequest<{
+    id?: string;
     roomCode?: string;
     code?: string;
     hostUserId?: string;
-    room?: Record<string, unknown>;
+    type?: string;
+    isLocked?: boolean;
+    isExpired?: boolean;
+    expiresAt?: string;
+    createdAt?: string;
   }>("/rooms", {
     method: "POST",
     body: JSON.stringify(payload),
+  }, {
+    auth: "internal",
+    userId: buildProviderSubject(input.hostFitcoachUserId),
   });
 
   const roomCode =
     created.roomCode ??
-    created.code ??
-    (typeof created.room?.roomCode === "string" ? created.room.roomCode : null);
+    created.code;
 
   if (!roomCode) {
     throw new Error("RTC provider did not return a roomCode");
   }
 
-  const hostUserId =
-    created.hostUserId ??
-    (typeof created.room?.hostUserId === "string" ? created.room.hostUserId : payload.hostUserId);
+  const hostUserId = created.hostUserId ?? input.hostFitcoachUserId;
 
   return {
     roomCode,
     hostUserId,
-    providerMetadata: asProviderMetadata(created.room ?? payload.metadata),
+    providerMetadata: asProviderMetadata({
+      fitcoachMetadata: input.metadata,
+      providerSnapshot: created,
+      providerRoomId: created.id ?? null,
+      recordingSupported: false,
+    }),
   };
 }
 
@@ -156,14 +182,13 @@ async function mintProviderUserToken(input: {
   roomCode: string;
   callMode: "AUDIO" | "VIDEO";
 }) {
-  const tokenResponse = await providerRequest<{ token?: string; accessToken?: string; expiresAt?: string }>(
+  const tokenResponse = await providerRequest<{ token?: string; accessToken?: string }>(
     "/auth/login",
     {
       method: "POST",
       body: JSON.stringify({
-        subject: buildProviderSubject(input.fitcoachUserId, input.role),
+        subject: buildProviderSubject(input.fitcoachUserId),
         role: "user",
-        ttlSeconds: getRtcConfig().tokenTtlSeconds,
       }),
     },
   );
@@ -175,7 +200,7 @@ async function mintProviderUserToken(input: {
 
   return {
     token,
-    expiresAt: tokenResponse.expiresAt ?? null,
+    expiresAt: null,
     roomCode: input.roomCode,
     joinUrl: buildEmbedUrl(input.roomCode, token, input.callMode),
     media: {
@@ -204,7 +229,6 @@ export async function provisionSessionRoom(sessionId: string) {
 
   const provisioned = await provisionProviderRoom({
     hostFitcoachUserId: session.coachId,
-    hostRole: "COACH",
     metadata: {
       fitcoachSessionId: session.id,
       coachId: session.coachId,
@@ -242,8 +266,30 @@ export async function getSessionRoom(sessionId: string) {
     return { session, snapshot: null };
   }
 
+  const config = getRtcConfig();
   const snapshot = await providerRequest<Record<string, unknown>>(`/rooms/${session.providerRoomCode}`);
-  return { session, snapshot };
+  let participants: unknown[] = [];
+
+  if (config.signalingInternalUrl) {
+    try {
+      const participantsResponse = await fetch(`${config.signalingInternalUrl}/rooms/${session.providerRoomCode}/participants`, {
+        cache: "no-store",
+      });
+      if (participantsResponse.ok) {
+        const participantsBody = await participantsResponse.json().catch(() => ({}));
+        participants = Array.isArray(participantsBody.participants) ? participantsBody.participants : [];
+      }
+    } catch {
+      participants = [];
+    }
+  }
+
+  const mergedSnapshot = {
+    ...snapshot,
+    participants,
+    participantCount: participants.length,
+  };
+  return { session, snapshot: mergedSnapshot };
 }
 
 export async function mintRtcToken(input: {
@@ -310,7 +356,6 @@ export async function provisionCallInviteRoom(callInviteId: string) {
 
   const provisioned = await provisionProviderRoom({
     hostFitcoachUserId: invite.callerId,
-    hostRole: invite.caller.role,
     metadata: {
       fitcoachCallInviteId: invite.id,
       callerId: invite.callerId,

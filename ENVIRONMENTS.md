@@ -196,6 +196,7 @@ RTC_PROVIDER="link"
 RTC_API_BASE_URL="https://rtc-provider.example.com/v1"
 RTC_ROOM_BASE_URL="https://rtc-provider.example.com"
 RTC_SIGNALING_URL="wss://rtc-provider.example.com"
+RTC_SIGNALING_INTERNAL_URL="https://rtc-provider.example.com"
 RTC_INTERNAL_API_SECRET="replace-me"
 RTC_TOKEN_TTL_SECONDS="3600"
 RTC_JOIN_WINDOW_MINUTES="10"
@@ -218,6 +219,7 @@ RTC_PROVIDER="link"
 RTC_API_BASE_URL="https://staging-rtc-provider.example.com/v1"
 RTC_ROOM_BASE_URL="https://staging-rtc-provider.example.com"
 RTC_SIGNALING_URL="wss://staging-rtc-provider.example.com"
+RTC_SIGNALING_INTERNAL_URL="https://staging-rtc-provider.example.com"
 RTC_INTERNAL_API_SECRET="replace-me"
 RTC_TOKEN_TTL_SECONDS="3600"
 RTC_JOIN_WINDOW_MINUTES="10"
@@ -236,6 +238,12 @@ NEXT_PUBLIC_ENABLE_SERVICE_WORKER="true"
 ## Call / Push Notes
 
 - `RTC_*`, `VAPID_*`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, and `WS_AUTH_SECRET` values above are placeholders until real infra values are provided.
+- Confirmed provider assumptions now used by FitCoach:
+  - room create uses `POST /v1/rooms`
+  - internal auth uses `Authorization: Bearer <RTC_INTERNAL_API_SECRET>` and `x-user-id`
+  - token mint uses `POST /v1/auth/login` and returns `{ accessToken }`
+  - provider web room path is `/room/{roomCode}`
+  - `roomCode` is the canonical join identifier
 - `NEXT_PUBLIC_ENABLE_SERVICE_WORKER="true"` can be used in staging to validate web-push calling without requiring a production-only runtime gate.
 - Production seed is bootstrap-only and must never be used to refresh a live production database.
 

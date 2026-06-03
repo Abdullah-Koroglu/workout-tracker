@@ -63,7 +63,8 @@
   - [x] Add recent calls surface in messages and persist call events into notifications.
   - [x] Add push/lifecycle handling for accepted, rejected, cancelled, ended, and missed states.
 - [ ] Finish external RTC validation and deployment wiring.
-  - [ ] Confirm real RTC provider contract and env values.
+  - [x] Confirm provider contract: `/v1/rooms`, `/v1/auth/login`, `roomCode`, `/room/{roomCode}`, no recording support.
+  - [ ] Set real RTC env values.
   - [ ] Apply latest RTC/call migrations in target environments.
   - [ ] Run multi-user staging smoke for scheduled call, instant call, third-user block, and push click-through.
 - [x] Introduce locale/i18n structure while keeping Turkish as default.

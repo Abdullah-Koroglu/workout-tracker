@@ -17,7 +17,6 @@ Implemented:
 - Recent call history surface inside messages
 
 Not yet fully closed:
-- Real provider contract verification
 - Staging/prod env wiring
 - Full end-to-end staging/prod validation with real infra
 
@@ -56,28 +55,15 @@ This is the short list of items currently blocked on direct user input or action
 - provide real push/VAPID env values
 - run the new commit on the server and execute the target deploy flow
 - return staging/prod smoke-test results for scheduled call, instant call, third-user block, and push notification flow
-- share real provider error logs or example responses if the actual contract differs from current assumptions
+- share provider-side errors only if live behavior differs from the now-confirmed contract
 - decide where call history should live and whether iframe remains acceptable for the current phase
 
-### 1. Real RTC provider contract verification
-Needs confirmation for:
-- room creation endpoint and payload
-- token mint endpoint and payload
-- auth header / secret format
-- room URL shape
-- response body shape for room/token/status
-
-Current code assumes:
-- `POST /rooms`
-- `POST /auth/login`
-- `x-internal-secret`
-- room page under `/rooms/:roomCode`
-
-### 2. Real environment values
+### 1. Real environment values
 Need actual staging/production values for:
 - `RTC_API_BASE_URL`
 - `RTC_ROOM_BASE_URL`
 - `RTC_SIGNALING_URL`
+- `RTC_SIGNALING_INTERNAL_URL`
 - `RTC_INTERNAL_API_SECRET`
 - `VAPID_PUBLIC_KEY`
 - `VAPID_PRIVATE_KEY`
@@ -85,19 +71,19 @@ Need actual staging/production values for:
 - `VAPID_SUBJECT`
 - `WS_AUTH_SECRET`
 
-### 3. Deploy/runtime strategy
+### 2. Deploy/runtime strategy
 Need explicit decision for:
 - whether staging runs with `NODE_ENV=staging` or production build semantics
 - whether service worker/push should be active in staging
 - final deploy shape for WS + Next + push
 
-### 4. Call history product placement
+### 3. Call history product placement
 Need decision whether recent/missed calls should live in:
 - messages page
 - separate `/calls` page
 - dashboard card
 
-### 5. Long-term RTC surface direction
+### 4. Long-term RTC surface direction
 Need product/engineering direction for:
 - iframe-based embedded room as final approach
 - or future SDK-native embed with tighter in-app media controls
@@ -112,7 +98,8 @@ File: `lib/rtc-provider.ts`
 Status:
 - implemented
 - type-safe
-- not yet proven against real provider responses
+- updated to the confirmed provider contract
+- not yet proven against real provider infrastructure with live env values
 
 ### Web push calling
 Files:
@@ -145,7 +132,7 @@ If continuing without external input, the next safe implementation batch should 
 If continuing with external input, the highest-value blocker to clear is:
 
 1. real RTC provider envs
-2. real provider contract confirmation
+2. live infra validation
 
 ## Deployment Impact
 

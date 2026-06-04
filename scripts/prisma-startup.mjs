@@ -1,4 +1,4 @@
-import { execFileSync } from "node:child_process";
+import { spawnSync } from "node:child_process";
 import process from "node:process";
 
 import { PrismaClient } from "@prisma/client";
@@ -6,10 +6,27 @@ import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
 function runPrisma(args) {
-  execFileSync("./node_modules/.bin/prisma", args, {
-    stdio: "inherit",
+  const result = spawnSync("./node_modules/.bin/prisma", args, {
+    stdio: "pipe",
     env: process.env,
+    encoding: "utf8",
   });
+
+  if (result.stdout) process.stdout.write(result.stdout);
+  if (result.stderr) process.stderr.write(result.stderr);
+
+  if (result.status !== 0) {
+    const error = new Error(`Command failed: ./node_modules/.bin/prisma ${args.join(" ")}`);
+    error.status = result.status;
+    error.stdout = result.stdout ?? "";
+    error.stderr = result.stderr ?? "";
+    throw error;
+  }
+}
+
+function isRecoverableMigrationFailure(error) {
+  const output = `${error?.stdout ?? ""}\n${error?.stderr ?? ""}\n${error?.message ?? ""}`;
+  return output.includes("P3005") || output.includes("P3009");
 }
 
 async function main() {
@@ -26,7 +43,16 @@ async function main() {
 
   if (hasMigrationTable) {
     console.log("[prisma-startup] _prisma_migrations bulundu, migrate deploy calisiyor.");
-    runPrisma(["migrate", "deploy", "--schema=/app/prisma/schema.prisma"]);
+    try {
+      runPrisma(["migrate", "deploy", "--schema=/app/prisma/schema.prisma"]);
+    } catch (error) {
+      if (!isRecoverableMigrationFailure(error)) {
+        throw error;
+      }
+
+      console.log("[prisma-startup] migrate deploy recoverable failure verdi, db push fallback calisiyor.");
+      runPrisma(["db", "push", "--skip-generate", "--schema=/app/prisma/schema.prisma"]);
+    }
     return;
   }
 

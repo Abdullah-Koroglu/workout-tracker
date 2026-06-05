@@ -44,6 +44,7 @@
     "deploy:staging": "node scripts/deploy-staging.mjs",
     "deploy:status": "node scripts/deploy-status.mjs",
     "deploy:webhook": "node scripts/github-webhook-listener.mjs",
+    "deploy:secrets": "node scripts/generate-deploy-secrets.mjs",
     "promote:prod": "node scripts/promote-production.mjs --approve"
   },
   "dependencies": {

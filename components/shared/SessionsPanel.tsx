@@ -103,8 +103,9 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
         return (
           <div key={session.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
             <button
+              type="button"
               onClick={() => setExpanded(isExpanded ? null : session.id)}
-              className="flex w-full items-center gap-3 p-4 text-left hover:bg-slate-50"
+              className="flex w-full items-start gap-3 p-4 text-left hover:bg-slate-50 sm:items-center"
             >
               <div className="flex h-10 w-12 flex-col items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
                 <span className="text-[9px] font-black uppercase">
@@ -116,7 +117,7 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-black text-slate-800">{otherPartyName}</p>
                 <p className="text-xs text-slate-400">
-                  {sessionDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} · {session.duration} dk · {session.type}
+                  {sessionDate.toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })} - {session.duration} dk - {session.type}
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-2">
                   <span className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${callStatus.className}`}>
@@ -130,7 +131,7 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
               </div>
 
               <span
-                className={`rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${
+                className={`mt-1 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-black uppercase sm:mt-0 ${
                   session.status === "COMPLETED"
                     ? "bg-emerald-100 text-emerald-600"
                     : session.status === "CANCELLED"
@@ -146,12 +147,13 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
 
             {isExpanded ? (
               <div className="space-y-3 border-t border-slate-100 p-4">
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
                   {role === "COACH" && !merged.providerRoomCode ? (
                     <button
+                      type="button"
                       onClick={() => provision(session.id)}
                       disabled={provisioningId === session.id}
-                      className="inline-flex items-center gap-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white disabled:opacity-50"
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white disabled:opacity-50 sm:w-auto"
                     >
                       {provisioningId === session.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Radio className="h-3.5 w-3.5" />}
                       Odayi hazirla
@@ -161,13 +163,13 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
                   {joinOpen && merged.callStatus !== "ENDED" && merged.callStatus !== "FAILED" ? (
                     <Link
                       href={`/sessions/${session.id}/call`}
-                      className="inline-flex items-center gap-1 rounded-xl bg-indigo-500 px-3 py-2 text-xs font-black text-white hover:bg-indigo-600"
+                      className="inline-flex w-full items-center justify-center gap-1 rounded-xl bg-indigo-500 px-3 py-2 text-xs font-black text-white hover:bg-indigo-600 sm:w-auto"
                     >
                       {merged.callMode === "AUDIO" ? <Mic className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}
                       {merged.callMode === "AUDIO" ? "Sesli gorusmeye katil" : "Goruntulu gorusmeye katil"}
                     </Link>
                   ) : (
-                    <span className="rounded-xl bg-slate-100 px-3 py-2 text-xs font-bold text-slate-500">
+                    <span className="w-full rounded-xl bg-slate-100 px-3 py-2 text-center text-xs font-bold text-slate-500 sm:w-auto">
                       {merged.callStatus === "FAILED"
                         ? "RTC baglantisi tekrar hazirlanmali"
                         : merged.callStatus === "ENDED"
@@ -233,7 +235,7 @@ export function SessionsPanel({ role }: { role: "COACH" | "CLIENT" }) {
                       <label className="text-[10px] font-black uppercase tracking-wider text-slate-400">Oturum Puani</label>
                       <div className="mt-1 flex gap-1">
                         {[1, 2, 3, 4, 5].map((value) => (
-                          <button key={value} onClick={() => setField(session.id, "rating", value)} className="h-8 w-8">
+                          <button key={value} type="button" onClick={() => setField(session.id, "rating", value)} className="h-8 w-8">
                             <Star
                               className="h-6 w-6"
                               fill={value <= (merged.rating ?? 0) ? "#F59E0B" : "none"}

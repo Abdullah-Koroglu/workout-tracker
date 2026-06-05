@@ -541,9 +541,9 @@ Beklenen JSON formati:
   };
 
   return (
-    <form className="space-y-4" onSubmit={form.handleSubmit(submit)}>
+    <form className="space-y-5" onSubmit={form.handleSubmit(submit)}>
       {/* Category Picker */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="app-panel p-4 sm:p-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Kategori</p>
         <input type="hidden" {...form.register("categoryId")} />
         <div className="flex flex-wrap items-center gap-2">
@@ -587,7 +587,7 @@ Beklenen JSON formati:
         </div>
 
         {showNewCategory && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-3">
+          <div className="mt-3 flex flex-col gap-3 rounded-xl border border-emerald-200/60 bg-emerald-50/50 p-3 sm:flex-row sm:flex-wrap sm:items-center">
             <input
               type="text"
               value={newCategoryName}
@@ -596,7 +596,7 @@ Beklenen JSON formati:
               placeholder="Kategori adı"
               className="h-8 flex-1 min-w-32 rounded-lg border border-slate-200 bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400"
             />
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               {CATEGORY_COLORS.map((c) => (
                 <button
                   key={c.value}
@@ -641,11 +641,11 @@ Beklenen JSON formati:
         {...form.register("description")}
       />
 
-      <div className="rounded-lg border">
+      <div className="app-panel overflow-hidden p-0">
         <button
           type="button"
           onClick={() => setShowJsonExamples(!showJsonExamples)}
-          className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+          className="flex w-full items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/50"
         >
           <span className="font-semibold text-sm">
             JSON ile Hızlı Antrenman Oluştur
@@ -656,7 +656,7 @@ Beklenen JSON formati:
         </button>
 
         {showJsonExamples && (
-          <div className="border-t p-4 space-y-6 bg-muted/30">
+          <div className="space-y-6 border-t bg-muted/30 p-4">
             {/* JSON Import Section */}
             <div className="space-y-3 border-b pb-6">
               <div>
@@ -706,7 +706,7 @@ Beklenen JSON formati:
             </div>
 
             <div className="border-t pt-6">
-              <div className="mb-3 flex items-center justify-between gap-2">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm font-semibold text-foreground">
                   AI Prompt Şablonu
                 </p>
@@ -732,9 +732,20 @@ Beklenen JSON formati:
               <p className="text-sm font-semibold text-foreground mb-2">
                 Veritabanindaki Tum Egzersizler
               </p>
-              <p className="text-xs text-muted-foreground mb-3" onClick={() => copyToClipboard(exerciseLibrary.map(exercise => `/${exercise.id}/${exercise.name}/${exercise.type}`).join("\n"), "Egzersiz Listesi")} style={{ cursor: "pointer" }}>
-                Copy
-              </p>
+              <button
+                type="button"
+                className="mb-3 text-left text-xs text-blue-600 hover:text-blue-700"
+                onClick={() =>
+                  copyToClipboard(
+                    exerciseLibrary
+                      .map((exercise) => `/${exercise.id}/${exercise.name}/${exercise.type}`)
+                      .join("\n"),
+                    "Egzersiz Listesi",
+                  )
+                }
+              >
+                Listeyi kopyala
+              </button>
               <pre className="rounded-lg border bg-background p-3 text-xs overflow-x-auto max-h-64 overflow-y-auto">
                 <code>
                   {exerciseLibrary.length === 0
@@ -753,7 +764,7 @@ Beklenen JSON formati:
         )}
       </div>
 
-      <div className="rounded-xl border p-4">
+      <div className="app-panel p-4">
         <div className="flex flex-col gap-3 md:flex-row">
           <select
             value={selectedExerciseId}
@@ -767,7 +778,7 @@ Beklenen JSON formati:
               </option>
             ))}
           </select>
-          <Button type="button" onClick={addExercise}>
+          <Button type="button" onClick={addExercise} className="w-full md:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Egzersiz Ekle
           </Button>
@@ -811,7 +822,7 @@ Beklenen JSON formati:
                         <div
                           ref={draggableProvided.innerRef}
                           {...draggableProvided.draggableProps}
-                          className={`rounded-xl border p-4 ${
+                          className={`app-panel p-4 ${
                             isSuperset
                               ? "border-violet-200 border-l-4 border-l-violet-500 bg-violet-50/50"
                               : isDropset
@@ -840,7 +851,7 @@ Beklenen JSON formati:
                           <input type="hidden" {...form.register(`exercises.${index}.groupOrder`, { valueAsNumber: true })} />
                           <input type="hidden" {...form.register(`exercises.${index}.dropCount`, { valueAsNumber: true })} />
 
-                          <div className="mb-4 flex items-start justify-between gap-3">
+                          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                             <div className="flex items-start gap-3">
                               <button
                                 type="button"
@@ -949,7 +960,7 @@ Beklenen JSON formati:
                               </div>
 
                               {currentExercise?.groupType === "DROPSET" ? (
-                                <div className="mt-2 flex items-center gap-2 rounded-xl bg-rose-50 px-3 py-2">
+                                <div className="mt-2 flex flex-wrap items-center gap-2 rounded-xl bg-rose-50 px-3 py-2">
                                   <span className="text-xs font-bold text-rose-600">Drop sayısı:</span>
                                   {[2, 3, 4, 5].map((dropNumber) => (
                                     <button
@@ -992,7 +1003,7 @@ Beklenen JSON formati:
                               </div>
 
                               <div className="space-y-2">
-                                <div className="flex items-center justify-between">
+                                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                                   <p className="text-sm font-medium">
                                     Sure Bazli Protokol
                                   </p>
@@ -1000,6 +1011,7 @@ Beklenen JSON formati:
                                     type="button"
                                     variant="outline"
                                     onClick={() => addProtocolRow(index)}
+                                    className="w-full sm:w-auto"
                                   >
                                     Satır Ekle
                                   </Button>
@@ -1011,7 +1023,7 @@ Beklenen JSON formati:
                                       key={`${field.id}-${protocolIndex}`}
                                       className="rounded-xl border bg-card p-3"
                                     >
-                                      <div className="mb-2 flex items-center justify-between border-b pb-2">
+                                      <div className="mb-2 flex flex-col gap-2 border-b pb-2 sm:flex-row sm:items-center sm:justify-between">
                                         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-700">
                                           Blok {protocolIndex + 1}
                                         </p>

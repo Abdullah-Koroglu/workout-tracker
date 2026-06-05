@@ -48,7 +48,7 @@ export function TemplatesPageClient({
     <div className="space-y-6">
       {maxTemplates !== null && (
         <div
-          className="flex items-center justify-between rounded-2xl px-4 py-3"
+          className="flex flex-col gap-3 rounded-2xl px-4 py-3 sm:flex-row sm:items-center sm:justify-between"
           style={{
             background: isAtLimit ? "#FEE2E2" : "#F8FAFC",
             border: `1px solid ${isAtLimit ? "#FECACA" : "#E2E8F0"}`,
@@ -69,7 +69,7 @@ export function TemplatesPageClient({
           {isAtLimit ? (
             <Link
               href="/coach/billing"
-              className="shrink-0 rounded-xl px-3 py-1.5 text-[11px] font-black text-white"
+              className="inline-flex shrink-0 items-center justify-center rounded-xl px-3 py-2 text-[11px] font-black text-white"
               style={{ background: "linear-gradient(135deg, #F59E0B, #D97706)" }}
             >
               Planı Yükselt →
@@ -150,14 +150,14 @@ export function TemplatesPageClient({
         {canAdd ? (
           <Link
             href="/coach/templates/new"
-            className="ml-auto rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700"
+            className="w-full rounded-full bg-emerald-600 px-5 py-2.5 text-center text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-700 sm:ml-auto sm:w-auto"
           >
             + Yeni Şablon
           </Link>
         ) : (
           <Link
             href="/coach/billing"
-            className="ml-auto flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors"
+            className="flex w-full items-center justify-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors sm:ml-auto sm:w-auto"
             style={{ background: "#94A3B8" }}
             title={`Limit doldu (${templateCount}/${maxTemplates}). Planı yükseltin.`}
           >

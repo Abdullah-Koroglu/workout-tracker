@@ -18,7 +18,9 @@
   --border: 24 37% 79%;
   --input: 210 16% 88%;
   --ring: 24 95% 53%;
-  --radius: 0.25rem;
+  --radius: 0.75rem;
+  --app-header-height: 4rem;
+  --app-mobile-nav-height: 5rem;
 }
 
 .dark {
@@ -43,12 +45,45 @@
   @apply border-border;
 }
 
+html {
+  min-height: 100%;
+  scroll-behavior: smooth;
+}
+
 body {
-  @apply bg-[#F8FAFC] text-[#0F172A] antialiased;
+  @apply min-h-screen bg-background text-foreground antialiased;
   font-family: var(--font-lexend), sans-serif;
+  overflow-x: hidden;
 }
 
 ::selection {
   background: rgba(249, 115, 22, 0.25);
   color: hsl(var(--foreground));
+}
+
+@layer components {
+  .app-page {
+    @apply mx-auto w-full max-w-7xl;
+  }
+
+  .app-content {
+    @apply px-4 pt-20 md:px-6 md:pb-8 md:pt-20;
+    padding-bottom: calc(var(--app-mobile-nav-height) + 2.5rem + env(safe-area-inset-bottom));
+  }
+
+  .app-panel {
+    @apply rounded-2xl border border-slate-200/80 bg-white shadow-sm;
+  }
+
+  .app-panel-muted {
+    @apply rounded-2xl border border-slate-200/80 bg-slate-50/70 shadow-sm;
+  }
+
+  .app-section-title {
+    @apply text-sm font-black tracking-tight text-slate-800 md:text-base;
+  }
+
+  .app-kpi-grid {
+    @apply grid grid-cols-2 gap-2.5 sm:grid-cols-4;
+  }
 }

@@ -21,7 +21,7 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
   if (!template) return notFound();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:pb-10">
       <Link
         href="/coach/templates"
         className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-500 hover:text-slate-800"
@@ -30,7 +30,7 @@ export default async function EditTemplatePage({ params }: { params: Promise<{ i
         Antrenmanlara geri dön
       </Link>
 
-      <div className="rounded-3xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-6 shadow-sm">
+      <div className="app-panel rounded-2xl border-emerald-200/60 bg-gradient-to-br from-emerald-50 via-white to-lime-50 p-5 shadow-sm sm:p-6">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
           Antrenman Yönetimi
         </p>

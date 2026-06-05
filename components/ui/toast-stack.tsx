@@ -47,7 +47,7 @@ function getToastStyles(type: ToastType) {
 
 export function ToastStack({ toasts }: { toasts: ToastItem[] }) {
   return (
-    <div className="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none">
+    <div className="pointer-events-none fixed bottom-[calc(var(--app-mobile-nav-height)+1rem+env(safe-area-inset-bottom))] right-3 z-50 space-y-2 md:bottom-4 md:right-4">
       {toasts.map((toast) => {
         const styles = getToastStyles(toast.type);
         const Icon = styles.icon;

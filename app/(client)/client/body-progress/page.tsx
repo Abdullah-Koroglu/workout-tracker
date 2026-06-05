@@ -1,5 +1,6 @@
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+﻿import Link from "next/link";
+import { ChevronLeft, Ruler } from "lucide-react";
+
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { BodyProgressClient } from "@/components/client/BodyProgressClient";
@@ -32,10 +33,9 @@ export default async function BodyProgressPage() {
     prisma.bodyTrackingPreference.findUnique({ where: { clientId } }),
   ]);
 
-  const logs: BodyLog[] = rawLogs.map((l) => ({
-    ...l,
-    date: l.date.toISOString(),
-    createdAt: l.createdAt.toISOString(),
+  const logs: BodyLog[] = rawLogs.map((log) => ({
+    ...log,
+    date: log.date.toISOString(),
   }));
 
   let activeMeasurements: string[] = [];
@@ -49,12 +49,11 @@ export default async function BodyProgressPage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
       <div
-        className="-mx-4 px-5 pt-5 pb-7 -mt-4"
+        className="-mx-4 -mt-4 px-5 pb-7 pt-5"
         style={{ background: "linear-gradient(160deg, #4C1D95, #6D28D9)" }}
       >
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <Link
             href="/client/dashboard"
             className="flex h-8 w-8 items-center justify-center rounded-xl"
@@ -66,24 +65,25 @@ export default async function BodyProgressPage() {
             className="rounded-full px-3 py-1 text-[11px] font-black text-white"
             style={{ background: "rgba(255,255,255,0.15)" }}
           >
-            {logs.length} kayıt
+            {logs.length} kayit
           </span>
         </div>
-        <div>
-          <p className="text-white/60 text-[12px] font-black uppercase tracking-widest">Dönüşüm Radarı</p>
-          <h1 className="text-white text-[26px] font-black leading-tight mt-1">
-            📏 Fiziksel İlerleme
-          </h1>
-          <p className="text-white/70 text-[13px] mt-1">
-            Kilo · Ölçümler · Before/After
-          </p>
+
+        <p className="text-[12px] font-black uppercase tracking-widest text-white/60">Donusum Radari</p>
+        <div className="mt-1 flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/12 text-white">
+            <Ruler className="h-5 w-5" />
+          </div>
+          <h1 className="text-[26px] font-black leading-tight text-white">Fiziksel Ilerleme</h1>
         </div>
+        <p className="mt-1 text-[13px] text-white/70">Kilo · Olcumler · Before/After</p>
       </div>
 
-      {/* Content */}
       <div className="mt-5">
         <BodyProgressClient logs={logs} activeMeasurements={activeMeasurements} />
       </div>
     </div>
   );
 }
+
+

@@ -91,24 +91,24 @@ export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 flex items-end justify-center p-3 sm:items-center sm:p-4">
       <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative w-full max-w-md rounded-2xl bg-white shadow-2xl"
+        className="relative flex max-h-[92vh] w-full max-w-md flex-col overflow-hidden rounded-[28px] bg-white shadow-2xl"
         style={{ boxShadow: "0 25px 50px rgba(0,0,0,0.25)" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between gap-3 border-b border-slate-100 px-5 py-4">
+          <div className="flex min-w-0 items-center gap-2">
             <div
               className="flex h-8 w-8 items-center justify-center rounded-xl"
               style={{ background: "rgba(249,115,22,0.1)" }}
             >
               <Calendar className="h-4 w-4 text-orange-500" />
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-sm font-black text-slate-800">Seans Planla</p>
-              <p className="text-xs text-slate-400">{coachName}</p>
+              <p className="truncate text-xs text-slate-400">{coachName}</p>
             </div>
           </div>
           <button
@@ -135,7 +135,7 @@ export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
             </button>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4 overflow-y-auto p-5">
             {/* Availability hint */}
             {!loadingSlots && availability.length > 0 && (
               <div className="rounded-xl bg-orange-50 border border-orange-100 px-3 py-2.5">
@@ -277,7 +277,7 @@ export function SessionBookingModal({ coachId, coachName, onClose }: Props) {
               </p>
             )}
 
-            <div className="flex gap-3 pt-1">
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row">
               <button
                 type="button"
                 onClick={onClose}

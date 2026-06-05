@@ -28,10 +28,10 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
 
   const deleteTemplate = async (id: string) => {
     const approved = await confirm({
-      title: "Şablon sil",
-      description: "Bu şablon silinecek. İşlem geri alınamaz.",
+      title: "Sablon sil",
+      description: "Bu sablon silinecek. Islem geri alinamaz.",
       confirmText: "Sil",
-      cancelText: "Vazgeç",
+      cancelText: "Vazgec",
       danger: true,
     });
 
@@ -42,30 +42,30 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
     });
 
     if (!response.ok) {
-      push("Şablon silinemedi.", "error");
+      push("Sablon silinemedi.", "error");
       return;
     }
 
-    push("Şablon silindi.", "success");
+    push("Sablon silindi.", "success");
     router.refresh();
   };
 
   if (templates.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-16 text-center">
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 px-6 py-14 text-center sm:px-8 sm:py-16">
         <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600">
           <Dumbbell className="h-7 w-7" />
         </div>
-        <p className="text-base font-black text-slate-700">İlk antrenman şablonunu oluştur</p>
+        <p className="text-base font-black text-slate-700">Ilk antrenman sablonunu olustur</p>
         <p className="mt-2 max-w-md text-sm leading-relaxed text-slate-500">
-          Koçların satış demosunda en hızlı değer gösteren adım hazır bir programdır. İlk şablonu oluştur, sonra danışanına tek tıkla ata.
+          Koclarin satis demosunda en hizli deger gosteren adim hazir bir programdir. Ilk sablonu olustur, sonra danisanina tek tikla ata.
         </p>
         <Link
           href="/coach/templates/new"
           className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-sm font-black text-white shadow-sm transition hover:bg-emerald-700"
         >
           <Plus className="h-4 w-4" />
-          Yeni Şablon Oluştur
+          Yeni Sablon Olustur
         </Link>
       </div>
     );
@@ -76,7 +76,7 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
       {templates.map((template) => (
         <div
           key={template.id}
-          className="group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+          className="app-panel group relative p-5 transition-shadow hover:shadow-md"
         >
           {template.category && (
             <div
@@ -92,14 +92,14 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
           )}
 
           <div className="flex items-start justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-base font-bold leading-tight text-slate-900">{template.name}</p>
               <p className="mt-0.5 text-xs text-slate-400">{template.exerciseCount} egzersiz</p>
             </div>
             <ActionMenu
               items={[
                 {
-                  label: "Düzenle",
+                  label: "Duzenle",
                   onClick: () => router.push(`/coach/templates/${template.id}/edit`),
                 },
                 {
@@ -113,14 +113,14 @@ export function TemplatesGrid({ templates }: { templates: TemplateItem[] }) {
             />
           </div>
 
-          <div className="mt-4 flex items-center gap-3 border-t border-slate-100 pt-3 text-xs font-semibold">
+          <div className="mt-4 flex flex-col gap-2 border-t border-slate-100 pt-3 text-xs font-semibold sm:flex-row sm:items-center sm:gap-3">
             <Link
               href={`/coach/templates/${template.id}/edit`}
               className="flex items-center gap-1 text-emerald-600 hover:text-emerald-700"
             >
-              Düzenle
+              Duzenle
             </Link>
-            <span className="text-slate-200">·</span>
+            <span className="hidden text-slate-200 sm:inline">.</span>
             <Link
               href={`/coach/templates/${template.id}/assign`}
               className="flex items-center gap-1 text-slate-500 hover:text-slate-700"

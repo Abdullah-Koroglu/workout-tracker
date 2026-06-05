@@ -147,7 +147,7 @@ export default async function CoachVitrinPage({
         : { label: "Henüz Bağlı Değilsin", color: "#64748B", bg: "rgba(148,163,184,0.14)" };
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:space-y-6 md:pb-16">
 
       {/* ── Back link ── */}
       <Link
@@ -208,10 +208,10 @@ export default async function CoachVitrinPage({
       </PageHero>
 
       {/* ── Desktop 2-col layout ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
         {/* ── LEFT: Packages ── */}
-        <div className="xl:col-span-2 space-y-4">
+        <div className="space-y-4 xl:col-span-2">
           {transformationPhotos.length > 0 && (
             <TransformCarousel items={transformationPhotos} />
           )}
@@ -254,7 +254,7 @@ export default async function CoachVitrinPage({
 
           {pkgCount === 0 ? (
             <div
-              className="rounded-2xl bg-gradient-to-br from-white to-slate-50 p-8 text-center border border-slate-100"
+              className="app-panel bg-gradient-to-br from-white to-slate-50 p-6 text-center sm:p-8"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div
@@ -282,7 +282,7 @@ export default async function CoachVitrinPage({
               {profile!.packages.map((pkg) => (
                 <div
                   key={pkg.id}
-                  className="group flex flex-col overflow-hidden rounded-2xl bg-white transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
+                  className="app-panel group flex flex-col overflow-hidden transition-all duration-200 hover:-translate-y-1 hover:shadow-xl"
                   style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                 >
                   {/* top accent */}
@@ -360,9 +360,9 @@ export default async function CoachVitrinPage({
                       ) : null}
                     </div>
 
-                    <div className="mt-auto flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+                    <div className="mt-auto flex flex-col gap-3 border-t border-slate-100 pt-3 sm:flex-row sm:items-center sm:justify-between">
                       {pkg.price != null ? (
-                        <div className="flex items-baseline gap-1.5">
+                        <div className="flex flex-wrap items-baseline gap-1.5">
                           {(pkg as { originalPrice?: number | null }).originalPrice && (
                             <span className="text-xs font-bold text-slate-400 line-through">
                               {(pkg as { originalPrice?: number | null }).originalPrice!.toLocaleString("tr-TR")}₺
@@ -385,7 +385,7 @@ export default async function CoachVitrinPage({
                       )}
                       <Link
                         href={messageHref}
-                        className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white transition-opacity hover:opacity-90"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-xs font-black text-white transition-opacity hover:opacity-90 sm:w-auto"
                         style={{
                           background: "linear-gradient(135deg, #1A365D, #2D4A7A)",
                           boxShadow: "0 3px 8px rgba(26,54,93,0.3)",
@@ -406,7 +406,7 @@ export default async function CoachVitrinPage({
         <div className="space-y-4 self-start xl:sticky xl:top-24">
           {trustScore && (
             <div
-              className="rounded-2xl bg-white p-5 space-y-4 border border-slate-100"
+              className="app-panel space-y-4 p-5"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-center justify-between gap-3">
@@ -466,10 +466,10 @@ export default async function CoachVitrinPage({
           )}
 
           {/* Request / status card */}
-          <div
-            className="rounded-2xl bg-white p-5 space-y-4 border border-slate-100"
-            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-          >
+            <div
+              className="app-panel space-y-4 p-5"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+            >
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
               Bağlantı Durumu
             </h3>
@@ -480,10 +480,10 @@ export default async function CoachVitrinPage({
           </div>
 
           {/* Message card */}
-          <div
-            className="rounded-2xl bg-gradient-to-br from-slate-50 to-white p-5 space-y-3 border border-slate-100"
-            style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-          >
+            <div
+              className="app-panel bg-gradient-to-br from-slate-50 to-white p-5 space-y-3"
+              style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
+            >
             <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-500">
               İletişim
             </h3>
@@ -506,7 +506,7 @@ export default async function CoachVitrinPage({
           {/* Specialties recap */}
           {specialties.length > 0 && (
             <div
-              className="rounded-2xl bg-white p-5 space-y-3 border border-slate-100"
+              className="app-panel space-y-3 p-5"
               style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
             >
               <div className="flex items-center gap-2">

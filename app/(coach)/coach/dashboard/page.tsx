@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import Image from "next/image";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 
@@ -63,7 +63,7 @@ function Avatar({ name, imageUrl, size = 40, bg = "#1A365D" }: { name: string; i
 export default async function CoachDashboardPage() {
   const session = await auth();
   const coachId = session?.user.id || "";
-  const userName = session?.user.name || "Koç";
+  const userName = session?.user.name || "Koc";
   const coachAvatarUrl = coachId ? await getCoachAvatarUrl(coachId) : null;
 
   const todayStart = new Date();
@@ -378,13 +378,13 @@ export default async function CoachDashboardPage() {
             (assignment) => assignment.workouts.length === 0 || assignment.workouts[0].status === "ABANDONED"
           ).length;
 
-          let reason = "Takip öneriliyor";
+          let reason = "Takip oneriliyor";
           if (lastWorkout === null && client.assignments.length > 0) {
-            reason = "Henüz tamamlanan antrenman yok";
+            reason = "Henuz tamamlanan antrenman yok";
           } else if (inactiveDays !== null && inactiveDays >= 7) {
-            reason = `${inactiveDays} gündür tamamlanan antrenman yok`;
+            reason = `${inactiveDays} gundur tamamlanan antrenman yok`;
           } else if (missedCount >= 2) {
-            reason = `${missedCount} atlanmış program görünüyor`;
+            reason = `${missedCount} atlanmis program gorunuyor`;
           }
 
           const isAtRisk =
@@ -460,10 +460,10 @@ export default async function CoachDashboardPage() {
   const formatTimeAgo = (date: Date) => {
     const diffMs = Date.now() - date.getTime();
     const minutes = Math.floor(diffMs / 60000);
-    if (minutes < 60) return `${Math.max(minutes, 1)} dk önce`;
+    if (minutes < 60) return `${Math.max(minutes, 1)} dk once`;
     const hours = Math.floor(minutes / 60);
-    if (hours < 24) return `${hours} sa önce`;
-    return `${Math.floor(hours / 24)} gün önce`;
+    if (hours < 24) return `${hours} sa once`;
+    return `${Math.floor(hours / 24)} gun once`;
   };
 
   const formatFutureTime = (date: Date) =>
@@ -563,14 +563,14 @@ export default async function CoachDashboardPage() {
 
   return (
     <div className="min-h-screen">
-      {/* ── Hero ── */}
+      {/* â”€â”€ Hero â”€â”€ */}
       <div
-        className="-mx-4 px-5 pt-5 pb-6 -mt-4"
+        className="-mx-4 -mt-4 rounded-b-[28px] px-4 pb-6 pt-5 sm:px-5"
         style={{ background: "linear-gradient(160deg, #1A365D, #2D4A7A)" }}
       >
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <p className="m-0 text-[13px] text-white/60">Koç Paneli</p>
+            <p className="m-0 text-[13px] text-white/60">Koc Paneli</p>
             <h2 className="m-0 text-[20px] font-black leading-tight tracking-tight text-white">
               {userName}
             </h2>
@@ -579,11 +579,11 @@ export default async function CoachDashboardPage() {
         </div>
 
         {/* KPI Row 1 */}
-        <div className="grid grid-cols-3 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {[
-            { label: "Aktif Danışan", val: totalClients, sub: `+${monthlyNewClients} bu ay`, color: "#fff" },
-            { label: "Uyumluluk", val: `${completionRate}%`, sub: "son 7 gün", color: "#FED7AA" },
-            { label: "Bugün", val: workoutsToday, sub: `${pendingReviewCount} bekliyor`, color: "#fff" },
+            { label: "Aktif Danisan", val: totalClients, sub: `+${monthlyNewClients} bu ay`, color: "#fff" },
+            { label: "Uyumluluk", val: `${completionRate}%`, sub: "son 7 gun", color: "#FED7AA" },
+            { label: "Bugun", val: workoutsToday, sub: `${pendingReviewCount} bekliyor`, color: "#fff" },
           ].map((m) => (
             <div
               key={m.label}
@@ -599,29 +599,29 @@ export default async function CoachDashboardPage() {
           ))}
         </div>
 
-        {/* KPI Row 2 — new metrics */}
-        <div className="grid grid-cols-3 gap-2.5 mt-2">
+        {/* KPI Row 2 â€” new metrics */}
+        <div className="mt-2 grid grid-cols-2 gap-2.5 sm:grid-cols-3">
           {[
             {
               label: "Aktif Abone",
               val: activeSubscriptionCount,
               sub: "abonelik",
               color: "#86EFAC",
-              icon: "💳",
+              icon: "MRR",
             },
             {
               label: "Seans",
               val: upcomingSessionsCount,
-              sub: "30 günde planlı",
+              sub: "30 gunde planli",
               color: "#C4B5FD",
-              icon: "📅",
+              icon: "SES",
             },
             {
               label: "Bekleyen",
               val: pendingRequests.length,
-              sub: "bağlantı isteği",
+              sub: "baglanti istegi",
               color: pendingRequests.length > 0 ? "#FCA5A5" : "#fff",
-              icon: "🤝",
+              icon: "TLP",
             },
           ].map((m) => (
             <div
@@ -642,7 +642,7 @@ export default async function CoachDashboardPage() {
         </div>
       </div>
 
-      {/* ── Content ── */}
+      {/* â”€â”€ Content â”€â”€ */}
       <div className="mt-4 flex flex-col gap-5">
         <div id="onboarding-checklist">
           <CoachOnboardingChecklist {...onboarding} />
@@ -674,7 +674,7 @@ export default async function CoachDashboardPage() {
             count: unansweredCheckInsCount,
             items: unansweredCheckInsPreview.map((checkIn) => ({
               label: checkIn.client.name,
-              meta: `${formatTimeAgo(checkIn.createdAt)} gÃ¶nderildi`,
+              meta: `${formatTimeAgo(checkIn.createdAt)} gonderildi`, 
               href: "/coach/dashboard#coach-checkins",
             })),
           }}
@@ -690,7 +690,7 @@ export default async function CoachDashboardPage() {
             count: upcomingSessionsCount,
             items: upcomingSessionsPreview.map((session) => ({
               label: session.client.name,
-              meta: `${formatFutureTime(session.scheduledFor)} · ${session.type}`,
+              meta: `${formatFutureTime(session.scheduledFor)} - ${session.type}`,
               href: "/coach/dashboard#coach-sessions",
             })),
           }}
@@ -701,7 +701,7 @@ export default async function CoachDashboardPage() {
           <div>
             <div className="mb-2.5 flex items-center justify-between">
               <span className="text-[15px] font-bold text-slate-800">
-                Şu An Aktif Antrenman
+                Su An Aktif Antrenman
               </span>
               <span className="rounded-full bg-red-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-red-500">
                 Live {activeStories.length}
@@ -733,7 +733,7 @@ export default async function CoachDashboardPage() {
                         .slice(0, 2)}
                     </div>
                     <span className="absolute -bottom-1 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-white">
-                      canlı
+                      canli
                     </span>
                   </div>
 
@@ -764,12 +764,12 @@ export default async function CoachDashboardPage() {
         {/* Rest Violation Report */}
         {restViolations.length > 0 && (
           <div
-            className="rounded-[18px] bg-white p-4 shadow-sm"
+            className="app-panel p-4"
             style={{ border: "1px solid rgba(0,0,0,0.06)", borderLeft: "4px solid #F97316" }}
           >
             <div className="mb-3 flex items-center justify-between">
-              <span className="text-[15px] font-bold text-slate-800">Dinlenme Süresi İhlal Raporu</span>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Son 7 gün</span>
+              <span className="text-[15px] font-bold text-slate-800">Dinlenme Suresi Ihlal Raporu</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Son 7 gun</span>
             </div>
 
             <div className="space-y-2">
@@ -782,7 +782,7 @@ export default async function CoachDashboardPage() {
                     </span>
                   </div>
                   <p className="mt-1 text-[11px] text-slate-500">
-                    Ortalama dinlenme {item.avgActual} sn, hedef {item.avgPrescribed} sn. İhlal seti: {item.violations}/{item.count}
+                    Ortalama dinlenme {item.avgActual} sn, hedef {item.avgPrescribed} sn. Ihlal seti: {item.violations}/{item.count}
                   </p>
                 </div>
               ))}
@@ -818,7 +818,7 @@ export default async function CoachDashboardPage() {
         {/* Pending Requests */}
         {pendingRequests.length > 0 && (
           <div
-            className="bg-white rounded-[18px] shadow-sm p-4"
+            className="app-panel p-4"
             style={{
               border: "1px solid rgba(0,0,0,0.06)",
               borderLeft: "4px solid #F97316",
@@ -859,7 +859,7 @@ export default async function CoachDashboardPage() {
               href="/coach/clients"
               className="mt-3 block text-center py-2 rounded-xl text-[13px] font-bold text-orange-500 border border-orange-500"
             >
-              Tümünü Gör
+              Tumunu Gor
             </Link>
           </div>
         )}
@@ -868,14 +868,14 @@ export default async function CoachDashboardPage() {
         {upcomingAppointments.length > 0 && (
           <div>
             <span className="text-[15px] font-bold text-slate-800 block mb-2.5">
-              Yaklaşan Randevular
+              Yaklasan Randevular
             </span>
             <div className="flex flex-col gap-2">
               {upcomingAppointments.map((a) => (
                 <Link
                   key={a.id}
                   href={`/coach/clients/${a.client.id}/progress`}
-                  className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                  className="app-panel flex items-center gap-3 p-3.5"
                   style={{ border: "1px solid rgba(0,0,0,0.06)" }}
                 >
                   <div className="bg-slate-100 rounded-xl px-3 py-2 text-center shrink-0 min-w-[48px]">
@@ -916,25 +916,25 @@ export default async function CoachDashboardPage() {
 
           {recentWorkouts.length === 0 ? (
             <div
-              className="bg-white rounded-[18px] p-4 shadow-sm text-center"
+              className="app-panel p-4 text-center"
               style={{ border: "1px solid rgba(0,0,0,0.06)" }}
             >
-              <p className="text-[13px] font-black text-slate-700">Bugün henüz aktivite yok</p>
+              <p className="text-[13px] font-black text-slate-700">Bugun henuz aktivite yok</p>
               <p className="mx-auto mt-1 max-w-xs text-[12px] leading-relaxed text-slate-400">
-                İlk hareketi yaratmak için bir danışana hazır şablon ata veya ilk şablonunu oluştur.
+                Ilk hareketi yaratmak icin bir danisana hazir sablon ata veya ilk sablonunu olustur.
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 <Link
                   href="/coach/templates"
                   className="rounded-xl bg-slate-900 px-3 py-2 text-[12px] font-black text-white"
                 >
-                  Şablonları Aç
+                  Sablonlari Ac
                 </Link>
                 <Link
                   href="/coach/clients"
                   className="rounded-xl border border-slate-200 px-3 py-2 text-[12px] font-black text-slate-600"
                 >
-                  Danışanları Gör
+                  Danisanlari Gor
                 </Link>
               </div>
             </div>
@@ -945,7 +945,7 @@ export default async function CoachDashboardPage() {
                 return (
                   <div
                     key={w.id}
-                    className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                    className="app-panel flex items-center gap-3 p-3.5"
                     style={{ border: "1px solid rgba(0,0,0,0.06)" }}
                   >
                     <Avatar
@@ -961,9 +961,9 @@ export default async function CoachDashboardPage() {
                             isCompleted ? "text-green-500" : "text-amber-500"
                           }
                         >
-                          {isCompleted ? "tamamladı" : "yarıda bıraktı"}
+                          {isCompleted ? "tamamladi" : "yarida birakti"}
                         </span>
-                        {" — "}
+                        {" - "}
                         <span className="font-semibold">{w.template.name}</span>
                       </div>
                       <div className="text-[11px] text-slate-400 mt-0.5">
@@ -996,24 +996,24 @@ export default async function CoachDashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[15px] font-bold text-slate-800">
-              Danışanlar
+              Danisanlar
             </span>
             <Link
               href="/coach/clients"
               className="text-[12px] text-orange-500 font-semibold"
             >
-              Tümü →
+              Tumunu Gor
             </Link>
           </div>
 
           {topClients.length === 0 ? (
             <div
-              className="bg-white rounded-[18px] p-4 shadow-sm text-center"
+              className="app-panel p-4 text-center"
               style={{ border: "1px solid rgba(0,0,0,0.06)" }}
             >
-              <p className="text-[13px] font-black text-slate-700">İlk danışanını bağla</p>
+              <p className="text-[13px] font-black text-slate-700">Ilk danisanini bagla</p>
               <p className="mx-auto mt-1 max-w-xs text-[12px] leading-relaxed text-slate-400">
-                Davet linkini paylaş veya marketplace profilini tamamla. Danışan geldiğinde uyumluluk ve aksiyonlar burada görünür.
+                Davet linkini paylas veya marketplace profilini tamamla. Danisan geldiginde uyumluluk ve aksiyonlar burada gorunur.
               </p>
               <div className="mt-3 flex flex-wrap justify-center gap-2">
                 <Link
@@ -1026,7 +1026,7 @@ export default async function CoachDashboardPage() {
                   href="/coach/templates/new"
                   className="rounded-xl border border-slate-200 px-3 py-2 text-[12px] font-black text-slate-600"
                 >
-                  İlk Şablon
+                  Ilk Sablon
                 </Link>
               </div>
             </div>
@@ -1036,7 +1036,7 @@ export default async function CoachDashboardPage() {
                 <Link
                   key={c.id}
                   href={`/coach/clients/${c.id}/progress`}
-                  className="bg-white rounded-[18px] shadow-sm p-3.5 flex items-center gap-3"
+                  className="app-panel flex items-center gap-3 p-3.5"
                   style={{ border: "1px solid rgba(0,0,0,0.06)" }}
                 >
                   <Avatar name={c.name} size={40} bg="#1A365D" />
@@ -1068,7 +1068,7 @@ export default async function CoachDashboardPage() {
                     )}
                     {!c.lastWorkout && (
                       <div className="text-[12px] text-slate-400">
-                        Henüz antrenman yok
+                        Henuz antrenman yok
                       </div>
                     )}
                   </div>
@@ -1090,10 +1090,10 @@ export default async function CoachDashboardPage() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[
-            { href: "/coach/clients", label: "Danışanlar" },
-            { href: "/coach/templates", label: "Şablonlar" },
+            { href: "/coach/clients", label: "Danisanlar" },
+            { href: "/coach/templates", label: "Sablonlar" },
             { href: "/coach/messages", label: "Mesajlar" },
             { href: "/coach/profile", label: "Profil" },
           ].map(({ href, label }) => (

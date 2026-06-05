@@ -35,6 +35,7 @@ const PERMISSION_LABELS = [
 
 function formatDate(date: Date | null) {
   if (!date) return "-";
+
   return new Intl.DateTimeFormat("tr-TR", {
     day: "2-digit",
     month: "short",
@@ -49,9 +50,7 @@ export default async function CoachTeamPage() {
   const [coachProfile, workspaceSummary] = await Promise.all([
     prisma.coachProfile.findUnique({
       where: { userId: coachId },
-      select: {
-        subscriptionTier: true,
-      },
+      select: { subscriptionTier: true },
     }),
     getAgencyWorkspaceSummaryForCoach(coachId),
   ]);
@@ -100,6 +99,7 @@ export default async function CoachTeamPage() {
             },
           ].map((item) => {
             const Icon = item.icon;
+
             return (
               <div key={item.title} className="rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-sm">
                 <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-600">
@@ -172,7 +172,7 @@ export default async function CoachTeamPage() {
             </div>
           </div>
 
-          <div className="grid min-w-[280px] grid-cols-2 gap-3">
+          <div className="grid w-full grid-cols-2 gap-3 sm:max-w-[320px]">
             {[
               { label: "Seats", value: `${workspace.metrics.seatsUsed}/${workspace.seatsIncluded}` },
               { label: "Active coaches", value: String(workspace.metrics.activeCoaches) },
@@ -242,9 +242,34 @@ export default async function CoachTeamPage() {
       <section className="rounded-[22px] border border-slate-200 bg-white shadow-sm">
         <div className="border-b border-slate-100 px-6 py-4">
           <h2 className="text-lg font-black tracking-[-0.03em] text-slate-900">Shared client roster</h2>
-          <p className="mt-1 text-sm text-slate-500">Birincil koç ve ekip gorunurlugu artik tenant seviyesinde izleniyor.</p>
+          <p className="mt-1 text-sm text-slate-500">Birincil koc ve ekip gorunurlugu artik tenant seviyesinde izleniyor.</p>
         </div>
-        <div className="overflow-x-auto">
+
+        <div className="space-y-3 p-4 md:hidden">
+          {workspace.sharedClients.map((item) => (
+            <div key={item.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-black text-slate-900">{item.client.name}</div>
+                  <div className="mt-1 text-xs text-slate-500">{item.client.email}</div>
+                </div>
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-600">{item.visibility}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Primary coach</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-800">{item.primaryCoach?.name ?? "Atanmadi"}</div>
+                </div>
+                <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Added</div>
+                  <div className="mt-1 text-sm font-semibold text-slate-800">{formatDate(item.createdAt)}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="min-w-full border-collapse">
             <thead className="bg-slate-50">
               <tr>
@@ -262,9 +287,7 @@ export default async function CoachTeamPage() {
                     <div className="text-sm font-black text-slate-900">{item.client.name}</div>
                     <div className="mt-1 text-xs text-slate-500">{item.client.email}</div>
                   </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-slate-700">
-                    {item.primaryCoach?.name ?? "Atanmadi"}
-                  </td>
+                  <td className="px-6 py-4 text-sm font-semibold text-slate-700">{item.primaryCoach?.name ?? "Atanmadi"}</td>
                   <td className="px-6 py-4">
                     <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-600">{item.visibility}</span>
                   </td>

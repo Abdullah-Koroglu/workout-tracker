@@ -1,9 +1,10 @@
+import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
+import { notFound } from "next/navigation";
+
 import { ProgressCharts } from "@/components/coach/ProgressCharts";
 import { VolumeHeatmap } from "@/components/coach/VolumeHeatmap";
 import { prisma } from "@/lib/prisma";
-import { notFound } from "next/navigation";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
 
 export default async function ClientProgressPage({
   params,
@@ -19,7 +20,6 @@ export default async function ClientProgressPage({
 
   if (!client) return notFound();
 
-  // Get all exercises that have been completed by this client
   const exercises = await prisma.exercise.findMany({
     where: {
       workoutSets: {
@@ -39,52 +39,69 @@ export default async function ClientProgressPage({
     },
   });
 
+  const initials = client.name
+    .split(" ")
+    .map((part: string) => part[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   if (exercises.length === 0) {
     return (
-      <div className="space-y-5">
-        <section className="rounded-2xl bg-secondary px-5 py-6 text-white shadow-md">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-black flex-shrink-0 shadow-md">
-              {client.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+      <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:pb-10">
+        <section className="rounded-[24px] bg-secondary px-5 py-6 text-white shadow-md">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-black text-white shadow-md">
+              {initials}
             </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/60">İlerleme Analizi</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Ilerleme Analizi</p>
               <h1 className="text-xl font-black">{client.name}</h1>
-              <p className="text-sm text-white/60 mt-0.5">{client.email}</p>
+              <p className="mt-0.5 truncate text-sm text-white/60">{client.email}</p>
             </div>
-            <Link href={`/coach/clients/${clientId}`} className="ml-auto flex items-center gap-1 rounded-xl bg-white/10 hover:bg-white/20 transition-colors px-3 py-2 text-xs font-semibold text-white flex-shrink-0">
-              <ChevronLeft className="w-3.5 h-3.5" />
+            <Link
+              href={`/coach/clients/${clientId}`}
+              className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
               Geri
             </Link>
           </div>
         </section>
-        <div className="rounded-xl bg-muted/40 p-8 text-center">
-          <p className="text-muted-foreground">Henüz tamamlanan workout bulunamadı.</p>
+
+        <div className="rounded-[24px] border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+          Henuz tamamlanan workout bulunamadi.
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-5">
-      <section className="rounded-2xl bg-secondary px-5 py-6 text-white shadow-md">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-white text-xl font-black flex-shrink-0 shadow-md">
-            {client.name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:pb-10">
+      <section className="rounded-[24px] bg-secondary px-5 py-6 text-white shadow-md">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary text-xl font-black text-white shadow-md">
+            {initials}
           </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">İlerleme Analizi</p>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-semibold uppercase tracking-widest text-white/60">Ilerleme Analizi</p>
             <h1 className="text-xl font-black">{client.name}</h1>
-            <p className="text-sm text-white/60 mt-0.5">{client.email}</p>
+            <p className="mt-0.5 truncate text-sm text-white/60">{client.email}</p>
           </div>
-          <Link href={`/coach/clients/${clientId}`} className="ml-auto flex items-center gap-1 rounded-xl bg-white/10 hover:bg-white/20 transition-colors px-3 py-2 text-xs font-semibold text-white flex-shrink-0">
-            <ChevronLeft className="w-3.5 h-3.5" />
+          <Link
+            href={`/coach/clients/${clientId}`}
+            className="inline-flex items-center gap-1 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/20"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
             Geri
           </Link>
         </div>
       </section>
-      <VolumeHeatmap clientId={clientId} />
-      <ProgressCharts clientId={clientId} exercises={exercises} />
+
+      <div className="grid gap-5">
+        <VolumeHeatmap clientId={clientId} />
+        <ProgressCharts clientId={clientId} exercises={exercises} />
+      </div>
     </div>
   );
 }

@@ -140,11 +140,11 @@ export function PageHero({
     >
       {/* ── Decorative circles (design-language style) ── */}
       <div
-        className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full sm:-right-10 sm:-top-10 sm:h-48 sm:w-48"
+        className="pointer-events-none absolute right-4 top-4 h-28 w-28 rounded-full sm:right-6 sm:top-6 sm:h-40 sm:w-40"
         style={{ background: isLight ? "rgba(249,115,22,0.08)" : "rgba(255,255,255,0.06)" }}
       />
       <div
-        className="pointer-events-none absolute -bottom-10 -left-8 h-32 w-32 rounded-full"
+        className="pointer-events-none absolute bottom-4 left-4 h-20 w-20 rounded-full sm:bottom-6 sm:left-6 sm:h-28 sm:w-28"
         style={{ background: isLight ? "rgba(15,23,42,0.04)" : "rgba(255,255,255,0.04)" }}
       />
       {/* Small accent dot near top-left */}

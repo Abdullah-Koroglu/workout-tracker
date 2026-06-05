@@ -44,7 +44,7 @@ export default async function HomePage({
     <main className="min-h-screen bg-[#F8FAFC] text-slate-900">
       <section className="border-b border-slate-200 bg-[#0F172A] text-white">
         <div className="mx-auto flex min-h-[92vh] max-w-7xl flex-col px-5 pb-10 pt-6 lg:px-8">
-          <nav className="flex items-center justify-between gap-4">
+          <nav className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <Image src="/logo.png" alt={dictionary.common.productName} width={44} height={44} className="object-contain" />
               <div>
@@ -55,7 +55,7 @@ export default async function HomePage({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex w-full flex-wrap items-center justify-end gap-2 sm:w-auto sm:flex-nowrap">
               <LocaleToggle pathname="/" locale={locale} tone="dark" />
               <Link
                 href={buildLocalizedPath("/login", locale)}
@@ -65,7 +65,7 @@ export default async function HomePage({
               </Link>
               <Link
                 href={buildLocalizedPath("/register", locale, { role: "coach" })}
-                className="inline-flex h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-400 to-orange-600 px-4 text-sm font-black text-white shadow-sm transition hover:opacity-95"
+                className="inline-flex min-w-[152px] h-10 items-center justify-center rounded-xl bg-gradient-to-r from-orange-400 to-orange-600 px-4 text-sm font-black text-white shadow-sm transition hover:opacity-95 sm:min-w-0"
               >
                 {dictionary.common.startAsCoach}
               </Link>

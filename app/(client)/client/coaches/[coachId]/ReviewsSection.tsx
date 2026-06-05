@@ -54,7 +54,7 @@ export function ReviewsSection({ coachId, canReview }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <div
             className="flex h-8 w-8 items-center justify-center rounded-xl"
@@ -73,7 +73,7 @@ export function ReviewsSection({ coachId, canReview }: Props) {
           )}
         </div>
         {reviews.length > 0 && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
             <AverageStars rating={avgRating} />
             <span className="text-sm font-black text-slate-700">{avgRating.toFixed(1)}</span>
           </div>

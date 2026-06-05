@@ -792,15 +792,15 @@ export function MessagesClient({
   // Desktop: no bottom nav; composer is absolute bottom-0 inside section.
   return (
     <div
-      className="flex flex-col overflow-hidden bg-background"
-      style={{ height: "calc(100dvh - 4rem)" }}
+      className="flex flex-col overflow-hidden rounded-none bg-background md:rounded-[28px] md:border md:border-slate-200 md:bg-white md:shadow-sm"
+      style={{ minHeight: "calc(100dvh - 4rem)" }}
     >
       <div className="flex min-h-0 flex-1">
 
         {/* ── Thread list ─────────────────────────────────────────────────── */}
         <aside
           className={[
-            "flex flex-col overflow-hidden border-r border-slate-200 bg-white",
+            "flex w-full flex-col overflow-hidden border-r border-slate-200 bg-white md:max-w-[360px]",
             showChat ? "hidden md:flex" : "flex",
           ].join(" ")}
         >
@@ -871,7 +871,7 @@ export function MessagesClient({
           </div>
 
           {/* Thread rows */}
-          <div className="chat-scroll min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto pb-20 md:pb-0">
+          <div className="chat-scroll min-h-0 flex-1 divide-y divide-slate-100 overflow-y-auto pb-24 md:pb-0">
             {threads.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-3 p-8 text-center text-muted-foreground">
                 <MessageCircle className="h-10 w-10 text-muted-foreground/30" />
@@ -963,7 +963,7 @@ export function MessagesClient({
         {/* ── Chat panel ──────────────────────────────────────────────────── */}
         <section
           className={[
-            "relative flex min-h-0 flex-col bg-white w-full",
+            "relative flex min-h-0 w-full flex-col bg-white",
             showChat ? "flex" : "hidden md:flex",
           ].join(" ")}
         >
@@ -1020,7 +1020,7 @@ export function MessagesClient({
                   pb-20 = composer clearance only on desktop (no nav bar) */}
               <div
                 ref={messagesContainerRef}
-                className="chat-scroll flex-1 overflow-y-auto px-4 py-4 pb-40 md:pb-20"
+                className="chat-scroll flex-1 overflow-y-auto px-4 py-4 pb-44 md:pb-24"
               >
                 {loadingMessages ? (
                   <div className="flex h-full items-center justify-center">
@@ -1105,8 +1105,8 @@ export function MessagesClient({
               */}
               <form
                 onSubmit={onSend}
-                className="fixed bottom-20 left-0 right-0 z-20 flex items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm md:absolute md:bottom-0 md:left-0 md:right-0 md:z-10"
-                style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom, 12px))" }}
+                className="fixed bottom-[calc(var(--app-mobile-nav-height)-0.25rem)] left-0 right-0 z-20 flex items-center gap-3 border-t border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-sm md:absolute md:bottom-0 md:left-0 md:right-0 md:z-10"
+                style={{ paddingBottom: "max(12px, env(safe-area-inset-bottom))" }}
               >
                 <button
                   type="button"

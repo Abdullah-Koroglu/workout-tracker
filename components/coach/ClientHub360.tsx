@@ -9,7 +9,7 @@ import {
 import {
   Bell, MessageCircle, ChevronLeft, TrendingUp, TrendingDown,
   AlertTriangle, Leaf, Calendar, ClipboardList,
-  Activity, User, BarChart2, Play,
+  Activity, User, BarChart2, Play, Camera, X, ChevronRight, Lock,
 } from "lucide-react";
 import type { TimelineItem } from "@/lib/coach-timeline";
 import { WorkoutHistoryPanel } from "@/components/coach/WorkoutHistoryPanel";
@@ -140,10 +140,10 @@ const CustomTooltip = ({ active, payload, label }: ChartTooltipProps) => {
 
 // ─── Tab bar ─────────────────────────────────────────────────────────────────
 const TABS = [
-  { key: "overview", label: "Özet", icon: Activity },
+  { key: "overview", label: "Ozet", icon: Activity },
   { key: "performance", label: "Performans", icon: BarChart2 },
-  { key: "body", label: "Vücut", icon: User },
-  { key: "history", label: "Geçmiş", icon: Calendar },
+  { key: "body", label: "Vucut", icon: User },
+  { key: "history", label: "Gecmis", icon: Calendar },
   { key: "feedback", label: "Videolar", icon: Play },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
@@ -198,10 +198,10 @@ function OverviewTab({
 
           <div className="grid w-full grid-cols-2 gap-2.5">
               {[
-                { label: "Son 7 Gün", value: `${completedLast7}/7` },
-                { label: "Son 30 Gün", value: `${completedLast30}/${heatmap.length}` },
-                { label: "Seri", value: `${currentStreak} gün` },
-                { label: "En Uzun", value: `${longestStreak} gün` },
+                { label: "Son 7 Gun", value: `${completedLast7}/7` },
+                { label: "Son 30 Gun", value: `${completedLast30}/${heatmap.length}` },
+                { label: "Seri", value: `${currentStreak} gun` },
+                { label: "En Uzun", value: `${longestStreak} gun` },
               ].map((metric) => (
                 <div key={metric.label} className="rounded-xl bg-slate-50 px-3 py-2 text-center">
                   <div className="text-[15px] font-black text-slate-800">{metric.value}</div>
@@ -246,22 +246,22 @@ function OverviewTab({
             <Link href="/coach/billing"
               className="flex h-8 items-center justify-center rounded-xl text-xs font-black text-white"
               style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 6px 16px rgba(249,115,22,0.24)" }}>
-              Planı Yönet
+              Plani Yonet
             </Link>
           </div>
         </div>
 
         {/* Red Flags / Notes */}
         <div className="rounded-2xl bg-white p-4 shadow-sm xl:col-span-1" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-          <p className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Uyarılar & Notlar</p>
+          <p className="mb-3 text-[10px] font-black uppercase tracking-wider text-slate-400">Uyarilar ve Notlar</p>
           <div className="flex flex-col gap-2.5">
             {/* Injury */}
             <div className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
               style={{ background: "#FEE2E2", border: "1px solid #FECACA", borderLeft: "3px solid #EF4444" }}>
               <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" />
               <div>
-                <p className="text-[12px] font-black text-red-700">🚨 Sağ Omuz Sorun</p>
-                <p className="text-xs text-red-600 mt-0.5">Rotator cuff bölgesinde rahatsızlık. Overhead hareketlerde yük azaltılacak.</p>
+                <p className="text-[12px] font-black text-red-700">Sag Omuz Sorunu</p>
+                <p className="text-xs text-red-600 mt-0.5">Rotator cuff bolgesinde rahatsizlik. Overhead hareketlerde yuk azaltilacak.</p>
               </div>
             </div>
             {/* Diet */}
@@ -269,8 +269,8 @@ function OverviewTab({
               style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderLeft: "3px solid #F59E0B" }}>
               <Leaf className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
               <div>
-                <p className="text-[12px] font-black text-amber-700">⚠️ Diyet Tercihi</p>
-                <p className="text-xs text-amber-600 mt-0.5">Vegan beslenme. Protein kaynakları plant-based olacak şekilde planlandı.</p>
+                <p className="text-[12px] font-black text-amber-700">Diyet Tercihi</p>
+                <p className="text-xs text-amber-600 mt-0.5">Vegan beslenme. Protein kaynaklari plant-based olacak sekilde planlandi.</p>
               </div>
             </div>
             {/* Sleep */}
@@ -278,17 +278,17 @@ function OverviewTab({
               style={{ background: "#FEF3C7", border: "1px solid #FDE68A", borderLeft: "3px solid #F59E0B" }}>
               <Activity className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
               <div>
-                <p className="text-[12px] font-black text-amber-700">⚠️ Uyku Düzeni</p>
-                <p className="text-xs text-amber-600 mt-0.5">Hafta içi ortalama 5.5 saat uyku. Recovery etkilenebilir.</p>
+                <p className="text-[12px] font-black text-amber-700">Uyku Duzeni</p>
+                <p className="text-xs text-amber-600 mt-0.5">Hafta ici ortalama 5.5 saat uyku. Recovery etkilenebilir.</p>
               </div>
             </div>
             {/* Coach note */}
             <div className="flex items-start gap-2.5 rounded-xl px-3 py-2.5"
               style={{ background: "#E0E7FF", border: "1px solid #C7D2FE", borderLeft: "3px solid #6366F1" }}>
-              <span className="mt-0.5 text-lg">📝</span>
+              <ClipboardList className="mt-0.5 h-4 w-4 flex-shrink-0 text-indigo-600" />
               <div>
-                <p className="text-[12px] font-black text-indigo-700">Koç Notu</p>
-                <p className="text-xs text-indigo-600 mt-0.5">Motivasyon yüksek, beklentileri gerçekçi. Sosyal medyada paylaşımları artırılabilir.</p>
+                <p className="text-[12px] font-black text-indigo-700">Koc Notu</p>
+                <p className="text-xs text-indigo-600 mt-0.5">Motivasyon yuksek, beklentileri gercekci. Sosyal medya paylasimlari artirilabilir.</p>
               </div>
             </div>
           </div>
@@ -298,7 +298,7 @@ function OverviewTab({
       {/* Upcoming assignments */}
       {assignments.length > 0 && (
         <div>
-          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Atanmış Programlar</p>
+          <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Atanmis Programlar</p>
           <AssignmentList assignments={assignments} />
         </div>
       )}
@@ -342,7 +342,7 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
         <div className="mb-3 flex items-center justify-between">
           <div>
             <p className="text-[13px] font-black text-slate-800">Tahmini 1RM Trendi</p>
-            <p className="text-[10px] text-slate-400">12 haftalık ilerleme</p>
+            <p className="text-[10px] text-slate-400">12 haftalik ilerleme</p>
           </div>
           {!hasStrength && (
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-400">
@@ -369,12 +369,12 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
         <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Bu Hafta</p>
           <p className="mt-1 text-2xl font-black text-slate-800">
-            {weeklyTonnage.current > 0 ? `${Math.round(weeklyTonnage.current / 1000 * 10) / 10}t` : "—"}
+            {weeklyTonnage.current > 0 ? `${Math.round(weeklyTonnage.current / 1000 * 10) / 10}t` : "-"}
           </p>
           <p className="text-xs text-slate-400">toplam tonaj</p>
         </div>
         <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Değişim</p>
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Degisim</p>
           {change !== null ? (
             <div className="flex items-center gap-1 mt-1">
               {change >= 0
@@ -387,20 +387,20 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
           ) : (
             <p className="mt-1 text-2xl font-black text-slate-300">—</p>
           )}
-          <p className="text-xs text-slate-400">geçen haftaya göre</p>
+            <p className="text-xs text-slate-400">gecen haftaya gore</p>
         </div>
       </div>
 
       <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
         <div className="mb-3 flex items-center justify-between">
-          <p className="text-[13px] font-black text-slate-800">Kişisel Rekorlar</p>
+          <p className="text-[13px] font-black text-slate-800">Kisisel Rekorlar</p>
           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-400">Maksimum 1RM</span>
         </div>
         <div className="grid gap-2.5">
           {prCards.map((record) => (
             <div key={record.name} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-xl" style={{ background: `${record.color}18` }}>
-                <span className="text-base">🏆</span>
+                <TrendingUp className="h-4 w-4" style={{ color: record.color }} />
               </div>
               <div className="flex-1">
                 <div className="text-[12px] font-bold text-slate-700">{record.name}</div>
@@ -416,7 +416,7 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
 
       {/* Mock tonnage bar chart */}
       <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
-        <p className="mb-3 text-[13px] font-black text-slate-800">Haftalık Tonaj Karşılaştırması</p>
+        <p className="mb-3 text-[13px] font-black text-slate-800">Haftalik Tonaj Karsilastirmasi</p>
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={[
             { week: "H8", current: 4200, prev: 3900 },
@@ -430,7 +430,7 @@ function PerformanceTab({ strengthTrend, weeklyTonnage }: Pick<ClientHub360Props
             <YAxis tick={{ fontSize: 10, fill: "#94A3B8" }} axisLine={false} tickLine={false} width={40}
               tickFormatter={(v) => `${Math.round(v / 1000 * 10) / 10}t`} />
             <Tooltip formatter={(v: number) => [`${Math.round(v / 1000 * 10) / 10}t`]} />
-            <Bar dataKey="prev" name="Önceki" fill="#E2E8F0" radius={[3, 3, 0, 0]} />
+            <Bar dataKey="prev" name="Onceki" fill="#E2E8F0" radius={[3, 3, 0, 0]} />
             <Bar dataKey="current" name="Bu Hafta" fill="#1A365D" radius={[3, 3, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -448,7 +448,7 @@ type BodyLogEntry = {
 };
 
 const PHOTO_SLOTS = [
-  { key: "frontPhotoUrl" as const, label: "Ön" },
+  { key: "frontPhotoUrl" as const, label: "On" },
   { key: "sidePhotoUrl" as const, label: "Yan" },
   { key: "backPhotoUrl" as const, label: "Arka" },
 ];
@@ -456,7 +456,7 @@ const PHOTO_SLOTS = [
 function BodyTab({ clientId }: { clientId: string }) {
   const [logs, setLogs] = useState<BodyLogEntry[]>([]);
   const [loadingLogs, setLoadingLogs] = useState(true);
-  const [modalAngle, setModalAngle] = useState<number | null>(null); // null = closed
+  const [modalAngle, setModalAngle] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/coach/clients/${clientId}/body-logs`)
@@ -466,13 +466,12 @@ function BodyTab({ clientId }: { clientId: string }) {
       .finally(() => setLoadingLogs(false));
   }, [clientId]);
 
-  // Close modal on Escape
   useEffect(() => {
     if (modalAngle === null) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape") setModalAngle(null);
-      if (e.key === "ArrowLeft") setModalAngle((p) => p !== null ? (p + 2) % 3 : null);
-      if (e.key === "ArrowRight") setModalAngle((p) => p !== null ? (p + 1) % 3 : null);
+      if (e.key === "ArrowLeft") setModalAngle((p) => (p !== null ? (p + 2) % 3 : null));
+      if (e.key === "ArrowRight") setModalAngle((p) => (p !== null ? (p + 1) % 3 : null));
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -486,13 +485,18 @@ function BodyTab({ clientId }: { clientId: string }) {
 
   const newestLog = logs[0] ?? null;
   const oldestLog = logs[logs.length - 1] ?? null;
-  const hasAnyPhoto = newestLog && (newestLog.frontPhotoUrl || newestLog.sidePhotoUrl || newestLog.backPhotoUrl
-    || oldestLog?.frontPhotoUrl || oldestLog?.sidePhotoUrl || oldestLog?.backPhotoUrl);
+  const hasAnyPhoto = newestLog && (
+    newestLog.frontPhotoUrl ||
+    newestLog.sidePhotoUrl ||
+    newestLog.backPhotoUrl ||
+    oldestLog?.frontPhotoUrl ||
+    oldestLog?.sidePhotoUrl ||
+    oldestLog?.backPhotoUrl
+  );
 
   const firstWeight = weightLogs[0]?.weight ?? null;
   const lastWeight = weightLogs[weightLogs.length - 1]?.weight ?? null;
-  const weightDelta = firstWeight !== null && lastWeight !== null
-    ? +(lastWeight - firstWeight).toFixed(1) : null;
+  const weightDelta = firstWeight !== null && lastWeight !== null ? +(lastWeight - firstWeight).toFixed(1) : null;
 
   return (
     <div className="flex flex-col gap-4">
@@ -502,7 +506,6 @@ function BodyTab({ clientId }: { clientId: string }) {
       </div>
       <BodyTrackingSettings clientId={clientId} />
 
-      {/* ── Kilo Trendi ────────────────────────────────────────────────────── */}
       {loadingLogs ? (
         <div className="h-32 animate-pulse rounded-2xl bg-slate-100" />
       ) : weightChartData.length >= 2 ? (
@@ -510,14 +513,14 @@ function BodyTab({ clientId }: { clientId: string }) {
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-[13px] font-black text-slate-800">Kilo Trendi</p>
-              <p className="text-[10px] text-slate-400">{logs.length} kayıt · kg</p>
+              <p className="text-[10px] text-slate-400">{logs.length} kayit - kg</p>
             </div>
-            {weightDelta !== null && (
-              <span className="rounded-full px-2.5 py-1 text-[11px] font-black text-white"
-                style={{ background: weightDelta <= 0 ? "#22C55E" : "#EF4444" }}>
-                {weightDelta > 0 ? "+" : ""}{weightDelta} kg
+            {weightDelta !== null ? (
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-black text-white" style={{ background: weightDelta <= 0 ? "#22C55E" : "#EF4444" }}>
+                {weightDelta > 0 ? "+" : ""}
+                {weightDelta} kg
               </span>
-            )}
+            ) : null}
           </div>
           <ResponsiveContainer width="100%" height={160}>
             <LineChart data={weightChartData} margin={{ top: 4, right: 4, left: -20, bottom: 4 }}>
@@ -531,279 +534,216 @@ function BodyTab({ clientId }: { clientId: string }) {
         </div>
       ) : null}
 
-      {/* ── Before / After — 3-angle thumbnail grid ────────────────────────── */}
-      {!loadingLogs && newestLog && oldestLog && newestLog.id !== oldestLog.id && hasAnyPhoto && (
+      {!loadingLogs && newestLog && oldestLog && newestLog.id !== oldestLog.id && hasAnyPhoto ? (
         <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
           <div className="mb-3 flex items-center justify-between">
             <div>
               <p className="text-[13px] font-black text-slate-800">Before / After</p>
               <p className="text-[10px] text-slate-400">
                 {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                {" → "}
+                {" -> "}
                 {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                {" · Büyütmek için tıkla"}
+                {" - Buyutmek icin tikla"}
               </p>
             </div>
-            <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-600">
-              3 açı
-            </span>
+            <span className="rounded-full bg-purple-50 px-2 py-0.5 text-[10px] font-black text-purple-600">3 aci</span>
           </div>
 
-          {/* Thumbnail grid: 3 columns, each showing before+after stacked */}
           <div className="grid grid-cols-3 gap-2">
             {PHOTO_SLOTS.map((slot, idx) => {
               const beforeUrl = oldestLog[slot.key];
               const afterUrl = newestLog[slot.key];
               const hasPhoto = beforeUrl || afterUrl;
               return (
-                <button
-                  key={slot.key}
-                  type="button"
-                  onClick={() => setModalAngle(idx)}
-                  className="group flex flex-col gap-1 focus:outline-none"
-                >
-                  <p className="text-center text-[10px] font-black uppercase tracking-wider text-slate-400 group-hover:text-purple-600 transition-colors">
-                    {slot.label}
-                  </p>
-                  {/* Before thumb */}
-                  <div
-                    className="relative overflow-hidden rounded-xl ring-1 ring-slate-200 group-hover:ring-purple-300 transition-all"
-                    style={{ aspectRatio: "3/4" }}
-                  >
+                <button key={slot.key} type="button" onClick={() => setModalAngle(idx)} className="group flex flex-col gap-1 focus:outline-none">
+                  <p className="text-center text-[10px] font-black uppercase tracking-wider text-slate-400 transition-colors group-hover:text-purple-600">{slot.label}</p>
+                  <div className="relative overflow-hidden rounded-xl ring-1 ring-slate-200 transition-all group-hover:ring-purple-300" style={{ aspectRatio: "3/4" }}>
                     {beforeUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={beforeUrl} alt={`before-${slot.label}`} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-slate-50 text-[18px]">📷</div>
+                      <div className="flex h-full w-full items-center justify-center bg-slate-50 text-[18px]">+</div>
                     )}
-                    <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-black text-white">ÖNCE</span>
+                    <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-black text-white">ONCE</span>
                   </div>
-                  {/* After thumb */}
-                  <div
-                    className="relative overflow-hidden rounded-xl ring-2 ring-purple-200 group-hover:ring-purple-500 transition-all"
-                    style={{ aspectRatio: "3/4" }}
-                  >
+                  <div className="relative overflow-hidden rounded-xl ring-2 ring-purple-200 transition-all group-hover:ring-purple-500" style={{ aspectRatio: "3/4" }}>
                     {afterUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={afterUrl} alt={`after-${slot.label}`} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-purple-50 text-[18px]">📷</div>
+                      <div className="flex h-full w-full items-center justify-center bg-purple-50 text-[18px]">+</div>
                     )}
                     <span className="absolute bottom-1 left-1 rounded bg-black/55 px-1 py-0.5 text-[8px] font-black text-white">SONRA</span>
                   </div>
-                  {/* Zoom hint */}
-                  {hasPhoto && (
-                    <p className="text-center text-[9px] text-slate-300 group-hover:text-purple-400 transition-colors">
-                      🔍 Büyüt
-                    </p>
-                  )}
+                  {hasPhoto ? <p className="text-center text-[9px] text-slate-300 transition-colors group-hover:text-purple-400">Buyut</p> : null}
                 </button>
               );
             })}
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* ── Photo Modal ─────────────────────────────────────────────────────── */}
-      {modalAngle !== null && newestLog && oldestLog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          style={{ background: "rgba(0,0,0,0.85)" }}
-          onClick={() => setModalAngle(null)}
-        >
-          <div
-            className="relative w-full max-w-lg rounded-2xl bg-[#0F0F0F] p-4 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
+      {modalAngle !== null && newestLog && oldestLog ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.85)" }} onClick={() => setModalAngle(null)}>
+          <div className="relative w-full max-w-lg rounded-2xl bg-[#0F0F0F] p-4 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex items-center justify-between">
               <div>
-                <p className="text-[15px] font-black text-white">
-                  {PHOTO_SLOTS[modalAngle].label} Fotoğraf
-                </p>
-                <p className="text-[11px] text-white/50">
-                  {new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                  {" → "}
-                  {new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                </p>
+                <p className="text-[15px] font-black text-white">{PHOTO_SLOTS[modalAngle].label} Fotograf</p>
+                <p className="text-[11px] text-white/50">{new Date(oldestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}{" -> "}{new Date(newestLog.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => setModalAngle(null)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 hover:bg-white/10 hover:text-white transition-colors text-lg"
-              >
-                ✕
+              <button type="button" onClick={() => setModalAngle(null)} className="flex h-8 w-8 items-center justify-center rounded-full text-white/60 transition-colors hover:bg-white/10 hover:text-white" aria-label="Modal kapat">
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            {/* Before / After full size */}
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "ÖNCE", url: oldestLog[PHOTO_SLOTS[modalAngle].key], date: oldestLog.date },
+                { label: "ONCE", url: oldestLog[PHOTO_SLOTS[modalAngle].key], date: oldestLog.date },
                 { label: "SONRA", url: newestLog[PHOTO_SLOTS[modalAngle].key], date: newestLog.date },
               ].map(({ label, url, date }) => (
                 <div key={label} className="flex flex-col gap-1.5">
-                  <div
-                    className="relative overflow-hidden rounded-xl"
-                    style={{
-                      aspectRatio: "3/4",
-                      border: label === "SONRA" ? "2px solid #7C3AED" : "2px solid #374151",
-                    }}
-                  >
+                  <div className="relative overflow-hidden rounded-xl" style={{ aspectRatio: "3/4", border: label === "SONRA" ? "2px solid #7C3AED" : "2px solid #374151" }}>
                     {url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
                       <img src={url} alt={label} className="h-full w-full object-cover" />
                     ) : (
-                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-zinc-900 text-2xl">
-                        <span>📷</span>
-                        <span className="text-[11px] text-white/30">Fotoğraf yok</span>
+                      <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-zinc-900">
+                        <Camera className="h-6 w-6 text-white/35" />
+                        <span className="text-[11px] text-white/30">Fotograf yok</span>
                       </div>
                     )}
-                    <span
-                      className="absolute bottom-2 left-2 rounded-lg px-2 py-0.5 text-[10px] font-black text-white"
-                      style={{ background: label === "SONRA" ? "#7C3AED" : "#374151" }}
-                    >
-                      {label}
-                    </span>
+                    <span className="absolute bottom-2 left-2 rounded-lg px-2 py-0.5 text-[10px] font-black text-white" style={{ background: label === "SONRA" ? "#7C3AED" : "#374151" }}>{label}</span>
                   </div>
-                  <p className="text-center text-[10px] text-white/40">
-                    {new Date(date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
-                  </p>
+                  <p className="text-center text-[10px] text-white/40">{new Date(date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}</p>
                 </div>
               ))}
             </div>
 
-            {/* Pagination — prev / dots / next */}
             <div className="mt-4 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setModalAngle((modalAngle + 2) % 3)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-lg"
-              >
-                ←
+              <button type="button" onClick={() => setModalAngle((modalAngle + 2) % 3)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20" aria-label="Onceki aci">
+                <ChevronLeft className="h-4 w-4" />
               </button>
-
               <div className="flex items-center gap-2">
                 {PHOTO_SLOTS.map((slot, idx) => (
-                  <button
-                    key={slot.key}
-                    type="button"
-                    onClick={() => setModalAngle(idx)}
-                    className="flex flex-col items-center gap-1 transition-all"
-                  >
-                    <div
-                      className="rounded-full transition-all"
-                      style={{
-                        width: idx === modalAngle ? 24 : 8,
-                        height: 8,
-                        background: idx === modalAngle ? "#7C3AED" : "rgba(255,255,255,0.25)",
-                      }}
-                    />
-                    <span
-                      className="text-[9px] font-black transition-colors"
-                      style={{ color: idx === modalAngle ? "#A78BFA" : "rgba(255,255,255,0.3)" }}
-                    >
-                      {slot.label}
-                    </span>
+                  <button key={slot.key} type="button" onClick={() => setModalAngle(idx)} className="flex flex-col items-center gap-1 transition-all">
+                    <div className="rounded-full transition-all" style={{ width: idx === modalAngle ? 24 : 8, height: 8, background: idx === modalAngle ? "#7C3AED" : "rgba(255,255,255,0.25)" }} />
+                    <span className="text-[9px] font-black transition-colors" style={{ color: idx === modalAngle ? "#A78BFA" : "rgba(255,255,255,0.3)" }}>{slot.label}</span>
                   </button>
                 ))}
               </div>
-
-              <button
-                type="button"
-                onClick={() => setModalAngle((modalAngle + 1) % 3)}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors text-lg"
-              >
-                →
+              <button type="button" onClick={() => setModalAngle((modalAngle + 1) % 3)} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20" aria-label="Sonraki aci">
+                <ChevronRight className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
-      )}
+      ) : null}
 
-      {/* ── Body Metrics Log Table ──────────────────────────────────────────── */}
       <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
         <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
-          <p className="text-[13px] font-black text-slate-800">Vücut Ölçümleri</p>
-          <span className="text-[11px] text-slate-400">{logs.length} kayıt</span>
+          <p className="text-[13px] font-black text-slate-800">Vucut Olcumleri</p>
+          <span className="text-[11px] text-slate-400">{logs.length} kayit</span>
         </div>
         {loadingLogs ? (
-          <div className="p-4 space-y-2">
-            {[1, 2, 3].map((i) => <div key={i} className="h-8 animate-pulse rounded-lg bg-slate-100" />)}
-          </div>
+          <div className="space-y-2 p-4">{[1, 2, 3].map((i) => <div key={i} className="h-8 animate-pulse rounded-lg bg-slate-100" />)}</div>
         ) : logs.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 py-10">
-            <span className="text-3xl">📏</span>
-            <p className="text-[13px] text-slate-400">Henüz ölçüm girilmemiş.</p>
+            <Camera className="h-8 w-8 text-slate-300" />
+            <p className="text-[13px] text-slate-400">Henuz olcum girilmemis.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-slate-100 bg-slate-50">
-                  {["Tarih", "Kilo", "Omuz", "Göğüs", "Bel", "Kalça", "Kol", "Bacak", "Foto"].map((h) => (
-                    <th key={h} className="px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-wider text-slate-400 whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {logs.slice(0, 15).map((row, i) => {
-                  const prev = logs[i + 1];
-                  const wDiff = prev?.weight != null && row.weight != null
-                    ? +(row.weight - prev.weight).toFixed(1) : null;
-                  return (
-                    <tr key={row.id} className="border-b border-slate-50 hover:bg-slate-50/60">
-                      <td className="px-4 py-2.5 text-[12px] font-semibold text-slate-600 whitespace-nowrap">
-                        {new Date(row.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}
-                      </td>
-                      <td className="px-4 py-2.5 whitespace-nowrap">
-                        {row.weight != null ? (
-                          <span className="flex items-center gap-1">
-                            <span className="text-[13px] font-black text-slate-800">{row.weight}</span>
-                            {wDiff !== null && wDiff !== 0 && (
-                              <span className="text-[10px] font-bold" style={{ color: wDiff < 0 ? "#22C55E" : "#EF4444" }}>
-                                {wDiff < 0 ? "↓" : "↑"}{Math.abs(wDiff)}
-                              </span>
-                            )}
-                          </span>
-                        ) : <span className="text-slate-300 text-[12px]">—</span>}
-                      </td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.shoulder ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.chest ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.waist ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.hips ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.arm ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.leg ?? <span className="text-slate-300">—</span>}</td>
-                      <td className="px-4 py-2.5 text-[14px]">
-                        {row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl
-                          ? <button type="button" onClick={() => setModalAngle(0)} className="text-purple-500 hover:text-purple-700">📸</button>
-                          : "—"}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="space-y-3 p-4 md:hidden">
+              {logs.slice(0, 15).map((row, i) => {
+                const prev = logs[i + 1];
+                const wDiff = prev?.weight != null && row.weight != null ? +(row.weight - prev.weight).toFixed(1) : null;
+                const hasPhoto = row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl;
+                return (
+                  <div key={row.id} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-black text-slate-800">{new Date(row.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</p>
+                        <p className="mt-1 text-xs text-slate-500">Vucut takip kaydi</p>
+                      </div>
+                      {hasPhoto ? (
+                        <button type="button" onClick={() => setModalAngle(0)} className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple-200 bg-white text-purple-600" aria-label="Fotograflari ac">
+                          <Camera className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                    </div>
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                      {[
+                        { label: "Kilo", value: row.weight != null ? `${row.weight} kg` : "-" },
+                        { label: "Omuz", value: row.shoulder ?? "-" },
+                        { label: "Gogus", value: row.chest ?? "-" },
+                        { label: "Bel", value: row.waist ?? "-" },
+                        { label: "Kalca", value: row.hips ?? "-" },
+                        { label: "Kol", value: row.arm ?? "-" },
+                        { label: "Bacak", value: row.leg ?? "-" },
+                        { label: "Degisim", value: wDiff !== null && wDiff !== 0 ? `${wDiff < 0 ? "-" : "+"}${Math.abs(wDiff)} kg` : "-" },
+                      ].map((item) => (
+                        <div key={item.label} className="rounded-xl bg-white px-3 py-2">
+                          <p className="text-[10px] font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+                          <p className="mt-1 text-sm font-bold text-slate-800">{item.value}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-slate-100 bg-slate-50">
+                    {["Tarih", "Kilo", "Omuz", "Gogus", "Bel", "Kalca", "Kol", "Bacak", "Foto"].map((h) => (
+                      <th key={h} className="whitespace-nowrap px-4 py-2.5 text-left text-[10px] font-black uppercase tracking-wider text-slate-400">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {logs.slice(0, 15).map((row, i) => {
+                    const prev = logs[i + 1];
+                    const wDiff = prev?.weight != null && row.weight != null ? +(row.weight - prev.weight).toFixed(1) : null;
+                    return (
+                      <tr key={row.id} className="border-b border-slate-50 hover:bg-slate-50/60">
+                        <td className="whitespace-nowrap px-4 py-2.5 text-[12px] font-semibold text-slate-600">{new Date(row.date).toLocaleDateString("tr-TR", { day: "numeric", month: "short" })}</td>
+                        <td className="whitespace-nowrap px-4 py-2.5">
+                          {row.weight != null ? (
+                            <span className="flex items-center gap-1">
+                              <span className="text-[13px] font-black text-slate-800">{row.weight}</span>
+                              {wDiff !== null && wDiff !== 0 ? <span className="text-[10px] font-bold" style={{ color: wDiff < 0 ? "#22C55E" : "#EF4444" }}>{wDiff < 0 ? "v" : "^"}{Math.abs(wDiff)}</span> : null}
+                            </span>
+                          ) : <span className="text-[12px] text-slate-300">-</span>}
+                        </td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.shoulder ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.chest ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.waist ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.hips ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.arm ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[13px] font-black text-slate-800">{row.leg ?? <span className="text-slate-300">-</span>}</td>
+                        <td className="px-4 py-2.5 text-[14px]">{row.frontPhotoUrl || row.sidePhotoUrl || row.backPhotoUrl ? <button type="button" onClick={() => setModalAngle(0)} className="text-purple-500 hover:text-purple-700" aria-label="Fotograflari ac"><Camera className="h-4 w-4" /></button> : "-"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
     </div>
   );
 }
 
-// ─── TAB 4: History & Media ───────────────────────────────────────────────────
+// TAB 4: History & Media ───────────────────────────────────────────────────
 function HistoryTab({
   heatmap, timelineItems, currentPage, totalPages, clientId,
 }: Pick<ClientHub360Props, "heatmap" | "timelineItems" | "currentPage" | "totalPages" | "clientId">) {
   const FORM_CHECKS = [
-    { id: 1, exercise: "Back Squat - Ağır Set 3", note: "Paralel altı iniş yok, gözden geçir", date: "28 Nis" },
-    { id: 2, exercise: "Romanian Deadlift - Set 2", note: "Sırt düzlüğü kontrol et", date: "26 Nis" },
+    { id: 1, exercise: "Back Squat - Agir Set 3", note: "Paralel alti inis yok, gozden gecir", date: "28 Nis" },
+    { id: 2, exercise: "Romanian Deadlift - Set 2", note: "Sirt duzlugu kontrol et", date: "26 Nis" },
     { id: 3, exercise: "Overhead Press - Set 4", note: "Dirsek pozisyonu", date: "24 Nis" },
   ];
 
-  const DAY_LABELS = ["Pzt", "", "Çrş", "", "Cum", "", "Paz"];
-
-  // Group heatmap into weeks (7-day rows)
+  const DAY_LABELS = ["Pzt", "", "Crs", "", "Cum", "", "Paz"];
   const weeks: HeatCell[][] = [];
   for (let i = 0; i < heatmap.length; i += 7) {
     weeks.push(heatmap.slice(i, i + 7));
@@ -812,120 +752,110 @@ function HistoryTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        {/* Form Check Inbox */}
         <div className="rounded-2xl bg-white shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
           <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3">
             <div className="flex items-center gap-2">
               <ClipboardList className="h-4 w-4 text-slate-400" />
               <p className="text-[13px] font-black text-slate-800">Form Kontrol Gelen Kutusu</p>
             </div>
-            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black text-orange-600">
-              {FORM_CHECKS.length} bekleyen
-            </span>
+            <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-black text-orange-600">{FORM_CHECKS.length} bekleyen</span>
           </div>
           <div className="divide-y divide-slate-50">
             {FORM_CHECKS.map((fc) => (
               <div key={fc.id} className="flex items-center gap-3 px-4 py-3">
-                {/* Video thumb placeholder */}
                 <div className="relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-xl bg-slate-200">
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="flex h-7 w-7 items-center justify-center rounded-full bg-white/80">
-                      <Play className="h-3.5 w-3.5 text-slate-600 ml-0.5" />
+                      <Play className="ml-0.5 h-3.5 w-3.5 text-slate-600" />
                     </div>
                   </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-slate-800 truncate">{fc.exercise}</p>
-                  <p className="text-xs text-slate-400 truncate">{fc.note}</p>
-                  <p className="text-[10px] text-slate-300 mt-0.5">{fc.date}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-bold text-slate-800">{fc.exercise}</p>
+                  <p className="truncate text-xs text-slate-400">{fc.note}</p>
+                  <p className="mt-0.5 text-[10px] text-slate-300">{fc.date}</p>
                 </div>
-                <button className="flex-shrink-0 rounded-xl px-3 py-1.5 text-xs font-black text-white transition hover:opacity-90"
-                  style={{ background: "#1A365D" }}>
-                  İncele
+                <button className="flex-shrink-0 rounded-xl px-3 py-1.5 text-xs font-black text-white transition hover:opacity-90" style={{ background: "#1A365D" }}>
+                  Incele
                 </button>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Consistency Heatmap */}
         <div className="rounded-2xl bg-white p-4 shadow-sm" style={{ border: "1px solid rgba(0,0,0,0.06)" }}>
           <div className="mb-3 flex items-center justify-between">
             <div>
-              <p className="text-[13px] font-black text-slate-800">30 Günlük Tutarlılık</p>
-              <p className="text-[10px] text-slate-400">Her kare = 1 gün</p>
+              <p className="text-[13px] font-black text-slate-800">30 Gunluk Tutarlilik</p>
+              <p className="text-[10px] text-slate-400">Her kare = 1 gun</p>
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-slate-400">
+            <div className="hidden items-center gap-2 text-[10px] text-slate-400 sm:flex">
               <span className="h-3 w-3 rounded bg-green-400" /> Tamam
-              <span className="h-3 w-3 rounded bg-red-400" /> Kaçırıldı
+              <span className="h-3 w-3 rounded bg-red-400" /> Kacirildi
               <span className="h-3 w-3 rounded bg-slate-200" /> Dinlenme
             </div>
           </div>
-          <div className="overflow-x-auto  p-4">
-            <div className="flex gap-0.5 ">
-              {/* Day labels */}
-              <div className="mr-1 flex flex-col gap-0.5 ">
+          <div className="overflow-x-auto p-3 sm:p-4">
+            <div className="flex gap-0.5">
+              <div className="mr-1 flex flex-col gap-0.5">
                 {DAY_LABELS.map((d, i) => (
-                  <div key={i} className="flex h-14 w-6 items-center" style={{ fontSize: 9, color: "#94A3B8" }}>{d}</div>
+                  <div key={i} className="flex h-10 w-5 items-center sm:h-14 sm:w-6" style={{ fontSize: 9, color: "#94A3B8" }}>
+                    {d}
+                  </div>
                 ))}
               </div>
-              {/* Columns (each week) */}
               {weeks.map((week, wi) => (
                 <div key={wi} className="flex flex-col gap-1">
                   {week.map((cell, di) => {
-                    const bg = cell.status === "completed" ? "#4ADE80"
-                      : cell.status === "missed" ? "#F87171"
-                      : "#E2E8F0";
+                    const bg = cell.status === "completed" ? "#4ADE80" : cell.status === "missed" ? "#F87171" : "#E2E8F0";
                     return (
-                      <div key={di} className="rounded cursor-pointer transition-all duration-150" title={`${cell.date}: ${cell.status}`}
-                        style={{ width: 54, height: 54, background: bg }}
+                      <div
+                        key={di}
+                        className="cursor-pointer rounded transition-all duration-150"
+                        title={`${cell.date}: ${cell.status}`}
+                        style={{ width: 38, height: 38, background: bg }}
                         onMouseEnter={(e) => {
-                          (e.target as HTMLElement).style.transform = "scale(1.25)";
-                          (e.target as HTMLElement).style.boxShadow = `0 4px 12px #ffffff66`;
+                          (e.target as HTMLElement).style.transform = "scale(1.12)";
+                          (e.target as HTMLElement).style.boxShadow = "0 4px 12px #ffffff66";
                         }}
                         onMouseLeave={(e) => {
                           (e.target as HTMLElement).style.transform = "scale(1)";
                           (e.target as HTMLElement).style.boxShadow = "none";
-                        }} />
+                        }}
+                      />
                     );
                   })}
                 </div>
               ))}
             </div>
           </div>
-          {/* Stats */}
-          <div className="mt-4 grid grid-cols-3 gap-3">
+          <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
             {[
-              { label: "Tamamlanan", value: heatmap.filter(h => h.status === "completed").length, color: "#22C55E" },
-              { label: "Kaçırılan", value: heatmap.filter(h => h.status === "missed").length, color: "#EF4444" },
-              { label: "Dinlenme", value: heatmap.filter(h => h.status === "rest").length, color: "#94A3B8" },
-            ].map(s => (
+              { label: "Tamamlanan", value: heatmap.filter((h) => h.status === "completed").length, color: "#22C55E" },
+              { label: "Kacirilan", value: heatmap.filter((h) => h.status === "missed").length, color: "#EF4444" },
+              { label: "Dinlenme", value: heatmap.filter((h) => h.status === "rest").length, color: "#94A3B8" },
+            ].map((s) => (
               <div key={s.label} className="rounded-xl px-3 py-2.5" style={{ background: `${s.color}10`, border: `1px solid ${s.color}26` }}>
                 <p className="text-lg font-black" style={{ color: s.color }}>{s.value}</p>
-                <p className="text-[10px] text-slate-400 mt-0.5">{s.label}</p>
+                <p className="mt-0.5 text-[10px] text-slate-400">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Full workout timeline */}
       <div>
-        <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Antrenman Geçmişi</p>
+        <p className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-400">Antrenman Gecmisi</p>
         <WorkoutHistoryPanel items={timelineItems} />
         <div className="mt-3">
-          <PaginationControls
-            basePath={`/coach/clients/${clientId}?tab=history`}
-            currentPage={currentPage}
-            totalPages={totalPages}
-          />
+          <PaginationControls basePath={`/coach/clients/${clientId}?tab=history`} currentPage={currentPage} totalPages={totalPages} />
         </div>
       </div>
     </div>
   );
 }
 
-// ─── TAB 5: Feedback (Movement Videos) ───────────────────────────────────────
+// TAB 5: Feedback (Movement Videos) ───────────────────────────────────────
 function FeedbackTab({ clientId }: { clientId: string }) {
   const [videos, setVideos] = useState<Array<{
     id: string;
@@ -946,11 +876,11 @@ function FeedbackTab({ clientId }: { clientId: string }) {
         setLoading(true);
         setError(null);
         const res = await fetch(`/api/coach/clients/${clientId}/movement-videos?limit=100`);
-        if (!res.ok) throw new Error("Videolar yüklenemedi.");
+        if (!res.ok) throw new Error("Videolar yuklenemedi.");
         const data = await res.json();
         setVideos(data.videos);
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Bir hata oluştu.");
+        setError(err instanceof Error ? err.message : "Bir hata olustu.");
       } finally {
         setLoading(false);
       }
@@ -959,15 +889,15 @@ function FeedbackTab({ clientId }: { clientId: string }) {
     fetchVideos();
   }, [clientId]);
 
-  if (loading) return <div className="p-4 text-center text-slate-500">Videolar yükleniyor...</div>;
+  if (loading) return <div className="p-4 text-center text-slate-500">Videolar yukleniyor...</div>;
   if (error) return <div className="p-4 text-center text-red-600">{error}</div>;
 
   if (videos.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center">
         <Play className="mx-auto mb-3 h-8 w-8 text-slate-300" />
-        <p className="text-sm font-semibold text-slate-600">Henüz video yok</p>
-        <p className="mt-1 text-xs text-slate-500">İstemci antrenman içinden veya serbest form analizi ekranından video gönderdiğinde burada görünür.</p>
+        <p className="text-sm font-semibold text-slate-600">Henuz video yok</p>
+        <p className="mt-1 text-xs text-slate-500">Istemci antrenman icinden veya serbest form analizi ekranindan video gonderdiginde burada gorunur.</p>
       </div>
     );
   }
@@ -975,63 +905,33 @@ function FeedbackTab({ clientId }: { clientId: string }) {
   return (
     <div className="space-y-3">
       {videos.map((video) => (
-        <button
-          key={video.id}
-          onClick={() => setSelectedVideo(video.id)}
-          className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md"
-          style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
-        >
+        <button key={video.id} onClick={() => setSelectedVideo(video.id)} className="w-full overflow-hidden rounded-2xl bg-white text-left shadow-sm transition hover:shadow-md" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}>
           <div className="flex flex-col gap-3 p-4 md:flex-row md:items-center md:gap-4">
-            {/* Thumbnail */}
             <div className="relative aspect-video w-full flex-shrink-0 overflow-hidden rounded-lg bg-black md:w-32">
-              <video
-                src={video.videoPath}
-                className="h-full w-full object-cover"
-                preload="metadata"
-              />
+              <video src={video.videoPath} className="h-full w-full object-cover" preload="metadata" />
               <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition group-hover:bg-black/30">
                 <Play className="h-6 w-6 text-white opacity-60" />
               </div>
-              {!video.watchedByCoach && (
-                <div className="absolute top-2 right-2 h-3 w-3 rounded-full bg-orange-500" title="Yeni video" />
-              )}
+              {!video.watchedByCoach && <div className="absolute right-2 top-2 h-3 w-3 rounded-full bg-orange-500" title="Yeni video" />}
             </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                {video.movementName}
-              </p>
-              <p className="mt-1 text-xs text-slate-600">
-                {new Date(video.createdAt).toLocaleDateString("tr-TR")} • {video.durationSeconds}s
-              </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-wider text-slate-500">{video.movementName}</p>
+              <p className="mt-1 text-xs text-slate-600">{new Date(video.createdAt).toLocaleDateString("tr-TR")} - {video.durationSeconds}s</p>
               <div className="mt-2 flex items-center gap-2">
-                <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
-                  {video.commentCount} yorum
-                </span>
-                {!video.watchedByCoach && (
-                  <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
-                    YENİ
-                  </span>
-                )}
+                <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>{video.commentCount} yorum</span>
+                {!video.watchedByCoach && <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>YENI</span>}
               </div>
             </div>
           </div>
         </button>
       ))}
 
-      {selectedVideo && (
-        <MovementVideoDetailModal
-          videoId={selectedVideo}
-          isOpen={!!selectedVideo}
-          onClose={() => setSelectedVideo(null)}
-        />
-      )}
+      {selectedVideo && <MovementVideoDetailModal videoId={selectedVideo} isOpen={!!selectedVideo} onClose={() => setSelectedVideo(null)} />}
     </div>
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// Main Component ───────────────────────────────────────────────────────────
 export function ClientHub360(props: ClientHub360Props) {
   const { clientId, name, age, weightKg, goal,
     completedWorkouts, totalWorkouts, complianceScore, subscriptionTier,
@@ -1069,7 +969,7 @@ export function ClientHub360(props: ClientHub360Props) {
             <h1 className="truncate text-[18px] font-black leading-tight text-white lg:text-slate-800">{name}</h1>
             <div className="mt-1 flex flex-wrap gap-1.5">
               {age && (
-                <span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] font-bold text-white/80 lg:bg-slate-100 lg:text-slate-500">{age} yaş</span>
+                <span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] font-bold text-white/80 lg:bg-slate-100 lg:text-slate-500">{age} yas</span>
               )}
               {weightKg && (
                 <span className="rounded-full bg-white/12 px-2 py-0.5 text-[10px] font-bold text-white/80 lg:bg-slate-100 lg:text-slate-500">{weightKg} kg</span>
@@ -1079,7 +979,7 @@ export function ClientHub360(props: ClientHub360Props) {
               )}
             </div>
             <div className="mt-1.5 flex items-center gap-2">
-              <span className="text-[10px] font-bold text-white/60 lg:text-slate-400">{completedWorkouts}/{totalWorkouts} tamamlandı</span>
+              <span className="text-[10px] font-bold text-white/60 lg:text-slate-400">{completedWorkouts}/{totalWorkouts} tamamlandi</span>
               {cScore !== null && (
                 <span className="text-[10px] font-black" style={{ color: cColor(cScore) }}>%{cScore} uyum</span>
               )}
@@ -1100,7 +1000,7 @@ export function ClientHub360(props: ClientHub360Props) {
                   ? "bg-white text-[#1A365D] lg:border-b-2 lg:border-orange-500 lg:bg-transparent lg:text-orange-500"
                   : "bg-transparent text-white/60 lg:border-b-2 lg:border-transparent lg:text-slate-400 lg:hover:text-slate-600"}`}>
                 {label}
-                {isLocked && <span className="ml-0.5 text-[9px]">🔒</span>}
+                {isLocked && <Lock className="ml-0.5 h-3 w-3" />}
               </button>
             );
           })}

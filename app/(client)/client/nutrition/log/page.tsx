@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { ArrowLeft, Camera, Loader2, RefreshCw } from "lucide-react";
+
 import { useNotificationContext } from "@/contexts/NotificationContext";
 
 type AdherenceTag = "GREEN" | "YELLOW" | "RED";
@@ -25,9 +26,30 @@ const TAGS: Array<{
   bg: string;
   ring: string;
 }> = [
-  { tag: "GREEN", emoji: "🟢", title: "Plana Tam Uydum", subtitle: "Hedef makrolar tutturuldu", bg: "linear-gradient(135deg, #22C55E, #15803D)", ring: "#22C55E" },
-  { tag: "YELLOW", emoji: "🟡", title: "Hafif Sapma", subtitle: "Küçük bir kayma oldu", bg: "linear-gradient(135deg, #F59E0B, #B45309)", ring: "#F59E0B" },
-  { tag: "RED", emoji: "🔴", title: "Cheat Meal", subtitle: "Plan dışıydı, yine de paylaş", bg: "linear-gradient(135deg, #EF4444, #B91C1C)", ring: "#EF4444" },
+  {
+    tag: "GREEN",
+    emoji: "G",
+    title: "Plana Tam Uydum",
+    subtitle: "Hedef makrolar buyuk oranda tuttu",
+    bg: "linear-gradient(135deg, #22C55E, #15803D)",
+    ring: "#22C55E",
+  },
+  {
+    tag: "YELLOW",
+    emoji: "Y",
+    title: "Hafif Sapma",
+    subtitle: "Kucuk bir kayma oldu ama kontrol bende",
+    bg: "linear-gradient(135deg, #F59E0B, #B45309)",
+    ring: "#F59E0B",
+  },
+  {
+    tag: "RED",
+    emoji: "R",
+    title: "Plan Disi",
+    subtitle: "Beklenmedik bir ogun oldu, yine de kaydet",
+    bg: "linear-gradient(135deg, #EF4444, #B91C1C)",
+    ring: "#EF4444",
+  },
 ];
 
 export default function NutritionLogPage() {
@@ -63,6 +85,7 @@ export default function NutritionLogPage() {
       setPreviewUrl(null);
       return;
     }
+
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
@@ -72,11 +95,11 @@ export default function NutritionLogPage() {
     const next = event.target.files?.[0] ?? null;
     if (!next) return;
     if (!next.type.startsWith("image/")) {
-      warning("Sadece görsel dosyası yükleyebilirsin.");
+      warning("Sadece gorsel dosyasi yukleyebilirsin.");
       return;
     }
     if (next.size > 8 * 1024 * 1024) {
-      warning("Görsel 8MB'den büyük olamaz.");
+      warning("Gorsel 8MB'den buyuk olamaz.");
       return;
     }
     setFile(next);
@@ -88,7 +111,7 @@ export default function NutritionLogPage() {
 
   const onSubmit = async () => {
     if (!tag) {
-      warning("Bir uyum etiketi seç.");
+      warning("Bir uyum etiketi sec.");
       return;
     }
 
@@ -108,7 +131,7 @@ export default function NutritionLogPage() {
     } catch (uploadError) {
       console.error(uploadError);
       setSubmitting(false);
-      error("Bağlantı hatası. Tekrar dene.");
+      error("Baglanti hatasi. Tekrar dene.");
       return;
     }
 
@@ -116,18 +139,16 @@ export default function NutritionLogPage() {
     setSubmitting(false);
 
     if (!response.ok) {
-      console.log(data.error);
-      
-      error(typeof data.error === "string" ? data.error : "Öğün kaydedilemedi.");
+      error(typeof data.error === "string" ? data.error : "Ogun kaydedilemedi.");
       return;
     }
 
-    success("Öğün kaydedildi. Koçun bilgilendirildi.");
+    success("Ogun kaydedildi. Kocun bilgilendirildi.");
     router.push("/client/dashboard");
   };
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-5 px-4 pb-32 pt-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pb-[calc(var(--app-mobile-nav-height)+2rem)] pt-4 md:gap-6 md:pb-12">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -137,14 +158,14 @@ export default function NutritionLogPage() {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div>
-          <h1 className="text-[20px] font-black leading-tight text-slate-800">Öğün Kaydet</h1>
-          <p className="text-xs text-slate-400">Saniyeler içinde, kalori sayma yok.</p>
+          <h1 className="text-[20px] font-black leading-tight text-slate-800 md:text-[24px]">Ogun Kaydet</h1>
+          <p className="text-xs text-slate-400 md:text-sm">Hizli kayit, net takip, koctan kopmadan.</p>
         </div>
       </div>
 
-      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm md:p-5">
         <div className="mb-2 flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Koç Planın</p>
+          <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Koc Plani</p>
           {planLoading ? (
             <Loader2 className="h-3.5 w-3.5 animate-spin text-slate-300" />
           ) : (
@@ -161,10 +182,10 @@ export default function NutritionLogPage() {
                 {plan.instructions}
               </p>
             ) : (
-              <p className="text-xs text-slate-400">Koçun henüz özel talimat yazmadı.</p>
+              <p className="text-xs text-slate-400">Kocun henuz ozel talimat yazmadi.</p>
             )}
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="rounded-xl bg-slate-50 px-3 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kalori</p>
                 <p className="text-sm font-black text-slate-800">{plan.targetCalories ?? "-"}</p>
@@ -178,7 +199,7 @@ export default function NutritionLogPage() {
                 <p className="text-sm font-black text-slate-800">{plan.targetCarbs ?? "-"} g</p>
               </div>
               <div className="rounded-xl bg-slate-50 px-3 py-2">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Yağ</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Yag</p>
                 <p className="text-sm font-black text-slate-800">{plan.targetFats ?? "-"} g</p>
               </div>
             </div>
@@ -190,13 +211,13 @@ export default function NutritionLogPage() {
                 rel="noreferrer"
                 className="flex w-full items-center justify-center rounded-2xl bg-slate-800 px-4 py-3 text-xs font-black uppercase tracking-wider text-white"
               >
-                Diyet Dokumanini Ac
+                Diyet dokumanini ac
               </a>
             ) : null}
           </div>
         ) : (
           <p className="text-xs text-slate-400">
-            Koçun planını henüz paylaşmadı. Yine de öğününü gönderip davranış akışını sürdürebilirsin.
+            Kocun planini henuz paylasmadi. Yine de ogununu gonderip davranis akisini surdurebilirsin.
           </p>
         )}
       </section>
@@ -212,14 +233,14 @@ export default function NutritionLogPage() {
 
       {previewUrl ? (
         <div className="relative aspect-square w-full overflow-hidden rounded-3xl bg-slate-100 shadow-sm">
-          <Image src={previewUrl} alt="Öğün önizleme" fill className="object-cover" sizes="100vw" unoptimized />
+          <Image src={previewUrl} alt="Ogun onizleme" fill className="object-cover" sizes="100vw" unoptimized />
           <button
             type="button"
             onClick={triggerPicker}
             className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-white/90 px-3 py-2 text-xs font-black text-slate-700 shadow-lg backdrop-blur"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-            Tekrar Çek
+            Tekrar cek
           </button>
         </div>
       ) : (
@@ -233,14 +254,14 @@ export default function NutritionLogPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white shadow-sm">
               <Camera className="h-7 w-7" />
             </div>
-            <span className="text-sm font-black text-slate-600">Öğün fotoğrafı çek</span>
-            <span className="text-[11px] text-slate-400">Dokun → kamera açılır</span>
+            <span className="text-sm font-black text-slate-600">Ogun fotografi cek</span>
+            <span className="text-[11px] text-slate-400">Dokun, kamera acilir</span>
           </div>
         </button>
       )}
 
       <div className="flex flex-col gap-3">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Bugün nasıldın?</p>
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Bugun nasildin?</p>
         <div className="flex flex-col gap-2.5">
           {TAGS.map((item) => {
             const active = tag === item.tag;
@@ -257,7 +278,9 @@ export default function NutritionLogPage() {
                   outline: active ? `3px solid ${item.ring}` : "none",
                 }}
               >
-                <span className="text-3xl">{item.emoji}</span>
+                <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-base font-black">
+                  {item.emoji}
+                </span>
                 <div>
                   <p className="text-sm font-black leading-tight">{item.title}</p>
                   <p className="text-[11px] opacity-80">{item.subtitle}</p>
@@ -269,15 +292,15 @@ export default function NutritionLogPage() {
       </div>
 
       <label className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Sesli not / İtiraf</span>
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Not</span>
         <textarea
           value={note}
           onChange={(event) => setNote(event.target.value)}
           rows={4}
-          placeholder="Bugün biraz stresliyim, akşam yemekte bir dilim pizza yedim..."
+          placeholder="Bugun biraz stresliyim, aksam yemekte bir dilim pizza yedim..."
           className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700 focus:border-orange-400 focus:bg-white focus:outline-none"
         />
-        <span className="text-[10px] text-slate-300">Yakında: tek dokunuşla sesli kayıt.</span>
+        <span className="text-[10px] text-slate-300">Yakinda: tek dokunusla sesli kayit.</span>
       </label>
 
       <button
@@ -288,7 +311,7 @@ export default function NutritionLogPage() {
         style={{ background: "linear-gradient(135deg, #FB923C, #EA580C)", boxShadow: "0 12px 24px rgba(234,88,12,0.35)" }}
       >
         {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-        {submitting ? "Yükleniyor..." : "Öğünü Gönder"}
+        {submitting ? "Yukleniyor..." : "Ogunu Gonder"}
       </button>
     </div>
   );

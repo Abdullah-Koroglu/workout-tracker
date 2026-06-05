@@ -22,6 +22,7 @@ import {
 import { signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { useNotificationContext } from "@/contexts/NotificationContext";
 import { InviteLinkBox } from "@/components/coach/BillingSubscriptionPage";
 import { PageHero } from "@/components/shared/PageHero";
@@ -278,7 +279,7 @@ export default function CoachProfilePage() {
   });
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:space-y-6 md:pb-16">
       {/* ── Hero banner ── */}
       <PageHero
         // eyebrow="Elite Coach"
@@ -307,12 +308,12 @@ export default function CoachProfilePage() {
       />
 
       {/* ── 2-col desktop layout ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         {/* ── LEFT: vitrin form ── */}
-        <div className="xl:col-span-2 space-y-5">
+        <div className="space-y-5 xl:col-span-2">
           {/* Bio card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -380,7 +381,7 @@ export default function CoachProfilePage() {
             </div>
 
             {/* Experience + Social grid */}
-            <div className="mb-5 grid gap-4 sm:grid-cols-4">
+            <div className="mb-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
               <div className="space-y-1.5">
                 <label className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-400">
                   <Star className="h-3.5 w-3.5" />
@@ -448,7 +449,7 @@ export default function CoachProfilePage() {
               type="button"
               onClick={handleSaveProfile}
               disabled={saving}
-              className="flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-black uppercase tracking-wider text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
               style={{
                 background: "linear-gradient(135deg, #FB923C, #EA580C)",
                 boxShadow: "0 4px 14px rgba(249,115,22,0.35)",
@@ -465,7 +466,7 @@ export default function CoachProfilePage() {
 
           {/* Specialties card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -517,7 +518,7 @@ export default function CoachProfilePage() {
             )}
 
             {/* Input */}
-            <div className="mb-4 flex gap-2">
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row">
               <input
                 type="text"
                 value={specialtyInput}
@@ -534,7 +535,7 @@ export default function CoachProfilePage() {
               <button
                 type="button"
                 onClick={() => addSpecialty(specialtyInput)}
-                className="flex h-11 w-11 items-center justify-center rounded-xl text-white transition-opacity hover:opacity-90"
+                className="flex h-11 w-full items-center justify-center rounded-xl text-white transition-opacity hover:opacity-90 sm:w-11"
                 style={{
                   background: "linear-gradient(135deg, #FB923C, #EA580C)",
                 }}
@@ -567,7 +568,7 @@ export default function CoachProfilePage() {
 
           {/* Packages card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -707,7 +708,7 @@ export default function CoachProfilePage() {
                 placeholder="Paket açıklaması (opsiyonel)..."
                 className={textareaCls}
               />
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <div className="relative flex-1">
                   <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-300">
                     ₺
@@ -725,7 +726,7 @@ export default function CoachProfilePage() {
                   type="button"
                   onClick={handleAddPackage}
                   disabled={pkgSaving}
-                  className="flex items-center gap-2 rounded-xl px-5 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+                  className="flex h-11 w-full items-center justify-center gap-2 rounded-xl px-5 text-sm font-black text-white transition-opacity hover:opacity-90 disabled:opacity-50 sm:w-auto"
                   style={{
                     background: "linear-gradient(135deg, #FB923C, #EA580C)",
                     boxShadow: "0 4px 10px rgba(249,115,22,0.3)",
@@ -773,7 +774,7 @@ export default function CoachProfilePage() {
         <div className="space-y-4">
           {/* Profile completeness */}
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -782,13 +783,15 @@ export default function CoachProfilePage() {
             <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400">
               Avatar
             </h3>
-            <div className="flex items-center gap-3">
-              <div className="h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
+            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <div className="relative h-14 w-14 overflow-hidden rounded-2xl bg-slate-100">
                 {avatarUrl ? (
-                  <img
+                  <Image
                     src={avatarUrl}
                     alt="Coach avatar"
-                    className="h-full w-full object-cover"
+                    fill
+                    sizes="56px"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-sm font-black text-slate-500">
@@ -797,7 +800,7 @@ export default function CoachProfilePage() {
                 )}
               </div>
               <label
-                className="inline-flex cursor-pointer items-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-white"
+                className="inline-flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold text-white sm:w-auto"
                 style={{
                   background: "linear-gradient(135deg, #FB923C, #EA580C)",
                 }}
@@ -823,7 +826,7 @@ export default function CoachProfilePage() {
           </div>
 
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -847,7 +850,7 @@ export default function CoachProfilePage() {
               const pct = Math.round((score / checks.length) * 100);
               return (
                 <div className="space-y-3">
-                  <div className="flex items-end justify-between">
+                  <div className="flex items-end justify-between gap-3">
                     <span
                       className="text-2xl font-black"
                       style={{ color: pct === 100 ? "#22C55E" : "#F97316" }}
@@ -936,7 +939,7 @@ export default function CoachProfilePage() {
 
           {/* Quick links */}
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",
@@ -972,7 +975,7 @@ export default function CoachProfilePage() {
                 <a
                   key={href}
                   href={href}
-                  className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-slate-50"
+                  className="flex items-center justify-between gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
                 >
                   <div className="flex items-center gap-3">
                     <div
@@ -996,7 +999,7 @@ export default function CoachProfilePage() {
 
           {/* Account / logout */}
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{
               boxShadow:
                 "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)",

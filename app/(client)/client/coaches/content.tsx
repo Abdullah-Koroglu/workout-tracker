@@ -253,7 +253,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
 
   /* ─── Render ─────────────────────────────────────────── */
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:space-y-6 md:pb-10">
 
       {/* ── Hero header ── */}
       <PageHero
@@ -269,7 +269,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
       />
 
       {/* ── Tabs ── */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex gap-5 overflow-x-auto border-b border-slate-200">
         {[
           { k: "my"   as const, label: dictionary.clientCoachDiscovery.myCoachesTab, icon: UserCheck },
           { k: "find" as const, label: dictionary.clientCoachDiscovery.findCoachTab,  icon: Search },
@@ -483,7 +483,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
               <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-600">
                 {matchHeadline}
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <div className="relative flex-1">
                   <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                   <input
@@ -665,13 +665,13 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
                       className="group bg-white rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-lg"
                       style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
                     >
-                      <div className="flex items-center gap-5 p-5">
+                      <div className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:gap-5 sm:p-5">
                         {/* Avatar */}
                         <CoachAvatar name={coach.name} imageUrl={coach.avatarUrl} size={60} />
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="mb-1 flex flex-wrap items-center gap-2">
                             <p className="font-black text-slate-800 text-base leading-tight truncate">
                               {coach.name}
                             </p>
@@ -699,7 +699,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
                               </span>
                             )}
                           </div>
-                          <div className="flex items-center gap-4 text-xs text-slate-400 mb-2">
+                          <div className="mb-2 flex flex-wrap items-center gap-3 text-xs text-slate-400">
                             {profile?.city && (
                               <span className="flex items-center gap-1">
                                 📍 {profile.city}
@@ -719,7 +719,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
                         </div>
 
                         {/* Stats */}
-                        <div className="flex items-center gap-4 flex-shrink-0">
+                        <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:gap-4">
                           {profile?.rating != null && (
                             <div className="text-center">
                               <p className="text-base font-black text-slate-800">{Number(profile.rating).toFixed(1)}</p>
@@ -757,7 +757,7 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
                         </div>
 
                         {/* Price + CTA */}
-                        <div className="text-right flex-shrink-0">
+                        <div className="flex shrink-0 flex-col items-start sm:items-end">
                           {minPrice && (
                             <div>
                               <p className="text-lg font-black text-slate-800">{formatCurrency(Math.round(minPrice), locale)}</p>
@@ -986,19 +986,21 @@ export default function ClientCoachesContent({ lang }: { lang?: string }) {
       {/* Floating compare bar */}
       {compareIds.length >= 2 && (
         <div
-          className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-5 py-3 shadow-2xl"
+          className="fixed bottom-[calc(var(--app-mobile-nav-height)+0.75rem)] left-1/2 z-50 flex w-[calc(100%-1.5rem)] max-w-md -translate-x-1/2 items-center gap-3 rounded-2xl px-4 py-3 shadow-2xl md:bottom-6 md:w-auto md:px-5"
           style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)", color: "#fff" }}
         >
-          <span className="text-sm font-black">{compareIds.length} {dictionary.clientCoachDiscovery.compareBarSelected}</span>
+          <span className="min-w-0 flex-1 text-sm font-black">{compareIds.length} {dictionary.clientCoachDiscovery.compareBarSelected}</span>
           <button
+            type="button"
             onClick={() => router.push(buildLocalizedPath("/client/coaches/compare", locale, { ids: compareIds.join(",") }))}
-            className="rounded-xl bg-white px-4 py-1.5 text-xs font-black text-slate-800 transition-opacity hover:opacity-90"
+            className="shrink-0 rounded-xl bg-white px-4 py-1.5 text-xs font-black text-slate-800 transition-opacity hover:opacity-90"
           >
             {dictionary.clientCoachDiscovery.compareAction} →
           </button>
           <button
+            type="button"
             onClick={() => setCompareIds([])}
-            className="rounded-lg p-1 text-white/70 hover:text-white"
+            className="shrink-0 rounded-lg p-1 text-white/70 hover:text-white"
           >
             <X className="h-4 w-4" />
           </button>

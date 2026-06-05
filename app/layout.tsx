@@ -28,8 +28,8 @@ export const viewport: Viewport = {
   themeColor: "#111827",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false
+  maximumScale: 5,
+  userScalable: true
 };
 
 export default function RootLayout({
@@ -40,7 +40,6 @@ export default function RootLayout({
   return (
     <html lang="tr" suppressHydrationWarning>
       <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="theme-color" content="#111827" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -91,7 +90,7 @@ export default function RootLayout({
         <link rel="apple-touch-startup-image" href="/apple-splash-640-1136.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" />
         <link rel="apple-touch-startup-image" href="/apple-splash-1136-640.jpg" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)" />
       </head>
-      <body className={[  lexend.variable, ""].join(" ")}>
+      <body className={lexend.variable}>
         {/* <ThemeProvider> */}
           <AppSessionProvider>
             <AuthProvider>
@@ -99,7 +98,7 @@ export default function RootLayout({
                 <ConfirmationProvider>
                   <PwaRegister />
                   {/* <Navbar /> */}
-                  <main className="mx-auto min-h-[calc(100vh-64px)] bottom-0 m-0">
+                  <main className="min-h-screen">
                     {children}
                   </main>
                 </ConfirmationProvider>

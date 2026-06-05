@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useState } from "react";
@@ -125,15 +125,15 @@ export function CoachFilterPanel({
 
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              HÄ±zlÄ± Segment
+              Hizli Segment
             </label>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: "Hepsi", value: "all" as const },
                 { label: "Uygun Fiyat", value: "affordable" as const },
                 { label: "Performans", value: "performance" as const },
-                { label: "DÃ¶nÃ¼ÅŸÃ¼m", value: "transformation" as const },
-                { label: "YÃ¼ksek Puan", value: "highlyRated" as const },
+                { label: "Donusum", value: "transformation" as const },
+                { label: "Yuksek Puan", value: "highlyRated" as const },
                 { label: "Online", value: "online" as const },
               ].map(({ label, value }) => (
                 <button
@@ -155,11 +155,11 @@ export function CoachFilterPanel({
           {/* Price Range */}
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Fiyat Aralığı
+              Fiyat Araligi
             </label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 text-[10px] font-bold text-slate-400">Min (₺)</label>
+                <label className="mb-1 text-[10px] font-bold text-slate-400">Min (TL)</label>
                 <input
                   type="number"
                   min={0}
@@ -171,7 +171,7 @@ export function CoachFilterPanel({
                 />
               </div>
               <div>
-                <label className="mb-1 text-[10px] font-bold text-slate-400">Max (₺)</label>
+                <label className="mb-1 text-[10px] font-bold text-slate-400">Max (TL)</label>
                 <input
                   type="number"
                   min={0}
@@ -188,15 +188,15 @@ export function CoachFilterPanel({
           {/* Experience */}
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Tecrübe
+              Tecrube
             </label>
             <div className="flex flex-wrap gap-2">
               {[
                 { label: "Hepsi", value: null },
-                { label: "1+ yıl", value: 1 },
-                { label: "3+ yıl", value: 3 },
-                { label: "5+ yıl", value: 5 },
-                { label: "10+ yıl", value: 10 },
+                { label: "1+ yil", value: 1 },
+                { label: "3+ yil", value: 3 },
+                { label: "5+ yil", value: 5 },
+                { label: "10+ yil", value: 10 },
               ].map(({ label, value }) => (
                 <button
                   key={label}
@@ -242,12 +242,12 @@ export function CoachFilterPanel({
 
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              GÃ¼ven Sinyali
+              Guven Sinyali
             </label>
             <div className="flex gap-2">
               {[
                 { label: "Hepsi", value: false },
-                { label: "Sadece DoÄŸrulananlar", value: true },
+                { label: "Sadece Dogrulananlar", value: true },
               ].map(({ label, value }) => (
                 <button
                   key={label}
@@ -268,13 +268,13 @@ export function CoachFilterPanel({
           {/* City */}
           <div>
             <label className="mb-2.5 block text-xs font-bold uppercase tracking-wider text-slate-600">
-              Şehir
+              Sehir
             </label>
             <input
               type="text"
               value={filters.city}
               onChange={(e) => handleCityChange(e.target.value)}
-              placeholder="İstanbul, Ankara, İzmir..."
+              placeholder="Istanbul, Ankara, Izmir..."
               disabled={isLoading}
               maxLength={100}
               className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 placeholder-slate-400 focus:border-orange-400 focus:outline-none focus:ring-1 focus:ring-orange-100 disabled:opacity-50"

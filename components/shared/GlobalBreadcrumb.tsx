@@ -6,13 +6,13 @@ import { usePathname } from "next/navigation";
 import { Breadcrumb, type BreadcrumbItem } from "@/components/ui/breadcrumb";
 
 const SEGMENT_LABELS: Record<string, string> = {
-  coach: "Coach",
-  client: "Client",
-  dashboard: "Dashboard",
+  coach: "Koc",
+  client: "Danisan",
+  dashboard: "Panel",
   templates: "Sablonlar",
   workouts: "Antrenmanlar",
   clients: "Danisanlar",
-  coaches: "Coachlar",
+  coaches: "Koclar",
   exercises: "Egzersizler",
   progress: "Ilerleme",
   review: "Inceleme",
@@ -21,6 +21,15 @@ const SEGMENT_LABELS: Record<string, string> = {
   settings: "Ayarlar",
   new: "Yeni",
   edit: "Duzenle",
+  compare: "Karsilastir",
+  messages: "Mesajlar",
+  team: "Ekip",
+  billing: "Abonelik",
+  marketplace: "Pazar",
+  calendar: "Takvim",
+  nutrition: "Beslenme",
+  body: "Vucut",
+  mobility: "Mobilite",
   login: "Giris",
   register: "Kayit"
 };

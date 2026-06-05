@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   Award,
@@ -76,7 +76,7 @@ export default async function WorkoutDetailPage({
     include: { coach: { select: { name: true } } },
   });
 
-  /* ── Derived data ── */
+  /* â”€â”€ Derived data â”€â”€ */
   const isCompleted = workout.status === "COMPLETED";
 
   /* Build exercise order from template */
@@ -158,13 +158,13 @@ export default async function WorkoutDetailPage({
     ? durationMin >= 60
       ? `${Math.floor(durationMin / 60)}s ${durationMin % 60}dk`
       : `${durationMin} dk`
-    : "—";
+    : "-";
 
-  /* ── Stat cards config ── */
+  /* â”€â”€ Stat cards config â”€â”€ */
   const stats = [
     {
       icon: Clock,
-      label: "Süre",
+      label: "Sure",
       value: durationText,
       color: "#2563EB",
       bg: "rgba(37,99,235,0.08)",
@@ -185,7 +185,7 @@ export default async function WorkoutDetailPage({
     },
     {
       icon: Zap,
-      label: "Yoğunluk",
+      label: "Yogunluk",
       value: `${intensityScore} / 10`,
       color: "#16A34A",
       bg: "rgba(22,163,74,0.08)",
@@ -214,26 +214,26 @@ export default async function WorkoutDetailPage({
   };
 
   return (
-    <div className="pb-16">
+    <div className="pb-[calc(var(--app-mobile-nav-height)+2rem)] md:pb-16">
 
-      {/* ── Back link ── */}
+      {/* â”€â”€ Back link â”€â”€ */}
       <Link
         href="/client/workouts"
         className="mb-5 inline-flex items-center gap-1.5 text-xs font-bold text-slate-400 transition-colors hover:text-slate-700"
       >
         <ChevronLeft className="h-3.5 w-3.5" />
-        Antrenman Geçmişi
+        Antrenman Gecmisi
       </Link>
 
-      {/* ── Hero banner ── */}
+      {/* â”€â”€ Hero banner â”€â”€ */}
       <div className="mb-6">
         <PageHero
           title={workout.template.name}
           subtitle={workoutDate.toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
           glowColor={isCompleted ? "green" : "amber"}
           badge={isCompleted
-            ? { label: "Tamamlandı",      color: "#22C55E", bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.25)",  icon: CheckCircle2 }
-            : { label: "Yarıda Bırakıldı", color: "#F59E0B", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.25)", icon: XCircle }
+            ? { label: "Tamamlandi",      color: "#22C55E", bg: "rgba(34,197,94,0.15)",  border: "rgba(34,197,94,0.25)",  icon: CheckCircle2 }
+            : { label: "Yarida Birakildi", color: "#F59E0B", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.25)", icon: XCircle }
           }
         >
           {isCompleted && prExerciseNames.length > 0 && (
@@ -243,7 +243,7 @@ export default async function WorkoutDetailPage({
             >
               <Trophy className="h-4 w-4 text-amber-400" />
               <span className="text-xs font-black text-amber-300">
-                {prExerciseNames.length} yeni PR — {prExerciseNames.slice(0, 3).join(", ")}
+                {prExerciseNames.length} yeni PR - {prExerciseNames.slice(0, 3).join(", ")}
                 {prExerciseNames.length > 3 ? ` +${prExerciseNames.length - 3}` : ""}
               </span>
             </div>
@@ -251,7 +251,7 @@ export default async function WorkoutDetailPage({
         </PageHero>
       </div>
 
-      {/* ── Stat cards ── */}
+      {/* â”€â”€ Stat cards â”€â”€ */}
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map(({ icon: Icon, label, value, color, bg }) => (
           <div
@@ -268,16 +268,16 @@ export default async function WorkoutDetailPage({
         ))}
       </div>
 
-      {/* ── Main layout: left/right on lg+ ── */}
+      {/* â”€â”€ Main layout: left/right on lg+ â”€â”€ */}
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
 
-        {/* ── LEFT: Exercise breakdown (grows to fill) ── */}
+        {/* â”€â”€ LEFT: Exercise breakdown (grows to fill) â”€â”€ */}
         <div className="flex-1 min-w-0 space-y-4">
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-xl" style={{ background: "rgba(249,115,22,0.1)" }}>
               <Dumbbell className="h-4 w-4 text-orange-500" />
             </div>
-            <h2 className="text-base font-black text-slate-800">Egzersiz Detayı</h2>
+            <h2 className="text-base font-black text-slate-800">Egzersiz Detayi</h2>
             <span className="rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: "rgba(249,115,22,0.1)", color: "#EA580C" }}>
               {sortedExercises.length}
             </span>
@@ -285,7 +285,7 @@ export default async function WorkoutDetailPage({
 
           {sortedExercises.length === 0 ? (
             <div className="rounded-2xl bg-white p-8 text-center" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
-              <p className="text-sm text-slate-400">Bu antrenman için kayıtlı set bulunamadı.</p>
+              <p className="text-sm text-slate-400">Bu antrenman icin kayitli set bulunamadi.</p>
             </div>
           ) : (
             sortedExercises.map(([exerciseName, sets]) => {
@@ -316,7 +316,7 @@ export default async function WorkoutDetailPage({
                       <div>
                         <p className="font-black text-slate-800">{exerciseName}</p>
                         <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                          {isCardio ? "Kardiyo" : "Ağırlık"}
+                          {isCardio ? "Kardiyo" : "Agirlik"}
                         </p>
                         {exerciseMeta?.groupType === "SUPERSET" ? (
                           <p className="mt-1 text-[10px] font-black uppercase tracking-wider text-violet-600">
@@ -337,17 +337,65 @@ export default async function WorkoutDetailPage({
                         </span>
                       )}
                       <span className="rounded-full px-2.5 py-1 text-[10px] font-black" style={{ background: "rgba(249,115,22,0.08)", color: "#EA580C" }}>
-                        {exerciseMeta?.groupType === "DROPSET" ? `${uniqueSetCount} tur • ${sets.length} kayıt` : `${sets.length} set`}
+                        {exerciseMeta?.groupType === "DROPSET" ? `${uniqueSetCount} tur · ${sets.length} kayit` : `${sets.length} set`}
                       </span>
                     </div>
                   </div>
 
                   {/* Set table */}
-                  <div className="overflow-x-auto">
+                  <div className="space-y-2.5 md:hidden">
+                    {sets.map((set) => {
+                      const isPrSet =
+                        set.completed &&
+                        set.weightKg !== null &&
+                        (prevMaxByExercise[set.exerciseId] === undefined ||
+                          set.weightKg > (prevMaxByExercise[set.exerciseId] ?? 0));
+
+                      return (
+                        <div key={set.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-sm font-black text-slate-700">Set {set.setNumber}</span>
+                              {set.dropIndex !== null && set.dropIndex !== undefined ? (
+                                <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(244,63,94,0.12)", color: "#E11D48" }}>
+                                  Drop {set.dropIndex + 1}
+                                </span>
+                              ) : null}
+                              {exerciseMeta?.groupType === "SUPERSET" && set.groupInstanceId ? (
+                                <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(139,92,246,0.12)", color: "#7C3AED" }}>
+                                  SS
+                                </span>
+                              ) : null}
+                            </div>
+                            {isPrSet ? (
+                              <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(251,191,36,0.2)", color: "#B45309" }}>
+                                PR
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="mt-3 grid grid-cols-3 gap-2">
+                            <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Agirlik</div>
+                              <div className="mt-1 text-sm font-black text-slate-900">{set.weightKg ?? "-"}</div>
+                            </div>
+                            <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">Tekrar</div>
+                              <div className="mt-1 text-sm font-black text-slate-900">{set.reps ?? "-"}</div>
+                            </div>
+                            <div className="rounded-xl bg-white px-3 py-2 ring-1 ring-slate-200/80">
+                              <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-400">RIR</div>
+                              <div className="mt-1 text-sm font-black text-slate-900">{set.rir ?? "-"}</div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-left">
                       <thead>
                         <tr style={{ borderBottom: "1px solid #F1F5F9" }}>
-                          {["Set", "Ağırlık (kg)", "Tekrar", "RIR"].map((h) => (
+                          {["Set", "Agirlik (kg)", "Tekrar", "RIR"].map((h) => (
                             <th key={h} className="px-5 py-2.5 text-[10px] font-black uppercase tracking-wider text-slate-400">{h}</th>
                           ))}
                         </tr>
@@ -384,10 +432,10 @@ export default async function WorkoutDetailPage({
                                       <span className="rounded-full px-1.5 py-0.5 text-[9px] font-black uppercase" style={{ background: "rgba(251,191,36,0.2)", color: "#B45309" }}>PR</span>
                                     )}
                                   </span>
-                                ) : <span className="text-slate-400">—</span>}
+                                ) : <span className="text-slate-400">-</span>}
                               </td>
-                              <td className="px-5 py-3 text-sm font-bold text-slate-700">{set.reps ?? <span className="text-slate-400">—</span>}</td>
-                              <td className="px-5 py-3 text-sm text-slate-500">{set.rir ?? <span className="text-slate-400">—</span>}</td>
+                              <td className="px-5 py-3 text-sm font-bold text-slate-700">{set.reps ?? <span className="text-slate-400">-</span>}</td>
+                              <td className="px-5 py-3 text-sm text-slate-500">{set.rir ?? <span className="text-slate-400">-</span>}</td>
                             </tr>
                           );
                         })}
@@ -400,7 +448,7 @@ export default async function WorkoutDetailPage({
           )}
         </div>
 
-        {/* ── RIGHT: Sidebar — sticky on desktop ── */}
+        {/* â”€â”€ RIGHT: Sidebar - sticky on desktop â”€â”€ */}
         <div className="w-full space-y-4 lg:w-80 xl:w-96 lg:flex-shrink-0 lg:sticky lg:top-24 lg:self-start">
 
           {/* Coach comments */}
@@ -408,10 +456,10 @@ export default async function WorkoutDetailPage({
             <div className="px-5 py-4" style={{ background: "linear-gradient(135deg, #1A365D, #2D4A7A)" }}>
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquare className="h-4 w-4 text-white/60" />
-                <h3 className="text-[11px] font-black uppercase tracking-widest text-white/60">Koç Yorumları</h3>
+                <h3 className="text-[11px] font-black uppercase tracking-widest text-white/60">Koc Yorumlari</h3>
               </div>
               {workout.comments.length === 0 ? (
-                <p className="text-sm text-white/40">Henüz koç değerlendirmesi yok.</p>
+                <p className="text-sm text-white/40">Henuz koc degerlendirmesi yok.</p>
               ) : (
                 <div className="space-y-3">
                   {workout.comments.slice(0, 3).map((c) => (
@@ -433,7 +481,7 @@ export default async function WorkoutDetailPage({
             />
           )}
 
-          {/* Share card — in sidebar on desktop */}
+          {/* Share card - in sidebar on desktop */}
           {isCompleted && (
             <div className="hidden lg:block overflow-hidden">
               <WorkoutShareCard {...shareCardProps} />
@@ -448,7 +496,7 @@ export default async function WorkoutDetailPage({
               style={{ background: "#F8FAFC", border: "1px solid #E2E8F0" }}
             >
               <ChevronLeft className="h-4 w-4" />
-              Geçmişe Dön
+              Gecmise Don
             </Link>
             <Link
               href="/client/dashboard"
@@ -461,7 +509,7 @@ export default async function WorkoutDetailPage({
         </div>
       </div>
 
-      {/* Feedback section — Movement Videos */}
+      {/* Feedback section - Movement Videos */}
       {workout.movementVideos.length > 0 && (
         <div className="mt-8">
           <div className="flex items-center gap-2 mb-4">
@@ -503,14 +551,14 @@ export default async function WorkoutDetailPage({
                         {video.movementName}
                       </p>
                       <p className="mt-1 text-xs text-slate-500">
-                        {new Date(video.createdAt).toLocaleDateString("tr-TR")} • {video.durationSeconds}s
+                        {new Date(video.createdAt).toLocaleDateString("tr-TR")} · {video.durationSeconds}s
                       </p>
                     </div>
 
                     {/* Comments */}
                     {video.comments.length === 0 ? (
                       <div className="text-xs text-slate-400 italic">
-                        Henüz yorum yok. Koç görünce yorum yapacak.
+                        Henuz yorum yok. Koc gorunce yorum yapacak.
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -546,7 +594,7 @@ export default async function WorkoutDetailPage({
         </div>
       )}
 
-      {/* Share card — full width on mobile */}
+      {/* Share card - full width on mobile */}
       {isCompleted && (
         <div className="mt-6 lg:hidden">
           <WorkoutShareCard {...shareCardProps} />
@@ -555,3 +603,7 @@ export default async function WorkoutDetailPage({
     </div>
   );
 }
+
+
+
+

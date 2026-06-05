@@ -128,7 +128,7 @@ export default function ClientProfilePage() {
     "focus:outline-none focus:ring-2 focus:ring-orange-400 transition placeholder:text-slate-300";
 
   return (
-    <div className="space-y-6 pb-16">
+    <div className="space-y-5 pb-[calc(var(--app-mobile-nav-height)+2rem)] md:space-y-6 md:pb-16">
 
       {/* ── Hero banner ── */}
       <PageHero
@@ -145,14 +145,14 @@ export default function ClientProfilePage() {
       />
 
       {/* ── Desktop 2-col layout ── */}
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
 
         {/* ── LEFT: physical info + goal + level ── */}
-        <div className="xl:col-span-2 space-y-5">
+        <div className="space-y-5 xl:col-span-2">
 
           {/* Physical info card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="mb-5 flex items-center gap-2">
@@ -239,7 +239,7 @@ export default function ClientProfilePage() {
             {/* BMI bar */}
             {bmiInfo && (
               <div
-                className="mt-4 flex items-center justify-between rounded-xl px-4 py-3"
+                className="mt-4 flex items-center justify-between gap-4 rounded-xl px-4 py-3"
                 style={{ background: `${bmiInfo.color}12`, border: `1px solid ${bmiInfo.color}30` }}
               >
                 <div>
@@ -256,7 +256,7 @@ export default function ClientProfilePage() {
 
           {/* Fitness Goal card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="mb-5 flex items-center gap-2">
@@ -277,7 +277,7 @@ export default function ClientProfilePage() {
                     key={value}
                     type="button"
                     onClick={() => setGoal(active ? "" : value)}
-                    className="flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-150"
+                    className="flex min-h-[72px] items-center gap-3 rounded-xl px-4 py-3 text-left transition-all duration-150"
                     style={
                       active
                         ? {
@@ -303,7 +303,7 @@ export default function ClientProfilePage() {
 
           {/* Fitness Level card */}
           <div
-            className="rounded-2xl bg-white p-6"
+            className="app-panel p-5 sm:p-6"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <div className="mb-5 flex items-center gap-2">
@@ -316,7 +316,7 @@ export default function ClientProfilePage() {
               <h2 className="text-base font-black text-slate-800">Fitness Seviyem</h2>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               {FITNESS_LEVELS.map(({ value, label, sub }, i) => {
                 const active = fitnessLevel === value;
                 const colors = [
@@ -329,7 +329,7 @@ export default function ClientProfilePage() {
                     key={value}
                     type="button"
                     onClick={() => setFitnessLevel(active ? "" : value)}
-                    className="flex flex-col items-center rounded-xl p-4 transition-all duration-150"
+                    className="flex min-h-[112px] flex-col items-center justify-center rounded-xl p-4 text-center transition-all duration-150"
                     style={
                       active
                         ? {
@@ -372,14 +372,14 @@ export default function ClientProfilePage() {
 
           {/* Coach connections card */}
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Hızlı Erişim</h3>
             <div className="space-y-2">
               <Link
                 href="/client/coaches"
-                className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-slate-50"
+                className="flex items-center justify-between gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -398,7 +398,7 @@ export default function ClientProfilePage() {
 
               <Link
                 href="/client/calendar"
-                className="flex items-center justify-between rounded-xl p-3 transition-colors hover:bg-slate-50"
+                className="flex items-center justify-between gap-3 rounded-xl p-3 transition-colors hover:bg-slate-50"
               >
                 <div className="flex items-center gap-3">
                   <div
@@ -419,7 +419,7 @@ export default function ClientProfilePage() {
 
           {/* Danger zone */}
           <div
-            className="rounded-2xl bg-white p-5"
+            className="app-panel p-5"
             style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)" }}
           >
             <h3 className="mb-4 text-[11px] font-black uppercase tracking-widest text-slate-400">Hesap</h3>

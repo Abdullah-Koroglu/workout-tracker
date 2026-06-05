@@ -318,6 +318,7 @@ export function RegisterContent() {
                 </label>
                 <input
                   type="text"
+                  autoComplete="name"
                   placeholder={dictionary.register.namePlaceholder}
                   {...form.register("name")}
                   className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -333,6 +334,7 @@ export function RegisterContent() {
                 </label>
                 <input
                   type="email"
+                  autoComplete="email"
                   placeholder={dictionary.register.emailPlaceholder}
                   {...form.register("email")}
                   className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"
@@ -349,6 +351,7 @@ export function RegisterContent() {
                 <div className="relative">
                   <input
                     type={showPass ? "text" : "password"}
+                    autoComplete="new-password"
                     placeholder={dictionary.register.passwordPlaceholder}
                     {...form.register("password")}
                     className="h-11 w-full rounded-xl border-0 bg-slate-50 px-4 pr-11 text-sm text-slate-800 placeholder-slate-400 ring-1 ring-black/8 transition focus:outline-none focus:ring-2 focus:ring-orange-400"

@@ -95,14 +95,14 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       if ((prev[activeExerciseId] || 0) === 0) return prev;
       return { ...prev, [activeExerciseId]: 0 };
     });
-    warning("Kardiyo akışı sıfırlandı. Yeniden başlatabilirsin.");
+    warning("Kardiyo akis sifirlandi. Yeniden baslatabilirsin.");
   }, [activeExerciseId, warning]);
 
   // Show loading state while initializing
   if (workoutState.isLoading) {
     return (
       <div className="rounded-3xl border p-8 text-sm text-muted-foreground">
-        Antrenman hazırlanıyor, öneriler toplanıyor...
+        Antrenman hazirlaniyor, oneriler toplaniyor...
       </div>
     );
   }
@@ -120,7 +120,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
   if (!exerciseManager.activeExercise) {
     return (
       <div className="rounded-3xl border p-8 text-sm text-muted-foreground">
-        Bu atama için egzersiz bulunamadı.
+        Bu atama icin egzersiz bulunamadi.
       </div>
     );
   }
@@ -212,7 +212,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
 
     const approved = await confirm({
       title: "Antrenmani yarida birak",
-      description: "Antrenmanı yarıda bırakıp kaydetmek istediğine emin misin?",
+      description: "Antrenmani yarida birakip kaydetmek istedigine emin misin?",
       confirmText: "Yarida Birak",
       cancelText: "Vazgec",
       danger: true
@@ -278,23 +278,23 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       router.push("/client/dashboard");
       router.refresh();
     } catch {
-      warning("Antrenman iptal edilirken bir hata oluştu.");
+      warning("Antrenman iptal edilirken bir hata olustu.");
       setCancelling(false);
     }
   };
 
 
   return (
-    <div className="space-y-4 pb-20 md:pb-56 md:space-y-6">
+    <div className="space-y-4 pb-[calc(var(--app-mobile-nav-height)+8.5rem)] md:pb-56 md:space-y-6">
       <section className="space-y-4">
         <div className="flex flex-col gap-1">
           <span className="text-[10px] font-black uppercase tracking-[0.25em] text-primary">
-            Exercise{" "}
+            Egzersiz{" "}
             {Math.min(
               exerciseManager.completedExercises + 1,
               exerciseManager.exerciseState.length,
             )}{" "}
-            of {exerciseManager.exerciseState.length}
+            / {exerciseManager.exerciseState.length}
           </span>
           <h1 className="text-3xl font-black uppercase leading-[0.9] tracking-tighter text-secondary md:text-4xl">
             {activeExercise.exercise.exercise.name}
@@ -317,19 +317,19 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       <section className="grid grid-cols-2 gap-4">
         <div className="h-24 rounded-sm border-l-4 border-primary bg-secondary p-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-primary/80">
-            Total Sets
+            Toplam Set
           </p>
           <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-white">
             {exerciseManager.exerciseState.reduce(
               (acc, ex) => acc + ex.exerciseSets.length,
               0,
             )}{" "}
-            sets
+            set
           </p>
         </div>
         <div className="h-24 rounded-sm border-2 border-secondary/10 bg-white p-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-outline">
-            Total Volume KG
+            Toplam Hacim
           </p>
           {/* // total kg volume till now */}
           <p className="mt-1 text-2xl font-black uppercase tracking-tighter text-secondary">
@@ -376,12 +376,12 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                 {item.isCompleted ? (
                   <span className="flex items-center gap-1">
                     <CheckCircle2 className="h-3 w-3" />
-                    {item.exercise.exercise.type === "CARDIO" ? "🔥" : "💪"}
+                    {item.exercise.exercise.type === "CARDIO" ? <Flame className="h-3 w-3" /> : <Dumbbell className="h-3 w-3" />}
                   </span>
                 ) : item.exercise.exercise.type === "CARDIO" ? (
-                  "🔥"
+                  <Flame className="h-3 w-3" />
                 ) : (
-                  "💪"
+                  <Dumbbell className="h-3 w-3" />
                 )}
               </button>
             ))}
@@ -439,7 +439,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                   <div className="inline-flex rounded-full bg-primary/10 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-primary">
                     {activeExercise.exercise.exercise.type === "CARDIO"
                       ? "Cardio"
-                      : "Ağırlık"}
+                      : "Agirlik"}
                   </div>
                   {activeExercise.exercise.groupType === "SUPERSET" ? (
                     <div className="inline-flex rounded-full bg-violet-100 px-2 md:px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-violet-700">
@@ -454,7 +454,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                   <button
                     onClick={() => setIsVideoModalOpen(true)}
                     className="inline-flex items-center justify-center rounded-full bg-primary/10 p-2 text-primary transition hover:bg-primary/20"
-                    title="Video çek"
+                    title="Video cek"
                   >
                     <Camera className="h-4 w-4" />
                   </button>
@@ -464,12 +464,12 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                 </h2>
                 <p className="mt-1 md:mt-2 max-w-2xl text-[11px] md:text-sm text-muted-foreground">
                   {activeExercise.exercise.exercise.type === "CARDIO"
-                    ? "Protokolü takip et. Başlat, duraklat, durdur veya sıfırla."
-                    : "Hedef tekrar ve RIR otomatik. İstersen ekstra set veya erken bitir."}
+                    ? "Protokolu takip et. Baslat, duraklat, durdur veya sifirla."
+                    : "Hedef tekrar ve RIR otomatik. Istersen ekstra set ekle veya hareketi erken bitir."}
                 </p>
                 {activeExercise.supersetPeers.length > 0 ? (
                   <p className="mt-2 text-[11px] md:text-sm font-medium text-violet-700">
-                    SS eşleşmesi: {activeExercise.supersetPeers.join(" + ")}
+                    SS eslesmesi: {activeExercise.supersetPeers.join(" + ")}
                   </p>
                 ) : null}
                 {activeExercise.isCompleted && nextExercise ? (
@@ -482,7 +482,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                     }
                     className="mt-3 inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-xs font-black uppercase tracking-wider text-white transition hover:opacity-90"
                   >
-                    Sıradaki Harekete Geç
+                    Siradaki harekete gec
                     <ArrowRight className="h-3.5 w-3.5" />
                   </button>
                 ) : null}
@@ -525,7 +525,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                   <>
                     <div className="rounded-lg md:rounded-2xl bg-muted/40 px-3 md:px-4 py-2 md:py-3">
                       <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground font-semibold">
-                        Süre
+                        Sure
                       </p>
                       <p className="mt-1 md:mt-2 text-lg md:text-2xl font-black">
                         {activeExercise.exercise.durationMinutes || 1} dk
@@ -544,7 +544,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                         Durum
                       </p>
                       <p className="mt-1 md:mt-2 text-base md:text-lg font-bold">
-                        {activeExercise.isCompleted ? "✓" : "→"}
+                        {activeExercise.isCompleted ? "Tamam" : "Sirada"}
                       </p>
                     </div>
                   </>
@@ -590,17 +590,15 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
       </div>
 
       {/* Bottom bar: Completion options - Mobile Optimized */}
-      <div
-        className="fixed inset-x-3 bottom-[calc(7rem+env(safe-area-inset-bottom))] z-40 rounded-2xl border border-border/60 bg-background/95 shadow-lg backdrop-blur md:inset-x-0 md:bottom-0 md:z-20 md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none"
-      >
+      <div className="fixed inset-x-3 bottom-[calc(var(--app-mobile-nav-height)+0.75rem+env(safe-area-inset-bottom))] z-40 rounded-2xl border border-border/60 bg-background/95 shadow-lg backdrop-blur md:inset-x-0 md:bottom-0 md:z-20 md:rounded-none md:border-x-0 md:border-b-0 md:shadow-none">
         <div className="mx-auto max-w-6xl flex flex-col gap-2 px-3 py-3 md:px-4 md:py-4 md:flex-row md:items-center md:justify-between">
           <div className="hidden md:block">
             <p className="text-sm font-semibold text-foreground">
-              Antrenman özeti
+              Antrenman ozeti
             </p>
             <p className="text-xs md:text-sm text-muted-foreground">
               {exerciseManager.completedExercises} /{" "}
-              {exerciseManager.exerciseState.length} tamamlandı
+              {exerciseManager.exerciseState.length} tamamlandi
             </p>
           </div>
           <div className="flex gap-2 md:flex-row md:gap-2">
@@ -613,9 +611,9 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
             >
               <X className="mr-2 h-3 md:h-4 w-3 md:w-4" />
               <span className="hidden sm:inline">
-                {cancelling ? "İptal ediliyor..." : "İptal Et"}
+                {cancelling ? "Iptal ediliyor..." : "Iptal Et"}
               </span>
-              <span className="sm:hidden">İptal</span>
+              <span className="sm:hidden">Iptal</span>
             </Button>
             <Button
               type="button"
@@ -624,7 +622,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
               variant="outline"
               className="text-xs md:text-sm py-2 md:py-6 flex-1"
             >
-              {finishing ? "Kaydediliyor..." : "Yarıda Bırak"}
+              {finishing ? "Kaydediliyor..." : "Yarida Birak"}
             </Button>
             <Button
               type="button"
@@ -632,7 +630,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
               onClick={() => handleCompleteWorkout("COMPLETED")}
               className="text-xs md:text-sm py-2 md:py-6 flex-1"
             >
-              {finishing ? "Tamamlanıyor..." : "Tamamla"}
+              {finishing ? "Tamamlaniyor..." : "Tamamla"}
             </Button>
           </div>
         </div>
@@ -652,15 +650,17 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
             }}
           >
             <div className="text-center mb-5">
-              <div className="text-3xl mb-2">💪</div>
+              <div className="mb-2 flex justify-center">
+                <Dumbbell className="h-8 w-8 text-orange-500" />
+              </div>
               <h3
                 className="text-[18px] font-black"
                 style={{ color: "#1E293B", letterSpacing: -0.5 }}
               >
-                Nasıl Hissettin?
+                Nasil hissettin?
               </h3>
               <p className="text-[13px] mt-1" style={{ color: "#94A3B8" }}>
-                Antrenmanın zorluk seviyesini seç (1–10)
+                Antrenmanin zorluk seviyesini sec (1-10)
               </p>
             </div>
 
@@ -703,12 +703,12 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
               style={{ color: "#64748B" }}
             >
               {pendingIntensity <= 3
-                ? "Kolay — Rahat geçti"
+                ? "Kolay - Rahat gecti"
                 : pendingIntensity <= 6
-                ? "Orta — İyi bir antrenman"
+                ? "Orta - Iyi bir antrenman"
                 : pendingIntensity <= 8
-                ? "Zor — Çok güzel iş"
-                : "Maksimum — Mükemmel!"}
+                ? "Zor - Cok iyi is"
+                : "Maksimum - Mukemmel!"}
             </p>
 
             {/* Energy + Mood selectors */}
@@ -780,7 +780,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
                   border: "none",
                 }}
               >
-                Vazgeç
+                Vazgec
               </button>
               <button
                 type="button"
@@ -808,7 +808,7 @@ export function ClientWorkoutFlow({ assignmentId }: { assignmentId: string }) {
         onClose={() => setIsVideoModalOpen(false)}
         onSuccess={() => {
           setIsVideoModalOpen(false);
-          success("Video başarıyla yüklendi.");
+          success("Video basariyla yuklendi.");
         }}
       />
     </div>
@@ -859,7 +859,7 @@ function WeightExerciseSection({
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-600">
-                Superset Bloğu
+                Superset blogu
               </p>
               <h3 className="mt-1 text-base font-black text-violet-950">
                 {supersetBlock.map((item) => item.exercise.exercise.name).join(" + ")}
@@ -869,7 +869,7 @@ function WeightExerciseSection({
               </p>
             </div>
             <div className="rounded-xl bg-white/80 px-3 py-2 text-right shadow-sm">
-              <p className="text-[10px] font-black uppercase tracking-wider text-violet-500">Blok İlerlemesi</p>
+              <p className="text-[10px] font-black uppercase tracking-wider text-violet-500">Blok ilerlemesi</p>
               <p className="text-sm font-black text-violet-900">
                 {supersetBlock.filter((item) => item.isCompleted).length}/{supersetBlock.length} hareket tamam
               </p>
@@ -928,7 +928,7 @@ function WeightExerciseSection({
             onClick={onFinishEarly}
             className="text-xs md:text-sm py-5 md:py-6 flex-1 md:flex-initial"
           >
-            <span className="hidden sm:inline">Bugün Burada Bitir</span>
+            <span className="hidden sm:inline">Bugun burada bitir</span>
             <span className="sm:hidden">Bitir</span>
           </Button>
         </div>
@@ -945,7 +945,7 @@ function WeightExerciseSection({
         </div>
         {exercise.exerciseSets.length === 0 ? (
           <div className="rounded-sm border border-dashed bg-muted/30 p-3 text-xs text-muted-foreground md:p-4 md:text-sm">
-            İlk seti gir. Öneriler alındı.
+            Ilk seti gir. Oneriler hazir.
           </div>
         ) : (
           exercise.exerciseSets.map((setItem) => (
@@ -976,7 +976,7 @@ function WeightExerciseSection({
                     onClick={async () => {
                       const approved = await confirm({
                         title: "Set silin",
-                        description: "Bu seti silmek istediğinize emin misiniz?",
+                        description: "Bu seti silmek istediginize emin misiniz?",
                         confirmText: "Sil",
                         cancelText: "Vazgec",
                         danger: true
@@ -997,7 +997,7 @@ function WeightExerciseSection({
               {editingSetId === setItem.id ? (
                 <WorkoutSetForm
                   setNumber={setItem.setNumber}
-                  title={setItem.dropIndex !== null && setItem.dropIndex !== undefined ? `Set ${setItem.setNumber} • Drop ${setItem.dropIndex + 1}` : undefined}
+                  title={setItem.dropIndex !== null && setItem.dropIndex !== undefined ? `Set ${setItem.setNumber} - Drop ${setItem.dropIndex + 1}` : undefined}
                   defaultValues={{
                     weightKg: setItem.weightKg,
                     reps: setItem.reps,
@@ -1030,7 +1030,7 @@ function WeightExerciseSection({
               setNumber={exercise.nextSetNumber}
               title={
                 activeDropCount > 1
-                  ? `Set ${exercise.nextSetNumber} • Drop ${dropIndex + 1}/${activeDropCount}`
+                  ? `Set ${exercise.nextSetNumber} - Drop ${dropIndex + 1}/${activeDropCount}`
                   : `Set ${exercise.nextSetNumber} Bilgisi`
               }
               submitLabel={activeDropCount > 1 ? `Drop ${dropIndex + 1} Kaydet` : undefined}
@@ -1048,8 +1048,8 @@ function WeightExerciseSection({
 
       {exercise.isCompleted && (
         <div className="rounded-lg md:rounded-xl bg-primary/10 p-3 md:p-4 text-xs md:text-sm font-medium text-primary border border-primary/30 mt-4">
-          ✓ Bu hareket tamamlandı. 
-          <p className="text-[.7rem] text-primary/50">İstersen ekstra set ekleyebilir veya sonraki harekese geçebilirsin.</p>
+          Bu hareket tamamlandi.
+          <p className="text-[.7rem] text-primary/50">Istersen ekstra set ekleyebilir veya siradaki harekete gecebilirsin.</p>
         </div>
       )}
     </div>
@@ -1110,12 +1110,12 @@ function CardioExerciseSection({
           className="text-xs md:text-sm py-5 md:py-6 flex-1"
         >
           <Sparkles className="mr-2 h-3 md:h-4 w-3 md:w-4" />
-          {cardioReachedEnd[exercise.exercise.exerciseId] ? "Kaydet" : "Kısmi Kaydet"}
+          {cardioReachedEnd[exercise.exercise.exerciseId] ? "Kaydet" : "Kismi Kaydet"}
         </Button>
       </div>
       {exercise.isCompleted && (
         <div className="p-3 md:p-4 rounded-lg md:rounded-xl bg-primary/10 border border-primary/30 text-xs md:text-sm font-medium text-primary">
-          ✓ Kardiyo tamamlandı.
+          Kardiyo tamamlandi.
         </div>
       )}
     </div>

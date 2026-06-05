@@ -129,13 +129,9 @@ export function CompareContent({ coachIds, lang }: { coachIds: string[]; lang?: 
       </div>
 
       <div
-        className="grid gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white p-5"
-        style={{
-          gridTemplateColumns: `160px repeat(${validCoaches.length}, 1fr)`,
-          boxShadow: "0 2px 16px rgba(0,0,0,0.06)",
-        }}
+        className="grid grid-cols-1 gap-4 overflow-hidden rounded-2xl border border-slate-100 bg-white p-4 sm:grid-cols-2 md:p-5 lg:grid-cols-3"
+        style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}
       >
-        <div />
         {validCoaches.map((coach) => {
           const accent = coach.coachProfile?.accentColor ?? "#F97316";
 
@@ -166,7 +162,91 @@ export function CompareContent({ coachIds, lang }: { coachIds: string[]; lang?: 
         })}
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+      <div className="space-y-4 md:hidden">
+        {validCoaches.map((coach) => (
+          <div key={coach.id} className="overflow-hidden rounded-2xl border border-slate-100 bg-white p-4" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+            <div className="mb-3 flex items-center gap-3">
+              <div
+                className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl text-sm font-black text-white"
+                style={coach.avatarUrl ? {} : { background: `linear-gradient(135deg, ${(coach.coachProfile?.accentColor ?? "#F97316")}CC, ${coach.coachProfile?.accentColor ?? "#F97316"})` }}
+              >
+                {coach.avatarUrl ? (
+                  <Image src={coach.avatarUrl} alt={coach.name} width={48} height={48} unoptimized className="h-full w-full object-cover" />
+                ) : (
+                  getInitials(coach.name)
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-black text-slate-800">{coach.name}</p>
+                <p className="mt-0.5 text-xs text-slate-400">{coach.coachProfile?.city ?? dictionary.coachCompare.unspecified}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.trust}</p>
+                <p className="mt-1 text-sm font-black text-emerald-700">
+                  {coach.coachProfile?.trustScore ? `%${coach.coachProfile.trustScore.score}` : "—"}
+                </p>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.rating}</p>
+                <p className="mt-1 text-sm font-black text-amber-500">
+                  {coach.coachProfile?.rating != null ? Number(coach.coachProfile.rating).toFixed(1) : dictionary.coachCompare.noReviewsYet}
+                </p>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.experience}</p>
+                <p className="mt-1 text-sm font-black text-slate-700">
+                  {coach.coachProfile?.experienceYears != null ? coach.coachProfile.experienceYears : "—"}
+                </p>
+              </div>
+              <div className="rounded-xl bg-slate-50 p-3">
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.success}</p>
+                <p className="mt-1 text-sm font-black text-green-600">
+                  {coach.coachProfile?.successRate != null ? `%${coach.coachProfile.successRate}` : "—"}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-3 space-y-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.specialties}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {(coach.coachProfile?.specialties ?? []).length > 0 ? (
+                    (coach.coachProfile?.specialties ?? []).map((specialty) => (
+                      <span key={specialty} className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-600">
+                        {specialty}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-xs text-slate-400">—</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.packages}</p>
+                <div className="mt-2 space-y-2">
+                  {(coach.coachProfile?.packages ?? []).length > 0 ? (
+                    coach.coachProfile?.packages.map((pkg) => (
+                      <div key={pkg.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <p className="text-xs font-bold text-slate-700">{pkg.title}</p>
+                        <p className="mt-1 text-sm font-black text-green-600">
+                          {pkg.price != null ? formatCurrency(pkg.price, locale) : dictionary.coachCompare.askPrice}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-xs text-slate-400">{dictionary.coachCompare.noPackages}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-100 bg-white md:block" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
         <div className="border-b border-slate-100 px-5 py-3">
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.basicInfo}</p>
         </div>
@@ -276,7 +356,7 @@ export function CompareContent({ coachIds, lang }: { coachIds: string[]; lang?: 
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-100 bg-white md:block" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
         <div className="border-b border-slate-100 px-5 py-3">
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.packages}</p>
         </div>
@@ -313,7 +393,7 @@ export function CompareContent({ coachIds, lang }: { coachIds: string[]; lang?: 
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
+      <div className="hidden overflow-hidden rounded-2xl border border-slate-100 bg-white md:block" style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.06)" }}>
         <div className="border-b border-slate-100 px-5 py-3">
           <p className="text-xs font-black uppercase tracking-widest text-slate-400">{dictionary.coachCompare.about}</p>
         </div>

@@ -85,12 +85,13 @@ export function ExtendedProfileEditor() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h2 className="text-base font-black text-slate-800">Gelişmiş Profil</h2>
         <button
+          type="button"
           onClick={save}
           disabled={saving}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 disabled:opacity-50"
+          className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-orange-500 px-4 py-2 text-xs font-black text-white hover:bg-orange-600 disabled:opacity-50 sm:w-auto"
         >
           {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
           {savedMsg || "Kaydet"}
@@ -141,7 +142,7 @@ export function ExtendedProfileEditor() {
       {/* Stats triple */}
       <div className={sectionCls}>
         <div className={headerCls}><Clock className="h-4 w-4 text-purple-500" /> Performans Metrikleri</div>
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <label className="space-y-1">
             <span className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Saatlik (₺)</span>
             <input
@@ -185,7 +186,7 @@ export function ExtendedProfileEditor() {
           </button>
         </div>
         {(data.certifications ?? []).map((c, i) => (
-          <div key={i} className="grid grid-cols-12 gap-2">
+          <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-12">
             <input
               placeholder="Sertifika adı"
               value={c.name}
@@ -194,7 +195,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], name: e.target.value };
                 setData({ ...data, certifications: arr });
               }}
-              className={`${inputCls} col-span-5`}
+              className={`${inputCls} sm:col-span-5`}
             />
             <input
               placeholder="Veren kurum"
@@ -204,7 +205,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], issuer: e.target.value };
                 setData({ ...data, certifications: arr });
               }}
-              className={`${inputCls} col-span-4`}
+              className={`${inputCls} sm:col-span-4`}
             />
             <input
               type="number"
@@ -215,7 +216,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], year: e.target.value ? parseInt(e.target.value) : undefined };
                 setData({ ...data, certifications: arr });
               }}
-              className={`${inputCls} col-span-2`}
+              className={`${inputCls} sm:col-span-2`}
             />
             <button
               type="button"
@@ -224,7 +225,7 @@ export function ExtendedProfileEditor() {
                 arr.splice(i, 1);
                 setData({ ...data, certifications: arr });
               }}
-              className="col-span-1 inline-flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 sm:col-span-1"
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -245,7 +246,7 @@ export function ExtendedProfileEditor() {
           </button>
         </div>
         {(data.education ?? []).map((ed, i) => (
-          <div key={i} className="grid grid-cols-12 gap-2">
+          <div key={i} className="grid grid-cols-1 gap-2 sm:grid-cols-12">
             <input
               placeholder="Okul / Üniversite"
               value={ed.school}
@@ -254,7 +255,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], school: e.target.value };
                 setData({ ...data, education: arr });
               }}
-              className={`${inputCls} col-span-5`}
+              className={`${inputCls} sm:col-span-5`}
             />
             <input
               placeholder="Derece"
@@ -264,7 +265,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], degree: e.target.value };
                 setData({ ...data, education: arr });
               }}
-              className={`${inputCls} col-span-4`}
+              className={`${inputCls} sm:col-span-4`}
             />
             <input
               type="number"
@@ -275,7 +276,7 @@ export function ExtendedProfileEditor() {
                 arr[i] = { ...arr[i], year: e.target.value ? parseInt(e.target.value) : undefined };
                 setData({ ...data, education: arr });
               }}
-              className={`${inputCls} col-span-2`}
+              className={`${inputCls} sm:col-span-2`}
             />
             <button
               type="button"
@@ -284,7 +285,7 @@ export function ExtendedProfileEditor() {
                 arr.splice(i, 1);
                 setData({ ...data, education: arr });
               }}
-              className="col-span-1 inline-flex items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-rose-50 text-rose-500 hover:bg-rose-100 sm:col-span-1"
             >
               <Trash2 className="h-4 w-4" />
             </button>

@@ -139,7 +139,7 @@ function MetricCard({
 }) {
   return (
     <div
-      className="flex-1 rounded-[18px] p-3.5"
+      className="w-full rounded-[18px] p-3.5"
       style={{
         background: `linear-gradient(135deg, ${accent}18, ${accent}08)`,
         boxShadow: "0 2px 16px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)",
@@ -226,7 +226,7 @@ export function CoachClientsManager({
   const list = tab === "accepted" ? acceptedFiltered : pendingFiltered;
 
   return (
-    <div className="flex flex-col gap-3.5">
+    <div className="flex min-w-0 flex-col gap-3.5 overflow-x-hidden">
       {/* Metric Cards */}
       {(() => {
         const withScore = accepted.filter((c) => c.compliance !== undefined);
@@ -235,7 +235,7 @@ export function CoachClientsManager({
             ? Math.round(withScore.reduce((s, c) => s + (c.compliance ?? 0), 0) / withScore.length)
             : null;
         return (
-          <div className="flex gap-2.5">
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3">
             <MetricCard label="Toplam" value={accepted.length + pending.length} accent="#1E293B" />
             <MetricCard label="Aktif" value={accepted.length} accent="#22C55E" />
             <MetricCard
@@ -250,7 +250,7 @@ export function CoachClientsManager({
 
       {/* Search */}
       <div
-        className="flex items-center gap-2 rounded-xl px-3"
+        className="flex min-w-0 items-center gap-2 rounded-xl px-3"
         style={{
           background: "#F1F5F9",
           height: 44,
@@ -270,7 +270,7 @@ export function CoachClientsManager({
 
       {/* Tab Bar */}
       <div
-        className="flex rounded-xl p-1 gap-1"
+        className="flex min-w-0 rounded-xl p-1 gap-1"
         style={{ background: "#F1F5F9" }}
       >
         {[
@@ -338,7 +338,7 @@ export function CoachClientsManager({
                 border: "1px solid rgba(0,0,0,0.06)",
               }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3 sm:items-center">
                 <ComplianceRing name={client.name} score={client.compliance} size={44} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
@@ -361,8 +361,9 @@ export function CoachClientsManager({
                     <ClientNotesPanel clientId={client.id} clientName={client.name} />
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
+                <div className="flex shrink-0 items-center gap-1.5 self-start sm:self-center">
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); router.push("/coach/messages"); }}
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                     style={{ background: "#2563EB15", color: "#2563EB" }}
@@ -371,6 +372,7 @@ export function CoachClientsManager({
                     <MessageCircle className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={(e) => { e.stopPropagation(); void removeClient(client.id); }}
                     disabled={activeClientId === client.id}
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -395,7 +397,7 @@ export function CoachClientsManager({
                 border: "1px solid rgba(0,0,0,0.06)",
               }}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex items-start gap-3 sm:items-center">
                 <ComplianceRing name={client.name} size={44} />
                 <div className="flex-1 min-w-0">
                   <div className="text-[15px] font-bold truncate" style={{ color: "#1E293B" }}>
@@ -405,8 +407,9 @@ export function CoachClientsManager({
                     {client.email}
                   </div>
                 </div>
-                <div className="flex gap-2 flex-shrink-0">
+                <div className="flex shrink-0 gap-2 self-start sm:self-center">
                   <button
+                    type="button"
                     onClick={() => updateRelation(client.id, "ACCEPTED")}
                     disabled={activeClientId === client.id}
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"
@@ -416,6 +419,7 @@ export function CoachClientsManager({
                     <Check className="w-4 h-4" />
                   </button>
                   <button
+                    type="button"
                     onClick={() => updateRelation(client.id, "REJECTED")}
                     disabled={activeClientId === client.id}
                     className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors disabled:opacity-50"

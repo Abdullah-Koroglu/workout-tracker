@@ -52,7 +52,7 @@ export async function generateMetadata({
       : null,
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" | ");
 
   const canonical = `${appUrl}${buildLocalizedPath(`/coaches/${coachId}`, locale)}`;
 
@@ -141,7 +141,7 @@ export default async function PublicCoachProfilePage({
   const loginHref = buildLocalizedPath("/login", locale, { next: `/client/coaches/${coach.id}` });
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 pb-16 pt-4">
+    <div className="mx-auto w-full min-w-0 max-w-7xl overflow-x-hidden space-y-6 px-4 pb-16 pt-4">
       <Script
         id={`coach-${coach.id}-jsonld`}
         type="application/ld+json"
@@ -154,7 +154,7 @@ export default async function PublicCoachProfilePage({
 
       <PageHero
         title={coach.name}
-        subtitle={profile.slogan ?? (profile.city ? `${profile.city} merkezli online koçluk` : undefined)}
+        subtitle={profile.slogan ?? (profile.city ? `${profile.city} merkezli online kocluk` : undefined)}
         variant="light"
         avatar={{ initials: getInitials(coach.name), variant: "navy", imageUrl: avatarUrl }}
         statBoxes={[

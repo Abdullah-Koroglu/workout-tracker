@@ -35,8 +35,11 @@ export function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isCoach = searchParams.get("role") === "coach";
+  const authError = searchParams.get("error");
 
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    authError ? "Giris simdilik tamamlanamadi. Bilgileri kontrol edip tekrar deneyin." : null
+  );
   const [showPass, setShowPass] = useState(false);
 
   const form = useForm<LoginInput>({

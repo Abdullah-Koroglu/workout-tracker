@@ -4,6 +4,7 @@ import {
   getEnvBoolean,
   log,
   readCommandOutput,
+  runCompose,
   runCommand,
   updateState,
   verifyHealth
@@ -54,30 +55,28 @@ async function deployStaging() {
     ]);
 
     log("Bringing staging services up...");
-    await runCommand("docker", [
-      "compose",
-      "--env-file",
-      dockerEnvFile,
+    await runCompose([
       "--profile",
       "staging",
       "up",
       "-d",
       "--no-build",
       ...stagingServices
-    ]);
+    ], {
+      envFile: dockerEnvFile
+    });
 
     if (getEnvBoolean("STAGING_AUTO_SEED", false)) {
       log("STAGING_AUTO_SEED is enabled. Running staging seed...");
-      await runCommand("docker", [
-        "compose",
-        "--env-file",
-        dockerEnvFile,
+      await runCompose([
         "--profile",
         "staging-tools",
         "run",
         "--rm",
         "staging_seed"
-      ]);
+      ], {
+        envFile: dockerEnvFile
+      });
     }
 
     log(`Running staging health check: ${stagingHealthUrl}`);

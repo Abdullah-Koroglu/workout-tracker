@@ -125,6 +125,91 @@ export async function readCommandOutput(command, args, options = {}) {
   return result.stdout.trim();
 }
 
+export async function loadEnvFile(envFilePath) {
+  if (!envFilePath) {
+    return {};
+  }
+
+  const resolvedPath = path.isAbsolute(envFilePath)
+    ? envFilePath
+    : path.resolve(repoRoot, envFilePath);
+
+  let content = "";
+  try {
+    content = await fs.readFile(resolvedPath, "utf8");
+  } catch (error) {
+    if (error && error.code === "ENOENT") {
+      return {};
+    }
+
+    throw error;
+  }
+
+  const parsed = {};
+
+  for (const rawLine of content.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf("=");
+    if (separatorIndex === -1) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    let value = line.slice(separatorIndex + 1).trim();
+
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+
+    parsed[key] = value;
+  }
+
+  return parsed;
+}
+
+export async function getComposeCommand() {
+  const dockerComposeVersion = await runCommand("docker", ["compose", "version"], {
+    allowFailure: true,
+    capture: true
+  });
+
+  if (dockerComposeVersion.code === 0) {
+    return { command: "docker", baseArgs: ["compose"] };
+  }
+
+  const legacyComposeVersion = await runCommand("docker-compose", ["version"], {
+    allowFailure: true,
+    capture: true
+  });
+
+  if (legacyComposeVersion.code === 0) {
+    return { command: "docker-compose", baseArgs: [] };
+  }
+
+  throw new Error("Neither `docker compose` nor `docker-compose` is available.");
+}
+
+export async function runCompose(args, options = {}) {
+  const { envFile, env = process.env, ...restOptions } = options;
+  const compose = await getComposeCommand();
+  const fileEnv = await loadEnvFile(envFile);
+
+  return runCommand(compose.command, [...compose.baseArgs, ...args], {
+    ...restOptions,
+    env: {
+      ...env,
+      ...fileEnv
+    }
+  });
+}
+
 export async function acquireLock(lockName) {
   await ensureStateDir();
   const lockPath = path.join(stateDir, `${lockName}.lock`);

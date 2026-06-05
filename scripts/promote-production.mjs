@@ -3,6 +3,7 @@ import {
   acquireLock,
   loadState,
   log,
+  runCompose,
   runCommand,
   updateState,
   verifyHealth
@@ -55,15 +56,14 @@ async function promoteProduction() {
 
     try {
       log("Applying production services...");
-      await runCommand("docker", [
-        "compose",
-        "--env-file",
-        dockerEnvFile,
+      await runCompose([
         "up",
         "-d",
         "--no-build",
         ...productionServices
-      ]);
+      ], {
+        envFile: dockerEnvFile
+      });
 
       log(`Running production health check: ${productionHealthUrl}`);
       await verifyHealth(productionHealthUrl);
@@ -74,15 +74,13 @@ async function promoteProduction() {
           allowFailure: true
         });
 
-        await runCommand("docker", [
-          "compose",
-          "--env-file",
-          dockerEnvFile,
+        await runCompose([
           "up",
           "-d",
           "--no-build",
           ...productionServices
         ], {
+          envFile: dockerEnvFile,
           allowFailure: true
         });
       }

@@ -8,8 +8,9 @@ import { loginSchema } from "@/validations/user";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
   session: { strategy: "jwt" },
-  pages: { signIn: "/login" },
+  pages: { signIn: "/login", error: "/login" },
   providers: [
     Credentials({
       name: "Credentials",
@@ -18,29 +19,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) {
+        try {
+          const parsed = loginSchema.safeParse(credentials);
+          if (!parsed.success) {
+            return null;
+          }
+
+          const normalizedEmail = parsed.data.email.trim().toLowerCase();
+
+          const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+          if (!user || typeof user.password !== "string" || user.password.length === 0) {
+            return null;
+          }
+
+          const isMatch = await bcrypt.compare(parsed.data.password, user.password);
+          if (!isMatch) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role
+          };
+        } catch (error) {
+          console.error("[auth][authorize] credentials sign-in failed", error);
           return null;
         }
-
-        const normalizedEmail = parsed.data.email.trim().toLowerCase();
-
-        const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-        if (!user) {
-          return null;
-        }
-
-        const isMatch = await bcrypt.compare(parsed.data.password, user.password);
-        if (!isMatch) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role
-        };
       }
     })
   ],
